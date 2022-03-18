@@ -24,10 +24,12 @@ namespace Plants.Infrastructure
         public virtual DbSet<PlantCaringInstruction> PlantCaringInstructions { get; set; }
         public virtual DbSet<PlantGroup> PlantGroups { get; set; }
         public virtual DbSet<PlantOrder> PlantOrders { get; set; }
+        public virtual DbSet<PlantOrderV> PlantOrderVs { get; set; }
         public virtual DbSet<PlantPost> PlantPosts { get; set; }
         public virtual DbSet<PlantRegion> PlantRegions { get; set; }
         public virtual DbSet<PlantShipment> PlantShipments { get; set; }
         public virtual DbSet<PlantSoil> PlantSoils { get; set; }
+        public virtual DbSet<PlantStatsV> PlantStatsVs { get; set; }
         public virtual DbSet<PlantToRegion> PlantToRegions { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -197,6 +199,27 @@ namespace Plants.Infrastructure
                     .HasConstraintName("plant_order_post_id_fkey");
             });
 
+            modelBuilder.Entity<PlantOrderV>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("plant_order_v");
+
+                entity.Property(e => e.Description).HasColumnName("description");
+
+                entity.Property(e => e.GroupName).HasColumnName("group_name");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.PlantName).HasColumnName("plant_name");
+
+                entity.Property(e => e.Price).HasColumnName("price");
+
+                entity.Property(e => e.Regions).HasColumnName("regions");
+
+                entity.Property(e => e.SoilName).HasColumnName("soil_name");
+            });
+
             modelBuilder.Entity<PlantPost>(entity =>
             {
                 entity.HasKey(e => e.PlantId)
@@ -267,6 +290,31 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.SoilName)
                     .IsRequired()
                     .HasColumnName("soil_name");
+            });
+
+            modelBuilder.Entity<PlantStatsV>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("plant_stats_v");
+
+                entity.Property(e => e.GroupName).HasColumnName("group_name");
+
+                entity.Property(e => e.Income).HasColumnName("income");
+
+                entity.Property(e => e.IncomeRank).HasColumnName("income_rank");
+
+                entity.Property(e => e.Instructions).HasColumnName("instructions");
+
+                entity.Property(e => e.InstructionsRank).HasColumnName("instructions_rank");
+
+                entity.Property(e => e.PlantsCount).HasColumnName("plants_count");
+
+                entity.Property(e => e.PlantsCountRank).HasColumnName("plants_count_rank");
+
+                entity.Property(e => e.Popularity).HasColumnName("popularity");
+
+                entity.Property(e => e.PopularityRank).HasColumnName("popularity_rank");
             });
 
             modelBuilder.Entity<PlantToRegion>(entity =>
