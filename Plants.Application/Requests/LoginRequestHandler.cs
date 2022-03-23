@@ -28,7 +28,7 @@ namespace Plants.Application.Requests
             if (response.IsValid)
             {
                 var token = _tokenManager.CreateToken(login, pass, cancellationToken);
-                result = new LoginResult(token);
+                result = new LoginResult(token, response.Roles!);
             }
             else
             {

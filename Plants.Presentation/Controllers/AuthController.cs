@@ -23,7 +23,7 @@ namespace Plants.Presentation.Controllers
             ActionResult result;
             if (res.IsSuccessfull)
             {
-                result = Ok(res.Token);
+                result = Ok(res);
             }
             else
             {
