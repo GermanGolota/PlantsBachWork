@@ -1,6 +1,5 @@
 ﻿using Npgsql;
 using Plants.Application.Contracts;
-using System;
 using System.Linq;
 
 namespace Plants.Infrastructure.Services
@@ -14,19 +13,19 @@ namespace Plants.Infrastructure.Services
             _contextFactory = contextFactory;
         }
 
-        public bool AreValidCreds(string login, string password)
+        public CredsResponse CheckCreds(string login, string password)
         {
-            bool result;
             PlantsContext ctx = null;
+            CredsResponse result;
             try
             {
                 ctx = _contextFactory.CreateFromCreds(login, password);
                 var roles = ctx.CurrentUserRoles.ToList();
-                result = true;
+                result = new CredsResponse(roles.Select(x => x.RoleName).ToArray());
             }
             catch (PostgresException ex)
             {
-                result = false;
+                result = new CredsResponse();
             }
             finally
             {

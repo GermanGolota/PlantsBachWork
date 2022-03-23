@@ -24,7 +24,8 @@ namespace Plants.Application.Requests
         {
             var (login, pass) = request;
             LoginResult result;
-            if (_auth.AreValidCreds(login, pass))
+            var response = _auth.CheckCreds(login, pass);
+            if (response.IsValid)
             {
                 var token = _tokenManager.CreateToken(login, pass, cancellationToken);
                 result = new LoginResult(token);

@@ -2,6 +2,6 @@
 {
     public interface IAuthService
     {
-        bool AreValidCreds(string login, string password);
+        CredsResponse CheckCreds(string login, string password);
     }
 }
