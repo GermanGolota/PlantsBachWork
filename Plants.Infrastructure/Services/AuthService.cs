@@ -21,14 +21,11 @@ namespace Plants.Infrastructure.Services
             try
             {
                 ctx = _contextFactory.CreateFromCreds(login, password);
-                ctx.Plants.Any();
+                var roles = ctx.CurrentUserRoles.ToList();
                 result = true;
             }
             catch (PostgresException ex)
             {
-                var code = ex.Code;
-                var errCode = ex.ErrorCode;
-                var routine = ex.Routine;
                 result = false;
             }
             finally

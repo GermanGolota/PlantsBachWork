@@ -18,6 +18,7 @@ namespace Plants.Infrastructure
         {
         }
 
+        public virtual DbSet<CurrentUserRole> CurrentUserRoles { get; set; }
         public virtual DbSet<DeliveryAddress> DeliveryAddresses { get; set; }
         public virtual DbSet<Person> People { get; set; }
         public virtual DbSet<Plant> Plants { get; set; }
@@ -42,7 +43,15 @@ namespace Plants.Infrastructure
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasAnnotation("Relational:Collation", "Russian_Russia.1251");
+            modelBuilder.HasPostgresEnum(null, "userroles", new[] { "consumer", "producer", "manager", "other" })
+                .HasAnnotation("Relational:Collation", "Russian_Russia.1251");
+
+            modelBuilder.Entity<CurrentUserRole>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("current_user_roles");
+            });
 
             modelBuilder.Entity<DeliveryAddress>(entity =>
             {
