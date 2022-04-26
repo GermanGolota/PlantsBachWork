@@ -8,6 +8,7 @@ import Bootstrap.Grid.Row as Row
 import Bootstrap.Table as Table
 import Html exposing (Html, text)
 import Html.Attributes
+import Json.Decode as D
 import Main exposing (baseApplication)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Utils exposing (AlignDirection(..), largeFont, textAlign, textCenter)
@@ -138,7 +139,6 @@ view model =
                             Html.text "No group is selected"
                     ]
                 ]
-            , Html.a [ Html.Attributes.href "/abc" ] [ text "123" ]
             ]
         )
 
@@ -159,6 +159,7 @@ init authToken =
     ( initialModel, Cmd.none )
 
 
+initialModel : Model
 initialModel =
     Model
         [ PieItem 1 "Apple" 100 25 5
@@ -169,10 +170,12 @@ initialModel =
         Nothing
 
 
+subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
 
 
+main : Program D.Value Model Msg
 main =
     baseApplication
         { init = init
