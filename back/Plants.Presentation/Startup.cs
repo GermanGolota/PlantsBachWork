@@ -4,8 +4,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Plants.Core;
 using Plants.Infrastructure;
 using Plants.Presentation.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Plants.Presentation
 {
@@ -44,6 +48,24 @@ namespace Plants.Presentation
                         .AllowAnyMethod()
                         .AllowAnyHeader();
                 });
+            });
+
+            services.AddAuthorization(options =>
+            {
+                UserRole[] allRoles = (UserRole[])Enum.GetValues(typeof(UserRole));
+                UserRole[] passedRoles = new UserRole[allRoles.Length];
+                for (int i = 0; i < allRoles.Length; i++)
+                {
+                    var role = allRoles[i];
+                    passedRoles[i] = role;
+                    var perms = passedRoles.Permutate();
+                    foreach (var permutation in perms)
+                    {
+                        var roleNames = perms.Select(x => x.ToString());
+                        var policyName = String.Join('_', roleNames);
+                        options.AddPolicy(policyName, policy => policy.RequireRole(roleNames));
+                    }
+                }
             });
         }
 
