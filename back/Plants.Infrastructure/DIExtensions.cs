@@ -14,11 +14,14 @@ namespace Plants.Infrastructure
 {
     public static class DIExtensions
     {
+        const string AuthSectionName = "Auth";
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
         {
+            string key = GetAuthKey(config);
             services.AddScoped<SymmetricEncrypter>();
             services.AddScoped<IJWTokenManager, JWTokenManager>();
-            services.BindConfigSection<AuthConfig>(config, "Auth");
+            services.BindConfigSection<AuthConfig>(config, AuthSectionName);
+            services.BindConfigSection<ConnectionConfig>(config);
             services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -31,7 +34,7 @@ namespace Plants.Infrastructure
                x.TokenValidationParameters = new TokenValidationParameters
                {
                    ValidateIssuerSigningKey = true,
-                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(config.Get<AuthConfig>().AuthKey)),
+                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
                    ValidateIssuer = false,
                    ValidateAudience = false
                };
@@ -40,6 +43,14 @@ namespace Plants.Infrastructure
             services.AddScoped<PlantsContextFactory>();
             services.AddScoped<IAuthService, AuthService>();
             return services;
+        }
+
+        private static string GetAuthKey(IConfiguration config)
+        {
+            return config
+                .GetSection(AuthSectionName)
+                .Get<AuthConfig>()
+                .AuthKey;
         }
 
         /// <summary>
