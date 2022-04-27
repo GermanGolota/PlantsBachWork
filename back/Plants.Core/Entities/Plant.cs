@@ -9,6 +9,7 @@ namespace Plants.Core.Entities
     {
         public Plant()
         {
+            PlantToImages = new HashSet<PlantToImage>();
             PlantToRegions = new HashSet<PlantToRegion>();
         }
 
@@ -24,6 +25,7 @@ namespace Plants.Core.Entities
         public virtual PlantGroup Group { get; set; }
         public virtual PlantSoil Soil { get; set; }
         public virtual PlantPost PlantPost { get; set; }
+        public virtual ICollection<PlantToImage> PlantToImages { get; set; }
         public virtual ICollection<PlantToRegion> PlantToRegions { get; set; }
     }
 }

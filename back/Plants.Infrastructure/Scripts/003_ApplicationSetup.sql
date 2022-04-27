@@ -1,3 +1,25 @@
+CREATE OR REPLACE VIEW plant_post_v AS
+SELECT
+  p.id,
+  p.plant_name,
+  po.price,
+  gr.group_name,
+  s.soil_name,
+  p.description,
+  array_agg(DISTINCT rg.region_name) AS regions
+FROM
+  plant_post po
+  JOIN plant p ON p.id = po.plant_id
+  JOIN plant_group gr ON gr.id = p.group_id
+  JOIN plant_soil s ON s.id = p.soil_id
+  JOIN plant_to_region prg ON prg.plant_id = p.id
+  JOIN plant_region rg ON rg.id = prg.plant_region_id
+GROUP BY
+  p.id,
+  gr.group_name,
+  s.soil_name,
+  po.price;
+
 --Lab 4
 CREATE OR REPLACE VIEW plant_stats_v AS (
   WITH gToInstruction AS (
@@ -357,9 +379,9 @@ CREATE TRIGGER plant_instruction_reject_no_soils
   FOR EACH ROW
   EXECUTE PROCEDURE reject_instruction_no_soils ();
 
-CREATE OR REPLACE FUNCTION get_financial (start_date date, end_date date)
+CREATE OR REPLACE FUNCTION get_financial (start_date timestamp without time zone, end_date timestamp without time zone)
   RETURNS TABLE (
-    groudId int,
+    groupId int,
     group_name text,
     sold_count bigint,
     percent_sold numeric,

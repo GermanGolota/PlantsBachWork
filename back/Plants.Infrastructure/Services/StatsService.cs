@@ -53,7 +53,7 @@ namespace Plants.Infrastructure.Services
 
         private static GroupTotalStats Map(PlantStatsV x)
         {
-            return new GroupTotalStats(/*x.Id*/ 0, x.GroupName, x.Income.Value, x.Instructions.Value, x.Popularity.Value);
+            return new GroupTotalStats(x.Id.Value, x.GroupName, x.Income.Value, x.Instructions.Value, x.Popularity.Value);
         }
     }
 }

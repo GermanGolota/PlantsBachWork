@@ -21,16 +21,18 @@ namespace Plants.Infrastructure
         public virtual DbSet<CurrentUserRole> CurrentUserRoles { get; set; }
         public virtual DbSet<DeliveryAddress> DeliveryAddresses { get; set; }
         public virtual DbSet<Person> People { get; set; }
+        public virtual DbSet<PersonToLogin> PersonToLogins { get; set; }
         public virtual DbSet<Plant> Plants { get; set; }
         public virtual DbSet<PlantCaringInstruction> PlantCaringInstructions { get; set; }
         public virtual DbSet<PlantGroup> PlantGroups { get; set; }
         public virtual DbSet<PlantOrder> PlantOrders { get; set; }
-        public virtual DbSet<PlantOrderV> PlantOrderVs { get; set; }
         public virtual DbSet<PlantPost> PlantPosts { get; set; }
+        public virtual DbSet<PlantPostV> PlantPostVs { get; set; }
         public virtual DbSet<PlantRegion> PlantRegions { get; set; }
         public virtual DbSet<PlantShipment> PlantShipments { get; set; }
         public virtual DbSet<PlantSoil> PlantSoils { get; set; }
         public virtual DbSet<PlantStatsV> PlantStatsVs { get; set; }
+        public virtual DbSet<PlantToImage> PlantToImages { get; set; }
         public virtual DbSet<PlantToRegion> PlantToRegions { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -101,6 +103,23 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.PhoneNumber)
                     .IsRequired()
                     .HasColumnName("phone_number");
+            });
+
+            modelBuilder.Entity<PersonToLogin>(entity =>
+            {
+                entity.HasKey(e => e.PersonId)
+                    .HasName("person_to_login_pkey");
+
+                entity.ToTable("person_to_login");
+
+                entity.Property(e => e.PersonId)
+                    .ValueGeneratedNever()
+                    .HasColumnName("person_id");
+
+                entity.HasOne(d => d.Person)
+                    .WithOne(p => p.PersonToLogin)
+                    .HasForeignKey<PersonToLogin>(d => d.PersonId)
+                    .HasConstraintName("person_to_login_person_id_fkey");
             });
 
             modelBuilder.Entity<Plant>(entity =>
@@ -208,27 +227,6 @@ namespace Plants.Infrastructure
                     .HasConstraintName("plant_order_post_id_fkey");
             });
 
-            modelBuilder.Entity<PlantOrderV>(entity =>
-            {
-                entity.HasNoKey();
-
-                entity.ToTable("plant_order_v");
-
-                entity.Property(e => e.Description).HasColumnName("description");
-
-                entity.Property(e => e.GroupName).HasColumnName("group_name");
-
-                entity.Property(e => e.Id).HasColumnName("id");
-
-                entity.Property(e => e.PlantName).HasColumnName("plant_name");
-
-                entity.Property(e => e.Price).HasColumnName("price");
-
-                entity.Property(e => e.Regions).HasColumnName("regions");
-
-                entity.Property(e => e.SoilName).HasColumnName("soil_name");
-            });
-
             modelBuilder.Entity<PlantPost>(entity =>
             {
                 entity.HasKey(e => e.PlantId)
@@ -239,6 +237,10 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.PlantId)
                     .ValueGeneratedOnAdd()
                     .HasColumnName("plant_id");
+
+                entity.Property(e => e.Created)
+                    .HasColumnType("date")
+                    .HasColumnName("created");
 
                 entity.Property(e => e.Price).HasColumnName("price");
 
@@ -255,6 +257,27 @@ namespace Plants.Infrastructure
                     .HasForeignKey(d => d.SellerId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("plant_post_seller_id_fkey");
+            });
+
+            modelBuilder.Entity<PlantPostV>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("plant_post_v");
+
+                entity.Property(e => e.Description).HasColumnName("description");
+
+                entity.Property(e => e.GroupName).HasColumnName("group_name");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.PlantName).HasColumnName("plant_name");
+
+                entity.Property(e => e.Price).HasColumnName("price");
+
+                entity.Property(e => e.Regions).HasColumnName("regions");
+
+                entity.Property(e => e.SoilName).HasColumnName("soil_name");
             });
 
             modelBuilder.Entity<PlantRegion>(entity =>
@@ -309,21 +332,34 @@ namespace Plants.Infrastructure
 
                 entity.Property(e => e.GroupName).HasColumnName("group_name");
 
-                entity.Property(e => e.Income).HasColumnName("income");
+                entity.Property(e => e.Id).HasColumnName("id");
 
-                entity.Property(e => e.IncomeRank).HasColumnName("income_rank");
+                entity.Property(e => e.Income).HasColumnName("income");
 
                 entity.Property(e => e.Instructions).HasColumnName("instructions");
 
-                entity.Property(e => e.InstructionsRank).HasColumnName("instructions_rank");
-
                 entity.Property(e => e.PlantsCount).HasColumnName("plants_count");
 
-                entity.Property(e => e.PlantsCountRank).HasColumnName("plants_count_rank");
-
                 entity.Property(e => e.Popularity).HasColumnName("popularity");
+            });
 
-                entity.Property(e => e.PopularityRank).HasColumnName("popularity_rank");
+            modelBuilder.Entity<PlantToImage>(entity =>
+            {
+                entity.HasKey(e => e.RelationId)
+                    .HasName("plant_to_image_pkey");
+
+                entity.ToTable("plant_to_image");
+
+                entity.Property(e => e.RelationId).HasColumnName("relation_id");
+
+                entity.Property(e => e.Image).HasColumnName("image");
+
+                entity.Property(e => e.PlantId).HasColumnName("plant_id");
+
+                entity.HasOne(d => d.Plant)
+                    .WithMany(p => p.PlantToImages)
+                    .HasForeignKey(d => d.PlantId)
+                    .HasConstraintName("plant_to_image_plant_id_fkey");
             });
 
             modelBuilder.Entity<PlantToRegion>(entity =>

@@ -14,6 +14,7 @@ namespace Plants.Presentation
         public static void Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
+            Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
             host.Run();
         }
 
