@@ -4,15 +4,21 @@ import Assets exposing (treeIcon)
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
-import Color exposing (Color, rgb255)
+import Bootstrap.Form as Form
+import Bootstrap.Form.Input as Input
+import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Grid.Row as Row
+import Color exposing (Color, rgba)
+import Dict
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (attribute, style)
+import Html.Attributes exposing (attribute, for, style)
 import Json.Decode as D
 import Main exposing (baseApplication)
 import Svg exposing (Svg, image, svg)
 import Svg.Attributes exposing (height, width)
 import TypedSvg.Types exposing (px)
-import Utils exposing (textCenter)
+import Utils exposing (fillParent, filledBackground, flexCenter, mapStyles, rgba255, textCenter)
 
 
 type alias Model =
@@ -28,23 +34,95 @@ type Msg
 
 
 init : String -> ( Model, Cmd Msg )
-init key =
+init _ =
     ( Model "" "", Cmd.none )
+
+
+greenColor : Float -> Color
+greenColor opacity =
+    rgba255 36 158 71 opacity
 
 
 view : Model -> Html Msg
 view model =
-    Card.config [ Card.attrs [ style "width" "20rem" ] ]
+    Grid.containerFluid [ style "height" "100vh" ]
+        [ Grid.row [ Row.attrs (fillParent ++ flexCenter) ]
+            [ Grid.col [] []
+            , Grid.col [] []
+            , Grid.col [ Col.middleXs ]
+                [ viewForm model
+                , viewBackground
+                ]
+            , Grid.col [] []
+            , Grid.col [] []
+            ]
+        ]
+
+
+viewBackground =
+    filledBackground <|
+        mapStyles <|
+            Dict.fromList
+                [ ( "background"
+                  , "linear-gradient(180deg, #C4C4C4 0%, #159A42 0.01%, rgba(0, 128, 0, 0.53) 53.65%, #006400 100%)"
+                  )
+                , ( "box-shadow"
+                  , "0px 4px 4px rgba(0, 0, 0, 0.25)"
+                  )
+                ]
+
+
+viewForm : Model -> Html Msg
+viewForm model =
+    Card.config [ Card.attrs [ style "width" "100%", style "opacity" "0.66" ] ]
         |> Card.header [ textCenter ]
-            [ treeIcon (px 200) (rgb255 36 158 71)
+            [ treeIcon (px 200) (greenColor 1)
             ]
         |> Card.block []
-            [ Block.titleH4 [] [ text "Card title" ]
-            , Block.text [] [ text "Some quick example text to build on the card title and make up the bulk of the card's content." ]
-            , Block.custom <|
-                Button.button [ Button.primary ] [ text "Go somewhere" ]
+            [ Block.custom <| viewFormMain model
             ]
         |> Card.view
+
+
+viewFormMain : Model -> Html Msg
+viewFormMain model =
+    let
+        updatePass pass =
+            PasswordUpdate pass
+
+        updateLogin login =
+            UsernameUpdated login
+    in
+    div []
+        [ Form.form
+            []
+            [ Form.group []
+                [ Form.label [ for "login" ] [ text "Login" ]
+                , Input.text
+                    [ Input.id "login"
+                    , Input.onInput updateLogin
+                    ]
+                ]
+            , Form.group []
+                [ Form.label [ for "password" ] [ text "Password" ]
+                , Input.password
+                    [ Input.id "password"
+                    , Input.onInput updatePass
+                    ]
+                ]
+            ]
+        , Form.group []
+            [ Button.button
+                [ Button.primary
+                , Button.onClick Submitted
+                , Button.attrs
+                    [ style "margin" "10px auto"
+                    , style "width" "100%"
+                    ]
+                ]
+                [ text "Login" ]
+            ]
+        ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

@@ -1,7 +1,9 @@
-module Utils exposing (AlignDirection(..), largeFont, textAlign, textCenter)
+module Utils exposing (AlignDirection(..), fillParent, filledBackground, largeFont, mapStyles, rgba255, textAlign, textCenter, flexCenter)
 
-import Html exposing (Attribute)
-import Html.Attributes exposing (style)
+import Color exposing (Color, rgba)
+import Dict exposing (Dict)
+import Html exposing (Attribute, Html, div)
+import Html.Attributes exposing (attribute, style)
 
 
 type AlignDirection
@@ -36,3 +38,39 @@ textAlign dir =
 textCenter : Attribute msg
 textCenter =
     textAlign Center
+
+
+mapStyles : Dict String String -> List (Attribute msg)
+mapStyles styles =
+    let
+        keys =
+            Dict.keys styles
+
+        values =
+            Dict.values styles
+    in
+    List.map2 style keys values
+
+
+filledBackground : List (Attribute msg) -> Html msg
+filledBackground additionalAttributes =
+    div ((mapStyles <| Dict.fromList [ ( "position", "absolute" ), ( "width", "100vw" ), ( "height", "100vh" ), ( "left", "0px" ), ( "top", "0px" ), ( "z-index", "-1" ) ]) ++ additionalAttributes) []
+
+
+scaleFrom255 : Int -> Float
+scaleFrom255 c =
+    toFloat c / 255
+
+
+rgba255 : Int -> Int -> Int -> Float -> Color
+rgba255 r g b a =
+    rgba (scaleFrom255 r) (scaleFrom255 g) (scaleFrom255 b) a
+
+
+fillParent : List (Attribute msg)
+fillParent =
+    [ style "width" "100%", style "height" "100%" ]
+
+
+flexCenter =
+    [ style "align-items" "center", style "justify-content" "center" ]
