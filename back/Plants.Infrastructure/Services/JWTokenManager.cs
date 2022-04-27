@@ -38,7 +38,7 @@ namespace Plants.Infrastructure.Services
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var tokenKey = Encoding.ASCII.GetBytes(_config.AuthKey);
-            var expires = DateTime.UtcNow.AddDays(1);
+            var expires = DateTime.UtcNow.AddHours(_config.TokenValidityHours);
             var credentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), _securityAlgorithm);
             var tokenDescriptor = new SecurityTokenDescriptor
             {

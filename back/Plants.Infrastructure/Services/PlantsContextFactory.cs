@@ -12,9 +12,12 @@ namespace Plants.Infrastructure.Services
     {
         private readonly IHttpContextAccessor _httpContext;
         private readonly SymmetricEncrypter _encrypter;
-        private readonly AuthConfig _config;
+        private readonly ConnectionConfig _config;
 
-        public PlantsContextFactory(IHttpContextAccessor httpContext, IOptions<AuthConfig> options, SymmetricEncrypter encrypter)
+        public PlantsContextFactory(
+            IHttpContextAccessor httpContext,
+            IOptions<ConnectionConfig> options,
+            SymmetricEncrypter encrypter)
         {
             _httpContext = httpContext;
             _encrypter = encrypter;

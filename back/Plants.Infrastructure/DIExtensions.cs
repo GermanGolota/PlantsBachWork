@@ -14,11 +14,14 @@ namespace Plants.Infrastructure
 {
     public static class DIExtensions
     {
+        const string AuthSectionName = "Auth";
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
         {
+            string key = GetAuthKey(config);
             services.AddScoped<SymmetricEncrypter>();
             services.AddScoped<IJWTokenManager, JWTokenManager>();
-            services.BindConfigSection<AuthConfig>(config);
+            services.BindConfigSection<AuthConfig>(config, AuthSectionName);
+            services.BindConfigSection<ConnectionConfig>(config);
             services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -31,7 +34,7 @@ namespace Plants.Infrastructure
                x.TokenValidationParameters = new TokenValidationParameters
                {
                    ValidateIssuerSigningKey = true,
-                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(config.Get<AuthConfig>().AuthKey)),
+                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
                    ValidateIssuer = false,
                    ValidateAudience = false
                };
@@ -42,22 +45,27 @@ namespace Plants.Infrastructure
             return services;
         }
 
+        private static string GetAuthKey(IConfiguration config)
+        {
+            return config
+                .GetSection(AuthSectionName)
+                .Get<AuthConfig>()
+                .AuthKey;
+        }
+
         /// <summary>
         /// Would bind a section, that corresponds to linear subdivisioning of 
         /// config into sections using <param name="sectionNames"></param>
         /// If no section names is provided, then an entire config would be used
         /// </summary>
-        private static IServiceCollection BindConfigSection<T>(this IServiceCollection services,
+        public static IServiceCollection BindConfigSection<T>(this IServiceCollection services,
           IConfiguration config, params string[] sectionNames) where T : class
         {
             services.Configure<T>(options =>
             {
-                var currentConfig = config;
-                foreach (var sectionName in sectionNames)
-                {
-                    currentConfig = currentConfig.GetSection(sectionName);
-                }
-                currentConfig.Bind(options);
+                sectionNames
+                    .Aggregate(config, (config, sectionName) => config.GetSection(sectionName))
+                    .Bind(options);
             });
             return services;
         }

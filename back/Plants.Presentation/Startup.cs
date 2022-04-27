@@ -13,6 +13,9 @@ namespace Plants.Presentation
 {
     public class Startup
     {
+        private const string DevPolicyName = "dev";
+        private const string ProdPolicyName = "prod";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -49,20 +52,40 @@ namespace Plants.Presentation
                 };
                 c.AddSecurityRequirement(requiremenets);
             });
+
+            services.AddCors(opt =>
+            {
+                opt.AddPolicy(DevPolicyName, options =>
+                {
+                    options.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
+
+                opt.AddPolicy(ProdPolicyName, options =>
+                {
+                    var config = Configuration["AllowedHosts"];
+                    options.WithOrigins(config)
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage(); 
+                app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Plants v1"));
+                app.UseCors(DevPolicyName);
             }
             else
             {
                 app.UseExceptionHandler("/Error");
                 app.UseHsts();
+                app.UseCors(ProdPolicyName);
             }
 
             app.UseHttpsRedirection();
@@ -77,6 +100,6 @@ namespace Plants.Presentation
             {
                 endpoints.MapControllers();
             });
-        }   
+        }
     }
 }
