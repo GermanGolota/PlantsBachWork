@@ -1,4 +1,4 @@
-module Pages.Login exposing (main)
+port module Pages.Login exposing (main)
 
 import Assets exposing (treeIcon)
 import Bootstrap.Button as Button
@@ -31,8 +31,25 @@ type UserRole
     | Manager
 
 
+encodeResponse : AuthResponse -> E.Value
+encodeResponse response =
+    E.object [ ( "token", E.string response.token ), ( "roles", E.list roleToValue response.roles ) ]
 
---port NotifyLoggedIn : AuthResponse -> Cmd msg
+
+roleToValue : UserRole -> E.Value
+roleToValue role =
+    case role of
+        Consumer ->
+            E.string "Consumer"
+
+        Producer ->
+            E.string "Producer"
+
+        Manager ->
+            E.string "Manager"
+
+
+port notifyLoggedIn : E.Value -> Cmd msg
 
 
 type alias AuthResponse =
@@ -236,7 +253,7 @@ update msg model =
             ( model, submit model )
 
         SubmitRequest (Ok response) ->
-            ( { model | status = GoodCredentials }, Cmd.none )
+            ( { model | status = GoodCredentials }, notifyLoggedIn <| encodeResponse response )
 
         SubmitRequest (Err err) ->
             ( { model | status = BadCredentials }, Cmd.none )
