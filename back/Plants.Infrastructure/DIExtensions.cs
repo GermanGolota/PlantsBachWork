@@ -18,7 +18,7 @@ namespace Plants.Infrastructure
         {
             services.AddScoped<SymmetricEncrypter>();
             services.AddScoped<IJWTokenManager, JWTokenManager>();
-            services.BindConfigSection<AuthConfig>(config);
+            services.BindConfigSection<AuthConfig>(config, "Auth");
             services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -47,17 +47,14 @@ namespace Plants.Infrastructure
         /// config into sections using <param name="sectionNames"></param>
         /// If no section names is provided, then an entire config would be used
         /// </summary>
-        private static IServiceCollection BindConfigSection<T>(this IServiceCollection services,
+        public static IServiceCollection BindConfigSection<T>(this IServiceCollection services,
           IConfiguration config, params string[] sectionNames) where T : class
         {
             services.Configure<T>(options =>
             {
-                var currentConfig = config;
-                foreach (var sectionName in sectionNames)
-                {
-                    currentConfig = currentConfig.GetSection(sectionName);
-                }
-                currentConfig.Bind(options);
+                sectionNames
+                    .Aggregate(config, (config, sectionName) => config.GetSection(sectionName))
+                    .Bind(options);
             });
             return services;
         }
