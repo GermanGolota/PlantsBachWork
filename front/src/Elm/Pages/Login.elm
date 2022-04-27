@@ -11,14 +11,86 @@ import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Color exposing (Color, rgba)
 import Dict
+import Endpoints exposing (loginUrl)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (attribute, for, style)
+import Http as Http
 import Json.Decode as D
+import Json.Decode.Pipeline exposing (hardcoded, required)
+import Json.Encode as E
 import Main exposing (baseApplication)
 import Svg exposing (Svg, image, svg)
 import Svg.Attributes exposing (height, width)
 import TypedSvg.Types exposing (px)
 import Utils exposing (fillParent, filledBackground, flexCenter, mapStyles, rgba255, textCenter)
+
+
+type UserRole
+    = Consumer
+    | Producer
+    | Manager
+
+
+
+--port NotifyLoggedIn : AuthResponse -> Cmd msg
+
+
+type alias AuthResponse =
+    { token : String
+    , roles : List UserRole
+    }
+
+
+credsEncoded : Model -> E.Value
+credsEncoded model =
+    let
+        list =
+            [ ( "login", E.string model.username )
+            , ( "password", E.string model.password )
+            ]
+    in
+    list
+        |> E.object
+
+
+convertRoles roleIds =
+    List.map convertRole roleIds
+
+
+convertRole : Int -> UserRole
+convertRole roleId =
+    case roleId of
+        1 ->
+            Consumer
+
+        2 ->
+            Producer
+
+        3 ->
+            Manager
+
+        _ ->
+            Consumer
+
+
+submitSuccessDecoder : D.Decoder AuthResponse
+submitSuccessDecoder =
+    D.map2 AuthResponse
+        (D.field "token" D.string)
+        (D.field "roles" (D.list D.int) |> D.map convertRoles)
+
+
+submit : Model -> Cmd Msg
+submit model =
+    let
+        body =
+            credsEncoded model |> Http.jsonBody
+    in
+    Http.post
+        { url = loginUrl
+        , body = body
+        , expect = Http.expectJson SubmitRequest submitSuccessDecoder
+        }
 
 
 type alias Model =
@@ -31,6 +103,7 @@ type Msg
     = UsernameUpdated String
     | PasswordUpdate String
     | Submitted
+    | SubmitRequest (Result Http.Error AuthResponse)
 
 
 init : String -> ( Model, Cmd Msg )
@@ -135,6 +208,12 @@ update msg model =
             ( { model | password = pass }, Cmd.none )
 
         Submitted ->
+            ( model, submit model )
+
+        SubmitRequest (Ok authToken) ->
+            ( model, Cmd.none )
+
+        SubmitRequest (Err err) ->
             ( model, Cmd.none )
 
 
