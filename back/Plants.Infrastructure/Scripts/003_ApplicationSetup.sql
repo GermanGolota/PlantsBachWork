@@ -380,3 +380,5 @@ END;
 $$
 LANGUAGE plpgsql;
 
+GRANT EXECUTE ON PROCEDURE add_user_to_group TO consumer, producer, manager;
+
