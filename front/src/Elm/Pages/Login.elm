@@ -9,7 +9,7 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
-import Color exposing (Color, rgba)
+import Color exposing (Color, rgba, toCssString)
 import Dict
 import Endpoints exposing (loginUrl)
 import Html exposing (Html, div, text)
@@ -93,9 +93,16 @@ submit model =
         }
 
 
+type CredsStatus
+    = Unknown
+    | BadCredentials
+    | GoodCredentials
+
+
 type alias Model =
     { username : String
     , password : String
+    , status : CredsStatus
     }
 
 
@@ -108,7 +115,7 @@ type Msg
 
 init : String -> ( Model, Cmd Msg )
 init _ =
-    ( Model "" "", Cmd.none )
+    ( Model "" "" Unknown, Cmd.none )
 
 
 greenColor : Float -> Color
@@ -165,9 +172,14 @@ viewFormMain model =
 
         updateLogin login =
             UsernameUpdated login
+
+        credDisplay =
+            displayFromCredStatus model.status
     in
     div []
-        [ Form.form
+        [ Form.group [ Form.attrs [ style "color" <| toCssString <| Tuple.first credDisplay ] ]
+            [ text <| Tuple.second credDisplay ]
+        , Form.form
             []
             [ Form.group []
                 [ Form.label [ for "login" ] [ text "Login" ]
@@ -198,23 +210,36 @@ viewFormMain model =
         ]
 
 
+displayFromCredStatus : CredsStatus -> ( Color, String )
+displayFromCredStatus status =
+    case status of
+        BadCredentials ->
+            ( Color.red, "Those credentials are not valid!" )
+
+        GoodCredentials ->
+            ( Color.green, "Those credentials are valid! You would be redirected shortly" )
+
+        Unknown ->
+            ( Color.white, "" )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         UsernameUpdated login ->
-            ( { model | username = login }, Cmd.none )
+            ( { model | username = login, status = Unknown }, Cmd.none )
 
         PasswordUpdate pass ->
-            ( { model | password = pass }, Cmd.none )
+            ( { model | password = pass, status = Unknown }, Cmd.none )
 
         Submitted ->
             ( model, submit model )
 
-        SubmitRequest (Ok authToken) ->
-            ( model, Cmd.none )
+        SubmitRequest (Ok response) ->
+            ( { model | status = GoodCredentials }, Cmd.none )
 
         SubmitRequest (Err err) ->
-            ( model, Cmd.none )
+            ( { model | status = BadCredentials }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
