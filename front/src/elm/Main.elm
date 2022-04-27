@@ -1,7 +1,8 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html)
+import Html exposing (Html, a, div, text)
+import Html.Attributes exposing (href)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
 
@@ -40,7 +41,7 @@ init : (Maybe AuthResponse -> ( model, Cmd msg )) -> D.Value -> ( model, Cmd msg
 init initFunc flags =
     let
         authResp =
-            case D.decodeValue submitSuccessDecoder flags of
+            case D.decodeValue decodeFlags flags of
                 Ok res ->
                     Just res
 
@@ -54,24 +55,64 @@ convertRoles roleIds =
     List.map convertRole roleIds
 
 
-convertRole : Int -> UserRole
+convertRole : String -> UserRole
 convertRole roleId =
     case roleId of
-        1 ->
+        "Consumer" ->
             Consumer
 
-        2 ->
+        "Producer" ->
             Producer
 
-        3 ->
+        "Manager" ->
             Manager
 
         _ ->
             Consumer
 
 
-submitSuccessDecoder : D.Decoder AuthResponse
-submitSuccessDecoder =
+decodeFlags : D.Decoder AuthResponse
+decodeFlags =
     D.map2 AuthResponse
         (D.field "token" D.string)
-        (D.field "roles" (D.list D.int) |> D.map convertRoles)
+        (D.field "roles" (D.list D.string) |> D.map convertRoles)
+
+
+type ModelBase model
+    = Unauthorized
+    | NotLoggedIn
+    | Authorized model
+
+
+initBase : List UserRole -> ( model, Cmd msg ) -> Maybe AuthResponse -> ( ModelBase model, Cmd msg )
+initBase requiredRoles initialModel response =
+    let
+        roleInRequired role =
+            List.member role requiredRoles
+    in
+    case response of
+        Just resp ->
+            if List.any roleInRequired resp.roles then
+                ( Authorized <| Tuple.first initialModel, Tuple.second initialModel )
+
+            else
+                ( Unauthorized, Cmd.none )
+
+        Nothing ->
+            ( NotLoggedIn, Cmd.none )
+
+
+viewBase : (model -> Html msg) -> ModelBase model -> Html msg
+viewBase authorizedView modelB =
+    case modelB of
+        Unauthorized ->
+            div [] [ text "You are not authorized to view this page!" ]
+
+        NotLoggedIn ->
+            div []
+                [ text "You are not logged into your account!"
+                , a [ href "/login" ] [ text "Go to login" ]
+                ]
+
+        Authorized authM ->
+            authorizedView authM

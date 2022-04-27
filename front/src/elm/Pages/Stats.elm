@@ -9,7 +9,7 @@ import Bootstrap.Table as Table
 import Html exposing (Html, text)
 import Html.Attributes
 import Json.Decode as D
-import Main exposing (AuthResponse, baseApplication)
+import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Utils exposing (AlignDirection(..), largeFont, textAlign, textCenter)
 
@@ -25,15 +25,18 @@ dateInput =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        PieEvent pieEvent ->
+    case ( msg, model ) of
+        ( PieEvent pieEvent, Authorized modelView ) ->
             case pieEvent of
                 ChartItemClicked plantId ->
                     let
                         getById id =
-                            List.head <| List.filter (\item -> item.id == id) model.items
+                            List.head <| List.filter (\item -> item.id == id) modelView.items
                     in
-                    ( { model | selectedItem = getById plantId }, Cmd.none )
+                    ( Authorized { modelView | selectedItem = getById plantId }, Cmd.none )
+
+        ( _, _ ) ->
+            ( model, Cmd.none )
 
 
 type alias PieItem =
@@ -118,6 +121,11 @@ viewRow key value =
 
 view : Model -> Html.Html Msg
 view model =
+    viewBase viewMain model
+
+
+viewMain : ModelView -> Html Msg
+viewMain model =
     let
         items =
             model.items
@@ -148,20 +156,24 @@ convertToEvent msg =
     PieEvent msg
 
 
-type alias Model =
+type alias ModelView =
     { items : List PieItem
     , selectedItem : Maybe PieItem
     }
 
 
+type alias Model =
+    ModelBase ModelView
+
+
 init : Maybe AuthResponse -> ( Model, Cmd Msg )
-init _ =
-    ( initialModel, Cmd.none )
+init response =
+    initBase [ Manager ] ( initialModel, Cmd.none ) response
 
 
-initialModel : Model
+initialModel : ModelView
 initialModel =
-    Model
+    ModelView
         [ PieItem 1 "Apple" 100 25 5
         , PieItem 2 "Plum" 32 14 6
         , PieItem 3 "Cherry" 15 15 3

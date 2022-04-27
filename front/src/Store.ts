@@ -1,4 +1,5 @@
 import AES from 'crypto-js/aes';
+import Utf8 from 'crypto-js/enc-utf8';
 
 const secret = "CIPHERKEY";
 const valuesKey = "PlantAuthToken";
@@ -17,7 +18,7 @@ const encrypt = (value: string) => {
 
 const decrypt = (cipher: string) => {
   var decipher = AES.decrypt(cipher, secret);
-  return decipher.toString(CryptoJS.enc.Utf8);
+  return decipher.toString(Utf8);
 };
 
 const store = (response: AuthResponse) => {

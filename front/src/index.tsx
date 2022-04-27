@@ -12,11 +12,13 @@ const StatsPage = () => {
   const [app, setApp] = React.useState<StatsElm.Pages.Stats.App | undefined>();
   const elmRef = React.useRef(null);
 
-  const elmApp = () =>
-    StatsElm.Pages.Stats.init({
+  const elmApp = () => {
+    let model = retrieve();
+    return StatsElm.Pages.Stats.init({
       node: elmRef.current,
-      flags: retrieve(),
+      flags: model,
     });
+  };
 
   React.useEffect(() => {
     setApp(elmApp());

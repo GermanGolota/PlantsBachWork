@@ -8,10 +8,6 @@ import TypedSvg.Attributes exposing (d, fill, height, stroke, viewBox, width)
 import TypedSvg.Types exposing (Length(..), Paint(..), num, percent)
 
 
-
---width="51" height="54" viewBox="0 0 51 54"
-
-
 treeIcon : Length -> Color -> Html msg
 treeIcon treeWidth color =
     svg [ width treeWidth, height (percent 100), viewBox 0 0 51 54 ]
