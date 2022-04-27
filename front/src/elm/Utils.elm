@@ -1,4 +1,4 @@
-module Utils exposing (AlignDirection(..), fillParent, filledBackground, largeFont, mapStyles, rgba255, textAlign, textCenter, flexCenter)
+module Utils exposing (AlignDirection(..), fillParent, filledBackground, flatten, flexCenter, largeFont, mapStyles, rgba255, textAlign, textCenter, unique)
 
 import Color exposing (Color, rgba)
 import Dict exposing (Dict)
@@ -74,3 +74,23 @@ fillParent =
 
 flexCenter =
     [ style "align-items" "center", style "justify-content" "center" ]
+
+
+unique : List a -> List a
+unique l =
+    let
+        incUnique : a -> List a -> List a
+        incUnique elem lst =
+            case List.member elem lst of
+                True ->
+                    lst
+
+                False ->
+                    elem :: lst
+    in
+    List.foldr incUnique [] l
+
+
+flatten : List (List a) -> List a
+flatten plane =
+    plane |> List.foldr (++) []
