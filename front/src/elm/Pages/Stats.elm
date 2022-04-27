@@ -9,7 +9,7 @@ import Bootstrap.Table as Table
 import Html exposing (Html, text)
 import Html.Attributes
 import Json.Decode as D
-import Main exposing (baseApplication)
+import Main exposing (AuthResponse, baseApplication)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Utils exposing (AlignDirection(..), largeFont, textAlign, textCenter)
 
@@ -154,8 +154,8 @@ type alias Model =
     }
 
 
-init : String -> ( Model, Cmd Msg )
-init authToken =
+init : Maybe AuthResponse -> ( Model, Cmd Msg )
+init _ =
     ( initialModel, Cmd.none )
 
 

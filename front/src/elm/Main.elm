@@ -3,10 +3,23 @@ module Main exposing (..)
 import Browser
 import Html exposing (Html)
 import Json.Decode as D
+import Json.Decode.Pipeline exposing (required)
+
+
+type UserRole
+    = Consumer
+    | Producer
+    | Manager
+
+
+type alias AuthResponse =
+    { token : String
+    , roles : List UserRole
+    }
 
 
 type alias ApplicationConfig model msg =
-    { init : String -> ( model, Cmd msg )
+    { init : Maybe AuthResponse -> ( model, Cmd msg )
     , view : model -> Html msg
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
@@ -23,20 +36,42 @@ baseApplication config =
         }
 
 
-init : (String -> ( model, Cmd msg )) -> D.Value -> ( model, Cmd msg )
+init : (Maybe AuthResponse -> ( model, Cmd msg )) -> D.Value -> ( model, Cmd msg )
 init initFunc flags =
     let
-        authToken =
-            case D.decodeValue flagDecoder flags of
-                Ok token ->
-                    token
+        authResp =
+            case D.decodeValue submitSuccessDecoder flags of
+                Ok res ->
+                    Just res
 
                 Err _ ->
-                    ""
+                    Nothing
     in
-    initFunc authToken
+    initFunc authResp
 
 
-flagDecoder : D.Decoder String
-flagDecoder =
-    D.field "authToken" D.string
+convertRoles roleIds =
+    List.map convertRole roleIds
+
+
+convertRole : Int -> UserRole
+convertRole roleId =
+    case roleId of
+        1 ->
+            Consumer
+
+        2 ->
+            Producer
+
+        3 ->
+            Manager
+
+        _ ->
+            Consumer
+
+
+submitSuccessDecoder : D.Decoder AuthResponse
+submitSuccessDecoder =
+    D.map2 AuthResponse
+        (D.field "token" D.string)
+        (D.field "roles" (D.list D.int) |> D.map convertRoles)

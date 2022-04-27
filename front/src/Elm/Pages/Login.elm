@@ -18,17 +18,11 @@ import Http as Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
 import Json.Encode as E
-import Main exposing (baseApplication)
+import Main exposing (AuthResponse, UserRole(..), baseApplication, submitSuccessDecoder)
 import Svg exposing (Svg, image, svg)
 import Svg.Attributes exposing (height, width)
 import TypedSvg.Types exposing (px)
 import Utils exposing (fillParent, filledBackground, flexCenter, mapStyles, rgba255, textCenter)
-
-
-type UserRole
-    = Consumer
-    | Producer
-    | Manager
 
 
 encodeResponse : AuthResponse -> E.Value
@@ -52,12 +46,6 @@ roleToValue role =
 port notifyLoggedIn : E.Value -> Cmd msg
 
 
-type alias AuthResponse =
-    { token : String
-    , roles : List UserRole
-    }
-
-
 credsEncoded : Model -> E.Value
 credsEncoded model =
     let
@@ -68,33 +56,6 @@ credsEncoded model =
     in
     list
         |> E.object
-
-
-convertRoles roleIds =
-    List.map convertRole roleIds
-
-
-convertRole : Int -> UserRole
-convertRole roleId =
-    case roleId of
-        1 ->
-            Consumer
-
-        2 ->
-            Producer
-
-        3 ->
-            Manager
-
-        _ ->
-            Consumer
-
-
-submitSuccessDecoder : D.Decoder AuthResponse
-submitSuccessDecoder =
-    D.map2 AuthResponse
-        (D.field "token" D.string)
-        (D.field "roles" (D.list D.int) |> D.map convertRoles)
 
 
 submit : Model -> Cmd Msg
@@ -130,7 +91,7 @@ type Msg
     | SubmitRequest (Result Http.Error AuthResponse)
 
 
-init : String -> ( Model, Cmd Msg )
+init : Maybe AuthResponse -> ( Model, Cmd Msg )
 init _ =
     ( Model "" "" Unknown, Cmd.none )
 

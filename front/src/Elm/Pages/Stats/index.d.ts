@@ -6,7 +6,9 @@ export namespace Elm {
   namespace Pages.Stats {
     export interface App {
       ports: {
-        
+        notifyLoggedIn: {
+          subscribe(callback: (data: unknown) => void): void
+        }
       };
     }
     export function init(options: {

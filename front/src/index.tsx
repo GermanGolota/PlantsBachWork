@@ -6,28 +6,21 @@ import { Elm as LoginElm } from "./Elm/Pages/Login";
 import "./assets/tree.svg";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-
-const tokenName = "PlantAuthToken";
+import { AuthResponse, retrieve, store } from "./Store";
 
 const StatsPage = () => {
   const [app, setApp] = React.useState<StatsElm.Pages.Stats.App | undefined>();
   const elmRef = React.useRef(null);
 
   const elmApp = () =>
-    StatsElm.Pages.Stats.init({ node: elmRef.current, flags: 12 });
+    StatsElm.Pages.Stats.init({
+      node: elmRef.current,
+      flags: retrieve(),
+    });
 
   React.useEffect(() => {
     setApp(elmApp());
   }, []);
-
-  /*
-  // Subscribe to state changes from Elm
-  React.useEffect(() => {
-    app &&
-      app.ports.updateCountInReact.subscribe((newCount) => {
-        setCount(newCount);
-      });
-  }, [app]);*/
 
   return <div ref={elmRef}></div>;
 };
@@ -39,21 +32,21 @@ const LoginPage = () => {
   const elmApp = () =>
     LoginElm.Pages.Login.init({
       node: elmRef.current,
-      flags: localStorage.getItem(tokenName),
+      flags: null,
     });
 
   React.useEffect(() => {
     setApp(elmApp());
   }, []);
 
-  /*
   // Subscribe to state changes from Elm
   React.useEffect(() => {
     app &&
-      app.ports.updateCountInReact.subscribe((newCount) => {
-        setCount(newCount);
+      app.ports.notifyLoggedIn.subscribe((userModel) => {
+        let model = userModel as AuthResponse;
+        store(model);
       });
-  }, [app]);*/
+  }, [app]);
 
   return <div ref={elmRef}></div>;
 };
