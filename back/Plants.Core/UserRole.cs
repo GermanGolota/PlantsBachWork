@@ -2,6 +2,8 @@
 {
     public enum UserRole
     {
-        Consumer, Producer, Manager
+        Consumer = 1,
+        Producer = 2,
+        Manager = 3
     }
 }
