@@ -1,3 +1,57 @@
+--Lab 4
+CREATE OR REPLACE VIEW plant_stats_v AS (
+  WITH gToInstruction AS (
+    SELECT
+      plant_group_id AS gid,
+      Count(*) AS cnt
+    FROM
+      plant_caring_instruction
+    GROUP BY
+      plant_group_id),
+    gToPlants AS (
+      SELECT
+        group_id AS gid,
+        Count(*) AS cnt
+      FROM
+        plant
+      GROUP BY
+        group_id),
+      gToIncome AS (
+        SELECT
+          p.group_id AS gid,
+          SUM(price) AS total
+        FROM
+          plant_shipment s
+          JOIN plant_order o ON o.post_id = s.order_id
+          JOIN plant_post po ON po.plant_id = o.post_id
+          JOIN plant p ON p.id = po.plant_id
+        GROUP BY
+          group_id),
+        gToPopularity AS (
+          SELECT
+            p.group_id AS gid,
+            COUNT(*) AS total
+          FROM
+            plant_order o
+            JOIN plant_post po ON po.plant_id = o.post_id
+            JOIN plant p ON p.id = po.plant_id
+          GROUP BY
+            group_id
+)
+          SELECT
+            g.id,
+            g.group_name,
+            p.cnt AS plants_count,
+            p2.total AS popularity,
+            i.total AS income,
+            i2.cnt AS instructions
+          FROM
+            gToPlants p
+            JOIN gToPopularity p2 USING (gid)
+            JOIN gToIncome i USING (gid)
+            JOIN gToInstruction i2 USING (gid)
+            JOIN plant_group g ON g.id = (gid));
+
 --Part of Lab5
 CREATE GROUP consumer;
 
@@ -305,6 +359,7 @@ CREATE TRIGGER plant_instruction_reject_no_soils
 
 CREATE OR REPLACE FUNCTION get_financial (start_date date, end_date date)
   RETURNS TABLE (
+    groudId int,
     group_name text,
     sold_count bigint,
     percent_sold numeric,
@@ -321,7 +376,7 @@ BEGIN
         s.order_id IS NULL
         OR s.shipped BETWEEN start_date AND end_date GROUP BY p.group_id)
     SELECT
-      g.group_name, count(*) AS sold_count, round((count(*) * 1.0 / pc.total) * 100) AS percent_sold, sum(p.price) AS income FROM plant pl
+      g.id, g.group_name, count(*) AS sold_count, round((count(*) * 1.0 / pc.total) * 100) AS percent_sold, sum(p.price) AS income FROM plant pl
     JOIN plant_post p ON p.plant_id = pl.id
     JOIN plant_order o ON o.post_id = p.plant_id
     JOIN plant_shipment s ON s.order_id = o.post_id
