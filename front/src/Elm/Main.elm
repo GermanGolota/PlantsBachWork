@@ -5,6 +5,7 @@ import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (href)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
+import Utils exposing (intersect)
 
 
 type UserRole
@@ -86,13 +87,9 @@ type ModelBase model
 
 initBase : List UserRole -> ( model, Cmd msg ) -> Maybe AuthResponse -> ( ModelBase model, Cmd msg )
 initBase requiredRoles initialModel response =
-    let
-        roleInRequired role =
-            List.member role requiredRoles
-    in
     case response of
         Just resp ->
-            if List.any roleInRequired resp.roles then
+            if intersect requiredRoles resp.roles then
                 ( Authorized <| Tuple.first initialModel, Tuple.second initialModel )
 
             else

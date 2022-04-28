@@ -15,9 +15,10 @@ import Iso8601 exposing (toTime)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
+import NavBar exposing (navView, statsLink)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Time
-import Utils exposing (AlignDirection(..), flatten, itself, largeFont, textAlign, textCenter, unique, viewLoading)
+import Utils exposing (AlignDirection(..), fillParent, flatten, itself, largeFont, textAlign, textCenter, unique, viewLoading)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -242,12 +243,16 @@ viewMain model =
                 Financials _ ->
                     "Financials"
     in
-    Grid.container
-        []
-        [ getSwitchButtonFor model
-        , h1 [ textCenter ] [ text localizedTitle ]
-        , localizedView
-        ]
+    navView
+        (Just
+            statsLink
+        )
+        (div fillParent
+            [ getSwitchButtonFor model
+            , h1 [ textCenter ] [ text localizedTitle ]
+            , localizedView
+            ]
+        )
 
 
 viewFinancials : FinancialViewType -> Html Msg
@@ -520,6 +525,14 @@ init response =
 
                 Nothing ->
                     ""
+
+        roles =
+            case response of
+                Just item ->
+                    item.roles
+
+                Nothing ->
+                    []
 
         pair =
             initBase [ Manager ] ( Totals Loading, getTotals token ) response

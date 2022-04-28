@@ -1,11 +1,11 @@
-import React from "react";
-import ReactDOM from "react-dom";
+import React from "react";import ReactDOM from "react-dom";
 import { Route, Link, BrowserRouter, Router, Routes } from "react-router-dom";
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
 import "./assets/tree.svg";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import "./main.css";
 import { AuthResponse, retrieve, store } from "./Store";
 
 const StatsPage = () => {

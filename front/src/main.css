@@ -1,0 +1,8 @@
+a {
+  color: inherit; /* blue colors for links too */
+  text-decoration: inherit; /* no underline */
+}
+
+.nav-bar-item:hover{
+  background-color: var(--bs-gray);
+}

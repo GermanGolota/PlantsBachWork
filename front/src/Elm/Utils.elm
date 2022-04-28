@@ -1,4 +1,4 @@
-module Utils exposing (AlignDirection(..), fillParent, filledBackground, flatten, flexCenter, itself, largeFont, mapStyles, rgba255, textAlign, textCenter, unique, viewLoading)
+module Utils exposing (..)
 
 import Bootstrap.Spinner as Spinner
 import Bootstrap.Text as Text
@@ -130,3 +130,12 @@ viewLoading =
 itself : a -> a
 itself item =
     item
+
+
+intersect : List a -> List a -> Bool
+intersect first second =
+    let
+        inFirst member =
+            List.member member first
+    in
+    List.any inFirst second
