@@ -43,8 +43,9 @@ BEGIN
     JOIN plant_group g ON g.id = p.group_id
     JOIN plant_soil s ON s.id = p.soil_id
     LEFT JOIN plant_to_image i ON i.plant_id = p.id
+	LEFT JOIN plant_order o on o.post_id = p.id
   WHERE
-    1 = 1
+    o.customer_id is null
     AND (plantName IS NULL
       OR to_tsvector(se.plant_name) @@ to_tsquery(plantName))
     AND (priceRangeBottom IS NULL
