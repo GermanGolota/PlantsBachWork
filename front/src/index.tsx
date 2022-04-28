@@ -1,12 +1,36 @@
-import React from "react";import ReactDOM from "react-dom";
+import React from "react";
+import ReactDOM from "react-dom";
 import { Route, Link, BrowserRouter, Router, Routes } from "react-router-dom";
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
+import { Elm as SearchElm } from "./Elm/Pages/Search";
 import "./assets/tree.svg";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./main.css";
 import { AuthResponse, retrieve, store } from "./Store";
+
+const SearchPage = () => {
+  const [app, setApp] = React.useState<
+    SearchElm.Pages.Search.App | undefined
+  >();
+  const elmRef = React.useRef(null);
+
+  const elmApp = () => {
+    let model = retrieve();
+
+    return SearchElm.Pages.Search.init({
+      node: elmRef.current,
+      flags: model,
+    });
+  };
+
+  React.useEffect(() => {
+    setApp(elmApp());
+  }, []);
+
+  return <div ref={elmRef}></div>;
+};
 
 const StatsPage = () => {
   const [app, setApp] = React.useState<StatsElm.Pages.Stats.App | undefined>();
@@ -68,6 +92,7 @@ const App = () => (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/stats" element={<StatsPage />} />
+      <Route path="/search" element={<SearchPage />} />
     </Routes>
   </BrowserRouter>
 );

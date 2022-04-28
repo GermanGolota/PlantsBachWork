@@ -23,7 +23,7 @@ type alias Link =
 
 allLinks : List Link
 allLinks =
-    [ Link "/search" "Find" "fa-solid fa-magnifying-glass" Nothing
+    [ searchLink
     , Link "/plants" "Plants" "fa-solid fa-bucket" <| Just [ Manager, Producer ]
     , Link "/orders" "Orders" "fa-solid fa-bag-shopping" Nothing
     , Link "/instructions" "Instructions" "fa-solid fa-book" Nothing
@@ -34,6 +34,10 @@ allLinks =
 
 statsLink =
     Link "/stats" "Statistics" "fa-solid fa-chart-pie" <| Just [ Manager ]
+
+
+searchLink =
+    Link "/search" "Find" "fa-solid fa-magnifying-glass" Nothing
 
 
 getLinksFor : List UserRole -> List Link
