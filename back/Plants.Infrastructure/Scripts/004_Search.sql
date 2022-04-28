@@ -1,0 +1,66 @@
+CREATE OR REPLACE VIEW plant_search_v AS
+SELECT
+  p.id,
+  p.plant_name,
+  po.price,
+  p.created,
+  gr.id AS group_id,
+  s.id AS soil_id,
+  array_agg(DISTINCT rg.id) AS regions
+FROM
+  plant_post po
+  JOIN plant p ON p.id = po.plant_id
+  JOIN plant_group gr ON gr.id = p.group_id
+  JOIN plant_soil s ON s.id = p.soil_id
+  JOIN plant_to_region prg ON prg.plant_id = p.id
+  JOIN plant_region rg ON rg.id = prg.plant_region_id
+GROUP BY
+  p.id,
+  gr.id,
+  s.id,
+  po.price;
+
+--this would search plant table for provided values
+--would skip search by specific field when null value is provided
+CREATE OR REPLACE FUNCTION search_plant (plantName text, priceRangeBottom integer, priceRangeTop integer, lastDate timestamp without time zone, groupIds integer[], soilIds integer[], regionIds integer[])
+  RETURNS TABLE (
+    id integer,
+    plant_name text,
+    description text,
+    imageIds integer[]
+  )
+  AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    p.id,
+    p.plant_name,
+    p.description,
+    array_remove(array_agg(i.relation_id), NULL)
+  FROM
+    plant_search_v s
+    JOIN plant p ON p.id = s.id
+    LEFT JOIN plant_to_image i ON i.plant_id = p.id
+  WHERE
+    1 = 1
+    AND (plantName IS NULL
+      OR to_tsvector(s.plant_name) @@ to_tsquery(plantName))
+    AND (priceRangeBottom IS NULL
+      OR s.price <= priceRangeBottom)
+    AND (priceRangeTop IS NULL
+      OR s.price >= priceRangeTop)
+    AND (lastDate IS NULL
+      OR s.created >= lastDate)
+    AND (groupIds IS NULL
+      OR s.group_id = ANY (groupIds))
+    AND (soilIds IS NULL
+      OR s.soil_id = ANY (soilIds))
+    --&& means intersection
+    AND (regionIds IS NULL
+      OR regionIds && s.regions)
+  GROUP BY
+    p.id;
+END;
+$$
+LANGUAGE plpgsql;
+
