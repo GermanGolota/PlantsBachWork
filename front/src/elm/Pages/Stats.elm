@@ -11,10 +11,12 @@ import Endpoints exposing (Endpoint(..), getAuthed)
 import Html exposing (Html, div, h1, i, text)
 import Html.Attributes exposing (class, style)
 import Http
+import Iso8601 exposing (toTime)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import PieChart exposing (Msg(..), pieChartWithLabel)
+import Time
 import Utils exposing (AlignDirection(..), flatten, itself, largeFont, textAlign, textCenter, unique, viewLoading)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -38,10 +40,29 @@ update msg model =
         switchView viewType =
             case viewType of
                 Totals _ ->
-                    initialFinancial
+                    ( Financials NoDateSelected, Cmd.none )
 
                 Financials _ ->
-                    Totals Loading
+                    ( Totals Loading, getTotals model.token )
+
+        mapView viewType =
+            replaceModel (Authorized viewType) model.token
+
+        convertToTime dateStr =
+            Time.posixToMillis <| Result.withDefault (Time.millisToPosix 0) (toTime dateStr)
+
+        datesValid from to =
+            convertToTime from <= convertToTime to
+
+        buildFinancial viewType =
+            replaceModel (Authorized <| Financials viewType) model.token
+
+        updateOnDate from to token =
+            if datesValid from to then
+                ( buildFinancial (BothSelected from to (ValidDates Loading)), getFin from to token )
+
+            else
+                ( buildFinancial (BothSelected from to BadDates), Cmd.none )
     in
     case ( msg, model.view ) of
         ( PieEvent pieEvent, Authorized (Totals (Loaded viewType)) ) ->
@@ -56,7 +77,7 @@ update msg model =
                     in
                     ( replaceModel totals model.token, Cmd.none )
 
-        ( PieEvent pieEvent, Authorized (Financials fin) ) ->
+        ( PieEvent pieEvent, Authorized (Financials (BothSelected from to (ValidDates (Loaded fin)))) ) ->
             case pieEvent of
                 ChartItemClicked plantId ->
                     let
@@ -64,12 +85,12 @@ update msg model =
                             List.head <| List.filter (\item -> item.id == id) fin.items
 
                         finA =
-                            Authorized <| Financials { fin | selectedItem = getById plantId }
+                            Authorized <| Financials <| BothSelected from to <| ValidDates <| Loaded { fin | selectedItem = getById plantId }
                     in
                     ( replaceModel finA model.token, Cmd.none )
 
         ( Switched, Authorized viewType ) ->
-            ( replaceModel (Authorized <| switchView viewType) model.token, Cmd.none )
+            Tuple.mapFirst mapView (switchView viewType)
 
         ( GotTotals (Ok res), Authorized (Totals _) ) ->
             ( replaceModel (Authorized <| Totals <| Loaded <| TotalsView res Nothing) model.token, Cmd.none )
@@ -77,11 +98,29 @@ update msg model =
         ( GotTotals (Err err), Authorized (Totals _) ) ->
             ( replaceModel (Authorized <| Totals <| Error) model.token, Cmd.none )
 
-        ( DateLeftSelected date, Authorized (Financials fin) ) ->
-            ( replaceModel (Authorized <| Financials <| { fin | dateLeft = date }) model.token, Cmd.none )
+        ( DateLeftSelected date, Authorized (Financials NoDateSelected) ) ->
+            ( replaceModel (Authorized <| Financials <| OnlyLeftSelected date) model.token, Cmd.none )
 
-        ( DateRightSelected date, Authorized (Financials fin) ) ->
-            ( replaceModel (Authorized <| Financials <| { fin | dateRight = date }) model.token, Cmd.none )
+        ( DateRightSelected date, Authorized (Financials NoDateSelected) ) ->
+            ( replaceModel (Authorized <| Financials <| OnlyRightSelected date) model.token, Cmd.none )
+
+        ( DateLeftSelected left, Authorized (Financials (OnlyRightSelected right)) ) ->
+            updateOnDate left right model.token
+
+        ( DateLeftSelected left, Authorized (Financials (BothSelected oldLeft right _)) ) ->
+            updateOnDate left right model.token
+
+        ( DateRightSelected right, Authorized (Financials (OnlyLeftSelected left)) ) ->
+            updateOnDate left right model.token
+
+        ( DateRightSelected right, Authorized (Financials (BothSelected left oldRight _)) ) ->
+            updateOnDate left right model.token
+
+        ( GotFinancial (Ok res), Authorized (Financials (BothSelected left right (ValidDates _))) ) ->
+            ( replaceModel (Authorized <| Financials <| BothSelected left right <| ValidDates <| Loaded <| FinancialView res Nothing) model.token, Cmd.none )
+
+        ( GotFinancial (Err err), Authorized (Financials (BothSelected left right (ValidDates _))) ) ->
+            ( replaceModel (Authorized <| Financials <| BothSelected left right <| ValidDates <| Error) model.token, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -211,8 +250,29 @@ viewMain model =
         ]
 
 
-viewFinancials : FinancialView -> Html Msg
+viewFinancials : FinancialViewType -> Html Msg
 viewFinancials fin =
+    let
+        bodyView =
+            case fin of
+                BothSelected from to viewType ->
+                    case viewType of
+                        BadDates ->
+                            div [] [ text "Dates do not match" ]
+
+                        ValidDates data ->
+                            viewWebdata data viewFinancialsMain
+
+                _ ->
+                    div [] []
+    in
+    Grid.container
+        []
+        [ div [] [ datesRow, bodyView ] ]
+
+
+viewFinancialsMain : FinancialView -> Html Msg
+viewFinancialsMain fin =
     let
         items =
             fin.items
@@ -220,10 +280,8 @@ viewFinancials fin =
         selectedTable item =
             viewSelected item.text ( "Income", item.income ) ( "Sold %", item.percentSold ) ( "Sold Count", item.soldCount )
     in
-    Grid.container
-        []
-        [ div [] [ datesRow ]
-        , Html.map
+    div []
+        [ Html.map
             convertToEvent
             (viewPies <| getSlicesForFinancial items)
         , viewSelectedBase fin.selectedItem selectedTable
@@ -331,33 +389,6 @@ convertToEvent msg =
     PieEvent msg
 
 
-
---Model
-
-
-type View
-    = Totals (WebData TotalsView)
-    | Financials FinancialView
-
-
-type alias TotalsView =
-    { items : List TotalsPieItem
-    , selectedItem : Maybe TotalsPieItem
-    }
-
-
-type alias TotalsPieItem =
-    { id : Int, text : String, income : Float, instructions : Float, popularity : Float }
-
-
-type alias PieSlice =
-    { id : Int
-    , text : String
-    , value : Float
-    , name : String
-    }
-
-
 getSlicesForTotals : List TotalsPieItem -> List PieSlice
 getSlicesForTotals pies =
     flatten <| List.map getSlices pies
@@ -383,13 +414,50 @@ getSlicesF item =
         base val text =
             PieSlice item.id item.text val text
     in
-    [ base item.income "Income", base item.percentSold "Sold %", base item.soldCount "Sold number" ]
+    [ base item.income "Income", base item.percentSold "Sold %", base item.soldCount "Sold Count" ]
+
+
+
+--Model
+
+
+type View
+    = Totals (WebData TotalsView)
+    | Financials FinancialViewType
+
+
+type alias TotalsView =
+    { items : List TotalsPieItem
+    , selectedItem : Maybe TotalsPieItem
+    }
+
+
+type alias TotalsPieItem =
+    { id : Int, text : String, income : Float, instructions : Float, popularity : Float }
+
+
+type alias PieSlice =
+    { id : Int
+    , text : String
+    , value : Float
+    , name : String
+    }
+
+
+type FinancialViewType
+    = NoDateSelected
+    | OnlyLeftSelected String
+    | OnlyRightSelected String
+    | BothSelected String String BothSelectedViewType
+
+
+type BothSelectedViewType
+    = ValidDates (WebData FinancialView)
+    | BadDates
 
 
 type alias FinancialView =
-    { dateLeft : String
-    , dateRight : String
-    , items : List FinancialPieItem
+    { items : List FinancialPieItem
     , selectedItem : Maybe FinancialPieItem
     }
 
@@ -405,12 +473,17 @@ type alias Model =
 
 
 
---decoder
+--decoders
 
 
 totalsDecoder : D.Decoder (List TotalsPieItem)
 totalsDecoder =
     D.field "groups" <| D.list totalItemDecoder
+
+
+financialDecoder : D.Decoder (List FinancialPieItem)
+financialDecoder =
+    D.field "groups" <| D.list financialItemDecoder
 
 
 totalItemDecoder : D.Decoder TotalsPieItem
@@ -428,9 +501,9 @@ financialItemDecoder =
     D.succeed FinancialPieItem
         |> required "groupId" D.int
         |> required "groupName" D.string
-        |> required "income" D.float
         |> required "soldCount" D.float
         |> required "percentSold" D.float
+        |> required "income" D.float
 
 
 
@@ -454,7 +527,7 @@ init response =
         mapModel viewType =
             replaceModel viewType token
     in
-    Tuple.mapBoth mapModel itself pair
+    Tuple.mapFirst mapModel pair
 
 
 getTotals : String -> Cmd Msg
@@ -466,22 +539,9 @@ getTotals token =
 --getAuthed
 
 
-getFin : Cmd Msg
-getFin =
-    Cmd.none
-
-
-initialFinancial : View
-initialFinancial =
-    Financials <|
-        FinancialView ""
-            ""
-            [ FinancialPieItem 1 "Apple" 100 25 5
-            , FinancialPieItem 2 "Plum" 32 14 6
-            , FinancialPieItem 3 "Cherry" 15 15 3
-            , FinancialPieItem 4 "Cactus" 20 20 1
-            ]
-            Nothing
+getFin : String -> String -> String -> Cmd Msg
+getFin from to token =
+    Endpoints.getAuthedQuery ("?from=" ++ from ++ "&to=" ++ to) token StatsFinancial (Http.expectJson GotFinancial financialDecoder) Nothing
 
 
 subscriptions : Model -> Sub Msg

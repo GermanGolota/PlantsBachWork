@@ -1,4 +1,4 @@
-module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, postAuthed)
+module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, postAuthed)
 
 import Http exposing (header, request)
 
@@ -11,6 +11,7 @@ baseUrl =
 type Endpoint
     = Login
     | StatsTotal
+    | StatsFinancial
 
 
 endpointToUrl : Endpoint -> String
@@ -22,6 +23,9 @@ endpointToUrl endpoint =
         StatsTotal ->
             baseUrl ++ "stats/total"
 
+        StatsFinancial ->
+            baseUrl ++ "stats/financial"
+
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg
 postAuthed token endpoint body expect timeout =
@@ -31,6 +35,11 @@ postAuthed token endpoint body expect timeout =
 getAuthed : String -> Endpoint -> Http.Expect msg -> Maybe Float -> Cmd msg
 getAuthed token endpoint expect timeout =
     baseRequest "GET" token (endpointToUrl endpoint) Http.emptyBody expect timeout Nothing
+
+
+getAuthedQuery : String -> String -> Endpoint -> Http.Expect msg -> Maybe Float -> Cmd msg
+getAuthedQuery query token endpoint expect timeout =
+    baseRequest "GET" token (endpointToUrl endpoint ++ query) Http.emptyBody expect timeout Nothing
 
 
 baseRequest : String -> String -> String -> Http.Body -> Http.Expect msg -> Maybe Float -> Maybe String -> Cmd msg
