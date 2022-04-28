@@ -16,6 +16,7 @@ import Json.Decode.Pipeline exposing (hardcoded, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Utils exposing (AlignDirection(..), flatten, itself, largeFont, textAlign, textCenter, unique, viewLoading)
+import Webdata exposing (WebData(..), viewWebdata)
 
 
 
@@ -189,7 +190,7 @@ viewMain model =
         localizedView =
             case model of
                 Totals totals ->
-                    viewTotals totals
+                    viewWebdata totals viewTotalsMain
 
                 Financials financials ->
                     viewFinancials financials
@@ -261,19 +262,6 @@ getSwitchButtonFor viewType =
         , text buttonText
         , rightIcon
         ]
-
-
-viewTotals : TotalsViewType -> Html Msg
-viewTotals model =
-    case model of
-        Loading ->
-            viewLoading
-
-        Error ->
-            div [] [ text "Something went wrong while loading data" ]
-
-        Loaded fullModel ->
-            viewTotalsMain fullModel
 
 
 viewTotalsMain : TotalsView -> Html Msg
@@ -348,14 +336,8 @@ convertToEvent msg =
 
 
 type View
-    = Totals TotalsViewType
+    = Totals (WebData TotalsView)
     | Financials FinancialView
-
-
-type TotalsViewType
-    = Loading
-    | Loaded TotalsView
-    | Error
 
 
 type alias TotalsView =
