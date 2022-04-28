@@ -10,7 +10,7 @@ import Html exposing (Html, a, div, i, text)
 import Html.Attributes exposing (class, href, style)
 import Main exposing (UserRole(..))
 import TypedSvg.Types exposing (px)
-import Utils exposing (fillParent, fillScreen, intersect, largeFont)
+import Utils exposing (fillParent, fillScreen, flex, intersect, largeFont, smallMargin)
 
 
 type alias Link =
@@ -115,12 +115,3 @@ userView username =
         [ i [ class "fa-solid fa-user", style "margin-right" "2em", smallMargin ] []
         , text username
         ]
-
-
-flex : Html.Attribute msg
-flex =
-    style "display" "flex"
-
-
-smallMargin =
-    style "margin" "0.5em"

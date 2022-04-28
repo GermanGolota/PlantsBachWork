@@ -124,7 +124,7 @@ viewLoading =
         spiners =
             List.map spiner colors
     in
-    Html.div (fillParent ++ [ style "display" "flex" ] ++ flexCenter) spiners
+    Html.div (fillParent ++ [ flex ] ++ flexCenter) spiners
 
 
 itself : a -> a
@@ -139,3 +139,13 @@ intersect first second =
             List.member member first
     in
     List.any inFirst second
+
+
+flex : Html.Attribute msg
+flex =
+    style "display" "flex"
+
+
+smallMargin : Html.Attribute msg
+smallMargin =
+    style "margin" "0.5em"
