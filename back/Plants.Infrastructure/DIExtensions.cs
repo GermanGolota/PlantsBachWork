@@ -43,6 +43,7 @@ namespace Plants.Infrastructure
             services.AddScoped<PlantsContextFactory>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IStatsService, StatsService>();
+            services.AddScoped<ISearchService, SearchService>();
             return services;
         }
 
