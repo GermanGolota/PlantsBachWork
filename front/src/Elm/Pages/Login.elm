@@ -11,7 +11,7 @@ import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Color exposing (Color, rgba, toCssString)
 import Dict
-import Endpoints exposing (loginUrl)
+import Endpoints exposing (Endpoint(..), endpointToUrl)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (attribute, for, style)
 import Http as Http
@@ -92,7 +92,7 @@ submit model =
             credsEncoded model |> Http.jsonBody
     in
     Http.post
-        { url = loginUrl
+        { url = endpointToUrl Login
         , body = body
         , expect = Http.expectJson SubmitRequest submitSuccessDecoder
         }
