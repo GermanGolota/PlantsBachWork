@@ -10,9 +10,15 @@ import Dict exposing (Dict)
 import Html exposing (Html, div, h1, i, text)
 import Html.Attributes exposing (class, style)
 import Json.Decode as D
+import Json.Decode.Pipeline exposing (hardcoded, required)
+import Json.Encode as E
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Utils exposing (AlignDirection(..), flatten, largeFont, textAlign, textCenter, unique)
+
+
+
+--update
 
 
 type Msg
@@ -20,11 +26,6 @@ type Msg
     | Switched
     | DateLeftSelected String
     | DateRightSelected String
-
-
-dateInput : (String -> msg) -> Html msg
-dateInput onInput =
-    Input.date [ Input.onInput onInput ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -68,6 +69,15 @@ update msg model =
 
         ( _, _ ) ->
             ( model, Cmd.none )
+
+
+
+--view
+
+
+dateInput : (String -> msg) -> Html msg
+dateInput onInput =
+    Input.date [ Input.onInput onInput ]
 
 
 viewPies : List PieSlice -> Html PieChart.Msg
@@ -300,6 +310,10 @@ convertToEvent msg =
     PieEvent msg
 
 
+
+--Model
+
+
 type View
     = Totals TotalsView
     | Financials FinancialView
@@ -365,6 +379,10 @@ type alias FinancialPieItem =
 
 type alias Model =
     ModelBase View
+
+
+
+--init
 
 
 init : Maybe AuthResponse -> ( Model, Cmd Msg )
