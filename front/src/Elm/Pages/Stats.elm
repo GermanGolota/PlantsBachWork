@@ -1,7 +1,7 @@
 module Pages.Stats exposing (main)
 
 import Bootstrap.Button as Button
-import Bootstrap.Form.Input as Input
+import Bootstrap.Form.Input as Input exposing (date)
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
@@ -38,16 +38,13 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        switchView viewType =
+        switchView viewType token =
             case viewType of
                 Totals _ ->
                     ( Financials NoDateSelected, Cmd.none )
 
                 Financials _ ->
-                    ( Totals Loading, getTotals model.token )
-
-        mapView viewType =
-            replaceModel (Authorized viewType) model.token
+                    ( Totals Loading, getTotals token )
 
         convertToTime dateStr =
             Time.posixToMillis <| Result.withDefault (Time.millisToPosix 0) (toTime dateStr)
@@ -55,18 +52,15 @@ update msg model =
         datesValid from to =
             convertToTime from <= convertToTime to
 
-        buildFinancial viewType =
-            replaceModel (Authorized <| Financials viewType) model.token
-
         updateOnDate from to token =
             if datesValid from to then
-                ( buildFinancial (BothSelected from to (ValidDates Loading)), getFin from to token )
+                ( Authorized token <| Financials (BothSelected from to (ValidDates Loading)), getFin from to token )
 
             else
-                ( buildFinancial (BothSelected from to BadDates), Cmd.none )
+                ( Authorized token <| Financials (BothSelected from to BadDates), Cmd.none )
     in
-    case ( msg, model.view ) of
-        ( PieEvent pieEvent, Authorized (Totals (Loaded viewType)) ) ->
+    case ( msg, model ) of
+        ( PieEvent pieEvent, Authorized token (Totals (Loaded viewType)) ) ->
             case pieEvent of
                 ChartItemClicked plantId ->
                     let
@@ -74,11 +68,11 @@ update msg model =
                             List.head <| List.filter (\item -> item.id == id) viewType.items
 
                         totals =
-                            Authorized <| Totals <| Loaded { viewType | selectedItem = getById plantId }
+                            Authorized token (Totals <| Loaded { viewType | selectedItem = getById plantId })
                     in
-                    ( replaceModel totals model.token, Cmd.none )
+                    ( totals, Cmd.none )
 
-        ( PieEvent pieEvent, Authorized (Financials (BothSelected from to (ValidDates (Loaded fin)))) ) ->
+        ( PieEvent pieEvent, Authorized token (Financials (BothSelected from to (ValidDates (Loaded fin)))) ) ->
             case pieEvent of
                 ChartItemClicked plantId ->
                     let
@@ -86,50 +80,45 @@ update msg model =
                             List.head <| List.filter (\item -> item.id == id) fin.items
 
                         finA =
-                            Authorized <| Financials <| BothSelected from to <| ValidDates <| Loaded { fin | selectedItem = getById plantId }
+                            Authorized token (Financials <| BothSelected from to <| ValidDates <| Loaded { fin | selectedItem = getById plantId })
                     in
-                    ( replaceModel finA model.token, Cmd.none )
+                    ( finA, Cmd.none )
 
-        ( Switched, Authorized viewType ) ->
-            Tuple.mapFirst mapView (switchView viewType)
+        ( Switched, Authorized token viewType ) ->
+            Tuple.mapFirst (\viewType2 -> Authorized token viewType2) (switchView viewType token)
 
-        ( GotTotals (Ok res), Authorized (Totals _) ) ->
-            ( replaceModel (Authorized <| Totals <| Loaded <| TotalsView res Nothing) model.token, Cmd.none )
+        ( GotTotals (Ok res), Authorized token (Totals _) ) ->
+            ( Authorized token (Totals <| Loaded <| TotalsView res Nothing), Cmd.none )
 
-        ( GotTotals (Err err), Authorized (Totals _) ) ->
-            ( replaceModel (Authorized <| Totals <| Error) model.token, Cmd.none )
+        ( GotTotals (Err err), Authorized token (Totals _) ) ->
+            ( Authorized token (Totals <| Error), Cmd.none )
 
-        ( DateLeftSelected date, Authorized (Financials NoDateSelected) ) ->
-            ( replaceModel (Authorized <| Financials <| OnlyLeftSelected date) model.token, Cmd.none )
+        ( DateLeftSelected date, Authorized token (Financials NoDateSelected) ) ->
+            ( Authorized token <| Financials <| OnlyLeftSelected date, Cmd.none )
 
-        ( DateRightSelected date, Authorized (Financials NoDateSelected) ) ->
-            ( replaceModel (Authorized <| Financials <| OnlyRightSelected date) model.token, Cmd.none )
+        ( DateRightSelected date, Authorized token (Financials NoDateSelected) ) ->
+            ( Authorized token <| Financials <| OnlyRightSelected date, Cmd.none )
 
-        ( DateLeftSelected left, Authorized (Financials (OnlyRightSelected right)) ) ->
-            updateOnDate left right model.token
+        ( DateLeftSelected left, Authorized token (Financials (OnlyRightSelected right)) ) ->
+            updateOnDate left right token
 
-        ( DateLeftSelected left, Authorized (Financials (BothSelected oldLeft right _)) ) ->
-            updateOnDate left right model.token
+        ( DateLeftSelected left, Authorized token (Financials (BothSelected oldLeft right _)) ) ->
+            updateOnDate left right token
 
-        ( DateRightSelected right, Authorized (Financials (OnlyLeftSelected left)) ) ->
-            updateOnDate left right model.token
+        ( DateRightSelected right, Authorized token (Financials (OnlyLeftSelected left)) ) ->
+            updateOnDate left right token
 
-        ( DateRightSelected right, Authorized (Financials (BothSelected left oldRight _)) ) ->
-            updateOnDate left right model.token
+        ( DateRightSelected right, Authorized token (Financials (BothSelected left oldRight _)) ) ->
+            updateOnDate left right token
 
-        ( GotFinancial (Ok res), Authorized (Financials (BothSelected left right (ValidDates _))) ) ->
-            ( replaceModel (Authorized <| Financials <| BothSelected left right <| ValidDates <| Loaded <| FinancialView res Nothing) model.token, Cmd.none )
+        ( GotFinancial (Ok res), Authorized token (Financials (BothSelected left right (ValidDates _))) ) ->
+            ( Authorized token <| Financials <| BothSelected left right <| ValidDates <| Loaded <| FinancialView res Nothing, Cmd.none )
 
-        ( GotFinancial (Err err), Authorized (Financials (BothSelected left right (ValidDates _))) ) ->
-            ( replaceModel (Authorized <| Financials <| BothSelected left right <| ValidDates <| Error) model.token, Cmd.none )
+        ( GotFinancial (Err err), Authorized token (Financials (BothSelected left right (ValidDates _))) ) ->
+            ( Authorized token <| Financials <| BothSelected left right <| ValidDates <| Error, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
-
-
-replaceModel : ModelBase View -> String -> Model
-replaceModel model token =
-    { view = model, token = token }
 
 
 
@@ -221,7 +210,7 @@ viewRow key value =
 
 view : Model -> Html.Html Msg
 view model =
-    viewBase viewMain model.view
+    viewBase viewMain model
 
 
 viewMain : View -> Html Msg
@@ -472,9 +461,7 @@ type alias FinancialPieItem =
 
 
 type alias Model =
-    { view : ModelBase View
-    , token : String
-    }
+    ModelBase View
 
 
 
@@ -533,14 +520,8 @@ init response =
 
                 Nothing ->
                     []
-
-        pair =
-            initBase [ Manager ] ( Totals Loading, getTotals token ) response
-
-        mapModel viewType =
-            replaceModel viewType token
     in
-    Tuple.mapFirst mapModel pair
+    initBase [ Manager ] ( Totals Loading, getTotals token ) response
 
 
 getTotals : String -> Cmd Msg
