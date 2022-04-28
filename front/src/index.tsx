@@ -14,6 +14,7 @@ const StatsPage = () => {
 
   const elmApp = () => {
     let model = retrieve();
+
     return StatsElm.Pages.Stats.init({
       node: elmRef.current,
       flags: model,
