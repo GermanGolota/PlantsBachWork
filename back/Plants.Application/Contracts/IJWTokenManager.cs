@@ -1,10 +1,9 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using Plants.Core;
 
 namespace Plants.Application.Contracts
 {
     public interface IJWTokenManager
     {
-        string CreateToken(string username, string password, CancellationToken cancellation);
+        string CreateToken(string username, string password, UserRole[] roles);
     }
 }

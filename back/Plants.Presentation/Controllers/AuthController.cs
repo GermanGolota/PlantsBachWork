@@ -16,6 +16,7 @@ namespace Plants.Presentation.Controllers
         {
             _mediator = mediator;
         }
+
         [HttpPost("login")]
         public async Task<ActionResult> Login(LoginRequest command, CancellationToken token)
         {

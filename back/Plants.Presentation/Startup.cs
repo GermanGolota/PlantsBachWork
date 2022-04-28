@@ -1,13 +1,16 @@
 using MediatR;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
+using Plants.Core;
 using Plants.Infrastructure;
+using Plants.Presentation.Extensions;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Plants.Presentation
 {
@@ -28,30 +31,7 @@ namespace Plants.Presentation
             services.AddMediatR(typeof(Plants.Application.AssemblyTag).Assembly);
             services.AddControllers();
             services.AddInfrastructure(Configuration);
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Plants", Version = "v1" });
-                var securityScheme = new OpenApiSecurityScheme
-                {
-                    Name = "JWT Authentication",
-                    Description = "Enter JWT Bearer token **_only_**",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.Http,
-                    Scheme = "bearer",
-                    BearerFormat = "JWT",
-                    Reference = new OpenApiReference
-                    {
-                        Id = JwtBearerDefaults.AuthenticationScheme,
-                        Type = ReferenceType.SecurityScheme
-                    }
-                };
-                c.AddSecurityDefinition(securityScheme.Reference.Id, securityScheme);
-                var requiremenets = new OpenApiSecurityRequirement
-                {
-                    {securityScheme, Array.Empty<string>()}
-                };
-                c.AddSecurityRequirement(requiremenets);
-            });
+            services.AddSwagger();
 
             services.AddCors(opt =>
             {
@@ -69,6 +49,17 @@ namespace Plants.Presentation
                         .AllowAnyMethod()
                         .AllowAnyHeader();
                 });
+            });
+
+            services.AddAuthorization(options =>
+            {
+                UserRole[] allRoles = (UserRole[])Enum.GetValues(typeof(UserRole));
+                UserRole[] passedRoles = new UserRole[allRoles.Length];
+                for (int i = 0; i < allRoles.Length; i++)
+                {
+                    var policyName = allRoles[i].ToString();
+                    options.AddPolicy(policyName, (policy) => policy.RequireClaim(policyName));
+                }
             });
         }
 

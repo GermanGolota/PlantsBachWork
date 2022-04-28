@@ -74,7 +74,7 @@ pieLabel slice label =
         , textAnchor AnchorMiddle
         , fontWeight FontWeightBold
         , fontFamily [ "Helvetica", "sans-serif" ]
-        , fontSize (rem 1.5)
+        , fontSize (rem 1.125)
         ]
         [ text label ]
 

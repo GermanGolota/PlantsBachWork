@@ -15,6 +15,18 @@ namespace Plants.Infrastructure
                 .Property(x => x.RoleName)
                 .HasColumnName("rolename")
                 .HasConversion(converter);
+            modelBuilder.Entity<PersonToLogin>()
+               .Property(x => x.Login)
+               .HasColumnName("login")
+               .HasConversion(new LoginConverter());
+        }
+    }
+
+    public class LoginConverter : ValueConverter<string, string>
+    {
+        public LoginConverter() : base(v => v, v => v)
+        {
+
         }
     }
 

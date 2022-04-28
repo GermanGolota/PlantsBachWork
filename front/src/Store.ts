@@ -27,8 +27,16 @@ const store = (response: AuthResponse) => {
 };
 
 const retrieve = (): AuthResponse => {
-  let str = decrypt(localStorage.getItem(valuesKey) ?? '');
-  return JSON.parse(str);
+  let storedVal = localStorage.getItem(valuesKey) ?? '';
+  let str = decrypt(storedVal);
+  let res;
+  if (str) {
+    res = JSON.parse(str);
+  }
+  else {
+    res = null;
+  }
+  return res;
 };
 
 export { Roles, AuthResponse, store, retrieve };

@@ -21,6 +21,7 @@ namespace Plants.Core.Entities
         public string LastName { get; set; }
         public string PhoneNumber { get; set; }
 
+        public virtual PersonToLogin PersonToLogin { get; set; }
         public virtual ICollection<DeliveryAddress> DeliveryAddresses { get; set; }
         public virtual ICollection<PlantCaringInstruction> PlantCaringInstructions { get; set; }
         public virtual ICollection<PlantOrder> PlantOrders { get; set; }

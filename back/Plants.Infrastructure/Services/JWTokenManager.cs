@@ -1,10 +1,12 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Plants.Application.Contracts;
+using Plants.Core;
 using Plants.Infrastructure.Config;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading;
@@ -23,14 +25,15 @@ namespace Plants.Infrastructure.Services
             _encrypter = encrypter;
         }
 
-        public string CreateToken(string username, string password, CancellationToken cancellation)
+        public string CreateToken(string username, string password, UserRole[] roles)
         {
             var encPassword = _encrypter.Encrypt(password);
-            var claims = new Claim[]
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Hash, encPassword),
                 new Claim(ClaimTypes.NameIdentifier, username)
             };
+            claims.AddRange(roles.Select(x => new Claim(x.ToString(), "member")));
             return CreateTokenForClaims(claims);
         }
 

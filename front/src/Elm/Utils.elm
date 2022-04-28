@@ -1,8 +1,11 @@
-module Utils exposing (AlignDirection(..), fillParent, filledBackground, largeFont, mapStyles, rgba255, textAlign, textCenter, flexCenter)
+module Utils exposing (AlignDirection(..), fillParent, filledBackground, flatten, flexCenter, itself, largeFont, mapStyles, rgba255, textAlign, textCenter, unique, viewLoading)
 
+import Bootstrap.Spinner as Spinner
+import Bootstrap.Text as Text
+import Bootstrap.Utilities.Spacing as Spacing
 import Color exposing (Color, rgba)
 import Dict exposing (Dict)
-import Html exposing (Attribute, Html, div)
+import Html exposing (Attribute, Html, a, div)
 import Html.Attributes exposing (attribute, style)
 
 
@@ -67,6 +70,11 @@ rgba255 r g b a =
     rgba (scaleFrom255 r) (scaleFrom255 g) (scaleFrom255 b) a
 
 
+fillScreen : List (Attribute msg)
+fillScreen =
+    [ style "width" "100vw", style "height" "100vh" ]
+
+
 fillParent : List (Attribute msg)
 fillParent =
     [ style "width" "100%", style "height" "100%" ]
@@ -74,3 +82,51 @@ fillParent =
 
 flexCenter =
     [ style "align-items" "center", style "justify-content" "center" ]
+
+
+unique : List a -> List a
+unique l =
+    let
+        incUnique : a -> List a -> List a
+        incUnique elem lst =
+            case List.member elem lst of
+                True ->
+                    lst
+
+                False ->
+                    elem :: lst
+    in
+    List.foldr incUnique [] l
+
+
+flatten : List (List a) -> List a
+flatten plane =
+    plane |> List.foldr (++) []
+
+
+viewLoading : Html msg
+viewLoading =
+    let
+        colors =
+            [ Text.primary
+            , Text.secondary
+            , Text.success
+            , Text.danger
+            , Text.warning
+            , Text.info
+            , Text.light
+            , Text.dark
+            ]
+
+        spiner color =
+            Spinner.spinner [ Spinner.grow, Spinner.color color, Spinner.attrs [ Spacing.ml2 ] ] []
+
+        spiners =
+            List.map spiner colors
+    in
+    Html.div (fillParent ++ [ style "display" "flex" ] ++ flexCenter) spiners
+
+
+itself : a -> a
+itself item =
+    item

@@ -10,6 +10,7 @@ namespace Plants.Core.Entities
         public int PlantId { get; set; }
         public int SellerId { get; set; }
         public decimal Price { get; set; }
+        public DateTime Created { get; set; }
 
         public virtual Plant Plant { get; set; }
         public virtual Person Seller { get; set; }

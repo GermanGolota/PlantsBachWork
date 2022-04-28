@@ -42,6 +42,7 @@ namespace Plants.Infrastructure
             services.AddHttpContextAccessor();
             services.AddScoped<PlantsContextFactory>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IStatsService, StatsService>();
             return services;
         }
 
