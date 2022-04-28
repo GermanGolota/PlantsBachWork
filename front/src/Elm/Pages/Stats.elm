@@ -54,7 +54,7 @@ update msg model =
 
         updateOnDate from to token =
             if datesValid from to then
-                ( Authorized token <| Financials (BothSelected from to (ValidDates Loading)), getFin from to token )
+                ( Authorized token <| Financials (BothSelected from to (ValidDates Loading)), getFin from to token.token )
 
             else
                 ( Authorized token <| Financials (BothSelected from to BadDates), Cmd.none )
@@ -85,7 +85,7 @@ update msg model =
                     ( finA, Cmd.none )
 
         ( Switched, Authorized token viewType ) ->
-            Tuple.mapFirst (\viewType2 -> Authorized token viewType2) (switchView viewType token)
+            Tuple.mapFirst (\viewType2 -> Authorized token viewType2) (switchView viewType token.token)
 
         ( GotTotals (Ok res), Authorized token (Totals _) ) ->
             ( Authorized token (Totals <| Loaded <| TotalsView res Nothing), Cmd.none )
@@ -213,8 +213,8 @@ view model =
     viewBase viewMain model
 
 
-viewMain : View -> Html Msg
-viewMain model =
+viewMain : AuthResponse -> View -> Html Msg
+viewMain resp model =
     let
         localizedView =
             case model of
@@ -233,6 +233,8 @@ viewMain model =
                     "Financials"
     in
     navView
+        "Username"
+        resp.roles
         (Just
             statsLink
         )

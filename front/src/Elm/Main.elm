@@ -82,7 +82,7 @@ decodeFlags =
 type ModelBase model
     = Unauthorized
     | NotLoggedIn
-    | Authorized String model
+    | Authorized AuthResponse model
 
 
 initBase : List UserRole -> ( model, Cmd msg ) -> Maybe AuthResponse -> ( ModelBase model, Cmd msg )
@@ -90,7 +90,7 @@ initBase requiredRoles initialModel response =
     case response of
         Just resp ->
             if intersect requiredRoles resp.roles then
-                ( Authorized resp.token (Tuple.first initialModel), Tuple.second initialModel )
+                ( Authorized resp (Tuple.first initialModel), Tuple.second initialModel )
 
             else
                 ( Unauthorized, Cmd.none )
@@ -99,7 +99,7 @@ initBase requiredRoles initialModel response =
             ( NotLoggedIn, Cmd.none )
 
 
-viewBase : (model -> Html msg) -> ModelBase model -> Html msg
+viewBase : (AuthResponse -> model -> Html msg) -> ModelBase model -> Html msg
 viewBase authorizedView modelB =
     case modelB of
         Unauthorized ->
@@ -111,5 +111,5 @@ viewBase authorizedView modelB =
                 , a [ href "/login" ] [ text "Go to login" ]
                 ]
 
-        Authorized _ authM ->
-            authorizedView authM
+        Authorized resp authM ->
+            authorizedView resp authM

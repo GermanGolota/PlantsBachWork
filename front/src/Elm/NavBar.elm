@@ -40,20 +40,25 @@ getLinksFor : List UserRole -> List Link
 getLinksFor roles =
     let
         roleIntersect link =
-            intersect roles <| Maybe.withDefault [] link.access
+            case link.access of
+                Nothing ->
+                    True
+
+                Just items ->
+                    intersect roles items
     in
     List.filter roleIntersect allLinks
 
 
-navView : Maybe Link -> Html msg -> Html msg
-navView currentLink baseView =
+navView : String -> List UserRole -> Maybe Link -> Html msg -> Html msg
+navView username roles currentLink baseView =
     div fillScreen
-        [ div ([ flex, Flex.row ] ++ fillParent) [ navBar currentLink, baseView ]
+        [ div ([ flex, Flex.row ] ++ fillParent) [ navBar username roles currentLink, baseView ]
         ]
 
 
-navBar : Maybe Link -> Html msg
-navBar currentLink =
+navBar : String -> List UserRole -> Maybe Link -> Html msg
+navBar username roles currentLink =
     div
         [ style "width" "25%"
         , style "height" "100%"
@@ -65,9 +70,9 @@ navBar currentLink =
                 [ div [ flex, Flex.row, Flex.justifyCenter ]
                     [ treeIcon (px 200) Color.black
                     ]
-                , linksView currentLink allLinks
+                , linksView currentLink <| getLinksFor roles
                 ]
-            , div [] [ userView "Username" ]
+            , div [] [ userView username ]
             ]
         ]
 
