@@ -7,14 +7,15 @@ import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Table as Table
 import Dict exposing (Dict)
+import Endpoints exposing (Endpoint(..), getAuthed)
 import Html exposing (Html, div, h1, i, text)
 import Html.Attributes exposing (class, style)
+import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
-import Json.Encode as E
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import PieChart exposing (Msg(..), pieChartWithLabel)
-import Utils exposing (AlignDirection(..), flatten, largeFont, textAlign, textCenter, unique)
+import Utils exposing (AlignDirection(..), flatten, itself, largeFont, textAlign, textCenter, unique, viewLoading)
 
 
 
@@ -26,6 +27,8 @@ type Msg
     | Switched
     | DateLeftSelected String
     | DateRightSelected String
+    | GotFinancial (Result Http.Error (List FinancialPieItem))
+    | GotTotals (Result Http.Error (List TotalsPieItem))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -37,17 +40,20 @@ update msg model =
                     initialFinancial
 
                 Financials _ ->
-                    initialTotals
+                    Totals Loading
     in
-    case ( msg, model ) of
-        ( PieEvent pieEvent, Authorized (Totals viewType) ) ->
+    case ( msg, model.view ) of
+        ( PieEvent pieEvent, Authorized (Totals (Loaded viewType)) ) ->
             case pieEvent of
                 ChartItemClicked plantId ->
                     let
                         getById id =
                             List.head <| List.filter (\item -> item.id == id) viewType.items
+
+                        totals =
+                            Authorized <| Totals <| Loaded { viewType | selectedItem = getById plantId }
                     in
-                    ( Authorized <| Totals { viewType | selectedItem = getById plantId }, Cmd.none )
+                    ( replaceModel totals model.token, Cmd.none )
 
         ( PieEvent pieEvent, Authorized (Financials fin) ) ->
             case pieEvent of
@@ -55,20 +61,34 @@ update msg model =
                     let
                         getById id =
                             List.head <| List.filter (\item -> item.id == id) fin.items
+
+                        finA =
+                            Authorized <| Financials { fin | selectedItem = getById plantId }
                     in
-                    ( Authorized <| Financials { fin | selectedItem = getById plantId }, Cmd.none )
+                    ( replaceModel finA model.token, Cmd.none )
 
         ( Switched, Authorized viewType ) ->
-            ( Authorized <| switchView viewType, Cmd.none )
+            ( replaceModel (Authorized <| switchView viewType) model.token, Cmd.none )
+
+        ( GotTotals (Ok res), Authorized (Totals _) ) ->
+            ( replaceModel (Authorized <| Totals <| Loaded <| TotalsView res Nothing) model.token, Cmd.none )
+
+        ( GotTotals (Err err), Authorized (Totals _) ) ->
+            ( replaceModel (Authorized <| Totals <| Error) model.token, Cmd.none )
 
         ( DateLeftSelected date, Authorized (Financials fin) ) ->
-            ( Authorized <| Financials <| { fin | dateLeft = date }, Cmd.none )
+            ( replaceModel (Authorized <| Financials <| { fin | dateLeft = date }) model.token, Cmd.none )
 
         ( DateRightSelected date, Authorized (Financials fin) ) ->
-            ( Authorized <| Financials <| { fin | dateRight = date }, Cmd.none )
+            ( replaceModel (Authorized <| Financials <| { fin | dateRight = date }) model.token, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
+
+
+replaceModel : ModelBase View -> String -> Model
+replaceModel model token =
+    { view = model, token = token }
 
 
 
@@ -160,7 +180,7 @@ viewRow key value =
 
 view : Model -> Html.Html Msg
 view model =
-    viewBase viewMain model
+    viewBase viewMain model.view
 
 
 viewMain : View -> Html Msg
@@ -243,8 +263,21 @@ getSwitchButtonFor viewType =
         ]
 
 
-viewTotals : TotalsView -> Html Msg
+viewTotals : TotalsViewType -> Html Msg
 viewTotals model =
+    case model of
+        Loading ->
+            viewLoading
+
+        Error ->
+            div [] [ text "Something went wrong while loading data" ]
+
+        Loaded fullModel ->
+            viewTotalsMain fullModel
+
+
+viewTotalsMain : TotalsView -> Html Msg
+viewTotalsMain model =
     let
         items =
             model.items
@@ -315,8 +348,14 @@ convertToEvent msg =
 
 
 type View
-    = Totals TotalsView
+    = Totals TotalsViewType
     | Financials FinancialView
+
+
+type TotalsViewType
+    = Loading
+    | Loaded TotalsView
+    | Error
 
 
 type alias TotalsView =
@@ -378,7 +417,38 @@ type alias FinancialPieItem =
 
 
 type alias Model =
-    ModelBase View
+    { view : ModelBase View
+    , token : String
+    }
+
+
+
+--decoder
+
+
+totalsDecoder : D.Decoder (List TotalsPieItem)
+totalsDecoder =
+    D.field "groups" <| D.list totalItemDecoder
+
+
+totalItemDecoder : D.Decoder TotalsPieItem
+totalItemDecoder =
+    D.succeed TotalsPieItem
+        |> required "groupId" D.int
+        |> required "groupName" D.string
+        |> required "income" D.float
+        |> required "instructions" D.float
+        |> required "popularity" D.float
+
+
+financialItemDecoder : D.Decoder FinancialPieItem
+financialItemDecoder =
+    D.succeed FinancialPieItem
+        |> required "groupId" D.int
+        |> required "groupName" D.string
+        |> required "income" D.float
+        |> required "soldCount" D.float
+        |> required "percentSold" D.float
 
 
 
@@ -387,12 +457,36 @@ type alias Model =
 
 init : Maybe AuthResponse -> ( Model, Cmd Msg )
 init response =
-    initBase [ Manager ] ( initialModel, Cmd.none ) response
+    let
+        token =
+            case response of
+                Just item ->
+                    item.token
+
+                Nothing ->
+                    ""
+
+        pair =
+            initBase [ Manager ] ( Totals Loading, getTotals token ) response
+
+        mapModel viewType =
+            replaceModel viewType token
+    in
+    Tuple.mapBoth mapModel itself pair
 
 
-initialModel : View
-initialModel =
-    initialTotals
+getTotals : String -> Cmd Msg
+getTotals token =
+    Endpoints.getAuthed token StatsTotal (Http.expectJson GotTotals totalsDecoder) Nothing
+
+
+
+--getAuthed
+
+
+getFin : Cmd Msg
+getFin =
+    Cmd.none
 
 
 initialFinancial : View
@@ -404,18 +498,6 @@ initialFinancial =
             , FinancialPieItem 2 "Plum" 32 14 6
             , FinancialPieItem 3 "Cherry" 15 15 3
             , FinancialPieItem 4 "Cactus" 20 20 1
-            ]
-            Nothing
-
-
-initialTotals : View
-initialTotals =
-    Totals <|
-        TotalsView
-            [ TotalsPieItem 1 "Apple" 100 25 5
-            , TotalsPieItem 2 "Plum" 32 14 6
-            , TotalsPieItem 3 "Cherry" 15 15 3
-            , TotalsPieItem 4 "Cactus" 20 20 1
             ]
             Nothing
 

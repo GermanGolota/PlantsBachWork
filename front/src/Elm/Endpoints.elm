@@ -10,6 +10,7 @@ baseUrl =
 
 type Endpoint
     = Login
+    | StatsTotal
 
 
 endpointToUrl : Endpoint -> String
@@ -17,6 +18,9 @@ endpointToUrl endpoint =
     case endpoint of
         Login ->
             baseUrl ++ "auth/login"
+
+        StatsTotal ->
+            baseUrl ++ "stats/total"
 
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg
