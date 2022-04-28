@@ -22,7 +22,7 @@ GROUP BY
 
 --this would search plant table for provided values
 --would skip search by specific field when null value is provided
-CREATE OR REPLACE FUNCTION search_plant (plantName text, priceRangeBottom integer, priceRangeTop integer, lastDate timestamp without time zone, groupIds integer[], soilIds integer[], regionIds integer[])
+CREATE OR REPLACE FUNCTION search_plant (plantName text, priceRangeBottom numeric, priceRangeTop numeric, lastDate timestamp without time zone, groupIds integer[], soilIds integer[], regionIds integer[])
   RETURNS TABLE (
     id integer,
     plant_name text,
@@ -38,26 +38,28 @@ BEGIN
     p.description,
     array_remove(array_agg(i.relation_id), NULL)
   FROM
-    plant_search_v s
-    JOIN plant p ON p.id = s.id
+    plant_search_v se
+    JOIN plant p ON p.id = se.id
+    JOIN plant_group g ON g.id = p.group_id
+    JOIN plant_soil s ON s.id = p.soil_id
     LEFT JOIN plant_to_image i ON i.plant_id = p.id
   WHERE
     1 = 1
     AND (plantName IS NULL
-      OR to_tsvector(s.plant_name) @@ to_tsquery(plantName))
+      OR to_tsvector(se.plant_name) @@ to_tsquery(plantName))
     AND (priceRangeBottom IS NULL
-      OR s.price <= priceRangeBottom)
+      OR se.price <= priceRangeBottom)
     AND (priceRangeTop IS NULL
-      OR s.price >= priceRangeTop)
+      OR se.price >= priceRangeTop)
     AND (lastDate IS NULL
-      OR s.created >= lastDate)
+      OR se.created >= lastDate)
     AND (groupIds IS NULL
-      OR s.group_id = ANY (groupIds))
+      OR se.group_id = ANY (groupIds))
     AND (soilIds IS NULL
-      OR s.soil_id = ANY (soilIds))
+      OR se.soil_id = ANY (soilIds))
     --&& means intersection
     AND (regionIds IS NULL
-      OR regionIds && s.regions)
+      OR regionIds && se.regions)
   GROUP BY
     p.id;
 END;
