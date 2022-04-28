@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -56,15 +57,8 @@ namespace Plants.Presentation
                 UserRole[] passedRoles = new UserRole[allRoles.Length];
                 for (int i = 0; i < allRoles.Length; i++)
                 {
-                    var role = allRoles[i];
-                    passedRoles[i] = role;
-                    var perms = passedRoles.Permutate();
-                    foreach (var permutation in perms)
-                    {
-                        var roleNames = perms.Select(x => x.ToString());
-                        var policyName = String.Join('_', roleNames);
-                        options.AddPolicy(policyName, policy => policy.RequireRole(roleNames));
-                    }
+                    var policyName = allRoles[i].ToString();
+                    options.AddPolicy(policyName, (policy) => policy.RequireClaim(policyName));
                 }
             });
         }
