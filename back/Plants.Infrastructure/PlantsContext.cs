@@ -20,6 +20,7 @@ namespace Plants.Infrastructure
 
         public virtual DbSet<CurrentUserRole> CurrentUserRoles { get; set; }
         public virtual DbSet<DeliveryAddress> DeliveryAddresses { get; set; }
+        public virtual DbSet<DictsV> DictsVs { get; set; }
         public virtual DbSet<Person> People { get; set; }
         public virtual DbSet<PersonToLogin> PersonToLogins { get; set; }
         public virtual DbSet<Plant> Plants { get; set; }
@@ -85,6 +86,19 @@ namespace Plants.Infrastructure
                     .HasForeignKey(d => d.RegionId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("delivery_address_region_id_fkey");
+            });
+
+            modelBuilder.Entity<DictsV>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("dicts_v");
+
+                entity.Property(e => e.Ids).HasColumnName("ids");
+
+                entity.Property(e => e.Type).HasColumnName("type");
+
+                entity.Property(e => e.Values).HasColumnName("values");
             });
 
             modelBuilder.Entity<Person>(entity =>

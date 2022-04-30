@@ -44,6 +44,7 @@ namespace Plants.Infrastructure
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IStatsService, StatsService>();
             services.AddScoped<ISearchService, SearchService>();
+            services.AddScoped<IInfoService, InfoService>();
             return services;
         }
 
