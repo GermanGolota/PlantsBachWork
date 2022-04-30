@@ -12,6 +12,9 @@ type Endpoint
     = Login
     | StatsTotal
     | StatsFinancial
+    | Search
+    | Dicts
+    | Image Int
 
 
 endpointToUrl : Endpoint -> String
@@ -25,6 +28,15 @@ endpointToUrl endpoint =
 
         StatsFinancial ->
             baseUrl ++ "stats/financial"
+
+        Search ->
+            baseUrl ++ "search"
+
+        Dicts ->
+            baseUrl ++ "info/dicts"
+
+        Image id ->
+            baseUrl ++ "plantImage/" ++ String.fromInt id
 
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg

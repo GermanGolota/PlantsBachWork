@@ -149,3 +149,18 @@ flex =
 smallMargin : Html.Attribute msg
 smallMargin =
     style "margin" "0.5em"
+
+
+chunk : Int -> List a -> List (List a)
+chunk chunkSize initial =
+    let
+        indexed =
+            List.indexedMap Tuple.pair initial
+
+        paged =
+            List.map (\x -> ( modBy chunkSize (Tuple.first x), Tuple.second x )) indexed
+
+        pages =
+            unique <| List.map Tuple.first paged
+    in
+    List.map (\page -> List.map Tuple.second (List.filter (\pair -> Tuple.first pair == page) paged)) pages
