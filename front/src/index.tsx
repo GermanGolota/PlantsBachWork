@@ -1,6 +1,14 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import ReactDOM from "react-dom";
-import { Route, Link, BrowserRouter, Router, Routes } from "react-router-dom";
+import {
+  Route,
+  Link,
+  BrowserRouter,
+  Router,
+  Routes,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
 import { Elm as SearchElm } from "./Elm/Pages/Search";
@@ -63,15 +71,18 @@ const LoginPage = () => {
     });
 
   React.useEffect(() => {
+    if (retrieve()) {
+      window.location.replace("/search");
+    }
     setApp(elmApp());
   }, []);
-
   // Subscribe to state changes from Elm
   React.useEffect(() => {
     app &&
       app.ports.notifyLoggedIn.subscribe((userModel) => {
         let model = userModel as AuthResponse;
         store(model);
+        window.location.replace("/search");
       });
   }, [app]);
 
@@ -82,7 +93,7 @@ const NotFound = () => {
   return (
     <div>
       There is nothing at this url. Maybe you wanted to{" "}
-      <a href="/login">log in</a>
+      <a href="/login">log in</a>?
     </div>
   );
 };
@@ -93,6 +104,7 @@ const App = () => (
       <Route path="/login" element={<LoginPage />} />
       <Route path="/stats" element={<StatsPage />} />
       <Route path="/search" element={<SearchPage />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>
 );
