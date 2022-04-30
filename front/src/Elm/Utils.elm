@@ -1,5 +1,8 @@
 module Utils exposing (..)
 
+import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Grid.Row as Row
 import Bootstrap.Spinner as Spinner
 import Bootstrap.Text as Text
 import Bootstrap.Utilities.Spacing as Spacing
@@ -158,9 +161,47 @@ chunk chunkSize initial =
             List.indexedMap Tuple.pair initial
 
         paged =
-            List.map (\x -> ( modBy chunkSize (Tuple.first x), Tuple.second x )) indexed
+            List.map (\x -> ( Tuple.first x // chunkSize, Tuple.second x )) indexed
 
         pages =
             unique <| List.map Tuple.first paged
+
+        itemsInPage page =
+            List.filter (\item -> Tuple.first item == page) paged
     in
-    List.map (\page -> List.map Tuple.second (List.filter (\pair -> Tuple.first pair == page) paged)) pages
+    List.map (\page -> List.map Tuple.second <| itemsInPage page) pages
+
+
+chunkedView : Int -> (a -> Html msg) -> List a -> Html msg
+chunkedView size viewFunc items =
+    let
+        chunks =
+            chunk size items
+
+        remainder =
+            abs ((modBy size <| List.length items) - size)
+
+        emptyCol =
+            Grid.col [ Col.attrs [ style "flex" "1", smallMargin ] ] []
+
+        toCol item =
+            Grid.col [ Col.attrs [ style "flex" "1", smallMargin ] ] [ viewFunc item ]
+
+        addRemainder index =
+            if index == List.length chunks - 1 then
+                List.map (\i -> emptyCol) (List.repeat remainder 0)
+
+            else
+                List.map (\i -> emptyCol) []
+
+        buildRow index rowItems =
+            Grid.row []
+                (List.map toCol rowItems
+                    ++ addRemainder index
+                )
+    in
+    Grid.container []
+        (List.indexedMap
+            buildRow
+            chunks
+        )

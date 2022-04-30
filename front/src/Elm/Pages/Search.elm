@@ -346,12 +346,16 @@ viewAvailable av =
 
 resultsView : List SearchResultItem -> Html Msg
 resultsView items =
-    div [ flex ] <| List.map resultView items
+    Utils.chunkedView 3 resultView items
+
+
+
+--div [ flex ] <| List.map resultView items
 
 
 resultView : SearchResultItem -> Html Msg
 resultView item =
-    Card.config [ Card.attrs [ smallMargin, style "flex" "1" ] ]
+    Card.config [ Card.attrs (fillParent ++ [ smallMargin, style "flex" "1" ]) ]
         |> Card.header [ class "text-center" ]
             [ Html.img [ src <| imageIdToUrl <| Maybe.withDefault -1 (List.head item.images), alt "No images for this plant" ] []
             ]
@@ -361,9 +365,9 @@ resultView item =
             , Block.custom <|
                 div [ flex, Flex.row, style "justify-content" "space-between", Flex.alignItemsCenter ]
                     [ div [ largeFont ] [ text <| (format usLocale item.price ++ " ₴") ]
-                    , div []
+                    , div [ flex, Flex.row ]
                         [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/order/" ++ String.fromInt item.id ] ] [ text "Order" ]
-                        , Button.linkButton [ Button.primary, Button.attrs [ href <| "/plant/" ++ String.fromInt item.id ] ] [ text "Open" ]
+                        , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ String.fromInt item.id ] ] [ text "Open" ]
                         ]
                     ]
             ]
