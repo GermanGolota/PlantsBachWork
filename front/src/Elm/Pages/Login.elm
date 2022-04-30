@@ -47,14 +47,15 @@ convertRole roleId =
 
 submitSuccessDecoder : D.Decoder AuthResponse
 submitSuccessDecoder =
-    D.map2 AuthResponse
+    D.map3 AuthResponse
         (D.field "token" D.string)
         (D.field "roles" (D.list D.int) |> D.map convertRoles)
+        (D.field "username" D.string)
 
 
 encodeResponse : AuthResponse -> E.Value
 encodeResponse response =
-    E.object [ ( "token", E.string response.token ), ( "roles", E.list roleToValue response.roles ) ]
+    E.object [ ( "token", E.string response.token ), ( "roles", E.list roleToValue response.roles ), ("username", E.string response.username) ]
 
 
 roleToValue : UserRole -> E.Value

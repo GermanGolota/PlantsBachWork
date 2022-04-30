@@ -233,7 +233,7 @@ viewMain resp model =
                     "Financials"
     in
     navView
-        "Username"
+        resp.username
         resp.roles
         (Just
             statsLink

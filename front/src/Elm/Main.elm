@@ -17,6 +17,7 @@ type UserRole
 type alias AuthResponse =
     { token : String
     , roles : List UserRole
+    , username : String
     }
 
 
@@ -74,9 +75,10 @@ convertRole roleId =
 
 decodeFlags : D.Decoder AuthResponse
 decodeFlags =
-    D.map2 AuthResponse
+    D.map3 AuthResponse
         (D.field "token" D.string)
         (D.field "roles" (D.list D.string) |> D.map convertRoles)
+        (D.field "username" D.string)
 
 
 type ModelBase model

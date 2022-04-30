@@ -48,7 +48,7 @@ view model =
 
 viewMain : AuthResponse -> View -> Html Msg
 viewMain resp model =
-    navView "" resp.roles (Just NavBar.searchLink) (pageView model)
+    navView resp.username resp.roles (Just NavBar.searchLink) (pageView model)
 
 
 pageView : View -> Html Msg
