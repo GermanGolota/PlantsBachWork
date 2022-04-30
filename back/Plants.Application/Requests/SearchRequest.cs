@@ -13,10 +13,10 @@ namespace Plants.Application.Requests
         int[]? SoilIds) : IRequest<SearchResult>;
 
     public record SearchResult(List<SearchResultItem> Items);
-    public record SearchResultItem(int Id, string PlantName, string Description, int[] ImageIds)
+    public record SearchResultItem(int Id, string PlantName, string Description, int[] ImageIds, double Price)
     {
         //user by converter
-        public SearchResultItem() : this(0, "", "", null)
+        public SearchResultItem() : this(0, "", "", null, 0)
         {
 
         }

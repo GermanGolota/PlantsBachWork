@@ -27,6 +27,7 @@ CREATE OR REPLACE FUNCTION search_plant (plantName text, priceRangeBottom numeri
     id integer,
     plant_name text,
     description text,
+	price numeric,
     imageIds integer[]
   )
   AS $$
@@ -36,6 +37,7 @@ BEGIN
     p.id,
     p.plant_name,
     p.description,
+	se.price,
     array_remove(array_agg(i.relation_id), NULL)
   FROM
     plant_search_v se
@@ -62,7 +64,7 @@ BEGIN
     AND (regionIds IS NULL
       OR regionIds && se.regions)
   GROUP BY
-    p.id;
+    p.id, se.price;
 END;
 $$
 LANGUAGE plpgsql;
