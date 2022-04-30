@@ -29,7 +29,7 @@ namespace Plants.Application.Requests
             {
                 var roles = response.Roles!;
                 var token = _tokenManager.CreateToken(login, pass, roles);
-                result = new LoginResult(token, roles);
+                result = new LoginResult(token, roles, login);
             }
             else
             {
