@@ -15,7 +15,7 @@ import Iso8601 exposing (toTime)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
-import NavBar exposing (navView, statsLink)
+import NavBar exposing (statsLink, viewNav)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Time
 import Utils exposing (AlignDirection(..), fillParent, flatten, itself, largeFont, textAlign, textCenter, unique, viewLoading)
@@ -210,7 +210,7 @@ viewRow key value =
 
 view : Model -> Html.Html Msg
 view model =
-    viewBase viewMain model
+    viewNav model (Just statsLink) viewMain
 
 
 viewMain : AuthResponse -> View -> Html Msg
@@ -232,18 +232,11 @@ viewMain resp model =
                 Financials _ ->
                     "Financials"
     in
-    navView
-        resp.username
-        resp.roles
-        (Just
-            statsLink
-        )
-        (div fillParent
-            [ getSwitchButtonFor model
-            , h1 [ textCenter ] [ text localizedTitle ]
-            , localizedView
-            ]
-        )
+    div fillParent
+        [ getSwitchButtonFor model
+        , h1 [ textCenter ] [ text localizedTitle ]
+        , localizedView
+        ]
 
 
 viewFinancials : FinancialViewType -> Html Msg

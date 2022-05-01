@@ -8,7 +8,7 @@ import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
-import NavBar exposing (navView, searchLink)
+import NavBar exposing (searchLink, viewNav)
 import Utils exposing (smallMargin)
 import Webdata exposing (WebData(..))
 
@@ -148,16 +148,11 @@ createdDecoder =
 
 view : Model -> Html Msg
 view model =
-    viewBase viewMain model
+    viewNav model (Just searchLink) viewPage
 
 
-viewMain : AuthResponse -> View -> Html Msg
-viewMain resp model =
-    navView resp.username resp.roles (Just searchLink) (viewPage model)
-
-
-viewPage : View -> Html Msg
-viewPage page =
+viewPage : AuthResponse -> View -> Html Msg
+viewPage _ page =
     case page of
         NoPlant ->
             div [] [ text "Please select a plant", Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href "/search" ] ] [ text "Return to search" ] ]

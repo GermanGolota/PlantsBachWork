@@ -14,7 +14,7 @@ import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import Multiselect exposing (InputInMenu(..))
-import NavBar exposing (navView)
+import NavBar exposing (viewNav)
 import Utils exposing (fillParent, flex, formatPrice, largeFont, smallMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -290,19 +290,14 @@ convertDict tag dict =
 
 view : Model -> Html Msg
 view model =
-    viewBase viewMain model
+    viewNav model (Just NavBar.searchLink) pageView
 
 
-viewMain : AuthResponse -> View -> Html Msg
-viewMain resp model =
-    navView resp.username resp.roles (Just NavBar.searchLink) (pageView resp.token model)
-
-
-pageView : String -> View -> Html Msg
-pageView token viewType =
+pageView : AuthResponse -> View -> Html Msg
+pageView resp viewType =
     let
         viewFunc =
-            resultsView token
+            resultsView resp.token
 
         result =
             case viewType.results of
