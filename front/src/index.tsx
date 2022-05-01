@@ -1,5 +1,4 @@
-import React, { useCallback, useState } from "react";
-import ReactDOM from "react-dom";
+import React, { useCallback, useState } from "react";import ReactDOM from "react-dom";
 import {
   Route,
   Link,
@@ -8,10 +7,12 @@ import {
   Routes,
   Navigate,
   useNavigate,
+  useParams,
 } from "react-router-dom";
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
 import { Elm as SearchElm } from "./Elm/Pages/Search";
+import { Elm as PlantElm } from "./Elm/Pages/Plant";
 import "./assets/tree.svg";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -30,6 +31,31 @@ const SearchPage = () => {
     return SearchElm.Pages.Search.init({
       node: elmRef.current,
       flags: model,
+    });
+  };
+
+  React.useEffect(() => {
+    setApp(elmApp());
+  }, []);
+
+  return <div ref={elmRef}></div>;
+};
+
+const PlantPage = () => {
+  const [app, setApp] = React.useState<PlantElm.Pages.Plant.App | undefined>();
+  const elmRef = React.useRef(null);
+
+  const { plantId } = useParams();
+
+  const elmApp = () => {
+    let model = retrieve();
+    let finalResult = {
+      ...model,
+      plantId: plantId,
+    };
+    return PlantElm.Pages.Plant.init({
+      node: elmRef.current,
+      flags: finalResult,
     });
   };
 
@@ -104,6 +130,7 @@ const App = () => (
       <Route path="/login" element={<LoginPage />} />
       <Route path="/stats" element={<StatsPage />} />
       <Route path="/search" element={<SearchPage />} />
+      <Route path="/plant/:plantId" element={<PlantPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>

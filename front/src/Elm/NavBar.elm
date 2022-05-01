@@ -8,7 +8,7 @@ import Bootstrap.Utilities.Flex as Flex
 import Color
 import Html exposing (Html, a, div, i, text)
 import Html.Attributes exposing (class, href, style)
-import Main exposing (UserRole(..))
+import Main exposing (AuthResponse, ModelBase, UserRole(..), viewBase)
 import TypedSvg.Types exposing (px)
 import Utils exposing (fillParent, fillScreen, flex, intersect, largeFont, smallMargin)
 
@@ -54,8 +54,22 @@ getLinksFor roles =
     List.filter roleIntersect allLinks
 
 
-navView : String -> List UserRole -> Maybe Link -> Html msg -> Html msg
-navView username roles currentLink baseView =
+viewNav : ModelBase model -> Maybe Link -> (AuthResponse -> model -> Html msg) -> Html msg
+viewNav model link pageView =
+    let
+        viewP =
+            viewMain link pageView
+    in
+    viewBase viewP model
+
+
+viewMain : Maybe Link -> (AuthResponse -> model -> Html msg) -> AuthResponse -> model -> Html msg
+viewMain link pageView resp model =
+    viewNavBase resp.username resp.roles link (pageView resp model)
+
+
+viewNavBase : String -> List UserRole -> Maybe Link -> Html msg -> Html msg
+viewNavBase username roles currentLink baseView =
     div fillScreen
         [ div ([ flex, Flex.row ] ++ fillParent) [ navBar username roles currentLink, baseView ]
         ]

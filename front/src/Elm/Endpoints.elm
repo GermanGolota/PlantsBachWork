@@ -1,4 +1,4 @@
-module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, postAuthed)
+module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, postAuthed)
 
 import Http exposing (header, request)
 
@@ -15,6 +15,7 @@ type Endpoint
     | Search
     | Dicts
     | Image Int String
+    | PlantE Int
 
 
 endpointToUrl : Endpoint -> String
@@ -37,6 +38,14 @@ endpointToUrl endpoint =
 
         Image id token ->
             baseUrl ++ "file/plant/" ++ String.fromInt id ++ "?token=" ++ token
+
+        PlantE plantId ->
+            baseUrl ++ "order/" ++ String.fromInt plantId
+
+
+imageIdToUrl : String -> Int -> String
+imageIdToUrl token id =
+    endpointToUrl <| Image id token
 
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg

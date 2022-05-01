@@ -25,6 +25,16 @@ largeFont =
     style "font-size" "2rem"
 
 
+flex1 : Attribute msg
+flex1 =
+    style "flex" "1"
+
+
+mediumFont : Attribute msg
+mediumFont =
+    style "font-size" "1.5rem"
+
+
 textFromDirection : AlignDirection -> String
 textFromDirection dir =
     case dir of
@@ -77,7 +87,7 @@ rgba255 r g b a =
 
 fillScreen : List (Attribute msg)
 fillScreen =
-    [ style "width" "100vw", style "height" "100vh" ]
+    [ style "width" "100vw", style "height" "100vh", style "max-width" "100vw", style "max-height" "100vh" ]
 
 
 fillParent : List (Attribute msg)
@@ -154,6 +164,11 @@ flex =
 smallMargin : Html.Attribute msg
 smallMargin =
     style "margin" "0.5em"
+
+
+mediumMargin : Html.Attribute msg
+mediumMargin =
+    style "margin" "1em"
 
 
 chunk : Int -> List a -> List (List a)

@@ -22,6 +22,7 @@ namespace Plants.Infrastructure
         public virtual DbSet<DeliveryAddress> DeliveryAddresses { get; set; }
         public virtual DbSet<DictsV> DictsVs { get; set; }
         public virtual DbSet<Person> People { get; set; }
+        public virtual DbSet<PersonCredsV> PersonCredsVs { get; set; }
         public virtual DbSet<PersonToLogin> PersonToLogins { get; set; }
         public virtual DbSet<Plant> Plants { get; set; }
         public virtual DbSet<PlantCaringInstruction> PlantCaringInstructions { get; set; }
@@ -118,6 +119,21 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.PhoneNumber)
                     .IsRequired()
                     .HasColumnName("phone_number");
+            });
+
+            modelBuilder.Entity<PersonCredsV>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("person_creds_v");
+
+                entity.Property(e => e.CaredCount).HasColumnName("cared_count");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.InstructionsCount).HasColumnName("instructions_count");
+
+                entity.Property(e => e.SoldCount).HasColumnName("sold_count");
             });
 
             modelBuilder.Entity<PersonToLogin>(entity =>
@@ -280,7 +296,15 @@ namespace Plants.Infrastructure
 
                 entity.ToTable("plant_post_v");
 
-                entity.Property(e => e.CaretakerExperience).HasColumnName("caretaker_experience");
+                entity.Property(e => e.CareTakerCared).HasColumnName("care_taker_cared");
+
+                entity.Property(e => e.CareTakerInstructions).HasColumnName("care_taker_instructions");
+
+                entity.Property(e => e.CareTakerSold).HasColumnName("care_taker_sold");
+
+                entity.Property(e => e.Created)
+                    .HasColumnType("date")
+                    .HasColumnName("created");
 
                 entity.Property(e => e.Description).HasColumnName("description");
 
@@ -294,9 +318,15 @@ namespace Plants.Infrastructure
 
                 entity.Property(e => e.Regions).HasColumnName("regions");
 
+                entity.Property(e => e.SellerCared).HasColumnName("seller_cared");
+
+                entity.Property(e => e.SellerInstructions).HasColumnName("seller_instructions");
+
                 entity.Property(e => e.SellerName).HasColumnName("seller_name");
 
                 entity.Property(e => e.SellerPhone).HasColumnName("seller_phone");
+
+                entity.Property(e => e.SellerSold).HasColumnName("seller_sold");
 
                 entity.Property(e => e.SoilName).HasColumnName("soil_name");
             });

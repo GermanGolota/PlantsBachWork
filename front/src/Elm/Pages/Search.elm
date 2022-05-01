@@ -6,7 +6,7 @@ import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
-import Endpoints exposing (Endpoint(..), endpointToUrl, getAuthedQuery)
+import Endpoints exposing (Endpoint(..), endpointToUrl, getAuthedQuery, imageIdToUrl)
 import Html exposing (Html, div, i, text)
 import Html.Attributes exposing (alt, class, href, src, style)
 import Http
@@ -14,7 +14,7 @@ import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import Multiselect exposing (InputInMenu(..))
-import NavBar exposing (navView)
+import NavBar exposing (viewNav)
 import Utils exposing (fillParent, flex, formatPrice, largeFont, smallMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -290,19 +290,14 @@ convertDict tag dict =
 
 view : Model -> Html Msg
 view model =
-    viewBase viewMain model
+    viewNav model (Just NavBar.searchLink) pageView
 
 
-viewMain : AuthResponse -> View -> Html Msg
-viewMain resp model =
-    navView resp.username resp.roles (Just NavBar.searchLink) (pageView resp.token model)
-
-
-pageView : String -> View -> Html Msg
-pageView token viewType =
+pageView : AuthResponse -> View -> Html Msg
+pageView resp viewType =
     let
         viewFunc =
-            resultsView token
+            resultsView resp.token
 
         result =
             case viewType.results of
@@ -375,11 +370,6 @@ resultView token item =
         |> Card.view
 
 
-imageIdToUrl : String -> Int -> String
-imageIdToUrl token id =
-    endpointToUrl <| Image id token
-
-
 viewInput : String -> Html Msg -> Html Msg
 viewInput title input =
     div [ Flex.col, style "flex" "1", smallMargin ] [ div [ textCenter ] [ text title ], input ]
@@ -390,21 +380,13 @@ multiSelectInput msg model =
     Html.map msg <| Multiselect.view model
 
 
-init : Maybe AuthResponse -> ( Model, Cmd Msg )
-init resp =
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
+init resp _ =
     let
-        token =
-            case resp of
-                Just res ->
-                    res.token
-
-                Nothing ->
-                    ""
-
-        cmds =
-            Cmd.batch [ getAvailable token, search [] token ]
+        cmds authResp =
+            Cmd.batch [ getAvailable authResp.token, search [] authResp.token ]
     in
-    initBase [ Producer, Consumer, Manager ] ( View (Dict.fromList []) Loading Nothing, cmds ) resp
+    initBase [ Producer, Consumer, Manager ] (View (Dict.fromList []) Loading Nothing) cmds resp
 
 
 subscriptions : Model -> Sub Msg

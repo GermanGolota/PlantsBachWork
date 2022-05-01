@@ -40,6 +40,7 @@ namespace Plants.Infrastructure
             services.AddScoped<ISearchService, SearchService>();
             services.AddScoped<IInfoService, InfoService>();
             services.AddScoped<IFileService, FileService>();
+            services.AddScoped<IOrderService, OrderService>();
             return services;
         }
 
