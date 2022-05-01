@@ -31,7 +31,7 @@ namespace Plants.Infrastructure.Services
             var ctx = _contextFactory.CreateDbContext();
             await using (ctx)
             {
-                using (var connection = ctx.Database.GetDbConnection())
+                await using (var connection = ctx.Database.GetDbConnection())
                 {
                     string sql = "SELECT * FROM search_plant(@plantName, @lowerPrice, @topPrice, @lastDate, @groupIds, @soilIds, @regionIds)";
                     var p = new
