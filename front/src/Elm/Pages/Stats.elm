@@ -504,8 +504,8 @@ financialItemDecoder =
 --init
 
 
-init : Maybe AuthResponse -> ( Model, Cmd Msg )
-init response =
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
+init response _ =
     let
         token =
             case response of

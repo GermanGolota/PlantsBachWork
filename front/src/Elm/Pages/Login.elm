@@ -55,7 +55,7 @@ submitSuccessDecoder =
 
 encodeResponse : AuthResponse -> E.Value
 encodeResponse response =
-    E.object [ ( "token", E.string response.token ), ( "roles", E.list roleToValue response.roles ), ("username", E.string response.username) ]
+    E.object [ ( "token", E.string response.token ), ( "roles", E.list roleToValue response.roles ), ( "username", E.string response.username ) ]
 
 
 roleToValue : UserRole -> E.Value
@@ -119,8 +119,8 @@ type Msg
     | SubmitRequest (Result Http.Error AuthResponse)
 
 
-init : Maybe AuthResponse -> ( Model, Cmd Msg )
-init _ =
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
+init _ _ =
     ( Model "" "" Unknown, Cmd.none )
 
 

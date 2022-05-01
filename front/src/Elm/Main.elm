@@ -22,7 +22,7 @@ type alias AuthResponse =
 
 
 type alias ApplicationConfig model msg =
-    { init : Maybe AuthResponse -> ( model, Cmd msg )
+    { init : Maybe AuthResponse -> D.Value -> ( model, Cmd msg )
     , view : model -> Html msg
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
@@ -39,7 +39,7 @@ baseApplication config =
         }
 
 
-init : (Maybe AuthResponse -> ( model, Cmd msg )) -> D.Value -> ( model, Cmd msg )
+init : (Maybe AuthResponse -> D.Value -> ( model, Cmd msg )) -> D.Value -> ( model, Cmd msg )
 init initFunc flags =
     let
         authResp =
@@ -50,7 +50,7 @@ init initFunc flags =
                 Err _ ->
                     Nothing
     in
-    initFunc authResp
+    initFunc authResp flags
 
 
 convertRoles roleIds =

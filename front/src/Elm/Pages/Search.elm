@@ -390,8 +390,8 @@ multiSelectInput msg model =
     Html.map msg <| Multiselect.view model
 
 
-init : Maybe AuthResponse -> ( Model, Cmd Msg )
-init resp =
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
+init resp _ =
     let
         token =
             case resp of
