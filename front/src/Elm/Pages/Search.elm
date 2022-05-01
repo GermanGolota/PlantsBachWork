@@ -58,7 +58,7 @@ type alias SearchResultItem =
     , name : String
     , description : String
     , price : Float
-    , images : List Int
+    , imageIds : List Int
     }
 
 
@@ -297,20 +297,19 @@ view model =
 
 viewMain : AuthResponse -> View -> Html Msg
 viewMain resp model =
-    navView resp.username resp.roles (Just NavBar.searchLink) (pageView model)
+    navView resp.username resp.roles (Just NavBar.searchLink) (pageView resp.token model)
 
 
-
---<font-awesome-icon icon="fa-solid fa-dash" />
-
-
-pageView : View -> Html Msg
-pageView viewType =
+pageView : String -> View -> Html Msg
+pageView token viewType =
     let
+        viewFunc =
+            resultsView token
+
         result =
             case viewType.results of
                 Just res ->
-                    viewWebdata res resultsView
+                    viewWebdata res viewFunc
 
                 Nothing ->
                     div [] [ text "No search is selected" ]
@@ -344,20 +343,24 @@ viewAvailable av =
         ]
 
 
-resultsView : List SearchResultItem -> Html Msg
-resultsView items =
-    Utils.chunkedView 3 resultView items
+resultsView : String -> List SearchResultItem -> Html Msg
+resultsView token items =
+    let
+        viewFunc =
+            resultView token
+    in
+    Utils.chunkedView 3 viewFunc items
 
 
-
---div [ flex ] <| List.map resultView items
-
-
-resultView : SearchResultItem -> Html Msg
-resultView item =
-    Card.config [ Card.attrs (fillParent ++ [ smallMargin, style "flex" "1" ]) ]
+resultView : String -> SearchResultItem -> Html Msg
+resultView token item =
+    let
+        url =
+            imageIdToUrl token (Maybe.withDefault -1 (List.head item.imageIds))
+    in
+    Card.config [ Card.attrs (fillParent ++ [ style "flex" "1" ]) ]
         |> Card.header [ class "text-center" ]
-            [ Html.img [ src <| imageIdToUrl <| Maybe.withDefault -1 (List.head item.images), alt "No images for this plant" ] []
+            [ Html.img ([ src url, alt "No images for this plant" ] ++ fillParent) []
             ]
         |> Card.block []
             [ Block.titleH4 [] [ text item.name ]
@@ -374,9 +377,9 @@ resultView item =
         |> Card.view
 
 
-imageIdToUrl : Int -> String
-imageIdToUrl id =
-    endpointToUrl <| Image id
+imageIdToUrl : String -> Int -> String
+imageIdToUrl token id =
+    endpointToUrl <| Image id token
 
 
 viewInput : String -> Html Msg -> Html Msg

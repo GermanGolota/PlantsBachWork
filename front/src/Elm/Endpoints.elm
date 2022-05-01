@@ -14,7 +14,7 @@ type Endpoint
     | StatsFinancial
     | Search
     | Dicts
-    | Image Int
+    | Image Int String
 
 
 endpointToUrl : Endpoint -> String
@@ -35,8 +35,8 @@ endpointToUrl endpoint =
         Dicts ->
             baseUrl ++ "info/dicts"
 
-        Image id ->
-            baseUrl ++ "file/plant/" ++ String.fromInt id
+        Image id token ->
+            baseUrl ++ "file/plant/" ++ String.fromInt id ++ "?token=" ++ token
 
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg
