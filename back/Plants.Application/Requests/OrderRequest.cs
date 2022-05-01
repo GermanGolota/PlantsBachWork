@@ -35,6 +35,7 @@ namespace Plants.Application.Requests
         public long CareTakerCared { get; set; }
         public long CareTakerSold { get; set; }
         public long CareTakerInstructions { get; set; }
+        public int[] Images { get; set; }
         public OrderResult()
         {
 
@@ -43,7 +44,7 @@ namespace Plants.Application.Requests
         public OrderResult(long id, string plantName, string description, decimal price,
             string soilName, string[] regions, string groupName, DateTime created, string sellerName,
             string sellerPhone, long sellerCared, long sellerSold, long sellerInstructions,
-            long careTakerCared, long careTakerSold, long careTakerInstructions)
+            long careTakerCared, long careTakerSold, long careTakerInstructions, int[] images)
         {
             Id = id;
             PlantName = plantName;
@@ -61,6 +62,7 @@ namespace Plants.Application.Requests
             CareTakerCared = careTakerCared;
             CareTakerSold = careTakerSold;
             CareTakerInstructions = careTakerInstructions;
+            Images = images;
         }
         public string CreatedHumanDate { get; set; }
         public string CreatedDate { get; set; }

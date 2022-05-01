@@ -6,7 +6,7 @@ import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
-import Endpoints exposing (Endpoint(..), endpointToUrl, getAuthedQuery)
+import Endpoints exposing (Endpoint(..), endpointToUrl, getAuthedQuery, imageIdToUrl)
 import Html exposing (Html, div, i, text)
 import Html.Attributes exposing (alt, class, href, src, style)
 import Http
@@ -368,11 +368,6 @@ resultView token item =
                     ]
             ]
         |> Card.view
-
-
-imageIdToUrl : String -> Int -> String
-imageIdToUrl token id =
-    endpointToUrl <| Image id token
 
 
 viewInput : String -> Html Msg -> Html Msg

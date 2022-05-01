@@ -1,16 +1,19 @@
 module Pages.Plant exposing (..)
 
 import Bootstrap.Button as Button
-import Endpoints exposing (Endpoint(..), getAuthed)
+import Bootstrap.Utilities.Flex as Flex
+import Dict
+import Endpoints exposing (Endpoint(..), getAuthed, imageIdToUrl)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (href)
+import Html.Attributes exposing (href, style)
 import Http
+import ImageList as ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import NavBar exposing (searchLink, viewNav)
-import Utils exposing (smallMargin)
-import Webdata exposing (WebData(..))
+import Utils exposing (fillParent, flex, flex1, formatPrice, largeFont, mediumFont, mediumMargin, smallMargin, textCenter)
+import Webdata exposing (WebData(..), viewWebdata)
 
 
 
@@ -50,6 +53,7 @@ type alias PlantModel =
     , sellerPhone : String
     , sellerCreds : PersonCreds
     , caretakerCreds : PersonCreds
+    , images : ImageList.Model
     }
 
 
@@ -62,6 +66,7 @@ type alias PersonCreds =
 
 type Msg
     = GotPlant (Result Http.Error PlantModel)
+    | Images ImageList.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -82,6 +87,14 @@ update msg m =
                 ( GotPlant (Err res), Plant p ) ->
                     ( authedPlant { p | plant = Error }, Cmd.none )
 
+                ( Images img, Plant p ) ->
+                    case p.plant of
+                        Loaded pl ->
+                            ( authedPlant { p | plant = Loaded { pl | images = ImageList.update img pl.images } }, Cmd.none )
+
+                        _ ->
+                            ( m, Cmd.none )
+
                 ( _, _ ) ->
                     ( m, Cmd.none )
 
@@ -97,13 +110,13 @@ getPlantCommand : String -> Int -> Cmd Msg
 getPlantCommand token plantId =
     let
         expect =
-            Http.expectJson GotPlant plantDecoder
+            Http.expectJson GotPlant (plantDecoder token)
     in
     getAuthed token (PlantE plantId) expect Nothing
 
 
-plantDecoder : D.Decoder PlantModel
-plantDecoder =
+plantDecoder : String -> D.Decoder PlantModel
+plantDecoder token =
     D.succeed PlantModel
         |> required "plantName" D.string
         |> required "description" D.string
@@ -116,6 +129,25 @@ plantDecoder =
         |> required "sellerPhone" D.string
         |> custom (credsDecoder "seller")
         |> custom (credsDecoder "careTaker")
+        |> custom (imagesDecoder token)
+
+
+imagesDecoder : String -> D.Decoder ImageList.Model
+imagesDecoder token =
+    let
+        baseDecoder =
+            imageIdsToModel token
+    in
+    D.map baseDecoder (D.field "images" (D.list D.int))
+
+
+imageIdsToModel : String -> List Int -> ImageList.Model
+imageIdsToModel token ids =
+    let
+        baseList =
+            List.map (\id -> ( id, imageIdToUrl token id )) ids
+    in
+    ImageList.fromDict <| Dict.fromList baseList
 
 
 credsDecoder : String -> D.Decoder PersonCreds
@@ -158,7 +190,65 @@ viewPage _ page =
             div [] [ text "Please select a plant", Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href "/search" ] ] [ text "Return to search" ] ]
 
         Plant plant ->
-            div [] []
+            let
+                plantView =
+                    viewPlant plant.id
+            in
+            viewWebdata plant.plant plantView
+
+
+viewPlant : Int -> PlantModel -> Html Msg
+viewPlant id plant =
+    let
+        filled args =
+            fillParent ++ args
+
+        largeCentered =
+            [ largeFont, textCenter ]
+    in
+    div (filled [ flex, Flex.row ])
+        [ div [ flex, Flex.col, flex1 ]
+            [ div largeCentered [ text plant.name ]
+            , Html.map Images <| ImageList.view plant.images
+            , viewPlantStat "Caretaker Credentials" (credsToString plant.caretakerCreds)
+            , viewPlantStat "Seller Credentials" (credsToString plant.sellerCreds)
+            , viewPlantStat "Seller Nama" plant.sellerName
+            , viewPlantStat "Seller Phone" plant.sellerPhone
+            ]
+        , div [ flex, Flex.col, flex1 ]
+            [ div largeCentered [ text "Description" ]
+            , div [] [ text plant.description ]
+            , div largeCentered [ text <| formatPrice plant.price ]
+            , viewPlantStat "Soil" plant.soil
+            , viewPlantStat "Regions" (String.join ", " plant.regions)
+            , viewPlantStat "Group" plant.group
+            , viewPlantStat "Age" plant.created
+            , interactionButtons id
+            ]
+        ]
+
+
+credsToString : PersonCreds -> String
+credsToString creds =
+    String.fromInt creds.cared ++ " cared, " ++ String.fromInt creds.sold ++ " sold, " ++ String.fromInt creds.instructions ++ " instructions published"
+
+
+viewPlantStat desc value =
+    flexRowGap (div [ mediumMargin, mediumFont ] [ text desc ]) (div [ mediumMargin, mediumFont ] [ text value ])
+
+
+flexRowGap left right =
+    div [ flex, Flex.row, Flex.justifyBetween, flex1, Flex.alignItemsCenter ]
+        [ left
+        , right
+        ]
+
+
+interactionButtons id =
+    div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
+        [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/search", largeFont ] ] [ text "Back" ]
+        , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/order/" ++ String.fromInt id, largeFont ] ] [ text "Order" ]
+        ]
 
 
 

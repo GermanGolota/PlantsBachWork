@@ -14,22 +14,32 @@ CREATE TYPE plant_post_model AS (
   seller_instructions bigint,
   care_taker_cared bigint,
   care_taker_sold bigint,
-  care_taker_isntructions bigint
+  care_taker_isntructions bigint,
+  images int[]
 );
+
+CREATE OR REPLACE FUNCTION array_length_no_nulls (arr integer[])
+  RETURNS bigint
+  AS $$
+BEGIN
+  RETURN coalesce(array_length(array_remove(arr, NULL), 1), 0);
+END;
+$$
+LANGUAGE plpgsql;
 
 CREATE OR REPLACE VIEW person_creds_v AS (
   SELECT
     p.id,
-    count(DISTINCT pl.id) AS cared_count,
-    count(DISTINCT po.plant_id) AS sold_count,
-    count(DISTINCT i.id) AS instructions_count
+    array_length_no_nulls (ARRAY_AGG(DISTINCT pl.id)) AS cared_count,
+    array_length_no_nulls (ARRAY_AGG(DISTINCT po.plant_id)) AS sold_count,
+    array_length_no_nulls (ARRAY_AGG(DISTINCT i.id)) AS instructions_count
   FROM
     person p
-    JOIN plant pl ON pl.care_taker_id = p.id
-    JOIN plant_post po ON po.seller_id = p.id
-    JOIN plant_caring_instruction i ON i.posted_by_id = p.id
-  GROUP BY
-    p.id);
+  LEFT JOIN plant pl ON pl.care_taker_id = p.id
+  LEFT JOIN plant_post po ON po.seller_id = p.id
+  LEFT JOIN plant_caring_instruction i ON i.posted_by_id = p.id
+GROUP BY
+  p.id);
 
 CREATE OR REPLACE VIEW plant_post_v AS (
   WITH posts_extended AS (
@@ -43,7 +53,8 @@ CREATE OR REPLACE VIEW plant_post_v AS (
       po.seller_id,
       p.care_taker_id,
       array_agg(DISTINCT rg.region_name) AS regions,
-      p.created
+      p.created,
+      array_remove(array_agg(DISTINCT img.relation_id), NULL) AS img_ids
     FROM
       plant_post po
       JOIN plant p ON p.id = po.plant_id
@@ -51,6 +62,7 @@ CREATE OR REPLACE VIEW plant_post_v AS (
       JOIN plant_soil s ON s.id = p.soil_id
       JOIN plant_to_region prg ON prg.plant_id = p.id
       JOIN plant_region rg ON rg.id = prg.plant_region_id
+      LEFT JOIN plant_to_image img ON img.plant_id = p.id
     GROUP BY
       p.id,
       gr.group_name,
@@ -75,7 +87,8 @@ CREATE OR REPLACE VIEW plant_post_v AS (
       seller_creds.instructions_count AS seller_instructions,
       care_taker_creds.cared_count AS care_taker_cared,
       care_taker_creds.sold_count AS care_taker_sold,
-      care_taker_creds.instructions_count AS care_taker_instructions
+      care_taker_creds.instructions_count AS care_taker_instructions,
+      post.img_ids AS images
     FROM
       posts_extended post
       JOIN person seller ON seller.id = post.seller_id

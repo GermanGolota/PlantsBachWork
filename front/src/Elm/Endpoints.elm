@@ -1,4 +1,4 @@
-module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, postAuthed)
+module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, postAuthed)
 
 import Http exposing (header, request)
 
@@ -41,6 +41,11 @@ endpointToUrl endpoint =
 
         PlantE plantId ->
             baseUrl ++ "order/" ++ String.fromInt plantId
+
+
+imageIdToUrl : String -> Int -> String
+imageIdToUrl token id =
+    endpointToUrl <| Image id token
 
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg
