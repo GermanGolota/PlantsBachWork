@@ -36,7 +36,7 @@ endpointToUrl endpoint =
             baseUrl ++ "info/dicts"
 
         Image id ->
-            baseUrl ++ "plantImage/" ++ String.fromInt id
+            baseUrl ++ "file/plant/" ++ String.fromInt id
 
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg
