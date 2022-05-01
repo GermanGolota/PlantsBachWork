@@ -172,6 +172,8 @@ CREATE TABLE plant_to_image (
   image bytea
 );
 
+--add create
+
 ALTER TABLE plant_post
   ADD COLUMN created date;
 
@@ -184,6 +186,8 @@ WHERE
 
 ALTER TABLE plant_post
   ALTER COLUMN created SET NOT NULL;
+
+--set poster
 
 CREATE OR REPLACE FUNCTION get_current_user_id ()
   RETURNS integer
@@ -278,6 +282,8 @@ ALTER
 GROUP manager
   ADD USER postgres;
 
+--get post
+
 CREATE TYPE plant_post_model AS (
   id integer,
   plant_name text,
@@ -360,6 +366,8 @@ END;
 $$
 LANGUAGE plpgsql;
 
+--instruction reject
+
 CREATE OR REPLACE FUNCTION reject_instruction_no_soils ()
   RETURNS TRIGGER
   AS $$
@@ -391,6 +399,8 @@ CREATE TRIGGER plant_instruction_reject_no_soils
   BEFORE INSERT OR UPDATE ON plant_caring_instruction
   FOR EACH ROW
   EXECUTE PROCEDURE reject_instruction_no_soils ();
+
+--financial stats
 
 CREATE OR REPLACE FUNCTION get_financial (start_date timestamp without time zone, end_date timestamp without time zone)
   RETURNS TABLE (
