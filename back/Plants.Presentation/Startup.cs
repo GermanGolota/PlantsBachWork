@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Plants.Core;
 using Plants.Infrastructure;
 using Plants.Presentation.Extensions;
+using Plants.Presentation.Middleware;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,6 +87,7 @@ namespace Plants.Presentation
             app.UseRouting();
 
             app.UseAuthorization();
+            app.UseMiddleware<UrlAuthMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {

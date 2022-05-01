@@ -31,22 +31,30 @@ namespace Plants.Infrastructure
            {
                x.RequireHttpsMetadata = false;
                x.SaveToken = true;
-               x.TokenValidationParameters = new TokenValidationParameters
-               {
-                   ValidateIssuerSigningKey = true,
-                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
-                   ValidateIssuer = false,
-                   ValidateAudience = false
-               };
+               x.TokenValidationParameters = GetValidationParams(key);
            });
             services.AddHttpContextAccessor();
             services.AddScoped<PlantsContextFactory>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IStatsService, StatsService>();
+            services.AddScoped<ISearchService, SearchService>();
+            services.AddScoped<IInfoService, InfoService>();
+            services.AddScoped<IFileService, FileService>();
             return services;
         }
 
-        private static string GetAuthKey(IConfiguration config)
+        public static TokenValidationParameters GetValidationParams(string key)
+        {
+            return new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+                ValidateIssuer = false,
+                ValidateAudience = false
+            };
+        }
+
+        public static string GetAuthKey(IConfiguration config)
         {
             return config
                 .GetSection(AuthSectionName)

@@ -10,7 +10,7 @@ import TypedSvg.Types exposing (Length(..), Paint(..), num, percent)
 
 treeIcon : Length -> Color -> Html msg
 treeIcon treeWidth color =
-    svg [ width treeWidth, height (percent 100), viewBox 0 0 51 54 ]
+    svg [ width treeWidth, height treeWidth, viewBox 0 0 51 54 ]
         [ path
             [ fill (Paint color)
             , d treeIconD

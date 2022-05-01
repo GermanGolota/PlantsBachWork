@@ -14,5 +14,8 @@ namespace Plants.Core.Entities
         public string SoilName { get; set; }
         public string Description { get; set; }
         public string[] Regions { get; set; }
+        public string SellerName { get; set; }
+        public string SellerPhone { get; set; }
+        public long? CaretakerExperience { get; set; }
     }
 }

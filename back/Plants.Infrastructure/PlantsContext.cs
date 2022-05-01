@@ -20,6 +20,7 @@ namespace Plants.Infrastructure
 
         public virtual DbSet<CurrentUserRole> CurrentUserRoles { get; set; }
         public virtual DbSet<DeliveryAddress> DeliveryAddresses { get; set; }
+        public virtual DbSet<DictsV> DictsVs { get; set; }
         public virtual DbSet<Person> People { get; set; }
         public virtual DbSet<PersonToLogin> PersonToLogins { get; set; }
         public virtual DbSet<Plant> Plants { get; set; }
@@ -29,6 +30,7 @@ namespace Plants.Infrastructure
         public virtual DbSet<PlantPost> PlantPosts { get; set; }
         public virtual DbSet<PlantPostV> PlantPostVs { get; set; }
         public virtual DbSet<PlantRegion> PlantRegions { get; set; }
+        public virtual DbSet<PlantSearchV> PlantSearchVs { get; set; }
         public virtual DbSet<PlantShipment> PlantShipments { get; set; }
         public virtual DbSet<PlantSoil> PlantSoils { get; set; }
         public virtual DbSet<PlantStatsV> PlantStatsVs { get; set; }
@@ -84,6 +86,19 @@ namespace Plants.Infrastructure
                     .HasForeignKey(d => d.RegionId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("delivery_address_region_id_fkey");
+            });
+
+            modelBuilder.Entity<DictsV>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("dicts_v");
+
+                entity.Property(e => e.Ids).HasColumnName("ids");
+
+                entity.Property(e => e.Type).HasColumnName("type");
+
+                entity.Property(e => e.Values).HasColumnName("values");
             });
 
             modelBuilder.Entity<Person>(entity =>
@@ -265,6 +280,8 @@ namespace Plants.Infrastructure
 
                 entity.ToTable("plant_post_v");
 
+                entity.Property(e => e.CaretakerExperience).HasColumnName("caretaker_experience");
+
                 entity.Property(e => e.Description).HasColumnName("description");
 
                 entity.Property(e => e.GroupName).HasColumnName("group_name");
@@ -276,6 +293,10 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.Price).HasColumnName("price");
 
                 entity.Property(e => e.Regions).HasColumnName("regions");
+
+                entity.Property(e => e.SellerName).HasColumnName("seller_name");
+
+                entity.Property(e => e.SellerPhone).HasColumnName("seller_phone");
 
                 entity.Property(e => e.SoilName).HasColumnName("soil_name");
             });
@@ -289,6 +310,29 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.RegionName)
                     .IsRequired()
                     .HasColumnName("region_name");
+            });
+
+            modelBuilder.Entity<PlantSearchV>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("plant_search_v");
+
+                entity.Property(e => e.Created)
+                    .HasColumnType("date")
+                    .HasColumnName("created");
+
+                entity.Property(e => e.GroupId).HasColumnName("group_id");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.PlantName).HasColumnName("plant_name");
+
+                entity.Property(e => e.Price).HasColumnName("price");
+
+                entity.Property(e => e.Regions).HasColumnName("regions");
+
+                entity.Property(e => e.SoilId).HasColumnName("soil_id");
             });
 
             modelBuilder.Entity<PlantShipment>(entity =>

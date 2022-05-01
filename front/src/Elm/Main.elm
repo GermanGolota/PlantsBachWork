@@ -5,6 +5,7 @@ import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (href)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
+import Utils exposing (intersect)
 
 
 type UserRole
@@ -16,6 +17,7 @@ type UserRole
 type alias AuthResponse =
     { token : String
     , roles : List UserRole
+    , username : String
     }
 
 
@@ -73,27 +75,24 @@ convertRole roleId =
 
 decodeFlags : D.Decoder AuthResponse
 decodeFlags =
-    D.map2 AuthResponse
+    D.map3 AuthResponse
         (D.field "token" D.string)
         (D.field "roles" (D.list D.string) |> D.map convertRoles)
+        (D.field "username" D.string)
 
 
 type ModelBase model
     = Unauthorized
     | NotLoggedIn
-    | Authorized model
+    | Authorized AuthResponse model
 
 
 initBase : List UserRole -> ( model, Cmd msg ) -> Maybe AuthResponse -> ( ModelBase model, Cmd msg )
 initBase requiredRoles initialModel response =
-    let
-        roleInRequired role =
-            List.member role requiredRoles
-    in
     case response of
         Just resp ->
-            if List.any roleInRequired resp.roles then
-                ( Authorized <| Tuple.first initialModel, Tuple.second initialModel )
+            if intersect requiredRoles resp.roles then
+                ( Authorized resp (Tuple.first initialModel), Tuple.second initialModel )
 
             else
                 ( Unauthorized, Cmd.none )
@@ -102,7 +101,7 @@ initBase requiredRoles initialModel response =
             ( NotLoggedIn, Cmd.none )
 
 
-viewBase : (model -> Html msg) -> ModelBase model -> Html msg
+viewBase : (AuthResponse -> model -> Html msg) -> ModelBase model -> Html msg
 viewBase authorizedView modelB =
     case modelB of
         Unauthorized ->
@@ -114,5 +113,5 @@ viewBase authorizedView modelB =
                 , a [ href "/login" ] [ text "Go to login" ]
                 ]
 
-        Authorized authM ->
-            authorizedView authM
+        Authorized resp authM ->
+            authorizedView resp authM

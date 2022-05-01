@@ -1,25 +1,3 @@
-CREATE OR REPLACE VIEW plant_post_v AS
-SELECT
-  p.id,
-  p.plant_name,
-  po.price,
-  gr.group_name,
-  s.soil_name,
-  p.description,
-  array_agg(DISTINCT rg.region_name) AS regions
-FROM
-  plant_post po
-  JOIN plant p ON p.id = po.plant_id
-  JOIN plant_group gr ON gr.id = p.group_id
-  JOIN plant_soil s ON s.id = p.soil_id
-  JOIN plant_to_region prg ON prg.plant_id = p.id
-  JOIN plant_region rg ON rg.id = prg.plant_region_id
-GROUP BY
-  p.id,
-  gr.group_name,
-  s.soil_name,
-  po.price;
-
 --Lab 4
 CREATE OR REPLACE VIEW plant_stats_v AS (
   WITH gToInstruction AS (
@@ -313,12 +291,7 @@ CREATE TYPE plant_post_model AS (
   caretaker_experience bigint
 );
 
-CREATE OR REPLACE FUNCTION get_post (plantId integer)
-  RETURNS plant_post_model
-  AS $$
-DECLARE
-  res plant_post_model;
-BEGIN
+CREATE OR REPLACE VIEW plant_post_v AS (
   WITH caretaker_to_plant_count AS (
     SELECT
       p.id,
@@ -327,23 +300,63 @@ BEGIN
       person p
       JOIN plant pl ON pl.care_taker_id = p.id
     GROUP BY
-      p.id
+      p.id),
+    posts_extended AS (
+      SELECT
+        p.id,
+        p.plant_name,
+        po.price,
+        gr.group_name,
+        s.soil_name,
+        p.description,
+        po.seller_id,
+        p.care_taker_id,
+        array_agg(DISTINCT rg.region_name) AS regions
+      FROM
+        plant_post po
+        JOIN plant p ON p.id = po.plant_id
+        JOIN plant_group gr ON gr.id = p.group_id
+        JOIN plant_soil s ON s.id = p.soil_id
+        JOIN plant_to_region prg ON prg.plant_id = p.id
+        JOIN plant_region rg ON rg.id = prg.plant_region_id
+      GROUP BY
+        p.id,
+        gr.group_name,
+        s.soil_name,
+        po.price,
+        po.seller_id,
+        p.care_taker_id
 )
+      SELECT
+        post.id,
+        post.plant_name,
+        post.price,
+        post.group_name,
+        post.soil_name,
+        post.description,
+        post.regions,
+        FORMAT('%s %s', seller.first_name, seller.last_name) AS seller_name,
+        seller.phone_number AS seller_phone,
+        pc.pcount AS caretaker_experience
+      FROM
+        posts_extended post
+        JOIN caretaker_to_plant_count pc ON pc.id = post.care_taker_id
+        JOIN person seller ON seller.id = post.seller_id);
+
+CREATE OR REPLACE FUNCTION get_post (plantId integer)
+  RETURNS plant_post_model
+  AS $$
+DECLARE
+  res plant_post_model;
+BEGIN
   SELECT
-    post.*,
-    FORMAT('%s %s', seller.first_name, seller.last_name) AS seller_name,
-  seller.phone_number AS seller_phone,
-  pc.pcount AS caretaker_experience
-FROM
-  plant_post_v post
-  JOIN plant p ON post.id = p.id
-  JOIN caretaker_to_plant_count pc ON pc.id = p.care_taker_id
-  JOIN plant_post po ON post.id = po.plant_id
-  JOIN person seller ON seller.id = po.seller_id
-WHERE
-  post.id = plantId INTO res;
+    *
+  FROM
+    plant_post_v post
+  WHERE
+    id = plantId INTO res;
   RETURN res;
-END
+END;
 $$
 LANGUAGE plpgsql;
 
