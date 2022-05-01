@@ -507,23 +507,10 @@ financialItemDecoder =
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init response _ =
     let
-        token =
-            case response of
-                Just item ->
-                    item.token
-
-                Nothing ->
-                    ""
-
-        roles =
-            case response of
-                Just item ->
-                    item.roles
-
-                Nothing ->
-                    []
+        cmds resp =
+            getTotals resp.token
     in
-    initBase [ Manager ] ( Totals Loading, getTotals token ) response
+    initBase [ Manager ] (Totals Loading) cmds response
 
 
 getTotals : String -> Cmd Msg

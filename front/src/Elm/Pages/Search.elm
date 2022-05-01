@@ -393,18 +393,10 @@ multiSelectInput msg model =
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init resp _ =
     let
-        token =
-            case resp of
-                Just res ->
-                    res.token
-
-                Nothing ->
-                    ""
-
-        cmds =
-            Cmd.batch [ getAvailable token, search [] token ]
+        cmds authResp =
+            Cmd.batch [ getAvailable authResp.token, search [] authResp.token ]
     in
-    initBase [ Producer, Consumer, Manager ] ( View (Dict.fromList []) Loading Nothing, cmds ) resp
+    initBase [ Producer, Consumer, Manager ] (View (Dict.fromList []) Loading Nothing) cmds resp
 
 
 subscriptions : Model -> Sub Msg

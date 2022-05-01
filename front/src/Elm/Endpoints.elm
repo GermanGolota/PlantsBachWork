@@ -15,6 +15,7 @@ type Endpoint
     | Search
     | Dicts
     | Image Int String
+    | PlantE Int
 
 
 endpointToUrl : Endpoint -> String
@@ -37,6 +38,9 @@ endpointToUrl endpoint =
 
         Image id token ->
             baseUrl ++ "file/plant/" ++ String.fromInt id ++ "?token=" ++ token
+
+        PlantE plantId ->
+            baseUrl ++ "order/" ++ String.fromInt plantId
 
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg

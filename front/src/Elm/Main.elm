@@ -87,12 +87,12 @@ type ModelBase model
     | Authorized AuthResponse model
 
 
-initBase : List UserRole -> ( model, Cmd msg ) -> Maybe AuthResponse -> ( ModelBase model, Cmd msg )
-initBase requiredRoles initialModel response =
+initBase : List UserRole -> model -> (AuthResponse -> Cmd msg) -> Maybe AuthResponse -> ( ModelBase model, Cmd msg )
+initBase requiredRoles initialModel initialCmd response =
     case response of
         Just resp ->
             if intersect requiredRoles resp.roles then
-                ( Authorized resp (Tuple.first initialModel), Tuple.second initialModel )
+                ( Authorized resp initialModel, initialCmd resp )
 
             else
                 ( Unauthorized, Cmd.none )
