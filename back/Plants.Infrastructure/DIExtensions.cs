@@ -31,13 +31,7 @@ namespace Plants.Infrastructure
            {
                x.RequireHttpsMetadata = false;
                x.SaveToken = true;
-               x.TokenValidationParameters = new TokenValidationParameters
-               {
-                   ValidateIssuerSigningKey = true,
-                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
-                   ValidateIssuer = false,
-                   ValidateAudience = false
-               };
+               x.TokenValidationParameters = GetValidationParams(key);
            });
             services.AddHttpContextAccessor();
             services.AddScoped<PlantsContextFactory>();
@@ -49,7 +43,18 @@ namespace Plants.Infrastructure
             return services;
         }
 
-        private static string GetAuthKey(IConfiguration config)
+        public static TokenValidationParameters GetValidationParams(string key)
+        {
+            return new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+                ValidateIssuer = false,
+                ValidateAudience = false
+            };
+        }
+
+        public static string GetAuthKey(IConfiguration config)
         {
             return config
                 .GetSection(AuthSectionName)
