@@ -16,7 +16,7 @@ namespace Plants.Presentation.Controllers
             _mediator = mediator;
         }
 
-        [HttpGet("/{id}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult> GetOrder([FromRoute] int id)
         {
             return Ok(await _mediator.Send(new OrderRequest(id)));

@@ -68,7 +68,22 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg m =
     case m of
         Authorized auth model ->
-            ( m, Cmd.none )
+            let
+                authed newModel =
+                    Authorized auth newModel
+
+                authedPlant plantView =
+                    authed <| Plant plantView
+            in
+            case ( msg, model ) of
+                ( GotPlant (Ok res), Plant p ) ->
+                    ( authedPlant { p | plant = Loaded res }, Cmd.none )
+
+                ( GotPlant (Err res), Plant p ) ->
+                    ( authedPlant { p | plant = Error }, Cmd.none )
+
+                ( _, _ ) ->
+                    ( m, Cmd.none )
 
         _ ->
             ( m, Cmd.none )
@@ -158,12 +173,20 @@ viewPage page =
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init resp flags =
     let
+        initialModel =
+            decodeInitial flags
+
         cmds authResp =
-            Cmd.none
+            case initialModel of
+                Plant p ->
+                    getPlantCommand authResp.token p.id
+
+                NoPlant ->
+                    Cmd.none
     in
     initBase
         [ Producer, Consumer, Manager ]
-        (decodeInitial flags)
+        initialModel
         cmds
         resp
 
