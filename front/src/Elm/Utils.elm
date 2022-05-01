@@ -8,6 +8,8 @@ import Bootstrap.Text as Text
 import Bootstrap.Utilities.Spacing as Spacing
 import Color exposing (Color, rgba)
 import Dict exposing (Dict)
+import FormatNumber exposing (format)
+import FormatNumber.Locales exposing (usLocale)
 import Html exposing (Attribute, Html, a, div)
 import Html.Attributes exposing (attribute, style)
 
@@ -179,7 +181,7 @@ chunkedView size viewFunc items =
             chunk size items
 
         remainder =
-            abs ((modBy size <| List.length items) - size)
+            modBy size <| List.length items
 
         emptyCol =
             Grid.col [ Col.attrs [ style "flex" "1", smallMargin ] ] []
@@ -205,3 +207,8 @@ chunkedView size viewFunc items =
             buildRow
             chunks
         )
+
+
+formatPrice : Float -> String
+formatPrice price =
+    format usLocale price ++ " ₴"

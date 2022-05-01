@@ -51,9 +51,9 @@ BEGIN
     AND (plantName IS NULL
       OR to_tsvector(se.plant_name) @@ to_tsquery(plantName))
     AND (priceRangeBottom IS NULL
-      OR se.price <= priceRangeBottom)
+      OR se.price >= priceRangeBottom)
     AND (priceRangeTop IS NULL
-      OR se.price >= priceRangeTop)
+      OR se.price <= priceRangeTop)
     AND (lastDate IS NULL
       OR se.created >= lastDate)
     AND (groupIds IS NULL

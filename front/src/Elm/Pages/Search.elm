@@ -7,8 +7,6 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
 import Endpoints exposing (Endpoint(..), endpointToUrl, getAuthedQuery)
-import FormatNumber exposing (format)
-import FormatNumber.Locales exposing (usLocale)
 import Html exposing (Html, div, i, text)
 import Html.Attributes exposing (alt, class, href, src, style)
 import Http
@@ -17,7 +15,7 @@ import Json.Decode.Pipeline exposing (required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar exposing (navView)
-import Utils exposing (fillParent, flex, largeFont, smallMargin, textCenter)
+import Utils exposing (fillParent, flex, formatPrice, largeFont, smallMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -367,7 +365,7 @@ resultView token item =
             , Block.text [] [ text item.description ]
             , Block.custom <|
                 div [ flex, Flex.row, style "justify-content" "space-between", Flex.alignItemsCenter ]
-                    [ div [ largeFont ] [ text <| (format usLocale item.price ++ " ₴") ]
+                    [ div [ largeFont ] [ text <| formatPrice item.price ]
                     , div [ flex, Flex.row ]
                         [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/order/" ++ String.fromInt item.id ] ] [ text "Order" ]
                         , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ String.fromInt item.id ] ] [ text "Open" ]
