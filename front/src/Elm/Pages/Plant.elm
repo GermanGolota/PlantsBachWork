@@ -31,9 +31,13 @@ type View
 
 type alias PlantView =
     { id : Int
-    , plant : WebData (Maybe PlantModel)
-    , delivery : Maybe (WebData (Maybe DeliveryAddress))
+    , plantType : ViewType
     }
+
+
+type ViewType
+    = JustPlant (WebData (Maybe PlantModel))
+    | Order (WebData (Maybe PlantModel)) (WebData (Maybe DeliveryAddress))
 
 
 type alias DeliveryAddress =
@@ -89,15 +93,28 @@ update msg m =
             in
             case ( msg, model ) of
                 ( GotPlant (Ok res), Plant p ) ->
-                    ( authedPlant { p | plant = Loaded res }, Cmd.none )
+                    case p.plantType of
+                        JustPlant pWeb ->
+                            ( authedPlant <| { p | plantType = JustPlant <| Loaded res }, Cmd.none )
+
+                        Order pWeb del ->
+                            ( authedPlant <| { p | plantType = Order (Loaded res) del }, Cmd.none )
 
                 ( GotPlant (Err res), Plant p ) ->
-                    ( authedPlant { p | plant = Error }, Cmd.none )
+                    case p.plantType of
+                        JustPlant pWeb ->
+                            ( authedPlant <| { p | plantType = JustPlant <| Error }, Cmd.none )
+
+                        Order pWeb del ->
+                            ( authedPlant <| { p | plantType = Order Error del }, Cmd.none )
 
                 ( Images img, Plant p ) ->
-                    case p.plant of
-                        Loaded (Just pl) ->
-                            ( authedPlant { p | plant = Loaded <| Just { pl | images = ImageList.update img pl.images } }, Cmd.none )
+                    case p.plantType of
+                        JustPlant (Loaded (Just pl)) ->
+                            ( authedPlant { p | plantType = JustPlant <| Loaded <| Just { pl | images = ImageList.update img pl.images } }, Cmd.none )
+
+                        Order (Loaded (Just pl)) del ->
+                            ( authedPlant { p | plantType = Order (Loaded <| Just { pl | images = ImageList.update img pl.images }) del }, Cmd.none )
 
                         _ ->
                             ( m, Cmd.none )
@@ -226,7 +243,12 @@ viewPage _ page =
                 plantView =
                     viewPlantFull plant.id
             in
-            viewWebdata plant.plant plantView
+            case plant.plantType of
+                JustPlant pl ->
+                    viewWebdata pl plantView
+
+                Order pl _ ->
+                    viewWebdata pl plantView
 
 
 viewPlantFull : Int -> Maybe PlantModel -> Html Msg
@@ -327,7 +349,7 @@ decodeInitial flags =
         Ok plantId ->
             case String.toInt plantId of
                 Just plantNumber ->
-                    Plant (PlantView plantNumber Loading Nothing)
+                    Plant (PlantView plantNumber <| JustPlant Loading)
 
                 Nothing ->
                     NoPlant
