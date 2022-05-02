@@ -16,6 +16,7 @@ type Endpoint
     | Dicts
     | Image Int String
     | PlantE Int
+    | Addresses
 
 
 endpointToUrl : Endpoint -> String
@@ -41,6 +42,9 @@ endpointToUrl endpoint =
 
         PlantE plantId ->
             baseUrl ++ "order/" ++ String.fromInt plantId
+
+        Addresses ->
+            baseUrl ++ "info/addresses"
 
 
 imageIdToUrl : String -> Int -> String

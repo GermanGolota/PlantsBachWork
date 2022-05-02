@@ -37,7 +37,7 @@ type alias PlantView =
 
 type ViewType
     = JustPlant (WebData (Maybe PlantModel))
-    | Order (WebData (Maybe PlantModel)) (WebData (Maybe DeliveryAddress))
+    | Order (WebData (Maybe PlantModel)) (WebData (List DeliveryAddress))
 
 
 type alias DeliveryAddress =
@@ -78,6 +78,7 @@ type alias PersonCreds =
 type Msg
     = GotPlant (Result Http.Error (Maybe PlantModel))
     | Images ImageList.Msg
+    | GotAddresses (Result Http.Error (List DeliveryAddress))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -128,6 +129,27 @@ update msg m =
 
 
 --commands
+
+
+getAddressesCommand : String -> Cmd Msg
+getAddressesCommand token =
+    let
+        expect =
+            Http.expectJson GotAddresses addressesDecoder
+    in
+    getAuthed token Addresses expect Nothing
+
+
+addressesDecoder : D.Decoder (List DeliveryAddress)
+addressesDecoder =
+    D.field "addresses" (D.list addressDecoder)
+
+
+addressDecoder : D.Decoder DeliveryAddress
+addressDecoder =
+    D.succeed DeliveryAddress
+        |> required "city" D.string
+        |> custom (D.map (\val -> String.fromInt val ++ "Nova Poshta Delivery") (D.field "mailNumber" D.int))
 
 
 getPlantCommand : String -> Int -> Cmd Msg
