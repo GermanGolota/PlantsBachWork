@@ -18,10 +18,12 @@ namespace Plants.Infrastructure
         {
         }
 
+        public virtual DbSet<CurrentUserAddress> CurrentUserAddresses { get; set; }
         public virtual DbSet<CurrentUserRole> CurrentUserRoles { get; set; }
         public virtual DbSet<DeliveryAddress> DeliveryAddresses { get; set; }
         public virtual DbSet<DictsV> DictsVs { get; set; }
         public virtual DbSet<Person> People { get; set; }
+        public virtual DbSet<PersonAddressesV> PersonAddressesVs { get; set; }
         public virtual DbSet<PersonCredsV> PersonCredsVs { get; set; }
         public virtual DbSet<PersonToLogin> PersonToLogins { get; set; }
         public virtual DbSet<Plant> Plants { get; set; }
@@ -51,6 +53,17 @@ namespace Plants.Infrastructure
             modelBuilder.HasPostgresEnum(null, "userroles", new[] { "consumer", "producer", "manager", "other" })
                 .HasAnnotation("Relational:Collation", "Russian_Russia.1251");
 
+            modelBuilder.Entity<CurrentUserAddress>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("current_user_addresses");
+
+                entity.Property(e => e.Cities).HasColumnName("cities");
+
+                entity.Property(e => e.Posts).HasColumnName("posts");
+            });
+
             modelBuilder.Entity<CurrentUserRole>(entity =>
             {
                 entity.HasNoKey();
@@ -72,21 +85,11 @@ namespace Plants.Infrastructure
 
                 entity.Property(e => e.PersonId).HasColumnName("person_id");
 
-                entity.Property(e => e.RegionId)
-                    .HasColumnName("region_id")
-                    .HasDefaultValueSql("1");
-
                 entity.HasOne(d => d.Person)
                     .WithMany(p => p.DeliveryAddresses)
                     .HasForeignKey(d => d.PersonId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("delivery_address_person_id_fkey");
-
-                entity.HasOne(d => d.Region)
-                    .WithMany(p => p.DeliveryAddresses)
-                    .HasForeignKey(d => d.RegionId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("delivery_address_region_id_fkey");
             });
 
             modelBuilder.Entity<DictsV>(entity =>
@@ -119,6 +122,19 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.PhoneNumber)
                     .IsRequired()
                     .HasColumnName("phone_number");
+            });
+
+            modelBuilder.Entity<PersonAddressesV>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("person_addresses_v");
+
+                entity.Property(e => e.Cities).HasColumnName("cities");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.Posts).HasColumnName("posts");
             });
 
             modelBuilder.Entity<PersonCredsV>(entity =>
@@ -243,13 +259,25 @@ namespace Plants.Infrastructure
                     .ValueGeneratedNever()
                     .HasColumnName("post_id");
 
+                entity.Property(e => e.Created)
+                    .HasColumnType("date")
+                    .HasColumnName("created");
+
                 entity.Property(e => e.CustomerId).HasColumnName("customer_id");
+
+                entity.Property(e => e.DeliveryAddressId).HasColumnName("delivery_address_id");
 
                 entity.HasOne(d => d.Customer)
                     .WithMany(p => p.PlantOrders)
                     .HasForeignKey(d => d.CustomerId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("plant_order_customer_id_fkey");
+
+                entity.HasOne(d => d.DeliveryAddress)
+                    .WithMany(p => p.PlantOrders)
+                    .HasForeignKey(d => d.DeliveryAddressId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("plant_order_delivery_address_id_fkey");
 
                 entity.HasOne(d => d.Post)
                     .WithOne(p => p.PlantOrder)
@@ -271,7 +299,8 @@ namespace Plants.Infrastructure
 
                 entity.Property(e => e.Created)
                     .HasColumnType("date")
-                    .HasColumnName("created");
+                    .HasColumnName("created")
+                    .HasDefaultValueSql("CURRENT_DATE");
 
                 entity.Property(e => e.Price).HasColumnName("price");
 
@@ -311,6 +340,8 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.GroupName).HasColumnName("group_name");
 
                 entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.Images).HasColumnName("images");
 
                 entity.Property(e => e.PlantName).HasColumnName("plant_name");
 

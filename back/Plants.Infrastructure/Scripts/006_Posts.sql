@@ -95,20 +95,63 @@ CREATE OR REPLACE VIEW plant_post_v AS (
       LEFT JOIN person_creds_v seller_creds ON seller_creds.id = post.seller_id
       LEFT JOIN person_creds_v care_taker_creds ON care_taker_creds.id = post.care_taker_id);
 
-CREATE OR REPLACE FUNCTION get_post (plantId integer)
-  RETURNS plant_post_model
-  AS $$
-DECLARE
-  res plant_post_model;
-BEGIN
+ALTER TABLE plant_order
+  ADD COLUMN created date;
+
+UPDATE
+  plant_order
+SET
+  created = CURRENT_DATE
+WHERE
+  created IS NULL;
+
+ALTER TABLE plant_post
+  ALTER COLUMN created SET NOT NULL;
+
+ALTER TABLE plant_post
+  ALTER COLUMN created SET DEFAULT CURRENT_DATE;
+
+ALTER TABLE plant_order
+  ADD COLUMN delivery_address_id INT REFERENCES delivery_address (id);
+
+ALTER TABLE delivery_address
+  DROP COLUMN region_id;
+
+INSERT INTO delivery_address (city, nova_poshta_number, person_id)
+  VALUES ('Odessa', 15, 1);
+
+CREATE VIEW person_addresses_v AS (
   SELECT
-    *
+    p.id,
+    array_agg(d.city) AS cities,
+    array_agg(d.nova_poshta_number) AS posts
   FROM
-    plant_post_v post
+    delivery_address d
+    JOIN person p ON p.id = d.person_id
+  GROUP BY
+    p.id);
+
+CREATE VIEW current_user_addresses AS (
+  SELECT
+    cities,
+    posts
+  FROM
+    person_addresses_v
   WHERE
-    id = plantId INTO res;
-  RETURN res;
-END;
-$$
-LANGUAGE plpgsql;
+    id = get_current_user_id ());
+
+UPDATE
+  plant_order p
+SET
+  delivery_address_id = (
+    SELECT
+      pa.id
+    FROM
+      person_addresses_v pa
+    WHERE
+      pa.id = p.customer_id
+    LIMIT 1);
+
+ALTER TABLE plant_order
+  ALTER COLUMN delivery_address_id SET NOT NULL;
 
