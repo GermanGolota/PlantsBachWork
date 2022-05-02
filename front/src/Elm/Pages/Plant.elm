@@ -9,7 +9,7 @@ import Html.Attributes exposing (href, style)
 import Http
 import ImageList as ImageList
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (custom, required)
+import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import NavBar exposing (searchLink, viewNav)
 import Utils exposing (fillParent, flex, flex1, formatPrice, largeFont, mediumFont, mediumMargin, smallMargin, textCenter)
@@ -31,7 +31,14 @@ type View
 
 type alias PlantView =
     { id : Int
-    , plant : WebData PlantModel
+    , plant : WebData (Maybe PlantModel)
+    , delivery : Maybe (WebData (Maybe DeliveryAddress))
+    }
+
+
+type alias DeliveryAddress =
+    { city : String
+    , location : String
     }
 
 
@@ -65,7 +72,7 @@ type alias PersonCreds =
 
 
 type Msg
-    = GotPlant (Result Http.Error PlantModel)
+    = GotPlant (Result Http.Error (Maybe PlantModel))
     | Images ImageList.Msg
 
 
@@ -89,8 +96,8 @@ update msg m =
 
                 ( Images img, Plant p ) ->
                     case p.plant of
-                        Loaded pl ->
-                            ( authedPlant { p | plant = Loaded { pl | images = ImageList.update img pl.images } }, Cmd.none )
+                        Loaded (Just pl) ->
+                            ( authedPlant { p | plant = Loaded <| Just { pl | images = ImageList.update img pl.images } }, Cmd.none )
 
                         _ ->
                             ( m, Cmd.none )
@@ -115,18 +122,40 @@ getPlantCommand token plantId =
     getAuthed token (PlantE plantId) expect Nothing
 
 
-plantDecoder : String -> D.Decoder PlantModel
+plantDecoder : String -> D.Decoder (Maybe PlantModel)
 plantDecoder token =
+    let
+        initedDecoder =
+            plantItemDecoder token
+    in
+    D.field "exists" D.bool |> D.andThen initedDecoder
+
+
+plantItemDecoder : String -> Bool -> D.Decoder (Maybe PlantModel)
+plantItemDecoder token exists =
+    if exists then
+        D.map Just (plantDecoderBase token)
+
+    else
+        D.succeed Nothing
+
+
+plantDecoderBase : String -> D.Decoder PlantModel
+plantDecoderBase token =
+    let
+        requiredItem name =
+            requiredAt [ "item", name ]
+    in
     D.succeed PlantModel
-        |> required "plantName" D.string
-        |> required "description" D.string
-        |> required "price" D.float
-        |> required "soilName" D.string
-        |> required "regions" (D.list D.string)
-        |> required "groupName" D.string
+        |> requiredItem "plantName" D.string
+        |> requiredItem "description" D.string
+        |> requiredItem "price" D.float
+        |> requiredItem "soilName" D.string
+        |> requiredItem "regions" (D.list D.string)
+        |> requiredItem "groupName" D.string
         |> custom createdDecoder
-        |> required "sellerName" D.string
-        |> required "sellerPhone" D.string
+        |> requiredItem "sellerName" D.string
+        |> requiredItem "sellerPhone" D.string
         |> custom (credsDecoder "seller")
         |> custom (credsDecoder "careTaker")
         |> custom (imagesDecoder token)
@@ -138,7 +167,7 @@ imagesDecoder token =
         baseDecoder =
             imageIdsToModel token
     in
-    D.map baseDecoder (D.field "images" (D.list D.int))
+    D.map baseDecoder (D.at [ "item", "images" ] (D.list D.int))
 
 
 imageIdsToModel : String -> List Int -> ImageList.Model
@@ -155,11 +184,14 @@ credsDecoder person =
     let
         combine str =
             person ++ str
+
+        requiredItem val =
+            requiredAt [ "item", val ]
     in
     D.succeed PersonCreds
-        |> required (combine "Cared") D.int
-        |> required (combine "Sold") D.int
-        |> required (combine "Instructions") D.int
+        |> requiredItem (combine "Cared") D.int
+        |> requiredItem (combine "Sold") D.int
+        |> requiredItem (combine "Instructions") D.int
 
 
 createdDecoder : D.Decoder String
@@ -170,8 +202,8 @@ createdDecoder =
     in
     D.map2
         combine
-        (D.field "createdDate" D.string)
-        (D.field "createdHumanDate" D.string)
+        (D.at [ "item", "createdDate" ] D.string)
+        (D.at [ "item", "createdHumanDate" ] D.string)
 
 
 
@@ -192,9 +224,19 @@ viewPage _ page =
         Plant plant ->
             let
                 plantView =
-                    viewPlant plant.id
+                    viewPlantFull plant.id
             in
             viewWebdata plant.plant plantView
+
+
+viewPlantFull : Int -> Maybe PlantModel -> Html Msg
+viewPlantFull id p =
+    case p of
+        Just plant ->
+            viewPlant id plant
+
+        Nothing ->
+            div [] [ text "This plant is no longer available, sorry" ]
 
 
 viewPlant : Int -> PlantModel -> Html Msg
@@ -285,7 +327,7 @@ decodeInitial flags =
         Ok plantId ->
             case String.toInt plantId of
                 Just plantNumber ->
-                    Plant (PlantView plantNumber Loading)
+                    Plant (PlantView plantNumber Loading Nothing)
 
                 Nothing ->
                     NoPlant

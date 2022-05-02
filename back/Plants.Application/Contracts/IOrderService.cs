@@ -5,6 +5,6 @@ namespace Plants.Application.Contracts
 {
     public interface IOrderService
     {
-        Task<OrderResult> GetBy(int orderId);
+        Task<OrderResultItem?> GetBy(int orderId);
     }
 }

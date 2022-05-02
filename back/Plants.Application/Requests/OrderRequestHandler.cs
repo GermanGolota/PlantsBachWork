@@ -16,7 +16,17 @@ namespace Plants.Application.Requests
 
         public async Task<OrderResult> Handle(OrderRequest request, CancellationToken cancellationToken)
         {
-            return await _order.GetBy(request.OrderId);
+            var item = await _order.GetBy(request.OrderId);
+            OrderResult res;
+            if (item is not null)
+            {
+                res = new OrderResult(item);
+            }
+            else
+            {
+                res = new OrderResult();
+            }
+            return res;
         }
     }
 }
