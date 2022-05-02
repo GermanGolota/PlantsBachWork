@@ -24,5 +24,13 @@ namespace Plants.Presentation.Controllers
             var res = await _mediator.Send(req, token);
             return Ok(res);
         }
+
+        [HttpGet("addresses")]
+        public async Task<ActionResult<AddressResult>> Addresses(CancellationToken token)
+        {
+            var req = new AddressRequest();
+            var res = await _mediator.Send(req, token);
+            return Ok(res);
+        }
     }
 }

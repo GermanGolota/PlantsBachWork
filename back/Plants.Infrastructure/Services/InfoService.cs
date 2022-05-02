@@ -56,5 +56,28 @@ namespace Plants.Infrastructure.Services
                 .Zip(dict.Values)
                 .ToDictionary(x => x.First, x => x.Second);
         }
+
+
+        public async Task<IEnumerable<PersonAddress>> GetMyAddresses()
+        {
+            var ctx = _ctxFactory.CreateDbContext();
+            await using (ctx)
+            {
+                var sql = "SELECT * FROM current_user_addresses";
+                var res = await ctx.CurrentUserAddresses.FromSqlRaw(sql).ToListAsync();
+                var first = res.FirstOrDefault();
+                IEnumerable<PersonAddress> output;
+                if (first == default)
+                {
+                    output = new List<PersonAddress>();
+                }
+                else
+                {
+                    output = first.Posts.Zip(first.Cities)
+                        .Select(pair => new PersonAddress(pair.Second, pair.First));
+                }
+                return output;
+            }
+        }
     }
 }
