@@ -414,7 +414,7 @@ createdDecoder : D.Decoder String
 createdDecoder =
     let
         combine date humanDate =
-            date ++ "(" ++ humanDate ++ ")"
+            date ++ " (" ++ humanDate ++ ")"
     in
     D.map2
         combine
