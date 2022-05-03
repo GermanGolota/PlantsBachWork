@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from "react";import ReactDOM from "react-dom";
+import React, { useCallback, useState } from "react";
+import ReactDOM from "react-dom";
 import {
   Route,
   Link,
@@ -41,7 +42,7 @@ const SearchPage = () => {
   return <div ref={elmRef}></div>;
 };
 
-const PlantPage = () => {
+const PlantPage = (props: { isOrder: boolean }) => {
   const [app, setApp] = React.useState<PlantElm.Pages.Plant.App | undefined>();
   const elmRef = React.useRef(null);
 
@@ -52,6 +53,7 @@ const PlantPage = () => {
     let finalResult = {
       ...model,
       plantId: plantId,
+      isOrder: props.isOrder,
     };
     return PlantElm.Pages.Plant.init({
       node: elmRef.current,
@@ -130,7 +132,11 @@ const App = () => (
       <Route path="/login" element={<LoginPage />} />
       <Route path="/stats" element={<StatsPage />} />
       <Route path="/search" element={<SearchPage />} />
-      <Route path="/plant/:plantId" element={<PlantPage />} />
+      <Route path="/plant/:plantId" element={<PlantPage isOrder={false} />} />
+      <Route
+        path="/plant/:plantId/order"
+        element={<PlantPage isOrder={true} />}
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>

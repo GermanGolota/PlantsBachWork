@@ -20,6 +20,10 @@ type AlignDirection
     | Center
 
 
+largeCentered =
+    [ largeFont, textCenter ]
+
+
 largeFont : Attribute msg
 largeFont =
     style "font-size" "2rem"

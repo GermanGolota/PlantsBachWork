@@ -1,18 +1,21 @@
 module Pages.Plant exposing (..)
 
 import Bootstrap.Button as Button
+import Bootstrap.Form.Input as Input
+import Bootstrap.Form.Radio as Radio
+import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
 import Dict
 import Endpoints exposing (Endpoint(..), getAuthed, imageIdToUrl)
-import Html exposing (Html, div, text)
-import Html.Attributes exposing (href, style)
+import Html exposing (Html, div, i, text)
+import Html.Attributes exposing (class, href, style, value)
 import Http
 import ImageList as ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import NavBar exposing (searchLink, viewNav)
-import Utils exposing (fillParent, flex, flex1, formatPrice, largeFont, mediumFont, mediumMargin, smallMargin, textCenter)
+import Utils exposing (fillParent, flex, flex1, formatPrice, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -37,7 +40,14 @@ type alias PlantView =
 
 type ViewType
     = JustPlant (WebData (Maybe PlantModel))
-    | Order (WebData (Maybe PlantModel)) (WebData (List DeliveryAddress))
+    | Order (WebData (Maybe PlantModel)) (WebData (List DeliveryAddress)) SelectedAddress
+
+
+type SelectedAddress
+    = None
+    | City String
+    | Location Int
+    | Selected DeliveryAddress
 
 
 type alias DeliveryAddress =
@@ -79,6 +89,9 @@ type Msg
     = GotPlant (Result Http.Error (Maybe PlantModel))
     | Images ImageList.Msg
     | GotAddresses (Result Http.Error (List DeliveryAddress))
+    | AddressSelected String Int
+    | CityChanged String
+    | LocationChanged Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -98,24 +111,49 @@ update msg m =
                         JustPlant pWeb ->
                             ( authedPlant <| { p | plantType = JustPlant <| Loaded res }, Cmd.none )
 
-                        Order pWeb del ->
-                            ( authedPlant <| { p | plantType = Order (Loaded res) del }, Cmd.none )
+                        Order pWeb del selected ->
+                            ( authedPlant <| { p | plantType = Order (Loaded res) del selected }, Cmd.none )
 
                 ( GotPlant (Err res), Plant p ) ->
                     case p.plantType of
                         JustPlant pWeb ->
                             ( authedPlant <| { p | plantType = JustPlant <| Error }, Cmd.none )
 
-                        Order pWeb del ->
-                            ( authedPlant <| { p | plantType = Order Error del }, Cmd.none )
+                        Order pWeb del selected ->
+                            ( authedPlant <| { p | plantType = Order Error del selected }, Cmd.none )
+
+                ( GotAddresses (Ok res), Plant p ) ->
+                    let
+                        sel =
+                            case List.head res of
+                                Just val ->
+                                    Selected val
+
+                                Nothing ->
+                                    None
+                    in
+                    case p.plantType of
+                        Order pl del selected ->
+                            ( authedPlant <| { p | plantType = Order pl (Loaded res) sel }, Cmd.none )
+
+                        _ ->
+                            ( m, Cmd.none )
+
+                ( GotAddresses (Err res), Plant p ) ->
+                    case p.plantType of
+                        Order pl del selected ->
+                            ( authedPlant <| { p | plantType = Order pl Error selected }, Cmd.none )
+
+                        _ ->
+                            ( m, Cmd.none )
 
                 ( Images img, Plant p ) ->
                     case p.plantType of
                         JustPlant (Loaded (Just pl)) ->
                             ( authedPlant { p | plantType = JustPlant <| Loaded <| Just { pl | images = ImageList.update img pl.images } }, Cmd.none )
 
-                        Order (Loaded (Just pl)) del ->
-                            ( authedPlant { p | plantType = Order (Loaded <| Just { pl | images = ImageList.update img pl.images }) del }, Cmd.none )
+                        Order (Loaded (Just pl)) del selected ->
+                            ( authedPlant { p | plantType = Order (Loaded <| Just { pl | images = ImageList.update img pl.images }) del selected }, Cmd.none )
 
                         _ ->
                             ( m, Cmd.none )
@@ -149,7 +187,7 @@ addressDecoder : D.Decoder DeliveryAddress
 addressDecoder =
     D.succeed DeliveryAddress
         |> required "city" D.string
-        |> custom (D.map (\val -> String.fromInt val ++ "Nova Poshta Delivery") (D.field "mailNumber" D.int))
+        |> custom (D.map (\val -> String.fromInt val ++ ", Nova Poshta Delivery") (D.field "mailNumber" D.int))
 
 
 getPlantCommand : String -> Int -> Cmd Msg
@@ -264,20 +302,108 @@ viewPage _ page =
             let
                 plantView =
                     viewPlantFull plant.id
+
+                orderView =
+                    viewOrderFull plant.id
             in
             case plant.plantType of
                 JustPlant pl ->
-                    viewWebdata pl plantView
+                    viewWebdata pl (plantView viewPlant)
 
-                Order pl _ ->
-                    viewWebdata pl plantView
+                Order pl del selected ->
+                    viewWebdata pl (orderView selected del)
 
 
-viewPlantFull : Int -> Maybe PlantModel -> Html Msg
-viewPlantFull id p =
+viewOrderFull : Int -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe PlantModel -> Html Msg
+viewOrderFull id selected del p =
+    viewPlantFull id (viewOrder selected del) p
+
+
+viewOrder : SelectedAddress -> WebData (List DeliveryAddress) -> Int -> PlantModel -> Html Msg
+viewOrder selected del id pl =
+    let
+        header textT =
+            div largeCentered [ text textT ]
+    in
+    div (fillParent ++ [ flex, Flex.row ])
+        [ viewPlantLeft pl
+        , div [ flex, Flex.col, flex1 ]
+            (viewDesc pl
+                ++ [ header "Payment methods"
+                   , div [ flex1, Flex.justifyCenter, flex, Flex.col ]
+                        [ Radio.advancedCustom
+                            [ Radio.id "direct"
+                            , Radio.disabled True
+                            ]
+                            (Radio.label [] [ text "Pay Now" ])
+                        , Radio.advancedCustom
+                            [ Radio.id "arrival"
+                            , Radio.checked True
+                            ]
+                            (Radio.label [] [ text "Pay On Arrival" ])
+                        ]
+                   , viewWebdata del (viewLocation selected)
+                   , interactionButtons True id
+                   ]
+            )
+        ]
+
+
+viewLocation : SelectedAddress -> List DeliveryAddress -> Html Msg
+viewLocation sel dels =
+    let
+        viewDel delAddr =
+            Select.item [ value (delAddr.city ++ "_" ++ delAddr.location) ] [ text (delAddr.city ++ " | " ++ delAddr.location) ]
+    in
+    div (fillParent ++ [ flex, Flex.col, mediumMargin, flex1 ])
+        ([ div largeCentered [ text "Previous" ]
+         , Select.select []
+            (List.map viewDel dels)
+         ]
+            ++ viewSelected sel
+        )
+
+
+viewSelected : SelectedAddress -> List (Html Msg)
+viewSelected selected =
+    let
+        cityText =
+            case selected of
+                Selected addr ->
+                    addr.city
+
+                City city ->
+                    city
+
+                _ ->
+                    ""
+
+        locationText =
+            case selected of
+                Selected addr ->
+                    addr.location
+
+                Location location ->
+                    String.fromInt location
+
+                _ ->
+                    ""
+    in
+    [ div largeCentered [ text "City" ]
+    , div [ flex, flex1, Flex.row, Flex.alignItemsCenter ]
+        [ i [ class "fa-solid fa-location-dot", smallMargin ] []
+        , Input.text [ Input.value cityText ]
+        ]
+    , div largeCentered [ text "Location" ]
+    , Input.text [ Input.attrs [ flex1 ], Input.value locationText ]
+    ]
+
+
+viewPlantFull : Int -> (Int -> PlantModel -> Html Msg) -> Maybe PlantModel -> Html Msg
+viewPlantFull id viewFunc p =
     case p of
         Just plant ->
-            viewPlant id plant
+            viewFunc id plant
 
         Nothing ->
             div [] [ text "This plant is no longer available, sorry" ]
@@ -288,29 +414,38 @@ viewPlant id plant =
     let
         filled args =
             fillParent ++ args
-
-        largeCentered =
-            [ largeFont, textCenter ]
     in
     div (filled [ flex, Flex.row ])
-        [ div [ flex, Flex.col, flex1 ]
-            [ div largeCentered [ text plant.name ]
-            , Html.map Images <| ImageList.view plant.images
-            , viewPlantStat "Caretaker Credentials" (credsToString plant.caretakerCreds)
-            , viewPlantStat "Seller Credentials" (credsToString plant.sellerCreds)
-            , viewPlantStat "Seller Nama" plant.sellerName
-            , viewPlantStat "Seller Phone" plant.sellerPhone
-            ]
+        [ viewPlantLeft plant
         , div [ flex, Flex.col, flex1 ]
-            [ div largeCentered [ text "Description" ]
-            , div [] [ text plant.description ]
-            , div largeCentered [ text <| formatPrice plant.price ]
-            , viewPlantStat "Soil" plant.soil
-            , viewPlantStat "Regions" (String.join ", " plant.regions)
-            , viewPlantStat "Group" plant.group
-            , viewPlantStat "Age" plant.created
-            , interactionButtons id
-            ]
+            (viewDesc plant
+                ++ [ viewPlantStat "Soil" plant.soil
+                   , viewPlantStat "Regions" (String.join ", " plant.regions)
+                   , viewPlantStat "Group" plant.group
+                   , viewPlantStat "Age" plant.created
+                   , interactionButtons False id
+                   ]
+            )
+        ]
+
+
+viewDesc : PlantModel -> List (Html msg)
+viewDesc plant =
+    [ div largeCentered [ text "Description" ]
+    , div [] [ text plant.description ]
+    , div largeCentered [ text <| formatPrice plant.price ]
+    ]
+
+
+viewPlantLeft : PlantModel -> Html Msg
+viewPlantLeft plant =
+    div [ flex, Flex.col, flex1 ]
+        [ div largeCentered [ text plant.name ]
+        , Html.map Images <| ImageList.view plant.images
+        , viewPlantStat "Caretaker Credentials" (credsToString plant.caretakerCreds)
+        , viewPlantStat "Seller Credentials" (credsToString plant.sellerCreds)
+        , viewPlantStat "Seller Nama" plant.sellerName
+        , viewPlantStat "Seller Phone" plant.sellerPhone
         ]
 
 
@@ -330,10 +465,33 @@ flexRowGap left right =
         ]
 
 
-interactionButtons id =
+interactionButtons : Bool -> Int -> Html Msg
+interactionButtons isOrder id =
+    let
+        backUrl =
+            if isOrder then
+                "/plant/" ++ String.fromInt id
+
+            else
+                "/search"
+
+        orderText =
+            if isOrder then
+                "Confirm Order"
+
+            else
+                "Order"
+
+        orderUrl =
+            if isOrder then
+                "#"
+
+            else
+                "/plant/" ++ String.fromInt id ++ "/order"
+    in
     div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
-        [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/search", largeFont ] ] [ text "Back" ]
-        , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/order/" ++ String.fromInt id, largeFont ] ] [ text "Order" ]
+        [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href backUrl, largeFont ] ] [ text "Back" ]
+        , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href orderUrl, largeFont ] ] [ text orderText ]
         ]
 
 
@@ -350,7 +508,12 @@ init resp flags =
         cmds authResp =
             case initialModel of
                 Plant p ->
-                    getPlantCommand authResp.token p.id
+                    case p.plantType of
+                        JustPlant _ ->
+                            getPlantCommand authResp.token p.id
+
+                        Order _ _ _ ->
+                            Cmd.batch [ getPlantCommand authResp.token p.id, getAddressesCommand authResp.token ]
 
                 NoPlant ->
                     Cmd.none
@@ -364,6 +527,10 @@ init resp flags =
 
 decodeInitial : D.Value -> View
 decodeInitial flags =
+    let
+        isOrder =
+            decodeIsOrder flags
+    in
     case decodePlantId flags of
         Err _ ->
             NoPlant
@@ -371,10 +538,28 @@ decodeInitial flags =
         Ok plantId ->
             case String.toInt plantId of
                 Just plantNumber ->
-                    Plant (PlantView plantNumber <| JustPlant Loading)
+                    if isOrder then
+                        Plant (PlantView plantNumber <| Order Loading Loading None)
+
+                    else
+                        Plant (PlantView plantNumber <| JustPlant Loading)
 
                 Nothing ->
                     NoPlant
+
+
+decodeIsOrder : D.Value -> Bool
+decodeIsOrder flags =
+    let
+        decoded =
+            D.decodeValue (D.field "isOrder" D.bool) flags
+    in
+    case decoded of
+        Ok res ->
+            res
+
+        Err _ ->
+            False
 
 
 decodePlantId : D.Value -> Result D.Error String
