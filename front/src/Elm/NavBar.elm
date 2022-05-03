@@ -10,7 +10,7 @@ import Html exposing (Html, a, div, i, text)
 import Html.Attributes exposing (class, href, style)
 import Main exposing (AuthResponse, ModelBase, UserRole(..), viewBase)
 import TypedSvg.Types exposing (px)
-import Utils exposing (fillParent, fillScreen, flex, intersect, largeFont, smallMargin)
+import Utils exposing (fillParent, fillScreen, flex, flex1, intersect, largeFont, smallMargin)
 
 
 type alias Link =
@@ -71,14 +71,14 @@ viewMain link pageView resp model =
 viewNavBase : String -> List UserRole -> Maybe Link -> Html msg -> Html msg
 viewNavBase username roles currentLink baseView =
     div fillScreen
-        [ div ([ flex, Flex.row ] ++ fillParent) [ navBar username roles currentLink, baseView ]
+        [ div ([ flex, Flex.row ] ++ fillParent) [ navBar username roles currentLink, div [ style "flex" "3" ] [ baseView ] ]
         ]
 
 
 navBar : String -> List UserRole -> Maybe Link -> Html msg
 navBar username roles currentLink =
     div
-        [ style "width" "25%"
+        [ flex1
         , style "height" "100%"
         , style "margin-right" "0.5em"
         , class "bg-light"

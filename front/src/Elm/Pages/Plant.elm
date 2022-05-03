@@ -7,8 +7,8 @@ import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
 import Dict
 import Endpoints exposing (Endpoint(..), getAuthed, imageIdToUrl, postAuthed)
-import Html exposing (Html, div, i, text)
-import Html.Attributes exposing (class, href, style, value)
+import Html exposing (Html, div, i, input, text)
+import Html.Attributes exposing (checked, class, disabled, href, style, type_, value)
 import Http
 import ImageList as ImageList
 import Json.Decode as D
@@ -61,7 +61,7 @@ type SelectedAddress
     = None
     | City String
     | Location Int
-    | Selected DeliveryAddress
+    | Selected Bool DeliveryAddress
 
 
 type alias DeliveryAddress =
@@ -151,7 +151,7 @@ update msg m =
                         sel =
                             case List.head res of
                                 Just val ->
-                                    Selected val
+                                    Selected True val
 
                                 Nothing ->
                                     None
@@ -190,7 +190,7 @@ update msg m =
                 ( AddressSelected city location, Plant p ) ->
                     case p.plantType of
                         Order orderView ->
-                            ( authedOrder p (Order <| { orderView | selected = Selected <| DeliveryAddress city location }), Cmd.none )
+                            ( authedOrder p (Order <| { orderView | selected = Selected True <| DeliveryAddress city location }), Cmd.none )
 
                         _ ->
                             noOp
@@ -203,11 +203,11 @@ update msg m =
                                     ( authedOrder p (Order <| { orderView | selected = selected }), Cmd.none )
                             in
                             case orderView.selected of
-                                Selected addr ->
-                                    updateSelected <| Selected (DeliveryAddress city addr.location)
+                                Selected _ addr ->
+                                    updateSelected <| Selected False (DeliveryAddress city addr.location)
 
                                 Location loc ->
-                                    updateSelected <| Selected <| DeliveryAddress city loc
+                                    updateSelected <| Selected False <| DeliveryAddress city loc
 
                                 City _ ->
                                     updateSelected <| City city
@@ -226,11 +226,11 @@ update msg m =
                                     ( authedOrder p (Order <| { orderView | selected = selected }), Cmd.none )
                             in
                             case orderView.selected of
-                                Selected addr ->
-                                    updateSelected <| Selected (DeliveryAddress addr.city loc)
+                                Selected _ addr ->
+                                    updateSelected <| Selected False (DeliveryAddress addr.city loc)
 
                                 City city ->
-                                    updateSelected <| Selected <| DeliveryAddress city loc
+                                    updateSelected <| Selected False <| DeliveryAddress city loc
 
                                 Location _ ->
                                     updateSelected <| Location loc
@@ -245,7 +245,7 @@ update msg m =
                     case p.plantType of
                         Order orderView ->
                             case orderView.selected of
-                                Selected addr ->
+                                Selected _ addr ->
                                     ( authedOrder p <| Order { orderView | result = Just Loading }, submitCmd auth.token p.id addr.city addr.location )
 
                                 _ ->
@@ -477,23 +477,20 @@ viewOrder selected del result id pl =
         , div [ flex, Flex.col, flex1 ]
             (viewDesc pl
                 ++ [ header "Payment methods"
-                   , div [ flex1, Flex.justifyCenter, flex, Flex.col ]
-                        [ Radio.advancedCustom
-                            [ Radio.id "direct"
-                            , Radio.disabled True
-                            ]
-                            (Radio.label [] [ text "Pay Now" ])
-                        , Radio.advancedCustom
-                            [ Radio.id "arrival"
-                            , Radio.checked True
-                            ]
-                            (Radio.label [] [ text "Pay On Arrival" ])
-                        ]
+                   , customRadio True "Pay now" False
+                   , customRadio False "Pay on arrival" True
                    , viewWebdata del (viewLocation selected)
                    , resultView
                    , interactionButtons True id
                    ]
             )
+        ]
+
+
+customRadio isDisabled msg isChecked =
+    div [ flex1, flex, Flex.row, Flex.alignItemsCenter ]
+        [ input [ type_ "radio", disabled isDisabled, checked isChecked ] []
+        , div [ largeFont, mediumMargin ] [ text msg ]
         ]
 
 
@@ -535,10 +532,18 @@ viewLocation sel dels =
 
                 Nothing ->
                     NoOp
+
+        selectClass =
+            case sel of
+                Selected True _ ->
+                    ""
+
+                _ ->
+                    "bg-secondary"
     in
     div (fillParent ++ [ flex, Flex.col, mediumMargin, flex1 ])
         ([ div largeCentered [ text "Previous" ]
-         , Select.select [ Select.onChange (\val -> delAddressToEvent <| getAddressFromValue val) ]
+         , Select.select [ Select.onChange (\val -> delAddressToEvent <| getAddressFromValue val), Select.attrs [ class selectClass ] ]
             (List.map viewDel dels)
          ]
             ++ viewSelected sel
@@ -555,7 +560,7 @@ viewSelected selected =
     let
         cityText =
             case selected of
-                Selected addr ->
+                Selected _ addr ->
                     addr.city
 
                 City city ->
@@ -566,7 +571,7 @@ viewSelected selected =
 
         locationText =
             case selected of
-                Selected addr ->
+                Selected _ addr ->
                     String.fromInt addr.location
 
                 Location location ->

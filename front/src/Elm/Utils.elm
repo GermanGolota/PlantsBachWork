@@ -91,7 +91,7 @@ rgba255 r g b a =
 
 fillScreen : List (Attribute msg)
 fillScreen =
-    [ style "width" "100vw", style "height" "100vh", style "max-width" "100vw", style "max-height" "100vh" ]
+    [ style "width" "100vw", style "height" "100vh", style "max-width" "100%", style "max-height" "100vh", style "overflow-x" "hidden" ]
 
 
 fillParent : List (Attribute msg)
