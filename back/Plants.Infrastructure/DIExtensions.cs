@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -7,7 +6,6 @@ using Plants.Application.Contracts;
 using Plants.Infrastructure.Config;
 using Plants.Infrastructure.Services;
 using System.Linq;
-using System.Security.Claims;
 using System.Text;
 
 namespace Plants.Infrastructure
@@ -16,6 +14,15 @@ namespace Plants.Infrastructure
     {
         const string AuthSectionName = "Auth";
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
+        {
+            services.AddHttpContextAccessor();
+            services.AddScoped<PlantsContextFactory>();
+            services.AddAuth(config)
+                .AddServices();
+            return services;
+        }
+
+        private static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration config)
         {
             string key = GetAuthKey(config);
             services.AddScoped<SymmetricEncrypter>();
@@ -33,14 +40,18 @@ namespace Plants.Infrastructure
                x.SaveToken = true;
                x.TokenValidationParameters = GetValidationParams(key);
            });
-            services.AddHttpContextAccessor();
-            services.AddScoped<PlantsContextFactory>();
+            return services;
+        }
+
+        private static IServiceCollection AddServices(this IServiceCollection services)
+        {
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IStatsService, StatsService>();
             services.AddScoped<ISearchService, SearchService>();
             services.AddScoped<IInfoService, InfoService>();
             services.AddScoped<IFileService, FileService>();
             services.AddScoped<IPostService, PostService>();
+            services.AddScoped<IPlantsService, PlantsService>();
             return services;
         }
 

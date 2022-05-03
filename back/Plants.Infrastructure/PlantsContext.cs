@@ -503,6 +503,8 @@ namespace Plants.Infrastructure
 
                 entity.Property(e => e.Description).HasColumnName("description");
 
+                entity.Property(e => e.Id).HasColumnName("id");
+
                 entity.Property(e => e.Ismine).HasColumnName("ismine");
 
                 entity.Property(e => e.PlantName).HasColumnName("plant_name");
