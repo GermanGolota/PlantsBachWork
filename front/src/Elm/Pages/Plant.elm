@@ -14,6 +14,7 @@ import ImageList as ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
+import Maybe exposing (map)
 import NavBar exposing (searchLink, viewNav)
 import Utils exposing (fillParent, flex, flex1, formatPrice, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -86,7 +87,8 @@ type alias PersonCreds =
 
 
 type Msg
-    = GotPlant (Result Http.Error (Maybe PlantModel))
+    = NoOp
+    | GotPlant (Result Http.Error (Maybe PlantModel))
     | Images ImageList.Msg
     | GotAddresses (Result Http.Error (List DeliveryAddress))
     | AddressSelected String Int
@@ -96,6 +98,10 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg m =
+    let
+        noOp =
+            ( m, Cmd.none )
+    in
     case m of
         Authorized auth model ->
             let
@@ -104,6 +110,9 @@ update msg m =
 
                 authedPlant plantView =
                     authed <| Plant plantView
+
+                authedOrder p ord =
+                    authedPlant { p | plantType = ord }
             in
             case ( msg, model ) of
                 ( GotPlant (Ok res), Plant p ) ->
@@ -137,7 +146,7 @@ update msg m =
                             ( authedPlant <| { p | plantType = Order pl (Loaded res) sel }, Cmd.none )
 
                         _ ->
-                            ( m, Cmd.none )
+                            noOp
 
                 ( GotAddresses (Err res), Plant p ) ->
                     case p.plantType of
@@ -145,7 +154,7 @@ update msg m =
                             ( authedPlant <| { p | plantType = Order pl Error selected }, Cmd.none )
 
                         _ ->
-                            ( m, Cmd.none )
+                            noOp
 
                 ( Images img, Plant p ) ->
                     case p.plantType of
@@ -156,13 +165,49 @@ update msg m =
                             ( authedPlant { p | plantType = Order (Loaded <| Just { pl | images = ImageList.update img pl.images }) del selected }, Cmd.none )
 
                         _ ->
-                            ( m, Cmd.none )
+                            noOp
+
+                ( AddressSelected city location, Plant p ) ->
+                    case p.plantType of
+                        Order pl (Loaded addresses) _ ->
+                            ( authedOrder p (Order pl (Loaded addresses) <| Selected (DeliveryAddress city location)), Cmd.none )
+
+                        _ ->
+                            noOp
+
+                ( CityChanged city, Plant p ) ->
+                    case p.plantType of
+                        Order pl (Loaded addresses) (Selected addr) ->
+                            ( authedOrder p (Order pl (Loaded addresses) <| Selected (DeliveryAddress city addr.location)), Cmd.none )
+
+                        Order pl (Loaded addresses) (Location loc) ->
+                            ( authedOrder p (Order pl (Loaded addresses) <| Selected <| DeliveryAddress city loc), Cmd.none )
+
+                        Order pl (Loaded addresses) None ->
+                            ( authedOrder p (Order pl (Loaded addresses) <| City city), Cmd.none )
+
+                        _ ->
+                            noOp
+
+                ( LocationChanged loc, Plant p ) ->
+                    case p.plantType of
+                        Order pl (Loaded addresses) (Selected addr) ->
+                            ( authedOrder p (Order pl (Loaded addresses) <| Selected (DeliveryAddress addr.city loc)), Cmd.none )
+
+                        Order pl (Loaded addresses) (City city) ->
+                            ( authedOrder p (Order pl (Loaded addresses) <| Selected <| DeliveryAddress city loc), Cmd.none )
+
+                        Order pl (Loaded addresses) None ->
+                            ( authedOrder p (Order pl (Loaded addresses) <| Location loc), Cmd.none )
+
+                        _ ->
+                            noOp
 
                 ( _, _ ) ->
-                    ( m, Cmd.none )
+                    noOp
 
         _ ->
-            ( m, Cmd.none )
+            noOp
 
 
 
@@ -352,12 +397,31 @@ viewOrder selected del id pl =
 viewLocation : SelectedAddress -> List DeliveryAddress -> Html Msg
 viewLocation sel dels =
     let
+        valSep =
+            "___"
+
         viewDel delAddr =
-            Select.item [ value (delAddr.city ++ "_" ++ String.fromInt delAddr.location) ] [ text (delAddr.city ++ " | " ++ locationToString delAddr.location) ]
+            Select.item [ value (delAddr.city ++ valSep ++ String.fromInt delAddr.location) ] [ text (delAddr.city ++ " | " ++ locationToString delAddr.location) ]
+
+        getAddressFromValue value =
+            case String.split valSep value of
+                [ city, location ] ->
+                    map (DeliveryAddress city) (String.toInt location)
+
+                _ ->
+                    Nothing
+
+        delAddressToEvent addr =
+            case addr of
+                Just address ->
+                    AddressSelected address.city address.location
+
+                Nothing ->
+                    NoOp
     in
     div (fillParent ++ [ flex, Flex.col, mediumMargin, flex1 ])
         ([ div largeCentered [ text "Previous" ]
-         , Select.select []
+         , Select.select [ Select.onChange (\val -> delAddressToEvent <| getAddressFromValue val) ]
             (List.map viewDel dels)
          ]
             ++ viewSelected sel
@@ -386,21 +450,29 @@ viewSelected selected =
         locationText =
             case selected of
                 Selected addr ->
-                    locationToString addr.location
+                    String.fromInt addr.location
 
                 Location location ->
-                    locationToString location
+                    String.fromInt location
 
                 _ ->
                     ""
+
+        locationFromStr str =
+            case String.toInt str of
+                Just location ->
+                    LocationChanged location
+
+                Nothing ->
+                    NoOp
     in
     [ div largeCentered [ text "City" ]
     , div [ flex, flex1, Flex.row, Flex.alignItemsCenter ]
         [ i [ class "fa-solid fa-location-dot", smallMargin ] []
-        , Input.text [ Input.value cityText ]
+        , Input.text [ Input.value cityText, Input.onInput CityChanged ]
         ]
     , div largeCentered [ text "Location" ]
-    , Input.text [ Input.attrs [ flex1 ], Input.value locationText ]
+    , Input.number [ Input.attrs [ flex1 ], Input.value locationText, Input.onInput locationFromStr ]
     ]
 
 
