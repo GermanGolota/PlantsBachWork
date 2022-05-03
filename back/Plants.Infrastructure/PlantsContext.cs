@@ -40,6 +40,7 @@ namespace Plants.Infrastructure
         public virtual DbSet<PlantToImage> PlantToImages { get; set; }
         public virtual DbSet<PlantToRegion> PlantToRegions { get; set; }
         public virtual DbSet<PlantsV> PlantsVs { get; set; }
+        public virtual DbSet<PreparedForPostV> PreparedForPostVs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -508,6 +509,47 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.Ismine).HasColumnName("ismine");
 
                 entity.Property(e => e.PlantName).HasColumnName("plant_name");
+            });
+
+            modelBuilder.Entity<PreparedForPostV>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("prepared_for_post_v");
+
+                entity.Property(e => e.CareTakerCared).HasColumnName("care_taker_cared");
+
+                entity.Property(e => e.CareTakerInstructions).HasColumnName("care_taker_instructions");
+
+                entity.Property(e => e.CareTakerSold).HasColumnName("care_taker_sold");
+
+                entity.Property(e => e.Created)
+                    .HasColumnType("date")
+                    .HasColumnName("created");
+
+                entity.Property(e => e.Description).HasColumnName("description");
+
+                entity.Property(e => e.GroupName).HasColumnName("group_name");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.Images).HasColumnName("images");
+
+                entity.Property(e => e.PlantName).HasColumnName("plant_name");
+
+                entity.Property(e => e.Regions).HasColumnName("regions");
+
+                entity.Property(e => e.SellerCared).HasColumnName("seller_cared");
+
+                entity.Property(e => e.SellerInstructions).HasColumnName("seller_instructions");
+
+                entity.Property(e => e.SellerName).HasColumnName("seller_name");
+
+                entity.Property(e => e.SellerPhone).HasColumnName("seller_phone");
+
+                entity.Property(e => e.SellerSold).HasColumnName("seller_sold");
+
+                entity.Property(e => e.SoilName).HasColumnName("soil_name");
             });
 
             modelBuilder.HasSequence("plantgroupidsequence");
