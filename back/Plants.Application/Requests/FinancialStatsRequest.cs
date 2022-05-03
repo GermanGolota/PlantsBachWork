@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Plants.Application.Requests
 {

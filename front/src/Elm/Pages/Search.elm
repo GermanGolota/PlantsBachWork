@@ -362,7 +362,7 @@ resultView token item =
                 div [ flex, Flex.row, style "justify-content" "space-between", Flex.alignItemsCenter ]
                     [ div [ largeFont ] [ text <| formatPrice item.price ]
                     , div [ flex, Flex.row ]
-                        [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/order/" ++ String.fromInt item.id ] ] [ text "Order" ]
+                        [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ String.fromInt item.id ++ "/order" ] ] [ text "Order" ]
                         , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ String.fromInt item.id ] ] [ text "Open" ]
                         ]
                     ]

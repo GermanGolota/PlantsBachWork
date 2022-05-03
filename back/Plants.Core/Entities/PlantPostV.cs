@@ -23,5 +23,6 @@ namespace Plants.Core.Entities
         public long? CareTakerCared { get; set; }
         public long? CareTakerSold { get; set; }
         public long? CareTakerInstructions { get; set; }
+        public int[] Images { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, postAuthed)
+module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, postAuthed, postAuthedQuery)
 
 import Http exposing (header, request)
 
@@ -15,7 +15,9 @@ type Endpoint
     | Search
     | Dicts
     | Image Int String
-    | PlantE Int
+    | Post Int
+    | OrderPost Int String Int --plantId, city, mailNumber
+    | Addresses
 
 
 endpointToUrl : Endpoint -> String
@@ -39,8 +41,14 @@ endpointToUrl endpoint =
         Image id token ->
             baseUrl ++ "file/plant/" ++ String.fromInt id ++ "?token=" ++ token
 
-        PlantE plantId ->
-            baseUrl ++ "order/" ++ String.fromInt plantId
+        Post plantId ->
+            baseUrl ++ "post/" ++ String.fromInt plantId
+
+        OrderPost plantId city mailNumber ->
+            baseUrl ++ "post/" ++ String.fromInt plantId ++ "/order" ++ "?city=" ++ city ++ "&mailNumber=" ++ String.fromInt mailNumber
+
+        Addresses ->
+            baseUrl ++ "info/addresses"
 
 
 imageIdToUrl : String -> Int -> String
@@ -61,6 +69,11 @@ getAuthed token endpoint expect timeout =
 getAuthedQuery : String -> String -> Endpoint -> Http.Expect msg -> Maybe Float -> Cmd msg
 getAuthedQuery query token endpoint expect timeout =
     baseRequest "GET" token (endpointToUrl endpoint ++ query) Http.emptyBody expect timeout Nothing
+
+
+postAuthedQuery : String -> String -> Endpoint -> Http.Expect msg -> Maybe Float -> Cmd msg
+postAuthedQuery query token endpoint expect timeout =
+    baseRequest "POST" token (endpointToUrl endpoint ++ query) Http.emptyBody expect timeout Nothing
 
 
 baseRequest : String -> String -> String -> Http.Body -> Http.Expect msg -> Maybe Float -> Maybe String -> Cmd msg
