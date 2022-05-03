@@ -14,6 +14,7 @@ import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
 import { Elm as SearchElm } from "./Elm/Pages/Search";
 import { Elm as PlantElm } from "./Elm/Pages/Plant";
+import { Elm as NotPostedElm } from "./Elm/Pages/NotPosted";
 import "./assets/tree.svg";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -30,6 +31,28 @@ const SearchPage = () => {
     let model = retrieve();
 
     return SearchElm.Pages.Search.init({
+      node: elmRef.current,
+      flags: model,
+    });
+  };
+
+  React.useEffect(() => {
+    setApp(elmApp());
+  }, []);
+
+  return <div ref={elmRef}></div>;
+};
+
+const NotPostedPage = () => {
+  const [app, setApp] = React.useState<
+    NotPostedElm.Pages.NotPosted.App | undefined
+  >();
+  const elmRef = React.useRef(null);
+
+  const elmApp = () => {
+    let model = retrieve();
+
+    return NotPostedElm.Pages.NotPosted.init({
       node: elmRef.current,
       flags: model,
     });
@@ -132,6 +155,7 @@ const App = () => (
       <Route path="/login" element={<LoginPage />} />
       <Route path="/stats" element={<StatsPage />} />
       <Route path="/search" element={<SearchPage />} />
+      <Route path="/notPosted" element={<NotPostedPage />} />
       <Route path="/plant/:plantId" element={<PlantPage isOrder={false} />} />
       <Route
         path="/plant/:plantId/order"
