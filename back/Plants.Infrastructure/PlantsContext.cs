@@ -39,6 +39,7 @@ namespace Plants.Infrastructure
         public virtual DbSet<PlantStatsV> PlantStatsVs { get; set; }
         public virtual DbSet<PlantToImage> PlantToImages { get; set; }
         public virtual DbSet<PlantToRegion> PlantToRegions { get; set; }
+        public virtual DbSet<PlantsV> PlantsVs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -261,7 +262,8 @@ namespace Plants.Infrastructure
 
                 entity.Property(e => e.Created)
                     .HasColumnType("date")
-                    .HasColumnName("created");
+                    .HasColumnName("created")
+                    .HasDefaultValueSql("CURRENT_DATE");
 
                 entity.Property(e => e.CustomerId).HasColumnName("customer_id");
 
@@ -491,6 +493,19 @@ namespace Plants.Infrastructure
                     .HasForeignKey(d => d.PlantRegionId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("plant_to_region_plant_region_id_fkey");
+            });
+
+            modelBuilder.Entity<PlantsV>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("plants_v");
+
+                entity.Property(e => e.Description).HasColumnName("description");
+
+                entity.Property(e => e.Ismine).HasColumnName("ismine");
+
+                entity.Property(e => e.PlantName).HasColumnName("plant_name");
             });
 
             modelBuilder.HasSequence("plantgroupidsequence");

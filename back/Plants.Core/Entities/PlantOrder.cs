@@ -9,7 +9,7 @@ namespace Plants.Core.Entities
     {
         public int PostId { get; set; }
         public int CustomerId { get; set; }
-        public DateTime? Created { get; set; }
+        public DateTime Created { get; set; }
         public int DeliveryAddressId { get; set; }
 
         public virtual Person Customer { get; set; }
