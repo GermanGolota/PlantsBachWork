@@ -6,7 +6,7 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 
-namespace Plants.Infrastructure.Services
+namespace Plants.Infrastructure.Helpers
 {
     public class PlantsContextFactory
     {
@@ -45,7 +45,7 @@ namespace Plants.Infrastructure.Services
         public PlantsContext CreateFromCreds(string login, string pass)
         {
             var optionsBuilder = new DbContextOptionsBuilder<PlantsContext>();
-            var connectionStr = String.Format(_config.ConnectionTemplate, login, pass);
+            var connectionStr = string.Format(_config.ConnectionTemplate, login, pass);
             optionsBuilder.UseNpgsql(connectionStr);
             return new PlantsContext(optionsBuilder.Options);
         }

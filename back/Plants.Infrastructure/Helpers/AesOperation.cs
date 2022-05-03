@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Plants.Infrastructure.Services
+namespace Plants.Infrastructure.Helpers
 {
     public class AesOperation
     {

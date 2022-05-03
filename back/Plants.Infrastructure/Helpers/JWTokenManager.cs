@@ -11,7 +11,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading;
 
-namespace Plants.Infrastructure.Services
+namespace Plants.Infrastructure.Helpers
 {
     public class JWTokenManager : IJWTokenManager
     {
