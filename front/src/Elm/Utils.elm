@@ -200,7 +200,7 @@ chunkedView size viewFunc items =
             chunk size items
 
         remainder =
-            modBy size <| List.length items
+            size - (modBy size <| List.length items)
 
         emptyCol =
             Grid.col [ Col.attrs [ style "flex" "1", smallMargin ] ] []
