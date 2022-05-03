@@ -52,7 +52,7 @@ type SelectedAddress
 
 type alias DeliveryAddress =
     { city : String
-    , location : String
+    , location : Int
     }
 
 
@@ -187,7 +187,7 @@ addressDecoder : D.Decoder DeliveryAddress
 addressDecoder =
     D.succeed DeliveryAddress
         |> required "city" D.string
-        |> custom (D.map (\val -> String.fromInt val ++ ", Nova Poshta Delivery") (D.field "mailNumber" D.int))
+        |> required "mailNumber" D.int
 
 
 getPlantCommand : String -> Int -> Cmd Msg
@@ -353,7 +353,7 @@ viewLocation : SelectedAddress -> List DeliveryAddress -> Html Msg
 viewLocation sel dels =
     let
         viewDel delAddr =
-            Select.item [ value (delAddr.city ++ "_" ++ delAddr.location) ] [ text (delAddr.city ++ " | " ++ delAddr.location) ]
+            Select.item [ value (delAddr.city ++ "_" ++ String.fromInt delAddr.location) ] [ text (delAddr.city ++ " | " ++ locationToString delAddr.location) ]
     in
     div (fillParent ++ [ flex, Flex.col, mediumMargin, flex1 ])
         ([ div largeCentered [ text "Previous" ]
@@ -362,6 +362,11 @@ viewLocation sel dels =
          ]
             ++ viewSelected sel
         )
+
+
+locationToString : Int -> String
+locationToString location =
+    String.fromInt location ++ ", Nova Poshta Delivery Address"
 
 
 viewSelected : SelectedAddress -> List (Html Msg)
@@ -381,10 +386,10 @@ viewSelected selected =
         locationText =
             case selected of
                 Selected addr ->
-                    addr.location
+                    locationToString addr.location
 
                 Location location ->
-                    String.fromInt location
+                    locationToString location
 
                 _ ->
                     ""
