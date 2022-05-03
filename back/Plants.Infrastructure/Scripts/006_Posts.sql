@@ -155,3 +155,105 @@ SET
 ALTER TABLE plant_order
   ALTER COLUMN delivery_address_id SET NOT NULL;
 
+CREATE OR REPLACE FUNCTION get_current_user_id_throw ()
+  RETURNS integer
+  AS $BODY$
+DECLARE
+  userId int;
+BEGIN
+  userId := get_current_user_id ();
+  IF userId = - 1 THEN
+    RAISE EXCEPTION 'There is no person attached to %', CURRENT_USER
+      USING HINT = 'Please, consider using credentials that have a person attached to them';
+    ELSE
+      RETURN userId;
+    END IF;
+END;
+$BODY$
+LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION set_current_user_id_order ()
+  RETURNS TRIGGER
+  AS $BODY$
+DECLARE
+  userId int;
+BEGIN
+  userId := get_current_user_id_throw ();
+  NEW.customer_id = userId;
+  RETURN NEW;
+END;
+$BODY$
+LANGUAGE 'plpgsql';
+
+CREATE TRIGGER order_set_customer
+  BEFORE INSERT ON plant_order
+  FOR EACH ROW
+  EXECUTE PROCEDURE set_current_user_id_order ();
+
+--Reason Code:
+-- 0 - all good
+-- 1 - plant not posted
+-- 2 - already ordered
+CREATE OR REPLACE FUNCTION place_order (IN postId int, delivery_city text, post_number integer, OUT wasPlaced boolean, OUT reasonCode integer)
+AS $$
+DECLARE
+  userId int;
+  postExists boolean;
+  orderExists boolean;
+  addressId int;
+BEGIN
+  CREATE TEMP TABLE IF NOT EXISTS order_results AS
+  SELECT
+    p.plant_id AS post_id,
+    o.post_id AS order_id
+  FROM
+    plant_post p
+  LEFT JOIN plant_order o ON p.plant_id = o.post_id
+WHERE
+  p.plant_id = postId
+LIMIT 1;
+  postExists := EXISTS (
+    SELECT
+      post_id
+    FROM
+      order_results);
+  orderExists := (
+    SELECT
+      order_id
+    FROM
+      order_results) IS NOT NULL;
+  IF postExists THEN
+    IF orderExists THEN
+      wasPlaced := FALSE;
+      reasonCode := 2;
+    ELSE
+      userId := get_current_user_id_throw ();
+      addressId := (
+        SELECT
+          id
+        FROM
+          delivery_address
+        WHERE
+          person_Id = userId
+          AND nova_poshta_number = post_number
+          AND delivery_city = delivery_city);
+      IF addressId IS NULL THEN
+        INSERT INTO delivery_address (city, nova_poshta_number, person_id)
+          VALUES (delivery_city, post_number, userId)
+        RETURNING
+          id INTO addressId;
+      END IF;
+      INSERT INTO plant_order (delivery_address_id, post_id)
+        VALUES (addressId, postId);
+      wasPlaced := TRUE;
+      reasonCode := 0;
+    END IF;
+  ELSE
+    wasPlaced := FALSE;
+    reasonCode := 1;
+  END IF;
+  DROP TABLE order_results;
+END;
+$$
+LANGUAGE plpgsql;
+
