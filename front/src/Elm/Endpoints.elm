@@ -15,7 +15,7 @@ type Endpoint
     | Search
     | Dicts
     | Image Int String
-    | PlantE Int
+    | Post Int
     | Addresses
 
 
@@ -40,8 +40,8 @@ endpointToUrl endpoint =
         Image id token ->
             baseUrl ++ "file/plant/" ++ String.fromInt id ++ "?token=" ++ token
 
-        PlantE plantId ->
-            baseUrl ++ "order/" ++ String.fromInt plantId
+        Post plantId ->
+            baseUrl ++ "post/" ++ String.fromInt plantId
 
         Addresses ->
             baseUrl ++ "info/addresses"

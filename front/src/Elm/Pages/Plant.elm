@@ -41,7 +41,14 @@ type alias PlantView =
 
 type ViewType
     = JustPlant (WebData (Maybe PlantModel))
-    | Order (WebData (Maybe PlantModel)) (WebData (List DeliveryAddress)) SelectedAddress
+    | Order OrderView
+
+
+type alias OrderView =
+    { plant : WebData (Maybe PlantModel)
+    , addresses : WebData (List DeliveryAddress)
+    , selected : SelectedAddress
+    }
 
 
 type SelectedAddress
@@ -120,16 +127,16 @@ update msg m =
                         JustPlant pWeb ->
                             ( authedPlant <| { p | plantType = JustPlant <| Loaded res }, Cmd.none )
 
-                        Order pWeb del selected ->
-                            ( authedPlant <| { p | plantType = Order (Loaded res) del selected }, Cmd.none )
+                        Order { addresses, selected } ->
+                            ( authedPlant <| { p | plantType = Order <| OrderView (Loaded res) addresses selected }, Cmd.none )
 
                 ( GotPlant (Err res), Plant p ) ->
                     case p.plantType of
                         JustPlant pWeb ->
                             ( authedPlant <| { p | plantType = JustPlant <| Error }, Cmd.none )
 
-                        Order pWeb del selected ->
-                            ( authedPlant <| { p | plantType = Order Error del selected }, Cmd.none )
+                        Order { addresses, selected } ->
+                            ( authedPlant <| { p | plantType = Order <| OrderView Error addresses selected }, Cmd.none )
 
                 ( GotAddresses (Ok res), Plant p ) ->
                     let
@@ -142,16 +149,16 @@ update msg m =
                                     None
                     in
                     case p.plantType of
-                        Order pl del selected ->
-                            ( authedPlant <| { p | plantType = Order pl (Loaded res) sel }, Cmd.none )
+                        Order { plant } ->
+                            ( authedPlant <| { p | plantType = Order <| OrderView plant (Loaded res) sel }, Cmd.none )
 
                         _ ->
                             noOp
 
                 ( GotAddresses (Err res), Plant p ) ->
                     case p.plantType of
-                        Order pl del selected ->
-                            ( authedPlant <| { p | plantType = Order pl Error selected }, Cmd.none )
+                        Order { plant, selected } ->
+                            ( authedPlant <| { p | plantType = Order <| OrderView plant Error selected }, Cmd.none )
 
                         _ ->
                             noOp
@@ -161,44 +168,59 @@ update msg m =
                         JustPlant (Loaded (Just pl)) ->
                             ( authedPlant { p | plantType = JustPlant <| Loaded <| Just { pl | images = ImageList.update img pl.images } }, Cmd.none )
 
-                        Order (Loaded (Just pl)) del selected ->
-                            ( authedPlant { p | plantType = Order (Loaded <| Just { pl | images = ImageList.update img pl.images }) del selected }, Cmd.none )
+                        Order { plant, addresses, selected } ->
+                            case plant of
+                                Loaded (Just pl) ->
+                                    ( authedPlant { p | plantType = Order <| OrderView (Loaded <| Just { pl | images = ImageList.update img pl.images }) addresses selected }, Cmd.none )
+
+                                _ ->
+                                    noOp
 
                         _ ->
                             noOp
 
                 ( AddressSelected city location, Plant p ) ->
                     case p.plantType of
-                        Order pl (Loaded addresses) _ ->
-                            ( authedOrder p (Order pl (Loaded addresses) <| Selected (DeliveryAddress city location)), Cmd.none )
+                        Order { plant, addresses } ->
+                            ( authedOrder p (Order <| OrderView plant addresses <| Selected (DeliveryAddress city location)), Cmd.none )
 
                         _ ->
                             noOp
 
                 ( CityChanged city, Plant p ) ->
                     case p.plantType of
-                        Order pl (Loaded addresses) (Selected addr) ->
-                            ( authedOrder p (Order pl (Loaded addresses) <| Selected (DeliveryAddress city addr.location)), Cmd.none )
+                        Order { plant, addresses, selected } ->
+                            case selected of
+                                Selected addr ->
+                                    ( authedOrder p (Order <| OrderView plant addresses <| Selected (DeliveryAddress city addr.location)), Cmd.none )
 
-                        Order pl (Loaded addresses) (Location loc) ->
-                            ( authedOrder p (Order pl (Loaded addresses) <| Selected <| DeliveryAddress city loc), Cmd.none )
+                                Location loc ->
+                                    ( authedOrder p (Order <| OrderView plant addresses <| Selected <| DeliveryAddress city loc), Cmd.none )
 
-                        Order pl (Loaded addresses) None ->
-                            ( authedOrder p (Order pl (Loaded addresses) <| City city), Cmd.none )
+                                City _ ->
+                                    ( authedOrder p (Order <| OrderView plant addresses <| City city), Cmd.none )
+
+                                None ->
+                                    ( authedOrder p (Order <| OrderView plant addresses <| City city), Cmd.none )
 
                         _ ->
                             noOp
 
                 ( LocationChanged loc, Plant p ) ->
                     case p.plantType of
-                        Order pl (Loaded addresses) (Selected addr) ->
-                            ( authedOrder p (Order pl (Loaded addresses) <| Selected (DeliveryAddress addr.city loc)), Cmd.none )
+                        Order { plant, addresses, selected } ->
+                            case selected of
+                                Selected addr ->
+                                    ( authedOrder p (Order <| OrderView plant addresses <| Selected (DeliveryAddress addr.city loc)), Cmd.none )
 
-                        Order pl (Loaded addresses) (City city) ->
-                            ( authedOrder p (Order pl (Loaded addresses) <| Selected <| DeliveryAddress city loc), Cmd.none )
+                                City city ->
+                                    ( authedOrder p (Order <| OrderView plant addresses <| Selected <| DeliveryAddress city loc), Cmd.none )
 
-                        Order pl (Loaded addresses) None ->
-                            ( authedOrder p (Order pl (Loaded addresses) <| Location loc), Cmd.none )
+                                Location _ ->
+                                    ( authedOrder p (Order <| OrderView plant addresses <| Location loc), Cmd.none )
+
+                                None ->
+                                    ( authedOrder p (Order <| OrderView plant addresses <| Location loc), Cmd.none )
 
                         _ ->
                             noOp
@@ -241,7 +263,7 @@ getPlantCommand token plantId =
         expect =
             Http.expectJson GotPlant (plantDecoder token)
     in
-    getAuthed token (PlantE plantId) expect Nothing
+    getAuthed token (Post plantId) expect Nothing
 
 
 plantDecoder : String -> D.Decoder (Maybe PlantModel)
@@ -343,20 +365,20 @@ viewPage _ page =
         NoPlant ->
             div [] [ text "Please select a plant", Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href "/search" ] ] [ text "Return to search" ] ]
 
-        Plant plant ->
+        Plant p ->
             let
                 plantView =
-                    viewPlantFull plant.id
+                    viewPlantFull p.id
 
                 orderView =
-                    viewOrderFull plant.id
+                    viewOrderFull p.id
             in
-            case plant.plantType of
+            case p.plantType of
                 JustPlant pl ->
                     viewWebdata pl (plantView viewPlant)
 
-                Order pl del selected ->
-                    viewWebdata pl (orderView selected del)
+                Order { plant, addresses, selected } ->
+                    viewWebdata plant (orderView selected addresses)
 
 
 viewOrderFull : Int -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe PlantModel -> Html Msg
@@ -589,7 +611,7 @@ init resp flags =
                         JustPlant _ ->
                             getPlantCommand authResp.token p.id
 
-                        Order _ _ _ ->
+                        Order _ ->
                             Cmd.batch [ getPlantCommand authResp.token p.id, getAddressesCommand authResp.token ]
 
                 NoPlant ->
@@ -616,7 +638,7 @@ decodeInitial flags =
             case String.toInt plantId of
                 Just plantNumber ->
                     if isOrder then
-                        Plant (PlantView plantNumber <| Order Loading Loading None)
+                        Plant (PlantView plantNumber <| Order <| OrderView Loading Loading None)
 
                     else
                         Plant (PlantView plantNumber <| JustPlant Loading)
