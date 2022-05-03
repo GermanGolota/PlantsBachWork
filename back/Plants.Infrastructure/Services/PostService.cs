@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 
 namespace Plants.Infrastructure.Services
 {
-    public class OrderService : IOrderService
+    public class PostService : IPostService
     {
         private readonly PlantsContextFactory _ctx;
 
-        public OrderService(PlantsContextFactory ctx)
+        public PostService(PlantsContextFactory ctx)
         {
             _ctx = ctx;
         }
 
-        public async Task<OrderResultItem> GetBy(int orderId)
+        public async Task<PostResultItem> GetBy(int orderId)
         {
             var ctx = _ctx.CreateDbContext();
             await using (ctx)
@@ -28,9 +28,9 @@ namespace Plants.Infrastructure.Services
                     {
                         orderId = orderId
                     };
-                    var res = await connection.QueryAsync<OrderResultItem>(sql, p);
+                    var res = await connection.QueryAsync<PostResultItem>(sql, p);
                     var first = res.FirstOrDefault();
-                    OrderResultItem final;
+                    PostResultItem final;
                     if(first != default)
                     {
                         final = first;

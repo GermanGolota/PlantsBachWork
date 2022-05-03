@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 namespace Plants.Presentation.Controllers
 {
     [ApiController]
-    [Route("order")]
-    public class OrderController : ControllerBase
+    [Route("post")]
+    public class PostController : ControllerBase
     {
         private readonly IMediator _mediator;
 
-        public OrderController(IMediator mediator)
+        public PostController(IMediator mediator)
         {
             _mediator = mediator;
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult> GetOrder([FromRoute] int id)
+        public async Task<ActionResult> GetPost([FromRoute] int id)
         {
-            return Ok(await _mediator.Send(new OrderRequest(id)));
+            return Ok(await _mediator.Send(new PostRequest(id)));
         }
     }
 }

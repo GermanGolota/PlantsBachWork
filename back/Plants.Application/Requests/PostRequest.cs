@@ -4,22 +4,22 @@ using System;
 
 namespace Plants.Application.Requests
 {
-    public record OrderRequest(int OrderId) : IRequest<OrderResult>;
+    public record PostRequest(int PostId) : IRequest<PostResult>;
 
-    public record OrderResult(bool Exists, OrderResultItem Item)
+    public record PostResult(bool Exists, PostResultItem Item)
     {
-        public OrderResult() : this (false, null)
+        public PostResult() : this (false, null)
         {
 
         }
 
-        public OrderResult(OrderResultItem item) : this(true, item)
+        public PostResult(PostResultItem item) : this(true, item)
         {
 
         }
     }
 
-    public class OrderResultItem
+    public class PostResultItem
     {
         public long Id { get; set; }
         public string PlantName { get; set; }
@@ -50,12 +50,12 @@ namespace Plants.Application.Requests
         public long CareTakerSold { get; set; }
         public long CareTakerInstructions { get; set; }
         public int[] Images { get; set; }
-        public OrderResultItem()
+        public PostResultItem()
         {
 
         }
 
-        public OrderResultItem(long id, string plantName, string description, decimal price,
+        public PostResultItem(long id, string plantName, string description, decimal price,
             string soilName, string[] regions, string groupName, DateTime created, string sellerName,
             string sellerPhone, long sellerCared, long sellerSold, long sellerInstructions,
             long careTakerCared, long careTakerSold, long careTakerInstructions, int[] images)
