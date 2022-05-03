@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Plants.Application.Commands;
 using Plants.Application.Contracts;
 using Plants.Application.Requests;
 using System.Linq;
@@ -16,22 +17,22 @@ namespace Plants.Infrastructure.Services
             _ctx = ctx;
         }
 
-        public async Task<PostResultItem> GetBy(int orderId)
+        public async Task<PostResultItem> GetBy(int postId)
         {
             var ctx = _ctx.CreateDbContext();
             await using (ctx)
             {
                 await using (var connection = ctx.Database.GetDbConnection())
                 {
-                    string sql = "SELECT * FROM plant_post_v WHERE id = @orderId";
+                    string sql = "SELECT * FROM plant_post_v WHERE id = @postId";
                     var p = new
                     {
-                        orderId = orderId
+                        postId = postId
                     };
                     var res = await connection.QueryAsync<PostResultItem>(sql, p);
                     var first = res.FirstOrDefault();
                     PostResultItem final;
-                    if(first != default)
+                    if (first != default)
                     {
                         final = first;
                     }
@@ -43,5 +44,32 @@ namespace Plants.Infrastructure.Services
                 }
             }
         }
+
+        public async Task<PlaceOrderResult> Order(int postId, string city, int postNumber)
+        {
+            var ctx = _ctx.CreateDbContext();
+            await using (ctx)
+            {
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = "SELECT * FROM place_order(@postId, @city, @postNumber)";
+                    var p = new
+                    {
+                        postId, city, postNumber
+                    };
+                    var res = (await connection.QueryAsync<PlaceOrderResultDb>(sql, p)).FirstOrDefault();
+                    var message = (res.WasPlaced, res.ReasonCode) switch
+                    {
+                        (true, _) => "Successfully Ordered!",
+                        (false, 1) => "This plant is not yet posted",
+                        (false, 2) => "This plant have already been ordered",
+                        (false, _) => "Failed to oreder plant!"
+                    };
+                    return new PlaceOrderResult(res.WasPlaced, message);
+                }
+            }
+        }
+
+        private record PlaceOrderResultDb(bool WasPlaced, int ReasonCode);
     }
 }

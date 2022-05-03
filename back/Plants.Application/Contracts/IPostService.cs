@@ -7,6 +7,6 @@ namespace Plants.Application.Contracts
     public interface IPostService
     {
         Task<PostResultItem?> GetBy(int postId);
-        //Task<PlaceOrderResult?> Order(int orderId);
+        Task<PlaceOrderResult> Order(int postId, string city, int mailNumber);
     }
 }
