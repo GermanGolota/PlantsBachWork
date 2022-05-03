@@ -23,8 +23,8 @@ namespace Plants.Presentation.Controllers
             return Ok(await _mediator.Send(new PostRequest(id)));
         }
 
-        [HttpPost("{id}")]
-        public async Task<ActionResult> Order([FromRoute] int id, [FromQuery] string city, [FromQuery] int mailNumber)
+        [HttpPost("{id}/order")]
+        public async Task<ActionResult<PlaceOrderResult>> Order([FromRoute] int id, [FromQuery] string city, [FromQuery] int mailNumber)
         {
             return Ok(await _mediator.Send(new PlaceOrderCommand(id, city, mailNumber)));
         }

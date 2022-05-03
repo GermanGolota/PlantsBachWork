@@ -6,7 +6,7 @@ import Bootstrap.Form.Radio as Radio
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
 import Dict
-import Endpoints exposing (Endpoint(..), getAuthed, imageIdToUrl)
+import Endpoints exposing (Endpoint(..), getAuthed, imageIdToUrl, postAuthed)
 import Html exposing (Html, div, i, text)
 import Html.Attributes exposing (class, href, style, value)
 import Http
@@ -48,7 +48,13 @@ type alias OrderView =
     { plant : WebData (Maybe PlantModel)
     , addresses : WebData (List DeliveryAddress)
     , selected : SelectedAddress
+    , result : Maybe (WebData SubmittedResult)
     }
+
+
+type SubmittedResult
+    = SubmittedSuccess String
+    | SubmittedFail String
 
 
 type SelectedAddress
@@ -96,11 +102,13 @@ type alias PersonCreds =
 type Msg
     = NoOp
     | GotPlant (Result Http.Error (Maybe PlantModel))
-    | Images ImageList.Msg
     | GotAddresses (Result Http.Error (List DeliveryAddress))
+    | Images ImageList.Msg
     | AddressSelected String Int
     | CityChanged String
     | LocationChanged Int
+    | Submit
+    | GotSubmit (Result Http.Error SubmittedResult)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -127,16 +135,16 @@ update msg m =
                         JustPlant pWeb ->
                             ( authedPlant <| { p | plantType = JustPlant <| Loaded res }, Cmd.none )
 
-                        Order { addresses, selected } ->
-                            ( authedPlant <| { p | plantType = Order <| OrderView (Loaded res) addresses selected }, Cmd.none )
+                        Order orderView ->
+                            ( authedPlant <| { p | plantType = Order { orderView | plant = Loaded res } }, Cmd.none )
 
                 ( GotPlant (Err res), Plant p ) ->
                     case p.plantType of
                         JustPlant pWeb ->
                             ( authedPlant <| { p | plantType = JustPlant <| Error }, Cmd.none )
 
-                        Order { addresses, selected } ->
-                            ( authedPlant <| { p | plantType = Order <| OrderView Error addresses selected }, Cmd.none )
+                        Order orderView ->
+                            ( authedPlant <| { p | plantType = Order { orderView | plant = Error } }, Cmd.none )
 
                 ( GotAddresses (Ok res), Plant p ) ->
                     let
@@ -149,16 +157,16 @@ update msg m =
                                     None
                     in
                     case p.plantType of
-                        Order { plant } ->
-                            ( authedPlant <| { p | plantType = Order <| OrderView plant (Loaded res) sel }, Cmd.none )
+                        Order orderView ->
+                            ( authedPlant <| { p | plantType = Order <| { orderView | addresses = Loaded res, selected = sel } }, Cmd.none )
 
                         _ ->
                             noOp
 
                 ( GotAddresses (Err res), Plant p ) ->
                     case p.plantType of
-                        Order { plant, selected } ->
-                            ( authedPlant <| { p | plantType = Order <| OrderView plant Error selected }, Cmd.none )
+                        Order orderView ->
+                            ( authedPlant <| { p | plantType = Order <| { orderView | plant = Error } }, Cmd.none )
 
                         _ ->
                             noOp
@@ -168,10 +176,10 @@ update msg m =
                         JustPlant (Loaded (Just pl)) ->
                             ( authedPlant { p | plantType = JustPlant <| Loaded <| Just { pl | images = ImageList.update img pl.images } }, Cmd.none )
 
-                        Order { plant, addresses, selected } ->
-                            case plant of
+                        Order orderView ->
+                            case orderView.plant of
                                 Loaded (Just pl) ->
-                                    ( authedPlant { p | plantType = Order <| OrderView (Loaded <| Just { pl | images = ImageList.update img pl.images }) addresses selected }, Cmd.none )
+                                    ( authedPlant { p | plantType = Order { orderView | plant = Loaded <| Just { pl | images = ImageList.update img pl.images } } }, Cmd.none )
 
                                 _ ->
                                     noOp
@@ -181,46 +189,83 @@ update msg m =
 
                 ( AddressSelected city location, Plant p ) ->
                     case p.plantType of
-                        Order { plant, addresses } ->
-                            ( authedOrder p (Order <| OrderView plant addresses <| Selected (DeliveryAddress city location)), Cmd.none )
+                        Order orderView ->
+                            ( authedOrder p (Order <| { orderView | selected = Selected <| DeliveryAddress city location }), Cmd.none )
 
                         _ ->
                             noOp
 
                 ( CityChanged city, Plant p ) ->
                     case p.plantType of
-                        Order { plant, addresses, selected } ->
-                            case selected of
+                        Order orderView ->
+                            let
+                                updateSelected selected =
+                                    ( authedOrder p (Order <| { orderView | selected = selected }), Cmd.none )
+                            in
+                            case orderView.selected of
                                 Selected addr ->
-                                    ( authedOrder p (Order <| OrderView plant addresses <| Selected (DeliveryAddress city addr.location)), Cmd.none )
+                                    updateSelected <| Selected (DeliveryAddress city addr.location)
 
                                 Location loc ->
-                                    ( authedOrder p (Order <| OrderView plant addresses <| Selected <| DeliveryAddress city loc), Cmd.none )
+                                    updateSelected <| Selected <| DeliveryAddress city loc
 
                                 City _ ->
-                                    ( authedOrder p (Order <| OrderView plant addresses <| City city), Cmd.none )
+                                    updateSelected <| City city
 
                                 None ->
-                                    ( authedOrder p (Order <| OrderView plant addresses <| City city), Cmd.none )
+                                    updateSelected <| City city
 
                         _ ->
                             noOp
 
                 ( LocationChanged loc, Plant p ) ->
                     case p.plantType of
-                        Order { plant, addresses, selected } ->
-                            case selected of
+                        Order orderView ->
+                            let
+                                updateSelected selected =
+                                    ( authedOrder p (Order <| { orderView | selected = selected }), Cmd.none )
+                            in
+                            case orderView.selected of
                                 Selected addr ->
-                                    ( authedOrder p (Order <| OrderView plant addresses <| Selected (DeliveryAddress addr.city loc)), Cmd.none )
+                                    updateSelected <| Selected (DeliveryAddress addr.city loc)
 
                                 City city ->
-                                    ( authedOrder p (Order <| OrderView plant addresses <| Selected <| DeliveryAddress city loc), Cmd.none )
+                                    updateSelected <| Selected <| DeliveryAddress city loc
 
                                 Location _ ->
-                                    ( authedOrder p (Order <| OrderView plant addresses <| Location loc), Cmd.none )
+                                    updateSelected <| Location loc
 
                                 None ->
-                                    ( authedOrder p (Order <| OrderView plant addresses <| Location loc), Cmd.none )
+                                    updateSelected <| Location loc
+
+                        _ ->
+                            noOp
+
+                ( Submit, Plant p ) ->
+                    case p.plantType of
+                        Order orderView ->
+                            case orderView.selected of
+                                Selected addr ->
+                                    ( authedOrder p <| Order { orderView | result = Just Loading }, submitCmd auth.token p.id addr.city addr.location )
+
+                                _ ->
+                                    noOp
+
+                        _ ->
+                            noOp
+
+                ( GotSubmit (Ok res), Plant p ) ->
+                    case p.plantType of
+                        Order orderView ->
+                            ( authedOrder p <| Order { orderView | result = Just <| Loaded res }, Cmd.none )
+
+                        _ ->
+                            noOp
+
+                ( GotSubmit (Err res), Plant p ) ->
+                    case p.plantType of
+                        Order orderView ->
+                            ( authedOrder p <| Order { orderView | result = Just Error }, Cmd.none )
 
                         _ ->
                             noOp
@@ -234,6 +279,33 @@ update msg m =
 
 
 --commands
+
+
+submitCmd : String -> Int -> String -> Int -> Cmd Msg
+submitCmd token plantId city mailNumber =
+    let
+        expect =
+            Http.expectJson GotSubmit submittedDecoder
+    in
+    postAuthed token (OrderPost plantId city mailNumber) Http.emptyBody expect Nothing
+
+
+submittedDecoder : D.Decoder SubmittedResult
+submittedDecoder =
+    D.field "successfull" D.bool |> D.andThen submittedMsgDecoder
+
+
+submittedMsgDecoder : Bool -> D.Decoder SubmittedResult
+submittedMsgDecoder success =
+    let
+        getMsg =
+            D.field "message" D.string
+    in
+    if success then
+        D.map SubmittedSuccess getMsg
+
+    else
+        D.map SubmittedFail getMsg
 
 
 getAddressesCommand : String -> Cmd Msg
@@ -377,20 +449,28 @@ viewPage _ page =
                 JustPlant pl ->
                     viewWebdata pl (plantView viewPlant)
 
-                Order { plant, addresses, selected } ->
-                    viewWebdata plant (orderView selected addresses)
+                Order { plant, addresses, selected, result } ->
+                    viewWebdata plant (orderView selected addresses result)
 
 
-viewOrderFull : Int -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe PlantModel -> Html Msg
-viewOrderFull id selected del p =
-    viewPlantFull id (viewOrder selected del) p
+viewOrderFull : Int -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
+viewOrderFull id selected del result p =
+    viewPlantFull id (viewOrder selected del result) p
 
 
-viewOrder : SelectedAddress -> WebData (List DeliveryAddress) -> Int -> PlantModel -> Html Msg
-viewOrder selected del id pl =
+viewOrder : SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Int -> PlantModel -> Html Msg
+viewOrder selected del result id pl =
     let
         header textT =
             div largeCentered [ text textT ]
+
+        resultView =
+            case result of
+                Just res ->
+                    viewWebdata res viewResult
+
+                Nothing ->
+                    div [] []
     in
     div (fillParent ++ [ flex, Flex.row ])
         [ viewPlantLeft pl
@@ -410,10 +490,25 @@ viewOrder selected del id pl =
                             (Radio.label [] [ text "Pay On Arrival" ])
                         ]
                    , viewWebdata del (viewLocation selected)
+                   , resultView
                    , interactionButtons True id
                    ]
             )
         ]
+
+
+viewResult : SubmittedResult -> Html Msg
+viewResult result =
+    let
+        baseView className message =
+            div [ flex1 ] [ div [ largeFont, class className ] [ text message ] ]
+    in
+    case result of
+        SubmittedSuccess msg ->
+            baseView "bg-primary" msg
+
+        SubmittedFail msg ->
+            baseView "bg-warning" msg
 
 
 viewLocation : SelectedAddress -> List DeliveryAddress -> Html Msg
@@ -543,7 +638,7 @@ viewPlantLeft plant =
         , Html.map Images <| ImageList.view plant.images
         , viewPlantStat "Caretaker Credentials" (credsToString plant.caretakerCreds)
         , viewPlantStat "Seller Credentials" (credsToString plant.sellerCreds)
-        , viewPlantStat "Seller Nama" plant.sellerName
+        , viewPlantStat "Seller Name" plant.sellerName
         , viewPlantStat "Seller Phone" plant.sellerPhone
         ]
 
@@ -587,10 +682,17 @@ interactionButtons isOrder id =
 
             else
                 "/plant/" ++ String.fromInt id ++ "/order"
+
+        orderOnClick =
+            if isOrder then
+                Button.onClick Submit
+
+            else
+                Button.attrs []
     in
     div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
         [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href backUrl, largeFont ] ] [ text "Back" ]
-        , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href orderUrl, largeFont ] ] [ text orderText ]
+        , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href orderUrl, largeFont ], orderOnClick ] [ text orderText ]
         ]
 
 
@@ -638,7 +740,7 @@ decodeInitial flags =
             case String.toInt plantId of
                 Just plantNumber ->
                     if isOrder then
-                        Plant (PlantView plantNumber <| Order <| OrderView Loading Loading None)
+                        Plant (PlantView plantNumber <| Order <| OrderView Loading Loading None Nothing)
 
                     else
                         Plant (PlantView plantNumber <| JustPlant Loading)

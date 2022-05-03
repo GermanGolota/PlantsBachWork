@@ -117,6 +117,13 @@ ALTER TABLE plant_order
 ALTER TABLE delivery_address
   DROP COLUMN region_id;
 
+ALTER TABLE plant_order
+  ALTER COLUMN created SET DEFAULT CURRENT_DATE;
+
+ALTER TABLE plant_order
+  ALTER COLUMN created SET NOT NULL;
+
+
 INSERT INTO delivery_address (city, nova_poshta_number, person_id)
   VALUES ('Odessa', 15, 1);
 
