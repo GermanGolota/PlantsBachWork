@@ -1,26 +1,22 @@
 ﻿using MediatR;
 using Plants.Application.Contracts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Plants.Application.Requests
+namespace Plants.Application.Commands
 {
-    public class LoginRequestHandler : IRequestHandler<LoginRequest, LoginResult>
+    public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResult>
     {
         private readonly IJWTokenManager _tokenManager;
         private readonly IAuthService _auth;
 
-        public LoginRequestHandler(IJWTokenManager tokenManager, IAuthService auth)
+        public LoginCommandHandler(IJWTokenManager tokenManager, IAuthService auth)
         {
             _tokenManager = tokenManager;
             _auth = auth;
         }
 
-        public Task<LoginResult> Handle(LoginRequest request, CancellationToken cancellationToken)
+        public Task<LoginResult> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
             var (login, pass) = request;
             LoginResult result;

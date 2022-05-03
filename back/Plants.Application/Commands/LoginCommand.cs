@@ -2,9 +2,9 @@
 using Plants.Core;
 
 #nullable enable
-namespace Plants.Application.Requests
+namespace Plants.Application.Commands
 {
-    public record LoginRequest(string Login, string Password) : IRequest<LoginResult>;
+    public record LoginCommand(string Login, string Password) : IRequest<LoginResult>;
 
     public record LoginResult(bool IsSuccessfull, string? Token, UserRole[]? Roles, string? Username)
     {

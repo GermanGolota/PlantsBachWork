@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Plants.Application.Requests;
+using Plants.Application.Commands;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,7 +18,7 @@ namespace Plants.Presentation.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult> Login(LoginRequest command, CancellationToken token)
+        public async Task<ActionResult> Login(LoginCommand command, CancellationToken token)
         {
             var res = await _mediator.Send(command, token);
             ActionResult result;
