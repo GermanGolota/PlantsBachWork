@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using Plants.Core;
 
-#nullable enable
 namespace Plants.Application.Commands
 {
     public record LoginCommand(string Login, string Password) : IRequest<LoginResult>;
