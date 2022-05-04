@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Plants.Application.Commands;
 using Plants.Application.Contracts;
 using Plants.Application.Requests;
 using Plants.Core.Entities;
@@ -61,6 +62,33 @@ namespace Plants.Infrastructure.Services
                         final = null;
                     }
                     return final;
+                }
+            }
+        }
+
+        public async Task<CreatePostResult> Post(int plantId, decimal price)
+        {
+            var ctx = _ctxFactory.CreateDbContext();
+            await using (ctx)
+            {
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = "SELECT * FROM post_plant(@plantId, @price)";
+                    var p = new
+                    {
+                        plantId,
+                        price
+                    };
+                    var res = (await connection.QueryAsync<PostService.PostResultDb>(sql, p)).FirstOrDefault();
+                    var message = (res.WasPlaced, res.ReasonCode) switch
+                    {
+                        (true, _) => "Successfully Posted!",
+                        (false, 1) => "This plant does not exist",
+                        (false, 2) => "This plant have already been posted",
+                        (false, 3) => "Price cannot have this value!",
+                        (false, _) => "Failed to post plant!"
+                    };
+                    return new CreatePostResult(res.WasPlaced, message);
                 }
             }
         }

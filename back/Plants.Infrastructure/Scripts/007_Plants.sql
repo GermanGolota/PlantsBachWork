@@ -62,3 +62,75 @@ CREATE VIEW prepared_for_post_v AS (
       LEFT JOIN person_creds_v seller_creds ON seller_creds.id = seller.id
       LEFT JOIN person_creds_v care_taker_creds ON care_taker_creds.id = p.care_taker_id);
 
+
+--Reason Code:
+-- 0 - all good
+-- 1 - plant does not exist
+-- 2 - already posted
+-- 3 - bad price
+CREATE OR REPLACE FUNCTION post_plant (IN plantId int, IN price numeric, OUT wasPlaced boolean, OUT reasonCode integer)
+AS $$
+DECLARE
+  plantExists boolean;
+  postExists boolean;
+BEGIN
+  CREATE TEMP TABLE IF NOT EXISTS post_results AS
+  SELECT
+    p.id AS plant_id,
+    po.plant_id AS post_id
+  FROM
+    plant p
+  LEFT JOIN plant_post po ON po.plant_id = p.id
+WHERE
+  p.id = plantId
+LIMIT 1;
+  plantExists := EXISTS (
+    SELECT
+      plant_id
+    FROM
+      post_results);
+  postExists := (
+    SELECT
+      post_id
+    FROM
+      post_results) IS NOT NULL;
+  IF plantExists THEN
+    IF postExists THEN
+      wasPlaced := FALSE;
+      reasonCode := 2;
+    ELSE
+		IF price <= 0 THEN
+			 wasPlaced := FALSE;
+      	     reasonCode := 3;
+		ELSE
+			 INSERT INTO plant_post (plant_id, price)
+        VALUES (plantId, price);
+      wasPlaced := TRUE;
+      reasonCode := 0;
+		END IF;
+    END IF;
+  ELSE
+    wasPlaced := FALSE;
+    reasonCode := 1;
+  END IF;
+  DROP TABLE post_results;
+END;
+$$
+LANGUAGE plpgsql;
+
+DELETE FROM plant_post
+where price <= 0;
+
+ALTER TABLE plant_post
+	ADD CHECK (price >= 0);
+
+select *
+from plant_post
+order by plant_id
+
+
+DELETE FROM plant_post
+where price <= 0;
+
+ALTER TABLE plant_post
+	ADD CHECK (price >= 0);

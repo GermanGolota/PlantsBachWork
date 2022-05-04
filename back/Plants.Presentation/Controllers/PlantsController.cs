@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Plants.Application.Commands;
 using Plants.Application.Requests;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,6 +28,13 @@ namespace Plants.Presentation.Controllers
         public async Task<ActionResult<PreparedPostResult>> GetPrepared(int id, CancellationToken token)
         {
             return await _mediator.Send(new PreparedPostRequest(id), token);
+        }
+
+        [HttpPost("{id}/post")]
+        public async Task<ActionResult<CreatePostResult>> GetPrepared([FromRoute] int id,
+            [FromQuery] decimal price, CancellationToken token)
+        {
+            return await _mediator.Send(new CreatePostCommand(id, price), token);
         }
     }
 }
