@@ -16,6 +16,7 @@ import { Elm as SearchElm } from "./Elm/Pages/Search";
 import { Elm as PlantElm } from "./Elm/Pages/Plant";
 import { Elm as NotPostedElm } from "./Elm/Pages/NotPosted";
 import { Elm as PostPlantElm } from "./Elm/Pages/PostPlant";
+import { Elm as AddEditPlantElm } from "./Elm/Pages/AddEditPlant";
 import "./assets/tree.svg";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -56,6 +57,34 @@ const NotPostedPage = () => {
     return NotPostedElm.Pages.NotPosted.init({
       node: elmRef.current,
       flags: model,
+    });
+  };
+
+  React.useEffect(() => {
+    setApp(elmApp());
+  }, []);
+
+  return <div ref={elmRef}></div>;
+};
+
+const AddEditPage = (props: { isEdit: boolean }) => {
+  const [app, setApp] = React.useState<
+    AddEditPlantElm.Pages.AddEditPlant.App | undefined
+  >();
+  const elmRef = React.useRef(null);
+
+  const { plantId } = useParams();
+
+  const elmApp = () => {
+    let model = retrieve();
+    let finalResult = {
+      ...model,
+      plantId: plantId,
+      isEdit: props.isEdit,
+    };
+    return AddEditPlantElm.Pages.AddEditPlant.init({
+      node: elmRef.current,
+      flags: finalResult,
     });
   };
 
@@ -185,10 +214,15 @@ const App = () => (
       <Route path="/search" element={<SearchPage />} />
       <Route path="/notPosted" element={<NotPostedPage />} />
       <Route path="/plant/:plantId" element={<PlantPage isOrder={false} />} />
-      <Route path="/notPosted/:plantId/post" element={<PostPlantPage />} />
       <Route
         path="/plant/:plantId/order"
         element={<PlantPage isOrder={true} />}
+      />
+      <Route path="/notPosted/:plantId/post" element={<PostPlantPage />} />
+      <Route path="/notPosted/add" element={<AddEditPage isEdit={false} />} />
+      <Route
+        path="/notPosted/:plantId/edit"
+        element={<AddEditPage isEdit={true} />}
       />
       <Route path="*" element={<NotFound />} />
     </Routes>
