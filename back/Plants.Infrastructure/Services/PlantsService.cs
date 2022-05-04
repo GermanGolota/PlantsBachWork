@@ -119,5 +119,22 @@ namespace Plants.Infrastructure.Services
                 }
             }
         }
+
+        public async Task Edit(int PlantId, string Name, string Description, int[] Regions, int SoilId, int GroupId)
+        {
+            var ctx = _ctxFactory.CreateDbContext();
+            await using (ctx)
+            {
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = "call edit_plant(@PlantId, @Name, @Description, @Regions, @SoilId, @GroupId)";
+                    var p = new
+                    {
+                        PlantId, Name, Description, Regions, SoilId, GroupId
+                    };
+                    await connection.ExecuteAsync(sql, p);
+                }
+            }
+        }
     }
 }

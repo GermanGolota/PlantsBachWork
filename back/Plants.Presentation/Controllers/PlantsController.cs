@@ -60,7 +60,18 @@ namespace Plants.Presentation.Controllers
 
             return await _mediator.Send(request, token);
         }
+
+        [HttpPost("{id}/edit")]
+        public async Task<ActionResult<EditPlantResult>> Edit
+          ([FromRoute] int id, [FromBody] EditPlantDto plant, CancellationToken token)
+        {
+            var request = new EditPlantCommand(id, plant.PlantName, plant.PlantDescription, 
+                plant.RegionIds, plant.SoilId, plant.GroupId);
+            return await _mediator.Send(request, token);
+        }
     }
 
     public record AddPlantDto(string Name, string Description, int[] Regions, int SoilId, int GroupId, DateTime Created);
+    public record EditPlantDto(string PlantName,
+      string PlantDescription, int[] RegionIds, int SoilId, int GroupId);
 }
