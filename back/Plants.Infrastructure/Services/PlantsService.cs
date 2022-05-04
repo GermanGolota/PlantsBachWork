@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Dapper;
+using Microsoft.EntityFrameworkCore;
 using Plants.Application.Contracts;
 using Plants.Application.Requests;
 using Plants.Core.Entities;
@@ -34,6 +35,34 @@ namespace Plants.Infrastructure.Services
         private PlantResultItem Convert(PlantsV plant)
         {
             return new PlantResultItem(plant.Id!.Value, plant.PlantName, plant.Description, plant.Ismine ?? false);
+        }
+
+        public async Task<PreparedPostResultItem> GetPrepared(int plantId)
+        {
+            var ctx = _ctxFactory.CreateDbContext();
+            await using (ctx)
+            {
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = "SELECT * FROM prepared_for_post_v WHERE id = @plantId";
+                    var p = new
+                    {
+                        plantId
+                    };
+                    var res = await connection.QueryAsync<PreparedPostResultItem>(sql, p);
+                    var first = res.FirstOrDefault();
+                    PreparedPostResultItem final;
+                    if (first != default)
+                    {
+                        final = first;
+                    }
+                    else
+                    {
+                        final = null;
+                    }
+                    return final;
+                }
+            }
         }
     }
 }
