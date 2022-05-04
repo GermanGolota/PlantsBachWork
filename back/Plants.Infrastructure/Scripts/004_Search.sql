@@ -6,14 +6,14 @@ SELECT
   p.created,
   gr.id AS group_id,
   s.id AS soil_id,
-  array_agg(DISTINCT rg.id) AS regions
+  ARRAY_REMOVE(array_agg(DISTINCT rg.id), NULL) AS regions
 FROM
   plant_post po
   JOIN plant p ON p.id = po.plant_id
   JOIN plant_group gr ON gr.id = p.group_id
   JOIN plant_soil s ON s.id = p.soil_id
-  JOIN plant_to_region prg ON prg.plant_id = p.id
-  JOIN plant_region rg ON rg.id = prg.plant_region_id
+  LEFT JOIN plant_to_region prg ON prg.plant_id = p.id
+  LEFT JOIN plant_region rg ON rg.id = prg.plant_region_id
 GROUP BY
   p.id,
   gr.id,
