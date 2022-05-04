@@ -1,7 +1,10 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Plants.Application.Commands;
 using Plants.Application.Requests;
+using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -36,5 +39,28 @@ namespace Plants.Presentation.Controllers
         {
             return await _mediator.Send(new CreatePostCommand(id, price), token);
         }
+
+        [HttpPost("add")]
+        public async Task<ActionResult<AddPlantResult>> Create
+            ([FromForm] AddPlantDto body, IEnumerable<IFormFile> files, CancellationToken token)
+        {
+            var totalBytes = new List<byte[]>();
+            foreach (var file in files)
+            {
+                using (var fileStream = file.OpenReadStream())
+                {
+                    byte[] bytes = new byte[file.Length];
+                    fileStream.Read(bytes, 0, (int)file.Length);
+                    totalBytes.Add(bytes);
+                }
+            }
+
+            var request = new AddPlantCommand(body.Name, body.Description,
+                body.Regions, body.SoilId, body.GroupId, body.Created, totalBytes.ToArray());
+
+            return await _mediator.Send(request, token);
+        }
     }
+
+    public record AddPlantDto(string Name, string Description, int[] Regions, int SoilId, int GroupId, DateTime Created);
 }

@@ -92,5 +92,32 @@ namespace Plants.Infrastructure.Services
                 }
             }
         }
+
+        public async Task<AddPlantResult> Create(string Name, string Description, int[] Regions,
+            int SoilId, int GroupId, DateTime Created, byte[][] Pictures)
+        {
+            var ctx = _ctxFactory.CreateDbContext();
+            await using (ctx)
+            {
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = "SELECT create_plant(@Name, @Description, " +
+                        "@Regions, @SoilId, @GroupId, @Created, @Pictures);";
+                    var p = new
+                    {
+                        Name,
+                        Description,
+                        Regions,
+                        SoilId,
+                        GroupId,
+                        Created,
+                        Pictures
+                    };
+                    var res = await connection.QueryAsync<int>(sql, p);
+                    var first = res.FirstOrDefault();
+                    return new AddPlantResult(first);
+                }
+            }
+        }
     }
 }

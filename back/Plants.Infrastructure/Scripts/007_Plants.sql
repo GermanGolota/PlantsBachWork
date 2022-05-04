@@ -124,13 +124,72 @@ where price <= 0;
 ALTER TABLE plant_post
 	ADD CHECK (price >= 0);
 
-select *
-from plant_post
-order by plant_id
 
 
-DELETE FROM plant_post
-where price <= 0;
+CREATE OR REPLACE function create_plant (plantName text, description text, regionIds int[], soilId int, groupId int, created timestamp without time zone, pictures bytea[])
+  returns int
+  AS $$
+DECLARE 
+	plantId int;
+	regionId int;
+	picture bytea;
+BEGIN
+	INSERT INTO plant(created, description, group_id, plant_name, soil_id)
+	values (created, description, groupId, plantName, soilId)
+	returning id into plantId;
+	
+	FOREACH regionId IN ARRAY regionIds
+  	LOOP
+		INSERT INTO plant_to_region(plant_id, plant_region_id)
+		values (plantId, regionId);
+  	END LOOP;
+	
+	FOREACH picture IN ARRAY pictures
+  	LOOP
+		INSERT INTO plant_to_image(plant_id, image)
+		values (plantId, picture);
+  	END LOOP;
+	
+	RETURN plantId;
+END;
+$$
+LANGUAGE plpgsql;
 
-ALTER TABLE plant_post
-	ADD CHECK (price >= 0);
+
+CREATE OR REPLACE procedure edit_plant (plantId int, plantName text,plantDescription text, regionIds int[], soilId int, groupId int)
+  AS $$
+DECLARE
+	regionId int;
+BEGIN
+	update plant
+	set plant_name = plantName, description = plantDescription, soil_id = soilId, group_id = groupId
+	where id = plantId;
+	
+	DELETE FROM plant_to_region where plant_id = plantId;
+	
+	FOREACH regionId IN ARRAY regionIds
+  	LOOP
+		INSERT INTO plant_to_region(plant_id, plant_region_id)
+		values (plantId, regionId);
+  	END LOOP;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION plant_no_update_posted ()
+  RETURNS TRIGGER
+  AS $BODY$
+BEGIN
+  IF EXISTS (SELECT plant_id FROM plant_post WHERE plant_id = NEW.id) THEN
+  	RAISE EXCEPTION 'You cannot edit posted plant';
+  ELSE
+  	RETURN NEW;
+  END IF;
+END;
+$BODY$
+LANGUAGE 'plpgsql';
+
+CREATE TRIGGER plant_prevent_update_of_posted
+  BEFORE UPDATE ON plant
+  FOR EACH ROW
+  EXECUTE PROCEDURE plant_no_update_posted ();
