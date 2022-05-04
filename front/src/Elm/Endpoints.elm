@@ -19,6 +19,7 @@ type Endpoint
     | OrderPost Int String Int --plantId, city, mailNumber
     | Addresses
     | NotPostedPlants
+    | PreparedPlant Int
 
 
 endpointToUrl : Endpoint -> String
@@ -53,6 +54,9 @@ endpointToUrl endpoint =
 
         NotPostedPlants ->
             baseUrl ++ "plants/notposted"
+
+        PreparedPlant plantId ->
+            baseUrl ++ "plants/prepared/" ++ String.fromInt plantId
 
 
 imageIdToUrl : String -> Int -> String
