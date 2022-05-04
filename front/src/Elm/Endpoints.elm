@@ -20,6 +20,7 @@ type Endpoint
     | Addresses
     | NotPostedPlants
     | PreparedPlant Int
+    | PostPlant Int Float
 
 
 endpointToUrl : Endpoint -> String
@@ -57,6 +58,9 @@ endpointToUrl endpoint =
 
         PreparedPlant plantId ->
             baseUrl ++ "plants/prepared/" ++ String.fromInt plantId
+
+        PostPlant plantId price ->
+            baseUrl ++ "plants/" ++ String.fromInt plantId ++ "/post?price=" ++ String.fromFloat price
 
 
 imageIdToUrl : String -> Int -> String

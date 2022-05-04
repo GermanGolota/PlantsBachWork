@@ -11,7 +11,7 @@ import Json.Decode as D
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (plantsLink, viewNav)
 import Pages.Plant exposing (PlantModel, plantDecoder, viewPlantBase)
-import Utils exposing (flex, largeFont, smallMargin)
+import Utils exposing (SubmittedResult, flex, largeFont, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -29,7 +29,7 @@ type View
 
 
 type alias PlantView =
-    WebData (Maybe PlantModel)
+    { plant : WebData (Maybe PlantModel), postResult : Maybe (WebData SubmittedResult) }
 
 
 
@@ -63,23 +63,23 @@ update msg m =
                     in
                     case msg of
                         GotPlant (Ok res) ->
-                            ( authedPlant (Loaded res), Cmd.none )
+                            ( authedPlant { plantView | plant = Loaded res }, Cmd.none )
 
                         GotPlant (Err err) ->
-                            ( authedPlant Error, Cmd.none )
+                            ( authedPlant { plantView | plant = Error }, Cmd.none )
 
                         Images imgEvent ->
-                            case plantView of
+                            case plantView.plant of
                                 Loaded (Just pl) ->
-                                    ( authedPlant <| Loaded <| Just { pl | images = ImageList.update imgEvent pl.images }, Cmd.none )
+                                    ( authedPlant <| { plantView | plant = Loaded <| Just { pl | images = ImageList.update imgEvent pl.images } }, Cmd.none )
 
                                 _ ->
                                     noOp
 
                         UpdatePrice price ->
-                            case plantView of
+                            case plantView.plant of
                                 Loaded (Just pl) ->
-                                    ( authedPlant <| Loaded <| Just { pl | price = price }, Cmd.none )
+                                    ( authedPlant <| { plantView | plant = Loaded <| Just { pl | price = price } }, Cmd.none )
 
                                 _ ->
                                     noOp
@@ -127,7 +127,7 @@ viewPage resp page =
             noplant
 
         Plant id plantWeb ->
-            viewWebdata plantWeb (viewPlant noplant id)
+            viewWebdata plantWeb.plant (viewPlant noplant id)
 
 
 viewPlant : Html Msg -> Int -> Maybe PlantModel -> Html Msg
@@ -203,7 +203,7 @@ decodeInitial flags =
         Ok plantId ->
             case String.toInt plantId of
                 Just id ->
-                    Plant id Loading
+                    Plant id (PlantView Loading Nothing)
 
                 Nothing ->
                     NoPlant

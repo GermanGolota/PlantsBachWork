@@ -12,6 +12,7 @@ import FormatNumber exposing (format)
 import FormatNumber.Locales exposing (usLocale)
 import Html exposing (Attribute, Html, a, div)
 import Html.Attributes exposing (attribute, style)
+import Json.Decode as D
 
 
 type AlignDirection
@@ -200,7 +201,12 @@ chunkedView size viewFunc items =
             chunk size items
 
         remainder =
-            size - (modBy size <| List.length items)
+            case modBy size <| List.length items of
+                0 ->
+                    0
+
+                val ->
+                    size - val
 
         emptyCol =
             Grid.col [ Col.attrs [ style "flex" "1", smallMargin ] ] []
@@ -231,3 +237,22 @@ chunkedView size viewFunc items =
 formatPrice : Float -> String
 formatPrice price =
     format usLocale price ++ " ₴"
+
+
+type SubmittedResult
+    = SubmittedSuccess String
+    | SubmittedFail String
+
+
+submittedDecoder : D.Decoder Bool -> D.Decoder String -> D.Decoder SubmittedResult
+submittedDecoder successDecoder msgDecoder =
+    successDecoder |> D.andThen (submittedMsgDecoder msgDecoder)
+
+
+submittedMsgDecoder : D.Decoder String -> Bool -> D.Decoder SubmittedResult
+submittedMsgDecoder messageField success =
+    if success then
+        D.map SubmittedSuccess messageField
+
+    else
+        D.map SubmittedFail messageField

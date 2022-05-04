@@ -15,7 +15,7 @@ import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import Maybe exposing (map)
 import NavBar exposing (searchLink, viewNav)
-import Utils exposing (fillParent, flex, flex1, formatPrice, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin)
+import Utils exposing (SubmittedResult(..), fillParent, flex, flex1, formatPrice, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -49,11 +49,6 @@ type alias OrderView =
     , selected : SelectedAddress
     , result : Maybe (WebData SubmittedResult)
     }
-
-
-type SubmittedResult
-    = SubmittedSuccess String
-    | SubmittedFail String
 
 
 type SelectedAddress
@@ -284,27 +279,9 @@ submitCmd : String -> Int -> String -> Int -> Cmd Msg
 submitCmd token plantId city mailNumber =
     let
         expect =
-            Http.expectJson GotSubmit submittedDecoder
+            Http.expectJson GotSubmit (submittedDecoder (D.field "successfull" D.bool) (D.field "message" D.string))
     in
     postAuthed token (OrderPost plantId city mailNumber) Http.emptyBody expect Nothing
-
-
-submittedDecoder : D.Decoder SubmittedResult
-submittedDecoder =
-    D.field "successfull" D.bool |> D.andThen submittedMsgDecoder
-
-
-submittedMsgDecoder : Bool -> D.Decoder SubmittedResult
-submittedMsgDecoder success =
-    let
-        getMsg =
-            D.field "message" D.string
-    in
-    if success then
-        D.map SubmittedSuccess getMsg
-
-    else
-        D.map SubmittedFail getMsg
 
 
 getAddressesCommand : String -> Cmd Msg
