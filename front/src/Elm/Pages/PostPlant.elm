@@ -2,16 +2,16 @@ module Pages.PostPlant exposing (..)
 
 import Bootstrap.Button as Button
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), getAuthed)
+import Endpoints exposing (Endpoint(..), getAuthed, postAuthed)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (href, style)
+import Html.Attributes exposing (class, href, style)
 import Http
 import ImageList
 import Json.Decode as D
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (plantsLink, viewNav)
 import Pages.Plant exposing (PlantModel, plantDecoder, viewPlantBase)
-import Utils exposing (SubmittedResult, flex, largeFont, smallMargin)
+import Utils exposing (SubmittedResult(..), flex, flex1, largeFont, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -41,6 +41,8 @@ type Msg
     | GotPlant (Result Http.Error (Maybe PlantModel))
     | Images ImageList.Msg
     | UpdatePrice Float
+    | Submit
+    | GotResult (Result Http.Error SubmittedResult)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -79,10 +81,24 @@ update msg m =
                         UpdatePrice price ->
                             case plantView.plant of
                                 Loaded (Just pl) ->
-                                    ( authedPlant <| { plantView | plant = Loaded <| Just { pl | price = price } }, Cmd.none )
+                                    ( authedPlant <| { plantView | plant = Loaded <| Just { pl | price = price }, postResult = Nothing }, Cmd.none )
 
                                 _ ->
                                     noOp
+
+                        Submit ->
+                            case plantView.plant of
+                                Loaded (Just pl) ->
+                                    ( m, submitCommand auth.token id pl.price )
+
+                                _ ->
+                                    noOp
+
+                        GotResult (Ok res) ->
+                            ( authedPlant <| { plantView | postResult = Just <| Loaded res }, Cmd.none )
+
+                        GotResult (Err err) ->
+                            ( authedPlant <| { plantView | postResult = Just Error }, Cmd.none )
 
                         NoOp ->
                             noOp
@@ -107,6 +123,18 @@ getPlantCommand token plantId =
     getAuthed token (PreparedPlant plantId) expect Nothing
 
 
+submitCommand : String -> Int -> Float -> Cmd Msg
+submitCommand token plantId price =
+    let
+        decoder =
+            submittedDecoder (D.field "successfull" D.bool) (D.field "message" D.string)
+
+        expect =
+            Http.expectJson GotResult decoder
+    in
+    postAuthed token (PostPlant plantId price) Http.emptyBody expect Nothing
+
+
 
 --view
 
@@ -127,11 +155,11 @@ viewPage resp page =
             noplant
 
         Plant id plantWeb ->
-            viewWebdata plantWeb.plant (viewPlant noplant id)
+            viewWebdata plantWeb.plant (viewPlant noplant id plantWeb.postResult)
 
 
-viewPlant : Html Msg -> Int -> Maybe PlantModel -> Html Msg
-viewPlant noplant id plant =
+viewPlant : Html Msg -> Int -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
+viewPlant noplant id res plant =
     let
         plantUpdate str =
             case String.toFloat str of
@@ -143,38 +171,63 @@ viewPlant noplant id plant =
     in
     case plant of
         Just plantView ->
-            viewPlantBase True plantUpdate Images (viewButtons id) plantView
+            viewPlantBase True plantUpdate Images (viewButtons res id) plantView
 
         Nothing ->
             noplant
 
 
-viewButtons : Int -> Html Msg
-viewButtons id =
+viewButtons : Maybe (WebData SubmittedResult) -> Int -> Html Msg
+viewButtons result id =
     let
+        resultView =
+            case result of
+                Just res ->
+                    viewWebdata res viewRes
+
+                Nothing ->
+                    div [] []
+
         postOnClick =
-            Button.onClick NoOp
+            Button.onClick Submit
     in
-    div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
-        [ Button.linkButton
-            [ Button.primary
-            , Button.attrs
-                [ smallMargin
-                , href ("/notPosted/" ++ String.fromInt id ++ "/edit")
-                , largeFont
+    div [ flex, style "flex" "2", Flex.col ]
+        [ resultView
+        , div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
+            [ Button.linkButton
+                [ Button.primary
+                , Button.attrs
+                    [ smallMargin
+                    , href ("/notPosted/" ++ String.fromInt id ++ "/edit")
+                    , largeFont
+                    ]
                 ]
-            ]
-            [ text "Edit" ]
-        , Button.button
-            [ Button.primary
-            , Button.attrs
-                [ smallMargin
-                , largeFont
+                [ text "Edit" ]
+            , Button.button
+                [ Button.primary
+                , Button.attrs
+                    [ smallMargin
+                    , largeFont
+                    ]
+                , postOnClick
                 ]
-            , postOnClick
+                [ text "Post" ]
             ]
-            [ text "Post" ]
         ]
+
+
+viewRes : SubmittedResult -> Html Msg
+viewRes res =
+    let
+        baseView className message =
+            div [ flex1 ] [ div [ largeFont, class className ] [ text message ] ]
+    in
+    case res of
+        SubmittedSuccess msg ->
+            baseView "bg-primary" msg
+
+        SubmittedFail msg ->
+            baseView "bg-warning" msg
 
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
