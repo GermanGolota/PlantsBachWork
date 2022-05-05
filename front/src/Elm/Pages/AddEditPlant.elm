@@ -43,6 +43,7 @@ type alias PlantView =
     , soil : Int
     , group : Int
     , images : ImageList.Model
+    , uploadedFiles : List File
     }
 
 
@@ -62,6 +63,7 @@ type Msg
     | ImagesLoaded File (List File)
     | RegionsMS Multiselect.Msg
     | GotAvailable (Result Http.Error Available)
+    | GotPlant (Result Http.Error (Maybe PlantView))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -81,7 +83,7 @@ update msg m =
                     ( m, requestImages )
 
                 ( GotAvailable (Ok res), Edit _ id plantView ) ->
-                    ( authed <| Edit (Loaded res) id plantView, Cmd.none )
+                    ( authed <| Edit (Loaded res) id plantView, getPlantCommand auth.token id )
 
                 ( GotAvailable (Err err), Edit _ id plantView ) ->
                     ( authed <| Edit Error id plantView, Cmd.none )
@@ -92,12 +94,29 @@ update msg m =
                 ( GotAvailable (Err err), Add _ plantView ) ->
                     ( authed <| Add Error plantView, Cmd.none )
 
+                ( GotPlant (Ok res), Edit (Loaded av) id _ ) ->
+                    case res of
+                        Just plView ->
+                            ( authed <| Edit (Loaded av) id (Loaded plView), Cmd.none )
+
+                        Nothing ->
+                            ( authed <| BadEdit, Cmd.none )
+
+                ( GotPlant (Err err), Edit _ id plantView ) ->
+                    ( authed <| BadEdit, Cmd.none )
+
                 ( RegionsMS msEvent, Add av plantView ) ->
                     let
                         ( subModel, subCmd, _ ) =
                             Multiselect.update msEvent plantView.regions
                     in
                     ( authed <| Add av { plantView | regions = subModel }, Cmd.map RegionsMS subCmd )
+
+                ( ImagesLoaded file files, Edit av id (Loaded plantView) ) ->
+                    ( authed <| Edit av id <| Loaded { plantView | uploadedFiles = files ++ [ file ] }, Cmd.none )
+
+                ( ImagesLoaded file files, Add av plantView ) ->
+                    ( authed <| Add av { plantView | uploadedFiles = files ++ [ file ] }, Cmd.none )
 
                 ( _, _ ) ->
                     noOp
@@ -108,6 +127,14 @@ update msg m =
 
 
 --commands
+
+
+getPlantCommand : String -> Int -> Cmd msg
+getPlantCommand token plantId =
+    Cmd.none
+
+
+
 --view
 
 
@@ -129,11 +156,21 @@ viewPage resp page =
             viewPlant av False plant
 
 
+viewPlant : WebData Available -> Bool -> PlantView -> Html Msg
 viewPlant av isEdit plant =
     viewWebdata av (viewPlantBase isEdit plant)
 
 
+viewPlantBase : Bool -> PlantView -> Available -> Html Msg
 viewPlantBase isEdit plant av =
+    div ([ flex, Flex.row ] ++ fillParent)
+        [ div [ Flex.col, flex1, flex ] (leftView isEdit plant av)
+        , div [ flex, Flex.col, flex1, Flex.justifyBetween, Flex.alignItemsCenter ] (rightView isEdit plant)
+        ]
+
+
+rightView : Bool -> PlantView -> List (Html Msg)
+rightView isEdit plant =
     let
         btnMsg =
             if isEdit then
@@ -144,6 +181,41 @@ viewPlantBase isEdit plant av =
 
         btnEvent =
             NoOp
+
+        btnView =
+            div [ flex1 ]
+                [ Button.button
+                    [ Button.primary
+                    , Button.onClick btnEvent
+                    , Button.attrs ([ smallMargin ] ++ largeCentered)
+                    ]
+                    [ text btnMsg ]
+                ]
+
+        imgView =
+            div [ flex1 ]
+                [ Html.map Images (ImageList.view plant.images)
+                ]
+    in
+    if isEdit then
+        [ imgView
+        , btnView
+        ]
+
+    else
+        [ btnView ]
+
+
+leftView : Bool -> PlantView -> Available -> List (Html Msg)
+leftView isEdit plant av =
+    let
+        filesText =
+            case plant.uploadedFiles of
+                [] ->
+                    "No files selected"
+
+                _ ->
+                    String.join ", " (List.map File.name plant.uploadedFiles)
 
         viewOption ( val, desc ) =
             Select.item [ value val ] [ text desc ]
@@ -158,35 +230,34 @@ viewPlantBase isEdit plant av =
 
         viewOptions vals =
             List.map viewOption (Multiselect.getValues vals)
+
+        dateInput =
+            if isEdit then
+                Input.text [ Input.disabled True, Input.value plant.created ]
+
+            else
+                Input.date [ Input.onInput DateUpdate, Input.value plant.created, Input.disabled isEdit ]
     in
-    div ([ flex, Flex.row ] ++ fillParent)
-        [ div [ Flex.col, flex1, flex ]
-            (viewInput "Name" (Input.text [ Input.onInput NameUpdate, Input.value plant.name ])
-                ++ viewInput "Add Image" (Button.button [ Button.primary, Button.onClick StartUpload ] [ text "Upload" ])
-                ++ viewInput "Regions" (Html.map RegionsMS <| Multiselect.view plant.regions)
-                ++ viewInput "Soil"
-                    (Select.select [ Select.onChange (pareOrNoOp SoilUpdate) ]
-                        (viewOptions av.soils)
-                    )
-                ++ viewInput "Group"
-                    (Select.select [ Select.onChange (pareOrNoOp GroupUpdate) ]
-                        (viewOptions av.groups)
-                    )
-                ++ viewInput "Description" (Input.text [ Input.onInput DescriptionUpdate, Input.value plant.description ])
-                ++ viewInput "Create Date" (Input.date [ Input.onInput DateUpdate, Input.value plant.created ])
-            )
-        , div [ flex, Flex.col, flex1, Flex.justifyBetween, Flex.alignItemsCenter ]
-            [ div [ flex1 ] [ Html.map Images (ImageList.view plant.images) ]
-            , div [ flex1 ]
+    viewInput "Name" (Input.text [ Input.onInput NameUpdate, Input.value plant.name ])
+        ++ viewInput "Add Image"
+            (div [ flex, Flex.row ]
                 [ Button.button
-                    [ Button.primary
-                    , Button.onClick btnEvent
-                    , Button.attrs [ smallMargin ]
-                    ]
-                    [ text btnMsg ]
+                    [ Button.primary, Button.onClick StartUpload, Button.attrs [ flex1 ] ]
+                    [ text "Upload" ]
+                , div [ flex1, smallMargin ] [ text filesText ]
                 ]
-            ]
-        ]
+            )
+        ++ viewInput "Regions" (Html.map RegionsMS <| Multiselect.view plant.regions)
+        ++ viewInput "Soil"
+            (Select.select [ Select.onChange (pareOrNoOp SoilUpdate) ]
+                (viewOptions av.soils)
+            )
+        ++ viewInput "Group"
+            (Select.select [ Select.onChange (pareOrNoOp GroupUpdate) ]
+                (viewOptions av.groups)
+            )
+        ++ viewInput "Description" (Input.text [ Input.onInput DescriptionUpdate, Input.value plant.description ])
+        ++ viewInput "Create Date" dateInput
 
 
 viewInput : String -> Html msg -> List (Html msg)
@@ -208,8 +279,8 @@ init resp flags =
                 Add _ _ ->
                     getAvailable res.token
 
-                _ ->
-                    Cmd.none
+                Edit _ plantId _ ->
+                    getAvailable res.token
     in
     initBase [ Producer, Consumer, Manager ] initial initialCmd resp
 
@@ -218,6 +289,12 @@ decodeInitial flags =
     let
         isEdit =
             Result.withDefault False <| D.decodeValue (D.field "isEdit" D.bool) flags
+
+        empyImageList =
+            ImageList.fromDict (Dict.fromList [])
+
+        emptyMultiSelect =
+            Multiselect.initModel [] "regions" Multiselect.Show
     in
     if isEdit then
         case D.decodeValue (D.field "plantId" D.int) flags of
@@ -228,12 +305,20 @@ decodeInitial flags =
                 BadEdit
 
     else
-        Add Loading (PlantView "" "" "" (Multiselect.initModel [] "regions" Multiselect.Show) 0 0 (ImageList.fromDict (Dict.fromList [])))
+        Add Loading (PlantView "" "" "" emptyMultiSelect 0 0 empyImageList [])
+
+
+
+--subs
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
+
+
+
+--commands
 
 
 requestImages : Cmd Msg
@@ -244,6 +329,10 @@ requestImages =
 getAvailable : String -> Cmd Msg
 getAvailable token =
     Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing
+
+
+
+--main
 
 
 main : Program D.Value Model Msg
