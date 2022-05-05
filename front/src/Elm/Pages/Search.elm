@@ -95,8 +95,11 @@ update msg m =
             case ( msg, model.availableValues ) of
                 ( SetQuery key value, _ ) ->
                     let
+                        queried = 
+                            (setQuery key value model) 
+
                         updatedView =
-                            setQuery key value model
+                            {queried | results = Just Loading}
                     in
                     ( Authorized auth updatedView, searchFull updatedView.searchItems updatedView.availableValues auth.token )
 
@@ -120,11 +123,19 @@ update msg m =
                         newVal =
                             updateAvailableRegion val subModel
 
-                        updatedView =
+                        setNew =
                             { model | availableValues = Loaded newVal }
 
                         availableChanged =
                             Multiselect.getSelectedValues val.regions /= Multiselect.getSelectedValues newVal.regions
+                        
+                        updatedView = 
+                            if availableChanged then
+                                {setNew | results = Just Loading}
+
+                            else
+                                setNew
+
 
                         searchCmd =
                             if availableChanged then
@@ -143,11 +154,17 @@ update msg m =
                         newVal =
                             updateAvailableSoil val subModel
 
-                        updatedView =
-                            { model | availableValues = Loaded newVal }
-
                         availableChanged =
                             Multiselect.getSelectedValues val.soils /= Multiselect.getSelectedValues newVal.soils
+
+                        setNew = 
+                            { model | availableValues = Loaded newVal }
+
+                        updatedView =
+                            if availableChanged then
+                                {setNew | results = Just Loading}
+                            else
+                                setNew
 
                         searchCmd =
                             if availableChanged then
@@ -166,11 +183,18 @@ update msg m =
                         newVal =
                             updateAvailableGroup val subModel
 
-                        updatedView =
-                            { model | availableValues = Loaded newVal }
-
                         availableChanged =
                             Multiselect.getSelectedValues val.groups /= Multiselect.getSelectedValues newVal.groups
+                        
+                        
+                        setNew = 
+                            { model | availableValues = Loaded newVal }
+
+                        updatedView =
+                            if availableChanged then
+                                {setNew | results = Just Loading}
+                            else
+                                setNew
 
                         searchCmd =
                             if availableChanged then
@@ -313,9 +337,9 @@ pageView resp viewType =
             [ viewInput "Plant Name" <| Input.text [ Input.onInput (\val -> SetQuery "PlantName" val) ]
             , viewInput "Price" <|
                 div [ Flex.row, flex, Flex.alignItemsCenter ]
-                    [ Input.text [ Input.onInput (\val -> SetQuery "LowerPrice" val) ]
+                    [ Input.text [ Input.onInput (\val -> SetQuery "LowerPrice" val), Input.attrs [style "text-align" "right"] ]
                     , i [ class "fa-solid fa-minus", smallMargin ] []
-                    , Input.text [ Input.onInput (\val -> SetQuery "TopPrice" val) ]
+                    , Input.text [ Input.onInput (\val -> SetQuery "TopPrice" val), Input.attrs [style "text-align" "right"] ]
                     ]
             , viewInput "Created Before" <| Input.date [ Input.onInput (\val -> SetQuery "LastDate" val) ]
             ]
