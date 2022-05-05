@@ -31,9 +31,13 @@ type alias Model =
 
 
 type View
-    = Add (WebData Available) PlantView
+    = Add AddView
     | Edit (WebData Available) Int (WebData PlantView)
     | BadEdit
+
+
+type alias AddView =
+    { available : WebData Available, plant : PlantView, result : Maybe (WebData Bool) }
 
 
 type alias PlantView =
@@ -91,11 +95,11 @@ update msg m =
                 ( GotAvailable (Err err), Edit _ id plantView ) ->
                     ( authed <| Edit Error id plantView, Cmd.none )
 
-                ( GotAvailable (Ok res), Add _ plantView ) ->
-                    ( authed <| Add (Loaded res) { plantView | regions = res.regions }, Cmd.none )
+                ( GotAvailable (Ok res), Add addView ) ->
+                    ( authed <| Add <| { addView | available = Loaded res }, Cmd.none )
 
-                ( GotAvailable (Err err), Add _ plantView ) ->
-                    ( authed <| Add Error plantView, Cmd.none )
+                ( GotAvailable (Err err), Add addView ) ->
+                    ( authed <| Add <| { addView | available = Error }, Cmd.none )
 
                 ( GotPlant (Ok res), Edit (Loaded av) id _ ) ->
                     case res of
@@ -108,12 +112,15 @@ update msg m =
                 ( GotPlant (Err err), Edit _ id plantView ) ->
                     ( authed <| BadEdit, Cmd.none )
 
-                ( RegionsMS msEvent, Add av plantView ) ->
+                ( RegionsMS msEvent, Add addView ) ->
                     let
                         ( subModel, subCmd, _ ) =
-                            Multiselect.update msEvent plantView.regions
+                            Multiselect.update msEvent addView.plant.regions
+
+                        updatedRegion plant =
+                            { plant | regions = subModel }
                     in
-                    ( authed <| Add av { plantView | regions = subModel }, Cmd.map RegionsMS subCmd )
+                    ( authed <| Add <| { addView | plant = updatedRegion addView.plant }, Cmd.map RegionsMS subCmd )
 
                 ( RegionsMS msEvent, Edit av id (Loaded plantView) ) ->
                     let
@@ -125,14 +132,18 @@ update msg m =
                 ( ImagesLoaded file files, Edit av id (Loaded plantView) ) ->
                     ( authed <| Edit av id <| Loaded { plantView | uploadedFiles = files ++ [ file ] }, Cmd.none )
 
-                ( ImagesLoaded file files, Add av plantView ) ->
-                    ( authed <| Add av { plantView | uploadedFiles = files ++ [ file ] }, Cmd.none )
+                ( ImagesLoaded file files, Add addView ) ->
+                    let
+                        updatedFiles plant =
+                            { plant | uploadedFiles = files ++ [ file ] }
+                    in
+                    ( authed <| Add <| { addView | plant = updatedFiles addView.plant }, Cmd.none )
 
                 ( Images imgEvent, Edit av id (Loaded plantView) ) ->
                     ( authed <| Edit av id <| Loaded { plantView | images = ImageList.update imgEvent plantView.images }, Cmd.none )
 
-                ( Submit, Add av plantView ) ->
-                    ( m, submitAddCommand auth.token plantView )
+                ( Submit, Add addView ) ->
+                    ( m, submitAddCommand auth.token addView.plant )
 
                 ( _, _ ) ->
                     noOp
@@ -159,8 +170,8 @@ viewPage resp page =
         Edit av id plant ->
             viewWebdata plant (viewPlant av True)
 
-        Add av plant ->
-            viewPlant av False plant
+        Add addView ->
+            viewPlant addView.available False addView.plant
 
 
 viewPlant : WebData Available -> Bool -> PlantView -> Html Msg
@@ -280,7 +291,7 @@ init resp flags =
                 BadEdit ->
                     Cmd.none
 
-                Add _ _ ->
+                Add _ ->
                     getAvailable res.token
 
                 Edit _ plantId _ ->
@@ -309,7 +320,7 @@ decodeInitial flags =
                 BadEdit
 
     else
-        Add Loading (PlantView "" "" "" emptyMultiSelect 0 0 empyImageList [])
+        Add <| AddView Loading (PlantView "" "" "" emptyMultiSelect 0 0 empyImageList []) Nothing
 
 
 
