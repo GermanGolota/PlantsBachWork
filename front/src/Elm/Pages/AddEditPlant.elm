@@ -32,12 +32,16 @@ type alias Model =
 
 type View
     = Add AddView
-    | Edit (WebData Available) Int (WebData PlantView)
+    | Edit EditView
     | BadEdit
 
 
 type alias AddView =
-    { available : WebData Available, plant : PlantView, result : Maybe (WebData Bool) }
+    { available : WebData Available, plant : PlantView, result : Maybe (WebData Int) }
+
+
+type alias EditView =
+    { available : WebData Available, plant : WebData PlantView, plantId : Int, result : Maybe (WebData Bool) }
 
 
 type alias PlantView =
@@ -70,7 +74,7 @@ type Msg
     | GotAvailable (Result Http.Error Available)
     | GotPlant (Result Http.Error (Maybe PlantView))
     | Submit
-    | GotSubmitAdd (Result Http.Error Bool)
+    | GotSubmitAdd (Result Http.Error Int)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -89,11 +93,11 @@ update msg m =
                 ( StartUpload, _ ) ->
                     ( m, requestImages )
 
-                ( GotAvailable (Ok res), Edit _ id plantView ) ->
-                    ( authed <| Edit (Loaded res) id plantView, getPlantCommand res auth.token id )
+                ( GotAvailable (Ok res), Edit editView ) ->
+                    ( authed <| Edit <| { editView | available = Loaded res }, getPlantCommand res auth.token editView.plantId )
 
-                ( GotAvailable (Err err), Edit _ id plantView ) ->
-                    ( authed <| Edit Error id plantView, Cmd.none )
+                ( GotAvailable (Err err), Edit editView ) ->
+                    ( authed <| Edit <| { editView | available = Error }, Cmd.none )
 
                 ( GotAvailable (Ok res), Add addView ) ->
                     ( authed <| Add <| { addView | available = Loaded res }, Cmd.none )
@@ -101,15 +105,15 @@ update msg m =
                 ( GotAvailable (Err err), Add addView ) ->
                     ( authed <| Add <| { addView | available = Error }, Cmd.none )
 
-                ( GotPlant (Ok res), Edit (Loaded av) id _ ) ->
+                ( GotPlant (Ok res), Edit editView ) ->
                     case res of
                         Just plView ->
-                            ( authed <| Edit (Loaded av) id (Loaded plView), Cmd.none )
+                            ( authed <| Edit <| { editView | plant = Loaded plView }, Cmd.none )
 
                         Nothing ->
                             ( authed <| BadEdit, Cmd.none )
 
-                ( GotPlant (Err err), Edit _ id plantView ) ->
+                ( GotPlant (Err err), Edit _ ) ->
                     ( authed <| BadEdit, Cmd.none )
 
                 ( RegionsMS msEvent, Add addView ) ->
@@ -122,15 +126,25 @@ update msg m =
                     in
                     ( authed <| Add <| { addView | plant = updatedRegion addView.plant }, Cmd.map RegionsMS subCmd )
 
-                ( RegionsMS msEvent, Edit av id (Loaded plantView) ) ->
-                    let
-                        ( subModel, subCmd, _ ) =
-                            Multiselect.update msEvent plantView.regions
-                    in
-                    ( authed <| Edit av id (Loaded { plantView | regions = subModel }), Cmd.map RegionsMS subCmd )
+                ( RegionsMS msEvent, Edit editView ) ->
+                    case editView.plant of
+                        Loaded plantView ->
+                            let
+                                ( subModel, subCmd, _ ) =
+                                    Multiselect.update msEvent plantView.regions
+                            in
+                            ( authed <| Edit <| { editView | plant = Loaded { plantView | regions = subModel } }, Cmd.map RegionsMS subCmd )
 
-                ( ImagesLoaded file files, Edit av id (Loaded plantView) ) ->
-                    ( authed <| Edit av id <| Loaded { plantView | uploadedFiles = files ++ [ file ] }, Cmd.none )
+                        _ ->
+                            noOp
+
+                ( ImagesLoaded file files, Edit editView ) ->
+                    case editView.plant of
+                        Loaded plantView ->
+                            ( authed <| Edit <| { editView | plant = Loaded { plantView | uploadedFiles = files ++ [ file ] } }, Cmd.none )
+
+                        _ ->
+                            noOp
 
                 ( ImagesLoaded file files, Add addView ) ->
                     let
@@ -139,8 +153,13 @@ update msg m =
                     in
                     ( authed <| Add <| { addView | plant = updatedFiles addView.plant }, Cmd.none )
 
-                ( Images imgEvent, Edit av id (Loaded plantView) ) ->
-                    ( authed <| Edit av id <| Loaded { plantView | images = ImageList.update imgEvent plantView.images }, Cmd.none )
+                ( Images imgEvent, Edit editView ) ->
+                    case editView.plant of
+                        Loaded plantView ->
+                            ( authed <| Edit <| { editView | plant = Loaded { plantView | images = ImageList.update imgEvent plantView.images } }, Cmd.none )
+
+                        _ ->
+                            noOp
 
                 ( Submit, Add addView ) ->
                     ( m, submitAddCommand auth.token addView.plant )
@@ -167,8 +186,8 @@ viewPage resp page =
         BadEdit ->
             div [] [ text "There is no such plant" ]
 
-        Edit av id plant ->
-            viewWebdata plant (viewPlant av True)
+        Edit editView ->
+            viewWebdata editView.plant (viewPlant editView.available True)
 
         Add addView ->
             viewPlant addView.available False addView.plant
@@ -294,7 +313,7 @@ init resp flags =
                 Add _ ->
                     getAvailable res.token
 
-                Edit _ plantId _ ->
+                Edit _ ->
                     getAvailable res.token
     in
     initBase [ Producer, Consumer, Manager ] initial initialCmd resp
@@ -314,7 +333,7 @@ decodeInitial flags =
     if isEdit then
         case D.decodeValue (D.field "plantId" D.int) flags of
             Ok id ->
-                Edit Loading id Loading
+                Edit <| EditView Loading Loading id Nothing
 
             Err _ ->
                 BadEdit
@@ -410,7 +429,7 @@ submitAddCommand : String -> PlantView -> Cmd Msg
 submitAddCommand token plant =
     let
         expect =
-            Http.expectJson GotSubmitAdd (D.succeed True)
+            Http.expectJson GotSubmitAdd (D.field "id" D.int)
     in
     postAuthed token AddPlant (getAddBody plant) expect Nothing
 
