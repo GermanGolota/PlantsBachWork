@@ -9,7 +9,7 @@ import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder, postAuthed)
 import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (value)
+import Html.Attributes exposing (class, value)
 import Http
 import ImageList
 import Json.Decode as D
@@ -88,6 +88,22 @@ update msg m =
             let
                 authed =
                     Authorized auth
+
+                setPlant plant =
+                    case model of
+                        Edit editView ->
+                            case editView.plant of
+                                Loaded loadedP ->
+                                    authed <| Edit <| { editView | plant = Loaded plant }
+
+                                _ ->
+                                    m
+
+                        Add addView ->
+                            authed <| Add <| { addView | plant = plant }
+
+                        BadEdit ->
+                            m
             in
             case ( msg, model ) of
                 ( StartUpload, _ ) ->
@@ -100,7 +116,11 @@ update msg m =
                     ( authed <| Edit <| { editView | available = Error }, Cmd.none )
 
                 ( GotAvailable (Ok res), Add addView ) ->
-                    ( authed <| Add <| { addView | available = Loaded res }, Cmd.none )
+                    let
+                        updatePlant plant =
+                            { plant | regions = res.regions }
+                    in
+                    ( authed <| Add <| { addView | available = Loaded res, plant = updatePlant addView.plant }, Cmd.none )
 
                 ( GotAvailable (Err err), Add addView ) ->
                     ( authed <| Add <| { addView | available = Error }, Cmd.none )
@@ -161,6 +181,82 @@ update msg m =
                         _ ->
                             noOp
 
+                ( NameUpdate newName, Add addView ) ->
+                    let
+                        updatedName plant =
+                            { plant | name = newName }
+                    in
+                    ( authed <| Add <| { addView | plant = updatedName addView.plant }, Cmd.none )
+
+                ( NameUpdate newName, Edit editView ) ->
+                    let
+                        updatedName plant =
+                            { plant | name = newName }
+                    in
+                    case editView.plant of
+                        Loaded pl ->
+                            ( authed <| Edit <| { editView | plant = Loaded (updatedName pl) }, Cmd.none )
+
+                        _ ->
+                            noOp
+
+                ( DescriptionUpdate newDesc, Add addView ) ->
+                    let
+                        updatedName plant =
+                            { plant | description = newDesc }
+                    in
+                    ( authed <| Add <| { addView | plant = updatedName addView.plant }, Cmd.none )
+
+                ( DescriptionUpdate newDesc, Edit editView ) ->
+                    let
+                        updatedName plant =
+                            { plant | description = newDesc }
+                    in
+                    case editView.plant of
+                        Loaded pl ->
+                            ( authed <| Edit <| { editView | plant = Loaded (updatedName pl) }, Cmd.none )
+
+                        _ ->
+                            noOp
+
+                ( SoilUpdate soil, _ ) ->
+                    case model of
+                        Add addView ->
+                            let
+                                updatePlant plant =
+                                    { plant | soil = soil }
+                            in
+                            ( authed <| Add <| { addView | plant = updatePlant addView.plant }, Cmd.none )
+
+                        Edit editView ->
+                            case editView.plant of
+                                Loaded plant ->
+                                    let
+                                        updatedPlant =
+                                            { plant | soil = soil }
+                                    in
+                                    ( authed <| Edit <| { editView | plant = Loaded updatedPlant }, Cmd.none )
+
+                                _ ->
+                                    noOp
+
+                        _ ->
+                            noOp
+
+                ( GroupUpdate group, Add { plant } ) ->
+                    ( setPlant { plant | group = group }, Cmd.none )
+
+                ( GroupUpdate group, Edit { plant } ) ->
+                    case plant of
+                        Loaded pl ->
+                            ( setPlant { pl | group = group }, Cmd.none )
+
+                        _ ->
+                            noOp
+
+                ( DateUpdate date, Add { plant } ) ->
+                    ( setPlant { plant | created = date }, Cmd.none )
+
                 ( Submit, Add addView ) ->
                     ( m, submitAddCommand auth.token addView.plant )
 
@@ -187,27 +283,37 @@ viewPage resp page =
             div [] [ text "There is no such plant" ]
 
         Edit editView ->
-            viewWebdata editView.plant (viewPlant editView.available True)
+            viewWebdata editView.plant (viewPlant editView.available True (div [ flex1 ] []))
 
         Add addView ->
-            viewPlant addView.available False addView.plant
+            viewPlant addView.available False (viewResultAdd addView.result) addView.plant
 
 
-viewPlant : WebData Available -> Bool -> PlantView -> Html Msg
-viewPlant av isEdit plant =
-    viewWebdata av (viewPlantBase isEdit plant)
+viewResultAdd : Maybe (WebData Int) -> Html msg
+viewResultAdd result =
+    case result of
+        Just web ->
+            viewWebdata web (\data -> div [ flex1, class "text-success" ] [ text ("Successfully created plant " ++ String.fromInt data) ])
+
+        Nothing ->
+            div [ flex1 ] []
 
 
-viewPlantBase : Bool -> PlantView -> Available -> Html Msg
-viewPlantBase isEdit plant av =
+viewPlant : WebData Available -> Bool -> Html Msg -> PlantView -> Html Msg
+viewPlant av isEdit resultView plant =
+    viewWebdata av (viewPlantBase isEdit plant resultView)
+
+
+viewPlantBase : Bool -> PlantView -> Html Msg -> Available -> Html Msg
+viewPlantBase isEdit plant resultView av =
     div ([ flex, Flex.row ] ++ fillParent)
         [ div [ Flex.col, flex1, flex ] (leftView isEdit plant av)
-        , div [ flex, Flex.col, flex1, Flex.justifyBetween, Flex.alignItemsCenter ] (rightView isEdit plant)
+        , div [ flex, Flex.col, flex1, Flex.justifyBetween, Flex.alignItemsCenter ] (rightView resultView isEdit plant)
         ]
 
 
-rightView : Bool -> PlantView -> List (Html Msg)
-rightView isEdit plant =
+rightView : Html Msg -> Bool -> PlantView -> List (Html Msg)
+rightView resultView isEdit plant =
     let
         btnMsg =
             if isEdit then
@@ -233,11 +339,12 @@ rightView isEdit plant =
     in
     if isEdit then
         [ imgView
+        , resultView
         , btnView
         ]
 
     else
-        [ btnView ]
+        [ resultView, btnView ]
 
 
 leftView : Bool -> PlantView -> Available -> List (Html Msg)
@@ -291,7 +398,7 @@ leftView isEdit plant av =
                 (viewOptions av.groups)
             )
         ++ viewInput "Description" (Input.text [ Input.onInput DescriptionUpdate, Input.value plant.description ])
-        ++ viewInput "Create Date" dateInput
+        ++ viewInput "Created Date" dateInput
 
 
 viewInput : String -> Html msg -> List (Html msg)
