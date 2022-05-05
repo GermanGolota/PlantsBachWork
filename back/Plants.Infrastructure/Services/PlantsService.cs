@@ -3,12 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Plants.Application.Commands;
 using Plants.Application.Contracts;
 using Plants.Application.Requests;
-using Plants.Core.Entities;
 using Plants.Infrastructure.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Plants.Infrastructure.Services
@@ -20,6 +18,34 @@ namespace Plants.Infrastructure.Services
         public PlantsService(PlantsContextFactory ctxFactory)
         {
             _ctxFactory = ctxFactory;
+        }
+
+        public async Task<PlantResultDto> GetBy(int id)
+        {
+            var ctx = _ctxFactory.CreateDbContext();
+            await using (ctx)
+            {
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = "SELECT * FROM plants_v WHERE Id = @id";
+                    var p = new
+                    {
+                        id
+                    };
+                    var items = await connection.QueryAsync<PlantResultDto>(sql, p);
+                    var first = items.FirstOrDefault();
+                    PlantResultDto res;
+                    if (first == default)
+                    {
+                        res = null;
+                    }
+                    else
+                    {
+                        res = first;
+                    }
+                    return res;
+                }
+            }
         }
 
         public async Task<IEnumerable<PlantResultItem>> GetNotPosted()
@@ -126,7 +152,12 @@ namespace Plants.Infrastructure.Services
                     string sql = "call edit_plant(@PlantId, @Name, @Description, @Regions, @SoilId, @GroupId)";
                     var p = new
                     {
-                        PlantId, Name, Description, Regions, SoilId, GroupId
+                        PlantId,
+                        Name,
+                        Description,
+                        Regions,
+                        SoilId,
+                        GroupId
                     };
                     await connection.ExecuteAsync(sql, p);
                 }

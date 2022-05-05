@@ -27,6 +27,12 @@ namespace Plants.Presentation.Controllers
             return await _mediator.Send(new PlantsRequest(), token);
         }
 
+        [HttpGet("notposted/{id}")]
+        public async Task<ActionResult<PlantResult>> GetNotPosted([FromRoute]int id, CancellationToken token)
+        {
+            return await _mediator.Send(new PlantRequest(id), token);
+        }
+
         [HttpGet("prepared/{id}")]
         public async Task<ActionResult<PreparedPostResult>> GetPrepared(int id, CancellationToken token)
         {

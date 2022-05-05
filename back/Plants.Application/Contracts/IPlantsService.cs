@@ -19,5 +19,6 @@ namespace Plants.Application.Contracts
         Task Edit(int PlantId, string Name, string Description,
                 int[] Regions, int SoilId,
             int GroupId);
+        Task<PlantResultDto?> GetBy(int id);
     }
 }
