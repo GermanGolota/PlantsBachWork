@@ -4,18 +4,17 @@ import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
-import Dict
-import Endpoints exposing (Endpoint(..), getAuthed, imageIdToUrl, postAuthed)
+import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder, postAuthed)
 import Html exposing (Html, div, i, input, text)
 import Html.Attributes exposing (checked, class, disabled, href, style, type_, value)
 import Http
 import ImageList as ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
+import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import Maybe exposing (map)
 import NavBar exposing (searchLink, viewNav)
-import Utils exposing (SubmittedResult(..), fillParent, flex, flex1, formatPrice, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin, submittedDecoder)
+import Utils exposing (SubmittedResult(..), createdDecoder, existsDecoder, fillParent, flex, flex1, formatPrice, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -316,20 +315,7 @@ getPlantCommand token plantId =
 
 plantDecoder : Maybe Float -> String -> D.Decoder (Maybe PlantModel)
 plantDecoder priceOverride token =
-    let
-        initedDecoder =
-            plantItemDecoder priceOverride token
-    in
-    D.field "exists" D.bool |> D.andThen initedDecoder
-
-
-plantItemDecoder : Maybe Float -> String -> Bool -> D.Decoder (Maybe PlantModel)
-plantItemDecoder priceOverride token exists =
-    if exists then
-        D.map Just (plantDecoderBase priceOverride token)
-
-    else
-        D.succeed Nothing
+    existsDecoder (plantDecoderBase priceOverride token)
 
 
 plantDecoderBase : Maybe Float -> String -> D.Decoder PlantModel
@@ -361,24 +347,6 @@ plantDecoderBase priceOverride token =
         |> custom (imagesDecoder token)
 
 
-imagesDecoder : String -> D.Decoder ImageList.Model
-imagesDecoder token =
-    let
-        baseDecoder =
-            imageIdsToModel token
-    in
-    D.map baseDecoder (D.at [ "item", "images" ] (D.list D.int))
-
-
-imageIdsToModel : String -> List Int -> ImageList.Model
-imageIdsToModel token ids =
-    let
-        baseList =
-            List.map (\id -> ( id, imageIdToUrl token id )) ids
-    in
-    ImageList.fromDict <| Dict.fromList baseList
-
-
 credsDecoder : String -> D.Decoder PersonCreds
 credsDecoder person =
     let
@@ -392,18 +360,6 @@ credsDecoder person =
         |> requiredItem (combine "Cared") D.int
         |> requiredItem (combine "Sold") D.int
         |> requiredItem (combine "Instructions") D.int
-
-
-createdDecoder : D.Decoder String
-createdDecoder =
-    let
-        combine date humanDate =
-            date ++ " (" ++ humanDate ++ ")"
-    in
-    D.map2
-        combine
-        (D.at [ "item", "createdDate" ] D.string)
-        (D.at [ "item", "createdHumanDate" ] D.string)
 
 
 

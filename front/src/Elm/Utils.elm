@@ -256,3 +256,29 @@ submittedMsgDecoder messageField success =
 
     else
         D.map SubmittedFail messageField
+
+
+existsDecoder : D.Decoder a -> D.Decoder (Maybe a)
+existsDecoder dec =
+    D.field "exists" D.bool |> D.andThen (maybeDecoder dec)
+
+
+maybeDecoder : D.Decoder a -> Bool -> D.Decoder (Maybe a)
+maybeDecoder dec exists =
+    if exists then
+        D.map Just dec
+
+    else
+        D.succeed Nothing
+
+
+createdDecoder : D.Decoder String
+createdDecoder =
+    let
+        combine date humanDate =
+            date ++ " (" ++ humanDate ++ ")"
+    in
+    D.map2
+        combine
+        (D.at [ "item", "createdDate" ] D.string)
+        (D.at [ "item", "createdHumanDate" ] D.string)

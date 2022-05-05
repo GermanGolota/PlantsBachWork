@@ -1,6 +1,9 @@
-module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, postAuthed, postAuthedQuery)
+module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, imagesDecoder, postAuthed, postAuthedQuery)
 
+import Dict
 import Http exposing (header, request)
+import ImageList
+import Json.Decode as D
 
 
 baseUrl : String
@@ -66,6 +69,24 @@ endpointToUrl endpoint =
 imageIdToUrl : String -> Int -> String
 imageIdToUrl token id =
     endpointToUrl <| Image id token
+
+
+imagesDecoder : String -> D.Decoder ImageList.Model
+imagesDecoder token =
+    let
+        baseDecoder =
+            imageIdsToModel token
+    in
+    D.map baseDecoder (D.at [ "item", "images" ] (D.list D.int))
+
+
+imageIdsToModel : String -> List Int -> ImageList.Model
+imageIdsToModel token ids =
+    let
+        baseList =
+            List.map (\id -> ( id, imageIdToUrl token id )) ids
+    in
+    ImageList.fromDict <| Dict.fromList baseList
 
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg
