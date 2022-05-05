@@ -52,7 +52,7 @@ CREATE OR REPLACE VIEW plant_post_v AS (
       p.description,
       po.seller_id,
       p.care_taker_id,
-      array_agg(DISTINCT rg.region_name) AS regions,
+      array_remove(array_agg(DISTINCT rg.region_name), NULL) AS regions,
       p.created,
       array_remove(array_agg(DISTINCT img.relation_id), NULL) AS img_ids
     FROM
@@ -60,8 +60,8 @@ CREATE OR REPLACE VIEW plant_post_v AS (
       JOIN plant p ON p.id = po.plant_id
       JOIN plant_group gr ON gr.id = p.group_id
       JOIN plant_soil s ON s.id = p.soil_id
-      JOIN plant_to_region prg ON prg.plant_id = p.id
-      JOIN plant_region rg ON rg.id = prg.plant_region_id
+      LEFT JOIN plant_to_region prg ON prg.plant_id = p.id
+      LEFT JOIN plant_region rg ON rg.id = prg.plant_region_id
       LEFT JOIN plant_to_image img ON img.plant_id = p.id
     GROUP BY
       p.id,
@@ -122,7 +122,6 @@ ALTER TABLE plant_order
 
 ALTER TABLE plant_order
   ALTER COLUMN created SET NOT NULL;
-
 
 INSERT INTO delivery_address (city, nova_poshta_number, person_id)
   VALUES ('Odessa', 15, 1);

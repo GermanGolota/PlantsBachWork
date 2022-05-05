@@ -1,6 +1,9 @@
-module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, postAuthed, postAuthedQuery)
+module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, imagesDecoder, postAuthed, postAuthedQuery)
 
+import Dict
 import Http exposing (header, request)
+import ImageList
+import Json.Decode as D
 
 
 baseUrl : String
@@ -18,6 +21,12 @@ type Endpoint
     | Post Int
     | OrderPost Int String Int --plantId, city, mailNumber
     | Addresses
+    | NotPostedPlants
+    | NotPostedPlant Int
+    | PreparedPlant Int
+    | PostPlant Int Float
+    | AddPlant
+    | EditPlant Int
 
 
 endpointToUrl : Endpoint -> String
@@ -50,10 +59,46 @@ endpointToUrl endpoint =
         Addresses ->
             baseUrl ++ "info/addresses"
 
+        NotPostedPlants ->
+            baseUrl ++ "plants/notposted"
+
+        PreparedPlant plantId ->
+            baseUrl ++ "plants/prepared/" ++ String.fromInt plantId
+
+        PostPlant plantId price ->
+            baseUrl ++ "plants/" ++ String.fromInt plantId ++ "/post?price=" ++ String.fromFloat price
+
+        NotPostedPlant id ->
+            baseUrl ++ "plants/notposted/" ++ String.fromInt id
+
+        AddPlant ->
+            baseUrl ++ "plants/add"
+
+        EditPlant plantId ->
+            baseUrl ++ "plants/" ++ String.fromInt plantId ++ "/edit"
+
 
 imageIdToUrl : String -> Int -> String
 imageIdToUrl token id =
     endpointToUrl <| Image id token
+
+
+imagesDecoder : String -> D.Decoder ImageList.Model
+imagesDecoder token =
+    let
+        baseDecoder =
+            imageIdsToModel token
+    in
+    D.map baseDecoder (D.at [ "item", "images" ] (D.list D.int))
+
+
+imageIdsToModel : String -> List Int -> ImageList.Model
+imageIdsToModel token ids =
+    let
+        baseList =
+            List.map (\id -> ( id, imageIdToUrl token id )) ids
+    in
+    ImageList.fromDict <| Dict.fromList baseList
 
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg

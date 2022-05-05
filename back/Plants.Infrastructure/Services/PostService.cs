@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Plants.Application.Commands;
 using Plants.Application.Contracts;
 using Plants.Application.Requests;
+using Plants.Infrastructure.Helpers;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -57,7 +58,7 @@ namespace Plants.Infrastructure.Services
                     {
                         postId, city, postNumber
                     };
-                    var res = (await connection.QueryAsync<PlaceOrderResultDb>(sql, p)).FirstOrDefault();
+                    var res = (await connection.QueryAsync<PostResultDb>(sql, p)).FirstOrDefault();
                     var message = (res.WasPlaced, res.ReasonCode) switch
                     {
                         (true, _) => "Successfully Ordered!",
@@ -70,6 +71,6 @@ namespace Plants.Infrastructure.Services
             }
         }
 
-        private record PlaceOrderResultDb(bool WasPlaced, int ReasonCode);
+        internal record PostResultDb(bool WasPlaced, int ReasonCode);
     }
 }

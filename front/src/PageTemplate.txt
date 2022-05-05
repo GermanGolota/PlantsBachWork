@@ -1,8 +1,9 @@
-module Pages.Search exposing (..)
+module Pages.NotPosted exposing (..)
 
 import Html exposing (Html, div)
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
+import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import NavBar exposing (plantsLink, viewNav)
 
 
 
@@ -42,17 +43,17 @@ update msg m =
 
 view : Model -> Html Msg
 view model =
-    viewBase viewMain model
+    viewNav model (Just plantsLink) viewPage
 
 
-viewMain : AuthResponse -> View -> Html Msg
-viewMain resp model =
+viewPage : AuthResponse -> View -> Html Msg
+viewPage resp page =
     div [] []
 
 
-init : Maybe AuthResponse -> ( Model, Cmd Msg )
-init resp =
-    initBase [ Producer, Consumer, Manager ] ( {}, Cmd.none ) resp
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
+init resp flags =
+    initBase [ Producer, Consumer, Manager ] {} (\res -> Cmd.none) resp
 
 
 subscriptions : Model -> Sub Msg

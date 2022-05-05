@@ -12,6 +12,7 @@ import FormatNumber exposing (format)
 import FormatNumber.Locales exposing (usLocale)
 import Html exposing (Attribute, Html, a, div)
 import Html.Attributes exposing (attribute, style)
+import Json.Decode as D
 
 
 type AlignDirection
@@ -200,7 +201,12 @@ chunkedView size viewFunc items =
             chunk size items
 
         remainder =
-            modBy size <| List.length items
+            case modBy size <| List.length items of
+                0 ->
+                    0
+
+                val ->
+                    size - val
 
         emptyCol =
             Grid.col [ Col.attrs [ style "flex" "1", smallMargin ] ] []
@@ -231,3 +237,48 @@ chunkedView size viewFunc items =
 formatPrice : Float -> String
 formatPrice price =
     format usLocale price ++ " ₴"
+
+
+type SubmittedResult
+    = SubmittedSuccess String
+    | SubmittedFail String
+
+
+submittedDecoder : D.Decoder Bool -> D.Decoder String -> D.Decoder SubmittedResult
+submittedDecoder successDecoder msgDecoder =
+    successDecoder |> D.andThen (submittedMsgDecoder msgDecoder)
+
+
+submittedMsgDecoder : D.Decoder String -> Bool -> D.Decoder SubmittedResult
+submittedMsgDecoder messageField success =
+    if success then
+        D.map SubmittedSuccess messageField
+
+    else
+        D.map SubmittedFail messageField
+
+
+existsDecoder : D.Decoder a -> D.Decoder (Maybe a)
+existsDecoder dec =
+    D.field "exists" D.bool |> D.andThen (maybeDecoder dec)
+
+
+maybeDecoder : D.Decoder a -> Bool -> D.Decoder (Maybe a)
+maybeDecoder dec exists =
+    if exists then
+        D.map Just dec
+
+    else
+        D.succeed Nothing
+
+
+createdDecoder : D.Decoder String
+createdDecoder =
+    let
+        combine date humanDate =
+            date ++ " (" ++ humanDate ++ ")"
+    in
+    D.map2
+        combine
+        (D.at [ "item", "createdDate" ] D.string)
+        (D.at [ "item", "createdHumanDate" ] D.string)

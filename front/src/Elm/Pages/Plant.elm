@@ -2,21 +2,19 @@ module Pages.Plant exposing (..)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
-import Bootstrap.Form.Radio as Radio
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
-import Dict
-import Endpoints exposing (Endpoint(..), getAuthed, imageIdToUrl, postAuthed)
+import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder, postAuthed)
 import Html exposing (Html, div, i, input, text)
 import Html.Attributes exposing (checked, class, disabled, href, style, type_, value)
 import Http
 import ImageList as ImageList
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (custom, required, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
+import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
+import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import Maybe exposing (map)
 import NavBar exposing (searchLink, viewNav)
-import Utils exposing (fillParent, flex, flex1, formatPrice, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin)
+import Utils exposing (SubmittedResult(..), createdDecoder, existsDecoder, fillParent, flex, flex1, formatPrice, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -50,11 +48,6 @@ type alias OrderView =
     , selected : SelectedAddress
     , result : Maybe (WebData SubmittedResult)
     }
-
-
-type SubmittedResult
-    = SubmittedSuccess String
-    | SubmittedFail String
 
 
 type SelectedAddress
@@ -285,27 +278,9 @@ submitCmd : String -> Int -> String -> Int -> Cmd Msg
 submitCmd token plantId city mailNumber =
     let
         expect =
-            Http.expectJson GotSubmit submittedDecoder
+            Http.expectJson GotSubmit (submittedDecoder (D.field "successfull" D.bool) (D.field "message" D.string))
     in
     postAuthed token (OrderPost plantId city mailNumber) Http.emptyBody expect Nothing
-
-
-submittedDecoder : D.Decoder SubmittedResult
-submittedDecoder =
-    D.field "successfull" D.bool |> D.andThen submittedMsgDecoder
-
-
-submittedMsgDecoder : Bool -> D.Decoder SubmittedResult
-submittedMsgDecoder success =
-    let
-        getMsg =
-            D.field "message" D.string
-    in
-    if success then
-        D.map SubmittedSuccess getMsg
-
-    else
-        D.map SubmittedFail getMsg
 
 
 getAddressesCommand : String -> Cmd Msg
@@ -333,39 +308,34 @@ getPlantCommand : String -> Int -> Cmd Msg
 getPlantCommand token plantId =
     let
         expect =
-            Http.expectJson GotPlant (plantDecoder token)
+            Http.expectJson GotPlant (plantDecoder Nothing token)
     in
     getAuthed token (Post plantId) expect Nothing
 
 
-plantDecoder : String -> D.Decoder (Maybe PlantModel)
-plantDecoder token =
-    let
-        initedDecoder =
-            plantItemDecoder token
-    in
-    D.field "exists" D.bool |> D.andThen initedDecoder
+plantDecoder : Maybe Float -> String -> D.Decoder (Maybe PlantModel)
+plantDecoder priceOverride token =
+    existsDecoder (plantDecoderBase priceOverride token)
 
 
-plantItemDecoder : String -> Bool -> D.Decoder (Maybe PlantModel)
-plantItemDecoder token exists =
-    if exists then
-        D.map Just (plantDecoderBase token)
-
-    else
-        D.succeed Nothing
-
-
-plantDecoderBase : String -> D.Decoder PlantModel
-plantDecoderBase token =
+plantDecoderBase : Maybe Float -> String -> D.Decoder PlantModel
+plantDecoderBase priceOverride token =
     let
         requiredItem name =
             requiredAt [ "item", name ]
+
+        priceDecoder =
+            case priceOverride of
+                Just price ->
+                    hardcoded price
+
+                Nothing ->
+                    requiredItem "price" D.float
     in
     D.succeed PlantModel
         |> requiredItem "plantName" D.string
         |> requiredItem "description" D.string
-        |> requiredItem "price" D.float
+        |> priceDecoder
         |> requiredItem "soilName" D.string
         |> requiredItem "regions" (D.list D.string)
         |> requiredItem "groupName" D.string
@@ -375,24 +345,6 @@ plantDecoderBase token =
         |> custom (credsDecoder "seller")
         |> custom (credsDecoder "careTaker")
         |> custom (imagesDecoder token)
-
-
-imagesDecoder : String -> D.Decoder ImageList.Model
-imagesDecoder token =
-    let
-        baseDecoder =
-            imageIdsToModel token
-    in
-    D.map baseDecoder (D.at [ "item", "images" ] (D.list D.int))
-
-
-imageIdsToModel : String -> List Int -> ImageList.Model
-imageIdsToModel token ids =
-    let
-        baseList =
-            List.map (\id -> ( id, imageIdToUrl token id )) ids
-    in
-    ImageList.fromDict <| Dict.fromList baseList
 
 
 credsDecoder : String -> D.Decoder PersonCreds
@@ -408,18 +360,6 @@ credsDecoder person =
         |> requiredItem (combine "Cared") D.int
         |> requiredItem (combine "Sold") D.int
         |> requiredItem (combine "Instructions") D.int
-
-
-createdDecoder : D.Decoder String
-createdDecoder =
-    let
-        combine date humanDate =
-            date ++ " (" ++ humanDate ++ ")"
-    in
-    D.map2
-        combine
-        (D.at [ "item", "createdDate" ] D.string)
-        (D.at [ "item", "createdHumanDate" ] D.string)
 
 
 
@@ -473,9 +413,9 @@ viewOrder selected del result id pl =
                     div [] []
     in
     div (fillParent ++ [ flex, Flex.row ])
-        [ viewPlantLeft pl
+        [ viewPlantLeft Images pl
         , div [ flex, Flex.col, flex1 ]
-            (viewDesc pl
+            (viewDesc False (\str -> NoOp) pl
                 ++ [ header "Payment methods"
                    , customRadio True "Pay now" False
                    , customRadio False "Pay on arrival" True
@@ -610,37 +550,59 @@ viewPlantFull id viewFunc p =
 
 viewPlant : Int -> PlantModel -> Html Msg
 viewPlant id plant =
+    viewPlantBase False (\str -> NoOp) Images (interactionButtons False id) plant
+
+
+viewPlantBase : Bool -> (String -> msg) -> (ImageList.Msg -> msg) -> Html msg -> PlantModel -> Html msg
+viewPlantBase priceEditable eventConverter imgConverter btns plant =
     let
         filled args =
             fillParent ++ args
+
+        desc =
+            viewDesc priceEditable eventConverter plant
     in
     div (filled [ flex, Flex.row ])
-        [ viewPlantLeft plant
+        [ viewPlantLeft imgConverter plant
         , div [ flex, Flex.col, flex1 ]
-            (viewDesc plant
+            (desc
                 ++ [ viewPlantStat "Soil" plant.soil
                    , viewPlantStat "Regions" (String.join ", " plant.regions)
                    , viewPlantStat "Group" plant.group
                    , viewPlantStat "Age" plant.created
-                   , interactionButtons False id
+                   , btns
                    ]
             )
         ]
 
 
-viewDesc : PlantModel -> List (Html msg)
-viewDesc plant =
+viewDesc : Bool -> (String -> msg) -> PlantModel -> List (Html msg)
+viewDesc priceEditable eventConverter plant =
+    let
+        priceView =
+            if priceEditable then
+                div [ flex, Flex.row, largeFont ]
+                    [ Input.number
+                        [ Input.onInput eventConverter
+                        , Input.attrs [ style "flex" "7", style "text-align" "right" ]
+                        ]
+                    , div [ flex1, smallMargin ] [ text " ₴" ]
+                    ]
+
+            else
+                div largeCentered [ text <| formatPrice plant.price ]
+    in
     [ div largeCentered [ text "Description" ]
     , div [] [ text plant.description ]
-    , div largeCentered [ text <| formatPrice plant.price ]
+    , priceView
     ]
 
 
-viewPlantLeft : PlantModel -> Html Msg
-viewPlantLeft plant =
+viewPlantLeft : (ImageList.Msg -> msg) -> PlantModel -> Html msg
+viewPlantLeft convert plant =
     div [ flex, Flex.col, flex1 ]
         [ div largeCentered [ text plant.name ]
-        , Html.map Images <| ImageList.view plant.images
+        , Html.map convert <| ImageList.view plant.images
         , viewPlantStat "Caretaker Credentials" (credsToString plant.caretakerCreds)
         , viewPlantStat "Seller Credentials" (credsToString plant.sellerCreds)
         , viewPlantStat "Seller Name" plant.sellerName
@@ -653,6 +615,7 @@ credsToString creds =
     String.fromInt creds.cared ++ " cared, " ++ String.fromInt creds.sold ++ " sold, " ++ String.fromInt creds.instructions ++ " instructions published"
 
 
+viewPlantStat : String -> String -> Html msg
 viewPlantStat desc value =
     flexRowGap (div [ mediumMargin, mediumFont ] [ text desc ]) (div [ mediumMargin, mediumFont ] [ text value ])
 
