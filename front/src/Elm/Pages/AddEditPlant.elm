@@ -41,7 +41,12 @@ type alias AddView =
 
 
 type alias EditView =
-    { available : WebData Available, plant : WebData PlantView, plantId : Int, result : Maybe (WebData Bool) }
+    { available : WebData Available
+    , plant : WebData PlantView
+    , plantId : Int
+    , result : Maybe (WebData Bool)
+    , removedItems : ImageList.Model
+    }
 
 
 type alias PlantView =
@@ -63,6 +68,7 @@ type alias PlantView =
 type Msg
     = NoOp
     | Images ImageList.Msg
+    | RemovedImages ImageList.Msg
     | NameUpdate String
     | DescriptionUpdate String
     | SoilUpdate Int
@@ -177,7 +183,75 @@ update msg m =
                 ( Images imgEvent, Edit editView ) ->
                     case editView.plant of
                         Loaded plantView ->
-                            ( authed <| Edit <| { editView | plant = Loaded { plantView | images = ImageList.update imgEvent plantView.images } }, Cmd.none )
+                            case imgEvent of
+                                ImageList.Clicked id ->
+                                    let
+                                        newImages =
+                                            Dict.remove id plantView.images.available
+
+                                        pair =
+                                            case Dict.get id plantView.images.available of
+                                                Just val ->
+                                                    ( id, val )
+
+                                                Nothing ->
+                                                    ( id, "" )
+
+                                        updatedPlant =
+                                            { plantView | images = ImageList.fromDict newImages }
+
+                                        removedImages =
+                                            ImageList.fromDict (Dict.union editView.removedItems.available (Dict.fromList [ pair ]))
+                                    in
+                                    ( authed <|
+                                        Edit <|
+                                            { editView
+                                                | plant = Loaded updatedPlant
+                                                , removedItems = removedImages
+                                            }
+                                    , Cmd.none
+                                    )
+
+                                _ ->
+                                    ( authed <| Edit <| { editView | plant = Loaded { plantView | images = ImageList.update imgEvent plantView.images } }, Cmd.none )
+
+                        _ ->
+                            noOp
+
+                ( RemovedImages imgEvent, Edit editView ) ->
+                    case editView.plant of
+                        Loaded plantView ->
+                            case imgEvent of
+                                ImageList.Clicked id ->
+                                    let
+                                        pair =
+                                            case Dict.get id editView.removedItems.available of
+                                                Just val ->
+                                                    ( id, val )
+
+                                                Nothing ->
+                                                    ( id, "" )
+
+                                        newImages =
+                                            Dict.union plantView.images.available (Dict.fromList [ pair ])
+
+                                        updatedPlant =
+                                            { plantView | images = ImageList.fromDict newImages }
+
+                                        removedImages =
+                                            ImageList.fromDict (Dict.remove id editView.removedItems.available)
+                                    in
+                                    ( authed <|
+                                        Edit <|
+                                            { editView
+                                                | plant = Loaded updatedPlant
+                                                , removedItems = removedImages
+                                            }
+                                    , Cmd.none
+                                    )
+
+                                _ ->
+                                    ( authed <| Edit <| { editView | removedItems = ImageList.update imgEvent editView.removedItems }, Cmd.none )
 
                         _ ->
                             noOp
@@ -264,7 +338,7 @@ update msg m =
                 ( Submit, Edit editView ) ->
                     case editView.plant of
                         Loaded pl ->
-                            ( m, submitEditCommand auth.token editView.plantId pl [] )
+                            ( m, submitEditCommand auth.token editView.plantId pl (Dict.toList editView.removedItems.available |> List.map Tuple.first) )
 
                         _ ->
                             noOp
@@ -304,10 +378,10 @@ viewPage resp page =
             div [] [ text "There is no such plant" ]
 
         Edit editView ->
-            viewWebdata editView.plant (viewPlant editView.available True (viewResultEdit editView.result))
+            viewWebdata editView.plant (viewPlant editView.removedItems editView.available True (viewResultEdit editView.result))
 
         Add addView ->
-            viewPlant addView.available False (viewResultAdd addView.result) addView.plant
+            viewPlant (ImageList.fromDict Dict.empty) addView.available False (viewResultAdd addView.result) addView.plant
 
 
 viewResultEdit : Maybe (WebData Bool) -> Html msg
@@ -341,21 +415,21 @@ viewResultAdd result =
             div [ flex1 ] []
 
 
-viewPlant : WebData Available -> Bool -> Html Msg -> PlantView -> Html Msg
-viewPlant av isEdit resultView plant =
-    viewWebdata av (viewPlantBase isEdit plant resultView)
+viewPlant : ImageList.Model -> WebData Available -> Bool -> Html Msg -> PlantView -> Html Msg
+viewPlant imgs av isEdit resultView plant =
+    viewWebdata av (viewPlantBase imgs isEdit plant resultView)
 
 
-viewPlantBase : Bool -> PlantView -> Html Msg -> Available -> Html Msg
-viewPlantBase isEdit plant resultView av =
+viewPlantBase : ImageList.Model -> Bool -> PlantView -> Html Msg -> Available -> Html Msg
+viewPlantBase imgs isEdit plant resultView av =
     div ([ flex, Flex.row ] ++ fillParent)
         [ div [ Flex.col, flex1, flex ] (leftView isEdit plant av)
-        , div [ flex, Flex.col, flex1, Flex.justifyBetween, Flex.alignItemsCenter ] (rightView resultView isEdit plant)
+        , div [ flex, Flex.col, flex1, Flex.justifyBetween, Flex.alignItemsCenter ] (rightView resultView isEdit imgs plant)
         ]
 
 
-rightView : Html Msg -> Bool -> PlantView -> List (Html Msg)
-rightView resultView isEdit plant =
+rightView : Html Msg -> Bool -> ImageList.Model -> PlantView -> List (Html Msg)
+rightView resultView isEdit additionalImages plant =
     let
         btnMsg =
             if isEdit then
@@ -374,13 +448,19 @@ rightView resultView isEdit plant =
                     [ text btnMsg ]
                 ]
 
-        imgView =
+        imgView event imgs =
             div [ style "flex" "2" ]
-                [ Html.map Images (ImageList.view plant.images)
+                [ Html.map event (ImageList.view imgs)
                 ]
+
+        imgText desc =
+            div ([ style "flex" "0.5" ] ++ largeCentered) [ text desc ]
     in
     if isEdit then
-        [ imgView
+        [ imgText "Remaining"
+        , imgView Images plant.images
+        , imgText "Removed"
+        , imgView RemovedImages additionalImages
         , resultView
         , btnView
         ]
@@ -482,7 +562,7 @@ decodeInitial flags =
     if isEdit then
         case D.decodeValue (D.field "plantId" D.int) flags of
             Ok id ->
-                Edit <| EditView Loading Loading id Nothing
+                Edit <| EditView Loading Loading id Nothing empyImageList
 
             Err _ ->
                 BadEdit
