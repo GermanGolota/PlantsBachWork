@@ -502,13 +502,25 @@ namespace Plants.Infrastructure
 
                 entity.ToTable("plants_v");
 
+                entity.Property(e => e.Created)
+                    .HasColumnType("date")
+                    .HasColumnName("created");
+
                 entity.Property(e => e.Description).HasColumnName("description");
+
+                entity.Property(e => e.GroupId).HasColumnName("group_id");
 
                 entity.Property(e => e.Id).HasColumnName("id");
 
-                entity.Property(e => e.Ismine).HasColumnName("ismine");
+                entity.Property(e => e.Images).HasColumnName("images");
+
+                entity.Property(e => e.IsMine).HasColumnName("is_mine");
 
                 entity.Property(e => e.PlantName).HasColumnName("plant_name");
+
+                entity.Property(e => e.Regions).HasColumnName("regions");
+
+                entity.Property(e => e.SoilId).HasColumnName("soil_id");
             });
 
             modelBuilder.Entity<PreparedForPostV>(entity =>

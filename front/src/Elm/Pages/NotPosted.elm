@@ -172,7 +172,7 @@ plantsDecoder =
 plantDecoder =
     D.succeed PlantItem
         |> required "id" D.int
-        |> required "name" D.string
+        |> required "plantName" D.string
         |> required "description" D.string
         |> required "isMine" D.bool
 

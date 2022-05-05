@@ -27,17 +27,13 @@ namespace Plants.Infrastructure.Services
             var ctx = _ctxFactory.CreateDbContext();
             await using (ctx)
             {
-                string sql = "SELECT * FROM plants_v";
-                var items = await ctx.PlantsVs.FromSqlRaw(sql).ToListAsync();
-                return items.Select(Convert);
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = "SELECT id, plant_name, description, is_mine FROM plants_v";
+                    return await connection.QueryAsync<PlantResultItem>(sql);
+                }
             }
         }
-
-        private PlantResultItem Convert(PlantsV plant)
-        {
-            return new PlantResultItem(plant.Id!.Value, plant.PlantName, plant.Description, plant.Ismine ?? false);
-        }
-
         public async Task<PreparedPostResultItem> GetPrepared(int plantId)
         {
             var ctx = _ctxFactory.CreateDbContext();

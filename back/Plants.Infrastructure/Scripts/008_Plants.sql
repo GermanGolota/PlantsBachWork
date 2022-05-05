@@ -4,12 +4,22 @@ CREATE OR REPLACE VIEW plants_v AS (
     p.id,
     p.plant_name,
     p.description,
-    p.care_taker_id = get_current_user_id_throw () AS isMine
+    p.care_taker_id = get_current_user_id_throw () AS is_mine,
+	p.group_id,
+	p.soil_id,
+	ARRAY_REMOVE( ARRAY_AGG(DISTINCT img.relation_id), NULL) as images,
+	ARRAY_REMOVE( ARRAY_AGG(DISTINCT prg.plant_region_id), NULL) as regions,
+	p.created
   FROM
     plant p
+  LEFT JOIN plant_to_region prg on prg.plant_id = p.id
+  LEFT JOIN plant_to_image img on img.plant_id = p.id
   LEFT JOIN plant_post po ON po.plant_id = p.id
+ 
 WHERE
-  po.plant_id IS NULL);
+  po.plant_id IS NULL
+	GROUP BY p.id
+);
 
 --this view would display posts as they would be seen after posting
 CREATE VIEW prepared_for_post_v AS (
