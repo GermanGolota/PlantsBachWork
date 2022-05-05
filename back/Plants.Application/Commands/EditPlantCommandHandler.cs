@@ -17,7 +17,8 @@ namespace Plants.Application.Commands
         public async Task<EditPlantResult> Handle(EditPlantCommand request, CancellationToken cancellationToken)
         {
             await _plants.Edit(request.PlantId, request.PlantName, 
-                request.PlantDescription, request.RegionIds, request.SoilId, request.GroupId);
+                request.PlantDescription, request.RegionIds, request.SoilId, request.GroupId,
+                request.RemovedImages, request.NewImages);
             return new EditPlantResult();
         }
     }

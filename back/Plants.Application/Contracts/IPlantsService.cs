@@ -17,8 +17,8 @@ namespace Plants.Application.Contracts
             byte[][] Pictures);
 
         Task Edit(int PlantId, string Name, string Description,
-                int[] Regions, int SoilId,
-            int GroupId);
+                int[] Regions, int SoilId, 
+                int GroupId, int[] RemovedImages, byte[][] NewImages);
         Task<PlantResultDto?> GetBy(int id);
     }
 }

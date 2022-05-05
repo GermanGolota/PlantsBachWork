@@ -28,7 +28,7 @@ namespace Plants.Presentation.Controllers
         }
 
         [HttpGet("notposted/{id}")]
-        public async Task<ActionResult<PlantResult>> GetNotPosted([FromRoute]int id, CancellationToken token)
+        public async Task<ActionResult<PlantResult>> GetNotPosted([FromRoute] int id, CancellationToken token)
         {
             return await _mediator.Send(new PlantRequest(id), token);
         }
@@ -50,6 +50,27 @@ namespace Plants.Presentation.Controllers
         public async Task<ActionResult<AddPlantResult>> Create
             ([FromForm] AddPlantDto body, IEnumerable<IFormFile> files, CancellationToken token)
         {
+            List<byte[]> totalBytes = ReadFiles(files);
+
+            var request = new AddPlantCommand(body.Name, body.Description,
+                body.Regions, body.SoilId, body.GroupId, body.Created, totalBytes.ToArray());
+
+            return await _mediator.Send(request, token);
+        }
+
+        [HttpPost("{id}/edit")]
+        public async Task<ActionResult<EditPlantResult>> Edit
+          ([FromRoute] int id, [FromForm] EditPlantDto plant, IEnumerable<IFormFile> files, CancellationToken token)
+        {
+            List<byte[]> totalBytes = ReadFiles(files);
+
+            var request = new EditPlantCommand(id, plant.PlantName, plant.PlantDescription,
+                plant.RegionIds, plant.SoilId, plant.GroupId, plant.RemovedImages, totalBytes.ToArray());
+            return await _mediator.Send(request, token);
+        }
+
+        private static List<byte[]> ReadFiles(IEnumerable<IFormFile> files)
+        {
             var totalBytes = new List<byte[]>();
             foreach (var file in files)
             {
@@ -61,23 +82,11 @@ namespace Plants.Presentation.Controllers
                 }
             }
 
-            var request = new AddPlantCommand(body.Name, body.Description,
-                body.Regions, body.SoilId, body.GroupId, body.Created, totalBytes.ToArray());
-
-            return await _mediator.Send(request, token);
-        }
-
-        [HttpPost("{id}/edit")]
-        public async Task<ActionResult<EditPlantResult>> Edit
-          ([FromRoute] int id, [FromBody] EditPlantDto plant, CancellationToken token)
-        {
-            var request = new EditPlantCommand(id, plant.PlantName, plant.PlantDescription, 
-                plant.RegionIds, plant.SoilId, plant.GroupId);
-            return await _mediator.Send(request, token);
+            return totalBytes;
         }
     }
 
     public record AddPlantDto(string Name, string Description, int[] Regions, int SoilId, int GroupId, DateTime Created);
     public record EditPlantDto(string PlantName,
-      string PlantDescription, int[] RegionIds, int SoilId, int GroupId);
+      string PlantDescription, int[] RegionIds, int SoilId, int GroupId, int[] RemovedImages);
 }

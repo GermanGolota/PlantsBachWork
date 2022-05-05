@@ -166,21 +166,33 @@ $$
 LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE procedure edit_plant (plantId int, plantName text,plantDescription text, regionIds int[], soilId int, groupId int)
+
+CREATE OR REPLACE procedure edit_plant (plantId int, plantName text,plantDescription text, regionIds int[], soilId int, groupId int, removedImages int[], newImages bytea[])
   AS $$
 DECLARE
 	regionId int;
+	picture bytea;
 BEGIN
 	update plant
 	set plant_name = plantName, description = plantDescription, soil_id = soilId, group_id = groupId
 	where id = plantId;
 	
-	DELETE FROM plant_to_region where plant_id = plantId;
+	DELETE FROM plant_to_region 
+	WHERE plant_id = plantId;
 	
 	FOREACH regionId IN ARRAY regionIds
   	LOOP
 		INSERT INTO plant_to_region(plant_id, plant_region_id)
 		values (plantId, regionId);
+  	END LOOP;
+	
+	DELETE FROM plant_to_image
+	WHERE plant_id = plantId AND relation_id = ANY(removedImages);
+	
+	FOREACH picture IN ARRAY newImages
+  	LOOP
+		INSERT INTO plant_to_image(plant_id, image)
+		values (plantId, picture);
   	END LOOP;
 END;
 $$

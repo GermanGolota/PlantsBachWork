@@ -142,14 +142,15 @@ namespace Plants.Infrastructure.Services
             }
         }
 
-        public async Task Edit(int PlantId, string Name, string Description, int[] Regions, int SoilId, int GroupId)
+        public async Task Edit(int PlantId, string Name, string Description,
+            int[] Regions, int SoilId, int GroupId, int[] RemovedImages, byte[][] NewImages)
         {
             var ctx = _ctxFactory.CreateDbContext();
             await using (ctx)
             {
                 await using (var connection = ctx.Database.GetDbConnection())
                 {
-                    string sql = "call edit_plant(@PlantId, @Name, @Description, @Regions, @SoilId, @GroupId)";
+                    string sql = "call edit_plant(@PlantId, @Name, @Description, @Regions, @SoilId, @GroupId, @RemovedImages, @NewImages)";
                     var p = new
                     {
                         PlantId,
@@ -157,7 +158,9 @@ namespace Plants.Infrastructure.Services
                         Description,
                         Regions,
                         SoilId,
-                        GroupId
+                        GroupId,
+                        RemovedImages,
+                        NewImages
                     };
                     await connection.ExecuteAsync(sql, p);
                 }
