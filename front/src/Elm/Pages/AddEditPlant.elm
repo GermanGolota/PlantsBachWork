@@ -9,7 +9,7 @@ import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder, postAuthed)
 import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, href, value)
+import Html.Attributes exposing (class, href, style, value)
 import Http
 import ImageList
 import Json.Decode as D
@@ -75,6 +75,7 @@ type Msg
     | GotPlant (Result Http.Error (Maybe PlantView))
     | Submit
     | GotSubmitAdd (Result Http.Error Int)
+    | GotSubmitEdit (Result Http.Error Bool)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -260,11 +261,25 @@ update msg m =
                 ( Submit, Add addView ) ->
                     ( m, submitAddCommand auth.token addView.plant )
 
+                ( Submit, Edit editView ) ->
+                    case editView.plant of
+                        Loaded pl ->
+                            ( m, submitEditCommand auth.token editView.plantId pl [] )
+
+                        _ ->
+                            noOp
+
                 ( GotSubmitAdd (Ok res), Add addView ) ->
                     ( authed <| Add <| { addView | result = Just (Loaded res) }, Cmd.none )
 
                 ( GotSubmitAdd (Err err), Add addView ) ->
                     ( authed <| Add <| { addView | result = Just Error }, Cmd.none )
+
+                ( GotSubmitEdit (Ok res), Edit editView ) ->
+                    ( authed <| Edit <| { editView | result = Just (Loaded res) }, Cmd.none )
+
+                ( GotSubmitEdit (Err err), Edit editView ) ->
+                    ( authed <| Edit <| { editView | result = Just Error }, Cmd.none )
 
                 ( _, _ ) ->
                     noOp
@@ -289,10 +304,23 @@ viewPage resp page =
             div [] [ text "There is no such plant" ]
 
         Edit editView ->
-            viewWebdata editView.plant (viewPlant editView.available True (div [ flex1 ] []))
+            viewWebdata editView.plant (viewPlant editView.available True (viewResultEdit editView.result))
 
         Add addView ->
             viewPlant addView.available False (viewResultAdd addView.result) addView.plant
+
+
+viewResultEdit : Maybe (WebData Bool) -> Html msg
+viewResultEdit result =
+    case result of
+        Just web ->
+            viewWebdata web
+                (\data ->
+                    div ([ flex1, class "text-primary" ] ++ largeCentered) [ text "Successfully edited!" ]
+                )
+
+        Nothing ->
+            div [ flex1 ] []
 
 
 viewResultAdd : Maybe (WebData Int) -> Html msg
@@ -347,7 +375,7 @@ rightView resultView isEdit plant =
                 ]
 
         imgView =
-            div [ flex1 ]
+            div [ style "flex" "2" ]
                 [ Html.map Images (ImageList.view plant.images)
                 ]
     in
@@ -546,6 +574,15 @@ plantDecoderBase av token =
         |> hardcoded []
 
 
+submitEditCommand : String -> Int -> PlantView -> List Int -> Cmd Msg
+submitEditCommand token plantId plant removed =
+    let
+        expect =
+            Http.expectJson GotSubmitEdit (D.succeed True)
+    in
+    postAuthed token (EditPlant plantId) (getEditBody plant removed) expect Nothing
+
+
 submitAddCommand : String -> PlantView -> Cmd Msg
 submitAddCommand token plant =
     let
@@ -553,6 +590,21 @@ submitAddCommand token plant =
             Http.expectJson GotSubmitAdd (D.field "id" D.int)
     in
     postAuthed token AddPlant (getAddBody plant) expect Nothing
+
+
+getEditBody : PlantView -> List Int -> Http.Body
+getEditBody plant removed =
+    Http.multipartBody
+        ([ Http.stringPart "PlantName" plant.name
+         , Http.stringPart "PlantDescription" plant.description
+         , Http.stringPart "SoilId" (String.fromInt plant.soil)
+         , Http.stringPart "GroupId" (String.fromInt plant.group)
+         , Http.stringPart "Created" plant.created
+         ]
+            ++ regionsParts "RegionIds" plant.regions
+            ++ filesParts plant.uploadedFiles
+            ++ removedParts removed
+        )
 
 
 getAddBody : PlantView -> Http.Body
@@ -564,18 +616,23 @@ getAddBody plant =
          , Http.stringPart "GroupId" (String.fromInt plant.group)
          , Http.stringPart "Created" plant.created
          ]
-            ++ regionsParts plant.regions
+            ++ regionsParts "Regions" plant.regions
             ++ filesParts plant.uploadedFiles
         )
 
 
-regionsParts : Multiselect.Model -> List Http.Part
-regionsParts regions =
+removedParts : List Int -> List Http.Part
+removedParts removed =
+    List.map (\r -> Http.stringPart "RemovedImages" (String.fromInt r)) removed
+
+
+regionsParts : String -> Multiselect.Model -> List Http.Part
+regionsParts name regions =
     let
         keys =
             List.map Tuple.first (Multiselect.getSelectedValues regions)
     in
-    List.map (\key -> Http.stringPart "Regions" key) keys
+    List.map (\key -> Http.stringPart name key) keys
 
 
 filesParts : List File -> List Http.Part
