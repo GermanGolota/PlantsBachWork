@@ -5,7 +5,7 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
 import Dict
-import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder)
+import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder, postAuthed)
 import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
@@ -65,6 +65,8 @@ type Msg
     | RegionsMS Multiselect.Msg
     | GotAvailable (Result Http.Error Available)
     | GotPlant (Result Http.Error (Maybe PlantView))
+    | Submit
+    | GotSubmitAdd (Result Http.Error Bool)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -129,6 +131,9 @@ update msg m =
                 ( Images imgEvent, Edit av id (Loaded plantView) ) ->
                     ( authed <| Edit av id <| Loaded { plantView | images = ImageList.update imgEvent plantView.images }, Cmd.none )
 
+                ( Submit, Add av plantView ) ->
+                    ( m, submitAddCommand auth.token plantView )
+
                 ( _, _ ) ->
                     noOp
 
@@ -181,14 +186,11 @@ rightView isEdit plant =
             else
                 "Add"
 
-        btnEvent =
-            NoOp
-
         btnView =
             div [ flex1 ]
                 [ Button.button
                     [ Button.primary
-                    , Button.onClick btnEvent
+                    , Button.onClick Submit
                     , Button.attrs ([ smallMargin ] ++ largeCentered)
                     ]
                     [ text btnMsg ]
@@ -391,6 +393,43 @@ plantDecoderBase av token =
         |> itemRequired "groupId" D.int
         |> custom (imagesDecoder token)
         |> hardcoded []
+
+
+submitAddCommand : String -> PlantView -> Cmd Msg
+submitAddCommand token plant =
+    let
+        expect =
+            Http.expectJson GotSubmitAdd (D.succeed True)
+    in
+    postAuthed token AddPlant (getAddBody plant) expect Nothing
+
+
+getAddBody : PlantView -> Http.Body
+getAddBody plant =
+    Http.multipartBody
+        ([ Http.stringPart "Name" plant.name
+         , Http.stringPart "Description" plant.description
+         , Http.stringPart "SoilId" (String.fromInt plant.soil)
+         , Http.stringPart "GroupId" (String.fromInt plant.group)
+         , Http.stringPart "Created" plant.created
+         ]
+            ++ regionsParts plant.regions
+            ++ filesParts plant.uploadedFiles
+        )
+
+
+regionsParts : Multiselect.Model -> List Http.Part
+regionsParts regions =
+    let
+        keys =
+            List.map Tuple.first (Multiselect.getSelectedValues regions)
+    in
+    List.map (\key -> Http.stringPart "Regions" key) keys
+
+
+filesParts : List File -> List Http.Part
+filesParts files =
+    List.map (Http.filePart "files") files
 
 
 

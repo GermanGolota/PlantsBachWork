@@ -25,6 +25,7 @@ type Endpoint
     | NotPostedPlant Int
     | PreparedPlant Int
     | PostPlant Int Float
+    | AddPlant
 
 
 endpointToUrl : Endpoint -> String
@@ -68,6 +69,9 @@ endpointToUrl endpoint =
 
         NotPostedPlant id ->
             baseUrl ++ "plants/notposted/" ++ String.fromInt id
+
+        AddPlant ->
+            baseUrl ++ "plants/add"
 
 
 imageIdToUrl : String -> Int -> String
