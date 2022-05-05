@@ -9,7 +9,7 @@ import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder, postAuthed)
 import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, value)
+import Html.Attributes exposing (class, href, value)
 import Http
 import ImageList
 import Json.Decode as D
@@ -260,6 +260,12 @@ update msg m =
                 ( Submit, Add addView ) ->
                     ( m, submitAddCommand auth.token addView.plant )
 
+                ( GotSubmitAdd (Ok res), Add addView ) ->
+                    ( authed <| Add <| { addView | result = Just (Loaded res) }, Cmd.none )
+
+                ( GotSubmitAdd (Err err), Add addView ) ->
+                    ( authed <| Add <| { addView | result = Just Error }, Cmd.none )
+
                 ( _, _ ) ->
                     noOp
 
@@ -293,7 +299,15 @@ viewResultAdd : Maybe (WebData Int) -> Html msg
 viewResultAdd result =
     case result of
         Just web ->
-            viewWebdata web (\data -> div [ flex1, class "text-success" ] [ text ("Successfully created plant " ++ String.fromInt data) ])
+            viewWebdata web
+                (\data ->
+                    div [ flex1, flex, Flex.col, class "text-success", Flex.alignItemsCenter, Flex.justifyEnd ]
+                        [ div [] [ text ("Successfully created plant " ++ String.fromInt data) ]
+                        , div []
+                            [ Button.linkButton [ Button.primary, Button.attrs [ href ("/notPosted/" ++ String.fromInt data ++ "/edit") ] ] [ text "Go to edit" ]
+                            ]
+                        ]
+                )
 
         Nothing ->
             div [ flex1 ] []
@@ -446,7 +460,7 @@ decodeInitial flags =
                 BadEdit
 
     else
-        Add <| AddView Loading (PlantView "" "" "" emptyMultiSelect 0 0 empyImageList []) Nothing
+        Add <| AddView Loading (PlantView "" "" "" emptyMultiSelect 1 1 empyImageList []) Nothing
 
 
 
