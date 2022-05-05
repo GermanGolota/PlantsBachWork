@@ -84,6 +84,8 @@ namespace Plants.Presentation
             app.UseAuthentication();
             app.UseStaticFiles();
 
+            app.UseExceptionHandler(handler => handler.UseCustomErrors(env));
+
             app.UseRouting();
 
             app.UseAuthorization();
