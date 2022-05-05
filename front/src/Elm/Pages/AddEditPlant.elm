@@ -5,7 +5,7 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
 import Dict
-import Endpoints exposing (Endpoint(..), getAuthed)
+import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder)
 import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
@@ -13,11 +13,12 @@ import Html.Attributes exposing (value)
 import Http
 import ImageList
 import Json.Decode as D
+import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import Multiselect
 import NavBar exposing (plantsLink, viewNav)
 import Pages.Search exposing (Available, availableDecoder)
-import Utils exposing (fillParent, flex, flex1, largeCentered, smallMargin)
+import Utils exposing (createdDecoder, existsDecoder, fillParent, flex, flex1, largeCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -83,7 +84,7 @@ update msg m =
                     ( m, requestImages )
 
                 ( GotAvailable (Ok res), Edit _ id plantView ) ->
-                    ( authed <| Edit (Loaded res) id plantView, getPlantCommand auth.token id )
+                    ( authed <| Edit (Loaded res) id plantView, getPlantCommand res auth.token id )
 
                 ( GotAvailable (Err err), Edit _ id plantView ) ->
                     ( authed <| Edit Error id plantView, Cmd.none )
@@ -112,26 +113,27 @@ update msg m =
                     in
                     ( authed <| Add av { plantView | regions = subModel }, Cmd.map RegionsMS subCmd )
 
+                ( RegionsMS msEvent, Edit av id (Loaded plantView) ) ->
+                    let
+                        ( subModel, subCmd, _ ) =
+                            Multiselect.update msEvent plantView.regions
+                    in
+                    ( authed <| Edit av id (Loaded { plantView | regions = subModel }), Cmd.map RegionsMS subCmd )
+
                 ( ImagesLoaded file files, Edit av id (Loaded plantView) ) ->
                     ( authed <| Edit av id <| Loaded { plantView | uploadedFiles = files ++ [ file ] }, Cmd.none )
 
                 ( ImagesLoaded file files, Add av plantView ) ->
                     ( authed <| Add av { plantView | uploadedFiles = files ++ [ file ] }, Cmd.none )
 
+                ( Images imgEvent, Edit av id (Loaded plantView) ) ->
+                    ( authed <| Edit av id <| Loaded { plantView | images = ImageList.update imgEvent plantView.images }, Cmd.none )
+
                 ( _, _ ) ->
                     noOp
 
         _ ->
             noOp
-
-
-
---commands
-
-
-getPlantCommand : String -> Int -> Cmd msg
-getPlantCommand token plantId =
-    Cmd.none
 
 
 
@@ -329,6 +331,66 @@ requestImages =
 getAvailable : String -> Cmd Msg
 getAvailable token =
     Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing
+
+
+getPlantCommand : Available -> String -> Int -> Cmd Msg
+getPlantCommand av token plantId =
+    let
+        expect =
+            Http.expectJson GotPlant (plantDecoder av token)
+    in
+    getAuthed token (NotPostedPlant plantId) expect Nothing
+
+
+plantDecoder : Available -> String -> D.Decoder (Maybe PlantView)
+plantDecoder av token =
+    existsDecoder (plantDecoderBase av token)
+
+
+plantDecoderBase : Available -> String -> D.Decoder PlantView
+plantDecoderBase av token =
+    let
+        itemRequired name =
+            requiredAt [ "item", name ]
+
+        regions =
+            Multiselect.getValues av.regions
+
+        getPairWithKey key list =
+            List.head (List.filter (\( k, v ) -> k == key) list)
+
+        getRegionFor id =
+            case getPairWithKey id regions of
+                Just val ->
+                    val
+
+                Nothing ->
+                    ( "-1", "Unknown" )
+
+        regFunc id =
+            getRegionFor (String.fromInt id)
+
+        regIdsDecoder =
+            D.at [ "item", "regions" ] (D.list D.int)
+
+        selected ids =
+            List.map regFunc ids
+
+        reg ids =
+            Multiselect.populateValues (Multiselect.initModel regions "regions" Multiselect.Show) regions (selected ids)
+
+        regDecoder =
+            D.map reg regIdsDecoder
+    in
+    D.succeed PlantView
+        |> itemRequired "plantName" D.string
+        |> itemRequired "description" D.string
+        |> custom createdDecoder
+        |> custom regDecoder
+        |> itemRequired "soilId" D.int
+        |> itemRequired "groupId" D.int
+        |> custom (imagesDecoder token)
+        |> hardcoded []
 
 
 
