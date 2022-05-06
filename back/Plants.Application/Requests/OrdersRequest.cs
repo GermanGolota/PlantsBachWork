@@ -29,7 +29,7 @@ namespace Plants.Application.Requests
             set
             {
                 ordered = value;
-                OrderedDate = ordered.ToLongDateString();
+                OrderedDate = ordered.ToString();
             }
         }
 
@@ -39,7 +39,7 @@ namespace Plants.Application.Requests
             set
             {
                 deliveryStarted = value;
-                DeliveryStartedDate = value?.ToLongDateString();
+                DeliveryStartedDate = value?.ToString();
             }
         }
 
@@ -49,7 +49,7 @@ namespace Plants.Application.Requests
             set
             {
                 shipped = value;
-                ShippedDate = value?.ToLongDateString();
+                ShippedDate = value?.ToString();
             }
         }
 

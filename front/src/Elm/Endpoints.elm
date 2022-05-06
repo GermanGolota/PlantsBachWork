@@ -27,6 +27,7 @@ type Endpoint
     | PostPlant Int Float
     | AddPlant
     | EditPlant Int
+    | AllOrders Bool
 
 
 endpointToUrl : Endpoint -> String
@@ -76,6 +77,17 @@ endpointToUrl endpoint =
 
         EditPlant plantId ->
             baseUrl ++ "plants/" ++ String.fromInt plantId ++ "/edit"
+
+        AllOrders onlyMine ->
+            let
+                mineStr =
+                    if onlyMine then
+                        "true"
+
+                    else
+                        "false"
+            in
+            baseUrl ++ "orders?onlyMine=" ++ mineStr
 
 
 imageIdToUrl : String -> Int -> String
