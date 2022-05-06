@@ -32,6 +32,7 @@ namespace Plants.Infrastructure
         public virtual DbSet<PlantDelivery> PlantDeliveries { get; set; }
         public virtual DbSet<PlantGroup> PlantGroups { get; set; }
         public virtual DbSet<PlantOrder> PlantOrders { get; set; }
+        public virtual DbSet<PlantOrdersV> PlantOrdersVs { get; set; }
         public virtual DbSet<PlantPost> PlantPosts { get; set; }
         public virtual DbSet<PlantPostV> PlantPostVs { get; set; }
         public virtual DbSet<PlantRegion> PlantRegions { get; set; }
@@ -308,9 +309,9 @@ namespace Plants.Infrastructure
                     .HasColumnName("post_id");
 
                 entity.Property(e => e.Created)
-                    .HasColumnType("date")
+                    .HasColumnType("timestamp with time zone")
                     .HasColumnName("created")
-                    .HasDefaultValueSql("CURRENT_DATE");
+                    .HasDefaultValueSql("now()");
 
                 entity.Property(e => e.CustomerId).HasColumnName("customer_id");
 
@@ -333,6 +334,41 @@ namespace Plants.Infrastructure
                     .HasForeignKey<PlantOrder>(d => d.PostId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("plant_order_post_id_fkey");
+            });
+
+            modelBuilder.Entity<PlantOrdersV>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("plant_orders_v");
+
+                entity.Property(e => e.City).HasColumnName("city");
+
+                entity.Property(e => e.DeliveryStarted)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("delivery_started");
+
+                entity.Property(e => e.DeliveryTrackingNumber).HasColumnName("delivery_tracking_number");
+
+                entity.Property(e => e.MailNumber).HasColumnName("mail_number");
+
+                entity.Property(e => e.Ordered)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("ordered");
+
+                entity.Property(e => e.PostId).HasColumnName("post_id");
+
+                entity.Property(e => e.Price).HasColumnName("price");
+
+                entity.Property(e => e.SellerContact).HasColumnName("seller_contact");
+
+                entity.Property(e => e.SellerName).HasColumnName("seller_name");
+
+                entity.Property(e => e.Shipped)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("shipped");
+
+                entity.Property(e => e.Status).HasColumnName("status");
             });
 
             modelBuilder.Entity<PlantPost>(entity =>
