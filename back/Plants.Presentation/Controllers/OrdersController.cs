@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Plants.Application.Commands;
 using Plants.Application.Requests;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +22,19 @@ namespace Plants.Presentation.Controllers
         public async Task<ActionResult<OrdersResult>> GetAll([FromQuery] bool onlyMine, CancellationToken token)
         {
             return await _mediator.Send(new OrdersRequest(onlyMine), token);
+        }
+
+        [HttpPost("{id}/deliver")]
+        public async Task<ActionResult<StartDeliveryResult>> StartDelivery([FromRoute] int id,
+            [FromQuery] string trackingNumber, CancellationToken token)
+        {
+            return await _mediator.Send(new StartDeliveryCommand(id, trackingNumber), token);
+        }
+
+        [HttpPost("{id}/delivered")]
+        public async Task<ActionResult<ConfirmDeliveryResult>> MarkAsDelivered([FromRoute] int id, CancellationToken token)
+        {
+            return await _mediator.Send(new ConfirmDeliveryCommand(id), token);
         }
     }
 }

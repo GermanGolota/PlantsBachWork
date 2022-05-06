@@ -34,5 +34,42 @@ namespace Plants.Infrastructure.Services
                 }
             }
         }
+
+        public async Task ConfirmStarted(int orderId, string trackingNumber)
+        {
+            var ctx = _ctx.CreateDbContext();
+            await using (ctx)
+            {
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = @"INSERT INTO plant_delivery(order_id, delivery_tracking_number)
+                            VALUES(@orderId, @trackingNumber);";
+                    var p = new
+                    {
+                        orderId,
+                        trackingNumber
+                    };
+                    await connection.ExecuteAsync(sql, p);
+                }
+            }
+        }
+
+        public async Task ConfirmReceived(int deliveryId)
+        {
+            var ctx = _ctx.CreateDbContext();
+            await using (ctx)
+            {
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = @"INSERT INTO plant_shipment(delivery_id)
+                            VALUES(@deliveryId);";
+                    var p = new
+                    {
+                        deliveryId
+                    };
+                    await connection.ExecuteAsync(sql, p);
+                }
+            }
+        }
     }
 }

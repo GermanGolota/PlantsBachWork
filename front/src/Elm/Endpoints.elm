@@ -28,6 +28,8 @@ type Endpoint
     | AddPlant
     | EditPlant Int
     | AllOrders Bool
+    | SendOrder Int String
+    | ReceivedOrder Int
 
 
 endpointToUrl : Endpoint -> String
@@ -88,6 +90,12 @@ endpointToUrl endpoint =
                         "false"
             in
             baseUrl ++ "orders?onlyMine=" ++ mineStr
+
+        SendOrder orderId ttn ->
+            baseUrl ++ "orders/" ++ String.fromInt orderId ++ "/deliver?trackingNumber=" ++ ttn
+
+        ReceivedOrder orderId ->
+            baseUrl ++ "orders/" ++ String.fromInt orderId ++ "/delivered"
 
 
 imageIdToUrl : String -> Int -> String

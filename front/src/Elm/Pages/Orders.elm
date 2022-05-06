@@ -2,8 +2,10 @@ module Pages.Orders exposing (..)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form.Checkbox as Checkbox
+import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder)
+import Dict exposing (Dict)
+import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder, postAuthed)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, href, style)
 import Http
@@ -30,6 +32,7 @@ type alias View =
     , viewType : ViewType
     , showAdditional : Bool
     , hideFulfilled : Bool
+    , selectedTtns : Dict Int String
     }
 
 
@@ -91,6 +94,11 @@ type Msg
     | GotOrders (Result Http.Error (List Order))
     | HideFullfilledChecked Bool
     | Images ImageList.Msg Int
+    | SelectedTtn Int String
+    | ConfirmSend Int
+    | GotConfirmSend Int (Result Http.Error Bool)
+    | ConfirmReceived Int
+    | GotConfirmReceived Int (Result Http.Error Bool)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -119,17 +127,6 @@ update msg m =
                     case model.data of
                         Loaded orders ->
                             let
-                                getPostId o =
-                                    case o of
-                                        Created c ->
-                                            c.postId
-
-                                        Delivering d ->
-                                            d.postId
-
-                                        Delivered d2 ->
-                                            d2.postId
-
                                 order =
                                     List.head (List.filter (\o -> getPostId o == postId) orders)
 
@@ -156,6 +153,35 @@ update msg m =
                         _ ->
                             noOp
 
+                SelectedTtn postId value ->
+                    let
+                        updatedView =
+                            Dict.union (Dict.fromList [ ( postId, value ) ]) model.selectedTtns
+                    in
+                    ( authed { model | selectedTtns = updatedView }, Cmd.none )
+
+                ConfirmSend orderId ->
+                    let
+                        ttn =
+                            Maybe.withDefault "" <| Dict.get orderId model.selectedTtns
+                    in
+                    ( m, startDelivery auth.token orderId ttn )
+
+                GotConfirmSend orderId (Ok res) ->
+                    ( m, getData auth.token model.viewType )
+
+                GotConfirmSend orderId (Err err) ->
+                    noOp
+
+                ConfirmReceived orderId ->
+                    ( m, confirmDelivery auth.token orderId )
+
+                GotConfirmReceived orderId (Ok res) ->
+                    ( m, getData auth.token model.viewType )
+
+                GotConfirmReceived orderId (Err err) ->
+                    noOp
+
                 NoOp ->
                     noOp
 
@@ -163,8 +189,39 @@ update msg m =
             noOp
 
 
+getPostId : Order -> Int
+getPostId o =
+    case o of
+        Created c ->
+            c.postId
+
+        Delivering d ->
+            d.postId
+
+        Delivered d2 ->
+            d2.postId
+
+
 
 --commands
+
+
+confirmDelivery : String -> Int -> Cmd Msg
+confirmDelivery token orderId =
+    let
+        expect =
+            Http.expectJson (GotConfirmReceived orderId) (D.field "successfull" D.bool)
+    in
+    postAuthed token (ReceivedOrder orderId) Http.emptyBody expect Nothing
+
+
+startDelivery : String -> Int -> String -> Cmd Msg
+startDelivery token orderId ttn =
+    let
+        expect =
+            Http.expectJson (GotConfirmSend orderId) (D.field "successfull" D.bool)
+    in
+    postAuthed token (SendOrder orderId ttn) Http.emptyBody expect Nothing
 
 
 getOrders : String -> Bool -> Cmd Msg
@@ -320,12 +377,12 @@ viewPage resp page =
     in
     div ([ flex, Flex.col ] ++ fillParent)
         [ topView
-        , viewWebdata page.data (mainView page.hideFulfilled)
+        , viewWebdata page.data (mainView page.selectedTtns page.viewType page.hideFulfilled)
         ]
 
 
-mainView : Bool -> List Order -> Html Msg
-mainView hide orders =
+mainView : Dict Int String -> ViewType -> Bool -> List Order -> Html Msg
+mainView ttns viewType hide orders =
     let
         isNotDelivered order =
             case order of
@@ -342,17 +399,51 @@ mainView hide orders =
             else
                 orders
     in
-    div [ flex, Flex.col, style "flex" "8", style "overflow-y" "scroll" ] (List.map viewOrder fOrders)
+    div [ flex, Flex.col, style "flex" "8", style "overflow-y" "scroll" ] (List.map (viewOrder ttns viewType) fOrders)
 
 
-viewOrder : Order -> Html Msg
-viewOrder order =
+viewOrder : Dict Int String -> ViewType -> Order -> Html Msg
+viewOrder ttns viewType order =
+    let
+        ttn =
+            Maybe.withDefault "" <| Dict.get (getPostId order) ttns
+    in
     case order of
         Created cr ->
-            viewOrderBase False cr (\a -> []) (div [] [])
+            let
+                btns =
+                    case viewType of
+                        ProducerView ->
+                            div [ flex, Flex.col, Flex.alignItemsCenter ]
+                                [ div (largeCentered ++ [ smallMargin ]) [ text "Tracking Number" ]
+                                , Input.text [ Input.onInput (SelectedTtn (getPostId order)), Input.value ttn ]
+                                , Button.button
+                                    [ Button.primary, Button.onClick <| ConfirmSend (getPostId order), Button.attrs [ smallMargin ] ]
+                                    [ text "Confirm Send" ]
+                                ]
+
+                        ConsumerView ->
+                            div [] []
+            in
+            viewOrderBase False cr (\a -> []) btns
 
         Delivering del ->
-            viewOrderBase False del (\a -> viewDelivering (\b -> div [] []) a) (div [] [])
+            let
+                btns =
+                    case viewType of
+                        ConsumerView ->
+                            div [ flex, Flex.col, flex1, smallMargin ]
+                                [ Button.button
+                                    [ Button.onClick (ConfirmReceived <| getPostId order)
+                                    , Button.primary
+                                    ]
+                                    [ text "Confirm Received" ]
+                                ]
+
+                        ProducerView ->
+                            div [] []
+            in
+            viewOrderBase False del (\a -> viewDelivering (\b -> div [] []) a) btns
 
         Delivered del ->
             viewOrderBase True del (\a -> viewDelivering viewDelivered a) (div [] [])
@@ -454,6 +545,15 @@ init resp flags =
             else
                 ConsumerView
 
+        initialCmd res =
+            getData res.token viewType
+    in
+    initBase [ Producer, Consumer, Manager ] (View Loading viewType showAdditional False Dict.empty) initialCmd resp
+
+
+getData : String -> ViewType -> Cmd Msg
+getData token viewType =
+    let
         onlyMine =
             case viewType of
                 ProducerView ->
@@ -461,11 +561,8 @@ init resp flags =
 
                 ConsumerView ->
                     True
-
-        initialCmd res =
-            getOrders res.token onlyMine
     in
-    initBase [ Producer, Consumer, Manager ] (View Loading viewType showAdditional False) initialCmd resp
+    getOrders token onlyMine
 
 
 
