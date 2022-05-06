@@ -6,6 +6,6 @@ namespace Plants.Application.Contracts
 {
     public interface IOrdersService
     {
-        Task<IEnumerable<OrdersResultItem>> GetOrders();
+        Task<IEnumerable<OrdersResultItem>> GetOrders(bool onlyMine);
     }
 }

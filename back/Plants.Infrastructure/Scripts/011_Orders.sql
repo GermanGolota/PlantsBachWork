@@ -40,3 +40,12 @@ CREATE VIEW plant_orders_v AS (
     ordered,
     post_id);
 
+CREATE OR REPLACE VIEW current_user_orders AS (
+  SELECT
+    v.*
+  FROM
+    plant_orders_v v
+    JOIN plant_order o ON v.post_id = o.post_id
+  WHERE
+    o.customer_id = get_current_user_id_throw ());
+

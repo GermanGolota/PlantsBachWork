@@ -18,9 +18,9 @@ namespace Plants.Presentation.Controllers
         }
 
         [HttpGet()]
-        public async Task<ActionResult<OrdersResult>> GetAll(CancellationToken token)
+        public async Task<ActionResult<OrdersResult>> GetAll([FromQuery] bool onlyMine, CancellationToken token)
         {
-            return await _mediator.Send(new OrdersRequest(), token);
+            return await _mediator.Send(new OrdersRequest(onlyMine), token);
         }
     }
 }

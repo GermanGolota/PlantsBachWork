@@ -19,6 +19,7 @@ namespace Plants.Infrastructure
         }
 
         public virtual DbSet<CurrentUserAddress> CurrentUserAddresses { get; set; }
+        public virtual DbSet<CurrentUserOrder> CurrentUserOrders { get; set; }
         public virtual DbSet<CurrentUserRole> CurrentUserRoles { get; set; }
         public virtual DbSet<DeliveryAddress> DeliveryAddresses { get; set; }
         public virtual DbSet<DictsV> DictsVs { get; set; }
@@ -67,6 +68,41 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.Cities).HasColumnName("cities");
 
                 entity.Property(e => e.Posts).HasColumnName("posts");
+            });
+
+            modelBuilder.Entity<CurrentUserOrder>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("current_user_orders");
+
+                entity.Property(e => e.City).HasColumnName("city");
+
+                entity.Property(e => e.DeliveryStarted)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("delivery_started");
+
+                entity.Property(e => e.DeliveryTrackingNumber).HasColumnName("delivery_tracking_number");
+
+                entity.Property(e => e.MailNumber).HasColumnName("mail_number");
+
+                entity.Property(e => e.Ordered)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("ordered");
+
+                entity.Property(e => e.PostId).HasColumnName("post_id");
+
+                entity.Property(e => e.Price).HasColumnName("price");
+
+                entity.Property(e => e.SellerContact).HasColumnName("seller_contact");
+
+                entity.Property(e => e.SellerName).HasColumnName("seller_name");
+
+                entity.Property(e => e.Shipped)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("shipped");
+
+                entity.Property(e => e.Status).HasColumnName("status");
             });
 
             modelBuilder.Entity<CurrentUserRole>(entity =>

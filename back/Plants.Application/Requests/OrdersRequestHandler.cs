@@ -20,7 +20,7 @@ namespace Plants.Application.Requests
 
         public async Task<OrdersResult> Handle(OrdersRequest request, CancellationToken cancellationToken)
         {
-            var items = await _orders.GetOrders();
+            var items = await _orders.GetOrders(request.OnlyMine);
             return new OrdersResult(items.ToList());
         }
     }

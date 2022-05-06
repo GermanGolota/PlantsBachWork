@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Plants.Application.Requests
 {
-    public record OrdersRequest() : IRequest<OrdersResult>;
+    public record OrdersRequest(bool OnlyMine) : IRequest<OrdersResult>;
 
     public record OrdersResult(List<OrdersResultItem> Items);
 
