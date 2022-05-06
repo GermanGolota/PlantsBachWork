@@ -8,7 +8,7 @@ DELETE FROM plant_shipment
 WHERE delivery_id IN (1, 20);
 
 --case : 0 - created, 1 - delivering, 2 - delivered
-CREATE VIEW plant_orders_v AS (
+CREATE OR REPLACE VIEW plant_orders_v AS (
   SELECT
     (
       CASE WHEN s.delivery_id IS NOT NULL THEN
@@ -27,7 +27,8 @@ CREATE VIEW plant_orders_v AS (
     po.price,
     d.delivery_tracking_number,
     d.created AS delivery_started,
-    s.shipped
+    s.shipped,
+    ARRAY_REMOVE(ARRAY_AGG(DISTINCT img.relation_id), NULL) AS images
   FROM
     plant_order o
     JOIN delivery_address da ON da.id = o.delivery_address_id
@@ -35,6 +36,14 @@ CREATE VIEW plant_orders_v AS (
     JOIN person seller ON seller.id = po.seller_id
     LEFT JOIN plant_delivery d ON d.order_id = o.post_id
     LEFT JOIN plant_shipment s ON s.delivery_id = d.order_id
+    LEFT JOIN plant_to_image img ON img.plant_id = o.post_id
+  GROUP BY
+    o.post_id,
+    s.delivery_id,
+    da.id,
+    d.order_id,
+    seller.id,
+    po.price
   ORDER BY
     status,
     ordered,

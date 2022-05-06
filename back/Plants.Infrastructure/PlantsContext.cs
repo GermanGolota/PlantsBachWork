@@ -386,6 +386,8 @@ namespace Plants.Infrastructure
 
                 entity.Property(e => e.DeliveryTrackingNumber).HasColumnName("delivery_tracking_number");
 
+                entity.Property(e => e.Images).HasColumnName("images");
+
                 entity.Property(e => e.MailNumber).HasColumnName("mail_number");
 
                 entity.Property(e => e.Ordered)

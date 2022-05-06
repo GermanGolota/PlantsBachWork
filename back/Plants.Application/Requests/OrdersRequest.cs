@@ -9,12 +9,13 @@ namespace Plants.Application.Requests
     public record OrdersResult(List<OrdersResultItem> Items);
 
     public record OrdersResultItem(
-        int Status, int PostId,
-        string City, int MailNumber, string SellerName,
-        string SellerContact, decimal Price, string? DeliveryTrackingNumber)
+        int Status, int PostId, string City,
+        int MailNumber, string SellerName, string SellerContact,
+        decimal Price, string? DeliveryTrackingNumber, int[] Images)
     {
         //decoder
-        public OrdersResultItem() : this(0, 0, "", 0, "", "", 0, null)
+        public OrdersResultItem() : this(0, 0, "", 
+            0, "", "", 0, null, Array.Empty<int>())
         {
 
         }

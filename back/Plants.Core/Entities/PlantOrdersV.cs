@@ -18,5 +18,6 @@ namespace Plants.Core.Entities
         public string DeliveryTrackingNumber { get; set; }
         public DateTime? DeliveryStarted { get; set; }
         public DateTime? Shipped { get; set; }
+        public int[] Images { get; set; }
     }
 }
