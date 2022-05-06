@@ -1,13 +1,19 @@
 module Pages.Orders exposing (..)
 
+import Bootstrap.Button as Button
+import Bootstrap.Form.Checkbox as Checkbox
+import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), getAuthed)
-import Html exposing (Html, div)
+import Html exposing (Html, div, text)
+import Html.Attributes exposing (class, href, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (ordersLink, viewNav)
-import Webdata exposing (WebData(..))
+import Pages.NotPosted exposing (bgTeal)
+import Utils exposing (fillParent, flex, flex1, largeCentered, smallMargin)
+import Webdata exposing (WebData(..), viewWebdata)
 
 
 
@@ -81,16 +87,36 @@ type Order
 type Msg
     = NoOp
     | GotOrders (Result Http.Error (List Order))
+    | HideFullfilledChecked Bool
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg m =
+    let
+        noOp =
+            ( m, Cmd.none )
+    in
     case m of
         Authorized auth model ->
-            ( m, Cmd.none )
+            let
+                authed =
+                    Authorized auth
+            in
+            case msg of
+                GotOrders (Ok res) ->
+                    ( authed { model | data = Loaded res }, Cmd.none )
+
+                GotOrders (Err res) ->
+                    ( authed { model | data = Error }, Cmd.none )
+
+                HideFullfilledChecked val ->
+                    ( authed { model | hideFulfilled = val }, Cmd.none )
+
+                NoOp ->
+                    noOp
 
         _ ->
-            ( m, Cmd.none )
+            noOp
 
 
 
@@ -200,7 +226,149 @@ view model =
 
 viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
-    div [] []
+    let
+        switchViewMessage =
+            case page.viewType of
+                ProducerView ->
+                    "To Consumer View"
+
+                ConsumerView ->
+                    "To Producer View"
+
+        switchViewHref =
+            case page.viewType of
+                ProducerView ->
+                    "/orders"
+
+                ConsumerView ->
+                    "/orders/employee"
+
+        checkAttrs =
+            Checkbox.attrs [ bgTeal ]
+
+        checksView =
+            div [ flex, Flex.row, Flex.alignItemsCenter ]
+                [ Checkbox.checkbox [ Checkbox.checked True, Checkbox.disabled True, checkAttrs ] ""
+                , Checkbox.checkbox
+                    [ Checkbox.checked page.hideFulfilled
+                    , Checkbox.onCheck HideFullfilledChecked
+                    , checkAttrs
+                    ]
+                    "Hide delivered"
+                ]
+
+        topViewItems =
+            if page.showAdditional then
+                [ checksView
+                , div [] [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href switchViewHref ] ] [ text switchViewMessage ] ]
+                ]
+
+            else
+                [ checksView ]
+
+        topView =
+            div [ flex, Flex.row, flex, Flex.justifyBetween, flex1, Flex.alignItemsCenter ]
+                topViewItems
+    in
+    div ([ flex, Flex.col ] ++ fillParent)
+        [ topView
+        , viewWebdata page.data (mainView page.hideFulfilled)
+        ]
+
+
+mainView : Bool -> List Order -> Html Msg
+mainView hide orders =
+    let
+        isNotDelivered order =
+            case order of
+                Delivered _ ->
+                    False
+
+                _ ->
+                    True
+
+        fOrders =
+            if hide then
+                List.filter isNotDelivered orders
+
+            else
+                orders
+    in
+    div [ flex, Flex.col, style "flex" "8", style "overflow-y" "scroll" ] (List.map viewOrder fOrders)
+
+
+viewOrder : Order -> Html Msg
+viewOrder order =
+    case order of
+        Created cr ->
+            viewOrderBase False cr (\a -> []) (div [] [])
+
+        Delivering del ->
+            viewOrderBase False del (\a -> viewDelivering (\b -> div [] []) a) (div [] [])
+
+        Delivered del ->
+            viewOrderBase True del (\a -> viewDelivering viewDelivered a) (div [] [])
+
+
+viewDelivered : DeliveredView -> Html Msg
+viewDelivered del =
+    viewInfoRow "Shipped" del.shipped
+
+
+viewDelivering : (a -> Html Msg) -> DeliveringView a -> List (Html Msg)
+viewDelivering add order =
+    [ viewInfoRow "Delivery Started" order.deliveryStartedDate
+    , viewInfoRow "Tracking Number" order.deliveryTrackingNumber
+    , add order.additional
+    ]
+
+
+viewOrderBase : Bool -> OrderBase a -> (a -> List (Html Msg)) -> Html Msg -> Html Msg
+viewOrderBase fill order viewAdd btnView =
+    let
+        imgCol =
+            div [ flex, Flex.col, smallMargin, flex1 ]
+                [ div largeCentered [ text ("#" ++ String.fromInt order.postId ++ " from " ++ order.orderedDate) ]
+
+                --TODO: Add image
+                ]
+
+        fillClass =
+            if fill then
+                bgTeal
+
+            else
+                class ""
+    in
+    div [ flex, Flex.row, flex1, fillClass, style "margin-bottom" "1.5rem", style "border-bottom" "solid 1px black" ]
+        [ imgCol
+        , infoCol order viewAdd btnView
+        ]
+
+
+infoCol : OrderBase a -> (a -> List (Html Msg)) -> Html Msg -> Html Msg
+infoCol order viewAdd btnView =
+    div [ flex, Flex.col, flex1 ]
+        ([ viewInfoRow "Status" order.status
+         , viewInfoRow "Delivery Address" (order.city ++ ", " ++ String.fromInt order.mailNumber)
+         , viewInfoRow "Ordered From" order.sellerName
+         , viewInfoRow "Vendor Contact" order.sellerContact
+         , viewInfoRow "Cost" <| String.fromFloat order.price
+         ]
+            ++ viewAdd order.additional
+            ++ [ div [ flex, Flex.row, Flex.alignItemsCenter, Flex.justifyCenter ]
+                    [ btnView
+                    ]
+               ]
+        )
+
+
+viewInfoRow : String -> String -> Html msg
+viewInfoRow desc val =
+    div [ flex, Flex.row, flex, Flex.justifyBetween, flex1, Flex.alignItemsCenter ]
+        [ div [ Utils.largeFont ] [ text desc ]
+        , div [ Utils.largeFont, smallMargin ] [ text val ]
+        ]
 
 
 
@@ -225,7 +393,7 @@ init resp flags =
                         List.member Consumer response.roles
 
                     else
-                        List.member Producer response.roles
+                        List.any (\a -> a == Producer || a == Manager) response.roles
 
                 _ ->
                     False

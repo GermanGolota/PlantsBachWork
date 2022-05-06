@@ -29,7 +29,7 @@ namespace Plants.Application.Requests
             set
             {
                 ordered = value;
-                OrderedDate = ordered.ToString();
+                OrderedDate = ordered.ToShortDateString();
             }
         }
 
