@@ -25,11 +25,23 @@ allLinks : List Link
 allLinks =
     [ searchLink
     , plantsLink
-    , Link "/orders" "Orders" "fa-solid fa-bag-shopping" Nothing
-    , Link "/instructions" "Instructions" "fa-solid fa-book" Nothing
+    , ordersLink
+    , instructionsLink
     , statsLink
-    , Link "/user" "Manage Users" "fa-solid fa-users" Nothing
+    , usersLink
     ]
+
+
+instructionsLink =
+    Link "/instructions" "Instructions" "fa-solid fa-book" Nothing
+
+
+usersLink =
+    Link "/user" "Manage Users" "fa-solid fa-users" Nothing
+
+
+ordersLink =
+    Link "/orders" "Orders" "fa-solid fa-bag-shopping" Nothing
 
 
 statsLink =
