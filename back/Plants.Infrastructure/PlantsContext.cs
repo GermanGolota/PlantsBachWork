@@ -270,9 +270,9 @@ namespace Plants.Infrastructure
                     .HasColumnName("order_id");
 
                 entity.Property(e => e.Created)
-                    .HasColumnType("date")
+                    .HasColumnType("timestamp with time zone")
                     .HasColumnName("created")
-                    .HasDefaultValueSql("CURRENT_DATE");
+                    .HasDefaultValueSql("now()");
 
                 entity.Property(e => e.DeliveryTrackingNumber)
                     .IsRequired()
@@ -457,9 +457,9 @@ namespace Plants.Infrastructure
                     .HasColumnName("delivery_id");
 
                 entity.Property(e => e.Shipped)
-                    .HasColumnType("date")
+                    .HasColumnType("timestamp with time zone")
                     .HasColumnName("shipped")
-                    .HasDefaultValueSql("CURRENT_DATE");
+                    .HasDefaultValueSql("now()");
 
                 entity.HasOne(d => d.Delivery)
                     .WithOne(p => p.PlantShipment)

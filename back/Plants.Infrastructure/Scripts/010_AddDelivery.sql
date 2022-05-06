@@ -115,3 +115,15 @@ END
 $$
 LANGUAGE plpgsql;
 
+ALTER TABLE plant_delivery
+  ALTER COLUMN created TYPE timestamptz;
+
+ALTER TABLE plant_delivery
+  ALTER COLUMN created SET DEFAULT now();
+
+ALTER TABLE plant_shipment
+  ALTER COLUMN shipped TYPE timestamptz;
+
+ALTER TABLE plant_shipment
+  ALTER COLUMN shipped SET DEFAULT now();
+
