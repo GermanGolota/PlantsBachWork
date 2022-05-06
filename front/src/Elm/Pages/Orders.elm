@@ -13,7 +13,7 @@ import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (ordersLink, viewNav)
 import Pages.NotPosted exposing (bgTeal)
-import Utils exposing (fillParent, flex, flex1, largeCentered, smallMargin)
+import Utils exposing (fillParent, flex, flex1, formatPrice, largeCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -402,7 +402,7 @@ infoCol order viewAdd btnView =
          , viewInfoRow "Delivery Address" (order.city ++ ", " ++ String.fromInt order.mailNumber)
          , viewInfoRow "Ordered From" order.sellerName
          , viewInfoRow "Vendor Contact" order.sellerContact
-         , viewInfoRow "Cost" <| String.fromFloat order.price
+         , viewInfoRow "Cost" <| formatPrice order.price
          ]
             ++ viewAdd order.additional
             ++ [ div [ flex, Flex.row, Flex.alignItemsCenter, Flex.justifyCenter ]
