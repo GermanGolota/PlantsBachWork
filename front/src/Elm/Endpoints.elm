@@ -95,13 +95,13 @@ imageIdToUrl token id =
     endpointToUrl <| Image id token
 
 
-imagesDecoder : String -> D.Decoder ImageList.Model
-imagesDecoder token =
+imagesDecoder : String -> List String -> D.Decoder ImageList.Model
+imagesDecoder token at =
     let
         baseDecoder =
             imageIdsToModel token
     in
-    D.map baseDecoder (D.at [ "item", "images" ] (D.list D.int))
+    D.map baseDecoder (D.at at (D.list D.int))
 
 
 imageIdsToModel : String -> List Int -> ImageList.Model

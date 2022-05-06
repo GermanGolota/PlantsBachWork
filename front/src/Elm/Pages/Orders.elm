@@ -3,10 +3,11 @@ module Pages.Orders exposing (..)
 import Bootstrap.Button as Button
 import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), getAuthed)
+import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, href, style)
 import Http
+import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
@@ -46,6 +47,7 @@ type alias OrderBase a =
     , sellerContact : String
     , price : Float
     , orderedDate : String
+    , images : ImageList.Model
     , additional : a
     }
 
@@ -88,6 +90,7 @@ type Msg
     = NoOp
     | GotOrders (Result Http.Error (List Order))
     | HideFullfilledChecked Bool
+    | Images ImageList.Msg Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -112,6 +115,47 @@ update msg m =
                 HideFullfilledChecked val ->
                     ( authed { model | hideFulfilled = val }, Cmd.none )
 
+                Images imgEvent postId ->
+                    case model.data of
+                        Loaded orders ->
+                            let
+                                getPostId o =
+                                    case o of
+                                        Created c ->
+                                            c.postId
+
+                                        Delivering d ->
+                                            d.postId
+
+                                        Delivered d2 ->
+                                            d2.postId
+
+                                order =
+                                    List.head (List.filter (\o -> getPostId o == postId) orders)
+
+                                updateOrder o =
+                                    if getPostId o == postId then
+                                        case o of
+                                            Created c ->
+                                                Created { c | images = ImageList.update imgEvent c.images }
+
+                                            Delivering d ->
+                                                Delivering { d | images = ImageList.update imgEvent d.images }
+
+                                            Delivered d2 ->
+                                                Delivered { d2 | images = ImageList.update imgEvent d2.images }
+
+                                    else
+                                        o
+
+                                updatedOrder =
+                                    List.map updateOrder orders
+                            in
+                            ( authed { model | data = Loaded updatedOrder }, Cmd.none )
+
+                        _ ->
+                            noOp
+
                 NoOp ->
                     noOp
 
@@ -127,23 +171,23 @@ getOrders : String -> Bool -> Cmd Msg
 getOrders token onlyMine =
     let
         expect =
-            Http.expectJson GotOrders ordersDecoder
+            Http.expectJson GotOrders (ordersDecoder token)
     in
     getAuthed token (AllOrders onlyMine) expect Nothing
 
 
-ordersDecoder : D.Decoder (List Order)
-ordersDecoder =
-    D.field "items" (D.list orderDecoder)
+ordersDecoder : String -> D.Decoder (List Order)
+ordersDecoder token =
+    D.field "items" (D.list (orderDecoder token))
 
 
-orderDecoder : D.Decoder Order
-orderDecoder =
-    D.field "status" D.int |> D.andThen decoderSelector
+orderDecoder : String -> D.Decoder Order
+orderDecoder token =
+    D.field "status" D.int |> D.andThen (decoderSelector token)
 
 
-decoderSelector : Int -> D.Decoder Order
-decoderSelector status =
+decoderSelector : String -> Int -> D.Decoder Order
+decoderSelector token status =
     let
         mapToCreated decoder =
             D.map Created decoder
@@ -153,16 +197,19 @@ decoderSelector status =
 
         mapToDelivered decoder =
             D.map Delivered decoder
+
+        initedDecoder =
+            orderDecoderBase token
     in
     case status of
         0 ->
-            orderDecoderBase (D.succeed True) |> mapToCreated
+            initedDecoder (D.succeed True) |> mapToCreated
 
         1 ->
-            orderDecoderBase (deliveringDecoder (D.succeed True)) |> mapToDelivering
+            initedDecoder (deliveringDecoder (D.succeed True)) |> mapToDelivering
 
         2 ->
-            orderDecoderBase (deliveringDecoder deliveredDecoder) |> mapToDelivered
+            initedDecoder (deliveringDecoder deliveredDecoder) |> mapToDelivered
 
         _ ->
             D.fail "unsupported status"
@@ -181,8 +228,8 @@ deliveringDecoder addDecoder =
         |> custom addDecoder
 
 
-orderDecoderBase : D.Decoder a -> D.Decoder (OrderBase a)
-orderDecoderBase addDecoder =
+orderDecoderBase : String -> D.Decoder a -> D.Decoder (OrderBase a)
+orderDecoderBase token addDecoder =
     D.succeed OrderBase
         |> custom statusDecoder
         |> required "postId" D.int
@@ -192,6 +239,7 @@ orderDecoderBase addDecoder =
         |> required "sellerContact" D.string
         |> required "price" D.float
         |> required "orderedDate" D.string
+        |> custom (imagesDecoder token [ "images" ])
         |> custom addDecoder
 
 
@@ -329,6 +377,7 @@ viewOrderBase fill order viewAdd btnView =
         imgCol =
             div [ flex, Flex.col, smallMargin, flex1 ]
                 [ div largeCentered [ text ("#" ++ String.fromInt order.postId ++ " from " ++ order.orderedDate) ]
+                , Html.map (\e -> Images e order.postId) (ImageList.view order.images)
 
                 --TODO: Add image
                 ]
