@@ -15,6 +15,6 @@ namespace Plants.Core.Entities
         public virtual Person Customer { get; set; }
         public virtual DeliveryAddress DeliveryAddress { get; set; }
         public virtual PlantPost Post { get; set; }
-        public virtual PlantShipment PlantShipment { get; set; }
+        public virtual PlantDelivery PlantDelivery { get; set; }
     }
 }

@@ -19,17 +19,21 @@ namespace Plants.Infrastructure
         }
 
         public virtual DbSet<CurrentUserAddress> CurrentUserAddresses { get; set; }
+        public virtual DbSet<CurrentUserOrder> CurrentUserOrders { get; set; }
         public virtual DbSet<CurrentUserRole> CurrentUserRoles { get; set; }
         public virtual DbSet<DeliveryAddress> DeliveryAddresses { get; set; }
         public virtual DbSet<DictsV> DictsVs { get; set; }
         public virtual DbSet<Person> People { get; set; }
         public virtual DbSet<PersonAddressesV> PersonAddressesVs { get; set; }
         public virtual DbSet<PersonCredsV> PersonCredsVs { get; set; }
+        public virtual DbSet<PersonToDelivery> PersonToDeliveries { get; set; }
         public virtual DbSet<PersonToLogin> PersonToLogins { get; set; }
         public virtual DbSet<Plant> Plants { get; set; }
         public virtual DbSet<PlantCaringInstruction> PlantCaringInstructions { get; set; }
+        public virtual DbSet<PlantDelivery> PlantDeliveries { get; set; }
         public virtual DbSet<PlantGroup> PlantGroups { get; set; }
         public virtual DbSet<PlantOrder> PlantOrders { get; set; }
+        public virtual DbSet<PlantOrdersV> PlantOrdersVs { get; set; }
         public virtual DbSet<PlantPost> PlantPosts { get; set; }
         public virtual DbSet<PlantPostV> PlantPostVs { get; set; }
         public virtual DbSet<PlantRegion> PlantRegions { get; set; }
@@ -66,6 +70,41 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.Posts).HasColumnName("posts");
             });
 
+            modelBuilder.Entity<CurrentUserOrder>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("current_user_orders");
+
+                entity.Property(e => e.City).HasColumnName("city");
+
+                entity.Property(e => e.DeliveryStarted)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("delivery_started");
+
+                entity.Property(e => e.DeliveryTrackingNumber).HasColumnName("delivery_tracking_number");
+
+                entity.Property(e => e.MailNumber).HasColumnName("mail_number");
+
+                entity.Property(e => e.Ordered)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("ordered");
+
+                entity.Property(e => e.PostId).HasColumnName("post_id");
+
+                entity.Property(e => e.Price).HasColumnName("price");
+
+                entity.Property(e => e.SellerContact).HasColumnName("seller_contact");
+
+                entity.Property(e => e.SellerName).HasColumnName("seller_name");
+
+                entity.Property(e => e.Shipped)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("shipped");
+
+                entity.Property(e => e.Status).HasColumnName("status");
+            });
+
             modelBuilder.Entity<CurrentUserRole>(entity =>
             {
                 entity.HasNoKey();
@@ -77,6 +116,9 @@ namespace Plants.Infrastructure
             {
                 entity.ToTable("delivery_address");
 
+                entity.HasIndex(e => new { e.City, e.NovaPoshtaNumber }, "delivery_address_city_nova_poshta_number_key")
+                    .IsUnique();
+
                 entity.Property(e => e.Id).HasColumnName("id");
 
                 entity.Property(e => e.City)
@@ -84,14 +126,6 @@ namespace Plants.Infrastructure
                     .HasColumnName("city");
 
                 entity.Property(e => e.NovaPoshtaNumber).HasColumnName("nova_poshta_number");
-
-                entity.Property(e => e.PersonId).HasColumnName("person_id");
-
-                entity.HasOne(d => d.Person)
-                    .WithMany(p => p.DeliveryAddresses)
-                    .HasForeignKey(d => d.PersonId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("delivery_address_person_id_fkey");
             });
 
             modelBuilder.Entity<DictsV>(entity =>
@@ -152,6 +186,28 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.InstructionsCount).HasColumnName("instructions_count");
 
                 entity.Property(e => e.SoldCount).HasColumnName("sold_count");
+            });
+
+            modelBuilder.Entity<PersonToDelivery>(entity =>
+            {
+                entity.ToTable("person_to_delivery");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.DeliveryAddressId).HasColumnName("delivery_address_id");
+
+                entity.Property(e => e.PersonId).HasColumnName("person_id");
+
+                entity.HasOne(d => d.DeliveryAddress)
+                    .WithMany(p => p.PersonToDeliveries)
+                    .HasForeignKey(d => d.DeliveryAddressId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("person_to_delivery_delivery_address_id_fkey");
+
+                entity.HasOne(d => d.Person)
+                    .WithMany(p => p.PersonToDeliveries)
+                    .HasForeignKey(d => d.PersonId)
+                    .HasConstraintName("person_to_delivery_person_id_fkey");
             });
 
             modelBuilder.Entity<PersonToLogin>(entity =>
@@ -239,6 +295,33 @@ namespace Plants.Infrastructure
                     .HasConstraintName("plant_caring_instruction_posted_by_id_fkey");
             });
 
+            modelBuilder.Entity<PlantDelivery>(entity =>
+            {
+                entity.HasKey(e => e.OrderId)
+                    .HasName("plant_delivery_pkey");
+
+                entity.ToTable("plant_delivery");
+
+                entity.Property(e => e.OrderId)
+                    .ValueGeneratedNever()
+                    .HasColumnName("order_id");
+
+                entity.Property(e => e.Created)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created")
+                    .HasDefaultValueSql("now()");
+
+                entity.Property(e => e.DeliveryTrackingNumber)
+                    .IsRequired()
+                    .HasColumnName("delivery_tracking_number");
+
+                entity.HasOne(d => d.Order)
+                    .WithOne(p => p.PlantDelivery)
+                    .HasForeignKey<PlantDelivery>(d => d.OrderId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("plant_delivery_order_id_fkey");
+            });
+
             modelBuilder.Entity<PlantGroup>(entity =>
             {
                 entity.ToTable("plant_group");
@@ -262,9 +345,9 @@ namespace Plants.Infrastructure
                     .HasColumnName("post_id");
 
                 entity.Property(e => e.Created)
-                    .HasColumnType("date")
+                    .HasColumnType("timestamp with time zone")
                     .HasColumnName("created")
-                    .HasDefaultValueSql("CURRENT_DATE");
+                    .HasDefaultValueSql("now()");
 
                 entity.Property(e => e.CustomerId).HasColumnName("customer_id");
 
@@ -287,6 +370,43 @@ namespace Plants.Infrastructure
                     .HasForeignKey<PlantOrder>(d => d.PostId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("plant_order_post_id_fkey");
+            });
+
+            modelBuilder.Entity<PlantOrdersV>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("plant_orders_v");
+
+                entity.Property(e => e.City).HasColumnName("city");
+
+                entity.Property(e => e.DeliveryStarted)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("delivery_started");
+
+                entity.Property(e => e.DeliveryTrackingNumber).HasColumnName("delivery_tracking_number");
+
+                entity.Property(e => e.Images).HasColumnName("images");
+
+                entity.Property(e => e.MailNumber).HasColumnName("mail_number");
+
+                entity.Property(e => e.Ordered)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("ordered");
+
+                entity.Property(e => e.PostId).HasColumnName("post_id");
+
+                entity.Property(e => e.Price).HasColumnName("price");
+
+                entity.Property(e => e.SellerContact).HasColumnName("seller_contact");
+
+                entity.Property(e => e.SellerName).HasColumnName("seller_name");
+
+                entity.Property(e => e.Shipped)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("shipped");
+
+                entity.Property(e => e.Status).HasColumnName("status");
             });
 
             modelBuilder.Entity<PlantPost>(entity =>
@@ -401,24 +521,25 @@ namespace Plants.Infrastructure
 
             modelBuilder.Entity<PlantShipment>(entity =>
             {
-                entity.HasKey(e => e.OrderId)
+                entity.HasKey(e => e.DeliveryId)
                     .HasName("plant_shipment_pkey");
 
                 entity.ToTable("plant_shipment");
 
-                entity.Property(e => e.OrderId)
+                entity.Property(e => e.DeliveryId)
                     .ValueGeneratedNever()
-                    .HasColumnName("order_id");
+                    .HasColumnName("delivery_id");
 
                 entity.Property(e => e.Shipped)
-                    .HasColumnType("date")
-                    .HasColumnName("shipped");
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("shipped")
+                    .HasDefaultValueSql("now()");
 
-                entity.HasOne(d => d.Order)
+                entity.HasOne(d => d.Delivery)
                     .WithOne(p => p.PlantShipment)
-                    .HasForeignKey<PlantShipment>(d => d.OrderId)
+                    .HasForeignKey<PlantShipment>(d => d.DeliveryId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("plant_shipment_order_id_fkey");
+                    .HasConstraintName("plant_shipment_delivery_id_fkey");
             });
 
             modelBuilder.Entity<PlantSoil>(entity =>

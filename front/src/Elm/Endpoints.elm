@@ -27,6 +27,9 @@ type Endpoint
     | PostPlant Int Float
     | AddPlant
     | EditPlant Int
+    | AllOrders Bool
+    | SendOrder Int String
+    | ReceivedOrder Int
 
 
 endpointToUrl : Endpoint -> String
@@ -77,19 +80,36 @@ endpointToUrl endpoint =
         EditPlant plantId ->
             baseUrl ++ "plants/" ++ String.fromInt plantId ++ "/edit"
 
+        AllOrders onlyMine ->
+            let
+                mineStr =
+                    if onlyMine then
+                        "true"
+
+                    else
+                        "false"
+            in
+            baseUrl ++ "orders?onlyMine=" ++ mineStr
+
+        SendOrder orderId ttn ->
+            baseUrl ++ "orders/" ++ String.fromInt orderId ++ "/deliver?trackingNumber=" ++ ttn
+
+        ReceivedOrder orderId ->
+            baseUrl ++ "orders/" ++ String.fromInt orderId ++ "/delivered"
+
 
 imageIdToUrl : String -> Int -> String
 imageIdToUrl token id =
     endpointToUrl <| Image id token
 
 
-imagesDecoder : String -> D.Decoder ImageList.Model
-imagesDecoder token =
+imagesDecoder : String -> List String -> D.Decoder ImageList.Model
+imagesDecoder token at =
     let
         baseDecoder =
             imageIdsToModel token
     in
-    D.map baseDecoder (D.at [ "item", "images" ] (D.list D.int))
+    D.map baseDecoder (D.at at (D.list D.int))
 
 
 imageIdsToModel : String -> List Int -> ImageList.Model

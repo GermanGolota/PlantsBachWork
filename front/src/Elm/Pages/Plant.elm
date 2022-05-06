@@ -344,7 +344,7 @@ plantDecoderBase priceOverride token =
         |> requiredItem "sellerPhone" D.string
         |> custom (credsDecoder "seller")
         |> custom (credsDecoder "careTaker")
-        |> custom (imagesDecoder token)
+        |> custom (imagesDecoder token [ "item", "images" ])
 
 
 credsDecoder : String -> D.Decoder PersonCreds

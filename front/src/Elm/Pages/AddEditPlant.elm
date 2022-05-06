@@ -650,7 +650,7 @@ plantDecoderBase av token =
         |> custom regDecoder
         |> itemRequired "soilId" D.int
         |> itemRequired "groupId" D.int
-        |> custom (imagesDecoder token)
+        |> custom (imagesDecoder token [ "item", "images" ])
         |> hardcoded []
 
 
