@@ -25,9 +25,11 @@ namespace Plants.Infrastructure
         public virtual DbSet<Person> People { get; set; }
         public virtual DbSet<PersonAddressesV> PersonAddressesVs { get; set; }
         public virtual DbSet<PersonCredsV> PersonCredsVs { get; set; }
+        public virtual DbSet<PersonToDelivery> PersonToDeliveries { get; set; }
         public virtual DbSet<PersonToLogin> PersonToLogins { get; set; }
         public virtual DbSet<Plant> Plants { get; set; }
         public virtual DbSet<PlantCaringInstruction> PlantCaringInstructions { get; set; }
+        public virtual DbSet<PlantDelivery> PlantDeliveries { get; set; }
         public virtual DbSet<PlantGroup> PlantGroups { get; set; }
         public virtual DbSet<PlantOrder> PlantOrders { get; set; }
         public virtual DbSet<PlantPost> PlantPosts { get; set; }
@@ -77,6 +79,9 @@ namespace Plants.Infrastructure
             {
                 entity.ToTable("delivery_address");
 
+                entity.HasIndex(e => new { e.City, e.NovaPoshtaNumber }, "delivery_address_city_nova_poshta_number_key")
+                    .IsUnique();
+
                 entity.Property(e => e.Id).HasColumnName("id");
 
                 entity.Property(e => e.City)
@@ -84,14 +89,6 @@ namespace Plants.Infrastructure
                     .HasColumnName("city");
 
                 entity.Property(e => e.NovaPoshtaNumber).HasColumnName("nova_poshta_number");
-
-                entity.Property(e => e.PersonId).HasColumnName("person_id");
-
-                entity.HasOne(d => d.Person)
-                    .WithMany(p => p.DeliveryAddresses)
-                    .HasForeignKey(d => d.PersonId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("delivery_address_person_id_fkey");
             });
 
             modelBuilder.Entity<DictsV>(entity =>
@@ -152,6 +149,28 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.InstructionsCount).HasColumnName("instructions_count");
 
                 entity.Property(e => e.SoldCount).HasColumnName("sold_count");
+            });
+
+            modelBuilder.Entity<PersonToDelivery>(entity =>
+            {
+                entity.ToTable("person_to_delivery");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.DeliveryAddressId).HasColumnName("delivery_address_id");
+
+                entity.Property(e => e.PersonId).HasColumnName("person_id");
+
+                entity.HasOne(d => d.DeliveryAddress)
+                    .WithMany(p => p.PersonToDeliveries)
+                    .HasForeignKey(d => d.DeliveryAddressId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("person_to_delivery_delivery_address_id_fkey");
+
+                entity.HasOne(d => d.Person)
+                    .WithMany(p => p.PersonToDeliveries)
+                    .HasForeignKey(d => d.PersonId)
+                    .HasConstraintName("person_to_delivery_person_id_fkey");
             });
 
             modelBuilder.Entity<PersonToLogin>(entity =>
@@ -237,6 +256,33 @@ namespace Plants.Infrastructure
                     .HasForeignKey(d => d.PostedById)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("plant_caring_instruction_posted_by_id_fkey");
+            });
+
+            modelBuilder.Entity<PlantDelivery>(entity =>
+            {
+                entity.HasKey(e => e.OrderId)
+                    .HasName("plant_delivery_pkey");
+
+                entity.ToTable("plant_delivery");
+
+                entity.Property(e => e.OrderId)
+                    .ValueGeneratedNever()
+                    .HasColumnName("order_id");
+
+                entity.Property(e => e.Created)
+                    .HasColumnType("date")
+                    .HasColumnName("created")
+                    .HasDefaultValueSql("CURRENT_DATE");
+
+                entity.Property(e => e.DeliveryTrackingNumber)
+                    .IsRequired()
+                    .HasColumnName("delivery_tracking_number");
+
+                entity.HasOne(d => d.Order)
+                    .WithOne(p => p.PlantDelivery)
+                    .HasForeignKey<PlantDelivery>(d => d.OrderId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("plant_delivery_order_id_fkey");
             });
 
             modelBuilder.Entity<PlantGroup>(entity =>
@@ -401,24 +447,25 @@ namespace Plants.Infrastructure
 
             modelBuilder.Entity<PlantShipment>(entity =>
             {
-                entity.HasKey(e => e.OrderId)
+                entity.HasKey(e => e.DeliveryId)
                     .HasName("plant_shipment_pkey");
 
                 entity.ToTable("plant_shipment");
 
-                entity.Property(e => e.OrderId)
+                entity.Property(e => e.DeliveryId)
                     .ValueGeneratedNever()
-                    .HasColumnName("order_id");
+                    .HasColumnName("delivery_id");
 
                 entity.Property(e => e.Shipped)
                     .HasColumnType("date")
-                    .HasColumnName("shipped");
+                    .HasColumnName("shipped")
+                    .HasDefaultValueSql("CURRENT_DATE");
 
-                entity.HasOne(d => d.Order)
+                entity.HasOne(d => d.Delivery)
                     .WithOne(p => p.PlantShipment)
-                    .HasForeignKey<PlantShipment>(d => d.OrderId)
+                    .HasForeignKey<PlantShipment>(d => d.DeliveryId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("plant_shipment_order_id_fkey");
+                    .HasConstraintName("plant_shipment_delivery_id_fkey");
             });
 
             modelBuilder.Entity<PlantSoil>(entity =>

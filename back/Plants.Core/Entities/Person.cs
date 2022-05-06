@@ -9,7 +9,7 @@ namespace Plants.Core.Entities
     {
         public Person()
         {
-            DeliveryAddresses = new HashSet<DeliveryAddress>();
+            PersonToDeliveries = new HashSet<PersonToDelivery>();
             PlantCaringInstructions = new HashSet<PlantCaringInstruction>();
             PlantOrders = new HashSet<PlantOrder>();
             PlantPosts = new HashSet<PlantPost>();
@@ -22,7 +22,7 @@ namespace Plants.Core.Entities
         public string PhoneNumber { get; set; }
 
         public virtual PersonToLogin PersonToLogin { get; set; }
-        public virtual ICollection<DeliveryAddress> DeliveryAddresses { get; set; }
+        public virtual ICollection<PersonToDelivery> PersonToDeliveries { get; set; }
         public virtual ICollection<PlantCaringInstruction> PlantCaringInstructions { get; set; }
         public virtual ICollection<PlantOrder> PlantOrders { get; set; }
         public virtual ICollection<PlantPost> PlantPosts { get; set; }

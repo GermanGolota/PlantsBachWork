@@ -9,15 +9,15 @@ namespace Plants.Core.Entities
     {
         public DeliveryAddress()
         {
+            PersonToDeliveries = new HashSet<PersonToDelivery>();
             PlantOrders = new HashSet<PlantOrder>();
         }
 
         public int Id { get; set; }
         public string City { get; set; }
         public short NovaPoshtaNumber { get; set; }
-        public int PersonId { get; set; }
 
-        public virtual Person Person { get; set; }
+        public virtual ICollection<PersonToDelivery> PersonToDeliveries { get; set; }
         public virtual ICollection<PlantOrder> PlantOrders { get; set; }
     }
 }

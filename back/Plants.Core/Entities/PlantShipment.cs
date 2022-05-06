@@ -7,9 +7,9 @@ namespace Plants.Core.Entities
 {
     public partial class PlantShipment
     {
-        public int OrderId { get; set; }
-        public DateTime Shipped { get; set; }
+        public int DeliveryId { get; set; }
+        public DateTime? Shipped { get; set; }
 
-        public virtual PlantOrder Order { get; set; }
+        public virtual PlantDelivery Delivery { get; set; }
     }
 }
