@@ -41,7 +41,7 @@ namespace Plants.Presentation.Controllers
 
         [HttpPost("create")]
         public async Task<ActionResult<CreateUserResult>> RemoveRole(
-            [FromForm] CreateUserCommand command)
+            [FromBody] CreateUserCommand command)
         {
             return await _mediator.Send(command);
         }

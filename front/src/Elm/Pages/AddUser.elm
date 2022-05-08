@@ -4,13 +4,17 @@ import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
+import Endpoints exposing (Endpoint(..), postAuthed)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, style, value)
+import Http
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Json.Encode as E
+import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, roleToNumber)
 import NavBar exposing (usersLink, viewNav)
 import UserRolesSelector exposing (userRolesBtns)
-import Utils exposing (fillParent, flex, flexCenter, largeCentered, mediumMargin)
+import Utils exposing (SubmittedResult(..), fillParent, flex, flexCenter, largeCentered, mediumMargin, submittedDecoder)
+import Webdata exposing (WebData(..), viewWebdata)
 
 
 
@@ -34,6 +38,7 @@ type alias View =
     , email : String
     , selectedLanguage : String
     , selectedRoles : List UserRole
+    , submitResult : Maybe (WebData SubmittedResult)
     }
 
 
@@ -51,6 +56,7 @@ type Msg
     | LanguageSelected String
     | RoleSelected UserRole
     | Submit
+    | GotSubmit (Result Http.Error SubmittedResult)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -70,22 +76,22 @@ update msg m =
             in
             case msg of
                 FirstNameChanged name ->
-                    updateModel { model | firstName = name }
+                    updateModel { model | firstName = name, submitResult = Nothing }
 
                 LastNameChanged name ->
-                    updateModel { model | lastName = name }
+                    updateModel { model | lastName = name, submitResult = Nothing }
 
                 EmailChanged email ->
-                    updateModel { model | email = email }
+                    updateModel { model | email = email, submitResult = Nothing }
 
                 LoginChanged login ->
-                    updateModel { model | login = login }
+                    updateModel { model | login = login, submitResult = Nothing }
 
                 PhoneChanged phone ->
-                    updateModel { model | phone = phone }
+                    updateModel { model | phone = phone, submitResult = Nothing }
 
                 LanguageSelected lang ->
-                    updateModel { model | selectedLanguage = lang }
+                    updateModel { model | selectedLanguage = lang, submitResult = Nothing }
 
                 RoleSelected role ->
                     let
@@ -96,10 +102,16 @@ update msg m =
                             else
                                 model.selectedRoles ++ [ role ]
                     in
-                    updateModel { model | selectedRoles = newRoles }
+                    updateModel { model | selectedRoles = newRoles, submitResult = Nothing }
 
                 Submit ->
-                    noOp
+                    ( authed { model | submitResult = Just Loading }, createUserCmd auth.token model )
+
+                GotSubmit (Ok res) ->
+                    updateModel { model | submitResult = Just (Loaded res) }
+
+                GotSubmit (Err _) ->
+                    updateModel { model | submitResult = Just Error }
 
                 NoOp ->
                     noOp
@@ -110,6 +122,30 @@ update msg m =
 
 
 --commands
+
+
+createUserCmd : String -> View -> Cmd Msg
+createUserCmd token page =
+    let
+        expect =
+            Http.expectJson GotSubmit (submittedDecoder (D.field "success" D.bool) (D.field "message" D.string))
+    in
+    postAuthed token CreateUser (Http.jsonBody <| encodeBody page) expect Nothing
+
+
+encodeBody : View -> E.Value
+encodeBody page =
+    E.object
+        [ ( "login", E.string page.login )
+        , ( "roles", E.list E.int (List.map roleToNumber page.selectedRoles) )
+        , ( "email", E.string page.email )
+        , ( "firstName", E.string page.firstName )
+        , ( "lastName", E.string page.lastName )
+        , ( "phoneNumber", E.string page.phone )
+        ]
+
+
+
 --view
 
 
@@ -120,12 +156,30 @@ view model =
 
 viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
+    let
+        viewSubmit submit =
+            case submit of
+                SubmittedSuccess msg ->
+                    div [ flex, Flex.row, class "text-success" ] [ text msg ]
+
+                SubmittedFail msg ->
+                    div [ flex, Flex.row, class "text-danger" ] [ text msg ]
+
+        submitResult =
+            case page.submitResult of
+                Just res ->
+                    viewWebdata res viewSubmit
+
+                Nothing ->
+                    div [] []
+    in
     div ([ flex, Flex.row ] ++ fillParent ++ flexCenter)
         [ div [ flex, Flex.col, class "modal__container" ]
             [ div [ flex, Flex.row ]
                 (viewInputs page)
             , div [ flex, Flex.row, mediumMargin ]
                 [ userRolesBtns RoleSelected page.selectedRoles resp.roles ]
+            , submitResult
             , div [ flex, Flex.row, Flex.justifyEnd, mediumMargin ]
                 [ viewBtn ]
             ]
@@ -160,7 +214,11 @@ viewInputBase desc input =
 
 
 viewBtn =
-    Button.button [ Button.primary, Button.onClick Submit ] [ text "Create and invite" ]
+    Button.button [ Button.primary, Button.onClick Submit, Button.attrs largeCentered ] [ text "Create and invite" ]
+
+
+
+--init
 
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
@@ -169,7 +227,7 @@ init resp flags =
         initialLang =
             Maybe.withDefault "English" <| List.head languages
     in
-    initBase [ Producer, Consumer, Manager ] (View "" "" "" "" "" initialLang []) (\res -> Cmd.none) resp
+    initBase [ Producer, Consumer, Manager ] (View "" "" "" "" "" initialLang [] Nothing) (\res -> Cmd.none) resp
 
 
 subscriptions : Model -> Sub Msg

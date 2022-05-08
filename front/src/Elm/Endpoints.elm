@@ -34,6 +34,7 @@ type Endpoint
     | SearchUsers
     | AddRole String UserRole
     | RemoveRole String UserRole
+    | CreateUser
 
 
 endpointToUrl : Endpoint -> String
@@ -109,6 +110,9 @@ endpointToUrl endpoint =
 
         RemoveRole login role ->
             baseUrl ++ "users/" ++ login ++ "/remove/" ++ (String.fromInt <| roleToNumber role)
+
+        CreateUser ->
+            baseUrl ++ "users/create"
 
 
 imageIdToUrl : String -> Int -> String
