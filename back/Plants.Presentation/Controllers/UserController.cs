@@ -1,10 +1,8 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Plants.Application.Commands;
 using Plants.Application.Requests;
 using Plants.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Plants.Presentation.Controllers
@@ -25,6 +23,20 @@ namespace Plants.Presentation.Controllers
             [FromQuery] string? name, [FromQuery] string? phone, [FromQuery] UserRole[]? roles)
         {
             return await _mediator.Send(new FindUsersRequest(name, phone, roles));
+        }
+
+        [HttpPost("{login}/add/{role}")]
+        public async Task<ActionResult<AlterRoleResult>> AddRole(
+           [FromRoute] string login, [FromRoute] UserRole role)
+        {
+            return await _mediator.Send(new AlterRoleCommand(login, role, AlterType.Add));
+        }
+
+        [HttpPost("{login}/remove/{role}")]
+        public async Task<ActionResult<AlterRoleResult>> RemoveRole(
+           [FromRoute] string login, [FromRoute] UserRole role)
+        {
+            return await _mediator.Send(new AlterRoleCommand(login, role, AlterType.Remove));
         }
     }
 }

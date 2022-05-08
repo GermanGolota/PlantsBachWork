@@ -155,3 +155,26 @@ END
 $$
 LANGUAGE plpgsql;
 
+CREATE OR REPLACE PROCEDURE remove_user_from_group (userName text, userRole UserRoles)
+  AS $$
+BEGIN
+  IF current_user_can_create_role (userRole) THEN
+    IF (
+      SELECT
+        ARRAY_LENGTH(roles, 1)
+      FROM
+        user_to_roles
+      WHERE
+        login = userName) > 1 THEN
+      EXECUTE FORMAT('ALTER GROUP %s DROP USER %s', userRole, userName);
+    ELSE
+      RAISE EXCEPTION 'You cannot remove last role of the user%', userRole::text;
+    END IF;
+  ELSE
+    RAISE EXCEPTION 'You cannot create role %', userRole::text
+      USING HINT = 'Yours role priority is lower than the priority of this role';
+    END IF;
+END;
+$$
+LANGUAGE plpgsql;
+
