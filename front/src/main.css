@@ -6,3 +6,11 @@ a {
 .nav-bar-item:hover{
   background-color: var(--bs-gray);
 }
+
+.modal__container {
+    border: 1px solid rgba(0,0,0,.2);
+    background-color: #fff;
+    background-clip: padding-box;
+    border-radius: 0.3rem;
+    outline: 0;
+}

@@ -12,9 +12,10 @@ import Html.Attributes exposing (class, href, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, convertRole, initBase, roleToNumber, roleToStr, rolesDecoder)
+import Main exposing (AuthResponse, ModelBase(..), UserRole(..), allRoles, baseApplication, convertRole, initBase, roleToNumber, roleToStr, rolesDecoder)
 import Multiselect as Multiselect
 import NavBar exposing (usersLink, viewNav)
+import UserRolesSelector exposing (userRolesBtns)
 import Utils exposing (buildQuery, chunkedView, fillParent, flatten, flex, flex1, largeCentered, mediumMargin, smallMargin, unique)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -232,7 +233,7 @@ viewUser : List UserRole -> User -> Html Msg
 viewUser viewerRoles user =
     let
         btnViewBase =
-            userRolesBtns user.login user.roles viewerRoles
+            userRolesBtns (\role -> CheckedRole role user.login) user.roles viewerRoles
 
         btnsMessage msg =
             div [ flex, Flex.col ]
@@ -259,33 +260,6 @@ viewUser viewerRoles user =
                 btnsView
             ]
         |> Card.view
-
-
-userRolesBtns : String -> List UserRole -> List UserRole -> Html Msg
-userRolesBtns login userRoles viewerRoles =
-    let
-        maxViewer =
-            Maybe.withDefault -1 <| List.maximum <| List.map roleToNumber viewerRoles
-
-        canEdit role =
-            roleToNumber role <= maxViewer
-
-        roles =
-            [ Consumer, Producer, Manager ]
-    in
-    ButtonGroup.checkboxButtonGroup [ ButtonGroup.attrs fillParent ]
-        (List.map
-            (\role -> btnView (List.member role userRoles) role (canEdit role) login)
-            roles
-        )
-
-
-btnView : Bool -> UserRole -> Bool -> String -> CheckboxButtonItem Msg
-btnView checked role canCheck login =
-    ButtonGroup.checkboxButton
-        checked
-        [ Button.primary, Button.onClick <| CheckedRole role login, Button.disabled <| not canCheck ]
-        [ text <| roleToStr role ]
 
 
 viewInput : Html msg -> String -> Html msg
@@ -328,7 +302,7 @@ init resp flags =
         multiSelect =
             Multiselect.initModel rolesList "roles" Multiselect.Show
     in
-    initBase [ Producer, Consumer, Manager ] (View Loading multiSelect Nothing Nothing) initialCmd resp
+    initBase allRoles (View Loading multiSelect Nothing Nothing) initialCmd resp
 
 
 

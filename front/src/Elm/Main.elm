@@ -14,6 +14,10 @@ type UserRole
     | Manager
 
 
+allRoles =
+    [ Producer, Consumer, Manager ]
+
+
 rolesDecoder : D.Decoder (List Int) -> D.Decoder (List UserRole)
 rolesDecoder idsDecoder =
     D.map convertRoles idsDecoder
