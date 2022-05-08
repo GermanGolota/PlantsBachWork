@@ -178,3 +178,20 @@ END;
 $$
 LANGUAGE plpgsql;
 
+CREATE OR REPLACE PROCEDURE create_user (username name, userPass text, userRoles UserRoles[], firstName text, lastName text, phoneNumber text)
+  AS $$
+DECLARE
+  userId int;
+BEGIN
+  username := lower(username);
+  CALL create_user_login (username, userPass, userRoles);
+  INSERT INTO person (first_name, last_name, phone_number)
+    VALUES (firstName, lastName, phoneNumber)
+  RETURNING
+    id INTO userId;
+  INSERT INTO person_to_login (person_id, login)
+    VALUES (userId, username);
+END;
+$$
+LANGUAGE plpgsql;
+

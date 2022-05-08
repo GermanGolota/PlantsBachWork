@@ -69,23 +69,6 @@ CREATE TRIGGER person_prevent_bad_login
   FOR EACH ROW
   EXECUTE PROCEDURE person_check_login ();
 
-CREATE OR REPLACE PROCEDURE create_user (LOGIN name, userPass text, userRoles UserRoles[], firstName text, lastName text, phoneNumber text)
-  AS $$
-DECLARE
-  userId int;
-BEGIN
-  login := lower(login);
-  CALL create_user_login (username, userPass, userRoles);
-  INSERT INTO person (first_name, last_name, phone_number)
-    VALUES (firstName, lastName, phoneNumber)
-  RETURNING
-    personId;
-  INSERT INTO person_to_login (person_id, login)
-    VALUES (person_id, login);
-END;
-$$
-LANGUAGE plpgsql;
-
 CREATE TABLE plant_to_image (
   relation_id serial PRIMARY KEY,
   plant_id int REFERENCES plant (id),

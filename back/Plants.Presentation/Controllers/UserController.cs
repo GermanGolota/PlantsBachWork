@@ -38,5 +38,12 @@ namespace Plants.Presentation.Controllers
         {
             return await _mediator.Send(new AlterRoleCommand(login, role, AlterType.Remove));
         }
+
+        [HttpPost("create")]
+        public async Task<ActionResult<CreateUserResult>> RemoveRole(
+            [FromForm] CreateUserCommand command)
+        {
+            return await _mediator.Send(command);
+        }
     }
 }

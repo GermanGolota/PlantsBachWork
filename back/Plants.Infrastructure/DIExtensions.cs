@@ -28,6 +28,7 @@ namespace Plants.Infrastructure
             string key = GetAuthKey(config);
             services.AddScoped<SymmetricEncrypter>();
             services.AddScoped<IJWTokenManager, JWTokenManager>();
+            services.AddScoped<IEmailer, Emailer>();
             services.BindConfigSection<AuthConfig>(config, AuthSectionName);
             services.BindConfigSection<ConnectionConfig>(config);
             services.AddAuthentication(x =>

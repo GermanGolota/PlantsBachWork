@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Plants.Application.Commands;
 using Plants.Application.Contracts;
 using Plants.Application.Requests;
 using Plants.Core;
@@ -37,6 +38,40 @@ namespace Plants.Infrastructure.Services
                         role = roleStr
                     };
                     await connection.ExecuteAsync(sql, p);
+                }
+            }
+        }
+
+        public async Task<CreateUserResult> CreateUser(string Login, List<UserRole> roles, string FirstName, 
+            string LastName, string PhoneNumber, string Password)
+        {
+            var ctx = _ctx.CreateDbContext();
+            await using (ctx)
+            {
+                using (var connection = ctx.Database.GetDbConnection())
+                {
+                    var Roles = ConvertRoles(roles.ToArray());
+                    string sql = "CALL create_user(@Login, @Password, @Roles::UserRoles[], @FirstName, @LastName, @PhoneNumber);";
+                    var p = new
+                    {
+                        Login,
+                        Password,
+                        Roles,
+                        FirstName,
+                        LastName,
+                        PhoneNumber
+                    };
+                    CreateUserResult res;
+                    try
+                    {
+                        await connection.ExecuteAsync(sql, p);
+                        res = new CreateUserResult(true, "Successfully created user!");
+                    }
+                    catch(Exception e)
+                    {
+                        res = new CreateUserResult(false, e.Message);
+                    }
+                    return res;
                 }
             }
         }
@@ -81,8 +116,7 @@ namespace Plants.Infrastructure.Services
                 {
                     Contact = null;
                 }
-                var converter = new UserRoleConverter();
-                var Roles = roles?.Select(x => converter.ConvertToProvider(x) as string)?.ToArray();
+                string[] Roles = ConvertRoles(roles);
 
                 using (var connection = ctx.Database.GetDbConnection())
                 {
@@ -96,6 +130,13 @@ namespace Plants.Infrastructure.Services
                     return await connection.QueryAsync<FindUsersResultItem>(sql, p);
                 }
             }
+        }
+
+        private static string[] ConvertRoles(UserRole[] roles)
+        {
+            var converter = new UserRoleConverter();
+            var Roles = roles?.Select(x => converter.ConvertToProvider(x) as string)?.ToArray();
+            return Roles;
         }
     }
 }
