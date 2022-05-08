@@ -291,3 +291,8 @@ buildQuery items =
 addQuery : ( String, String ) -> String -> String
 addQuery ( key, value ) result =
     result ++ key ++ "=" ++ value ++ "&"
+
+
+bgTeal : Html.Attribute msg
+bgTeal =
+    style "background-color" "var(--bs-teal)"
