@@ -217,7 +217,7 @@ viewPage resp page =
         [ div [ flex1, mediumMargin ]
             [ Button.linkButton [ Button.primary, Button.attrs ([ href "/user/add" ] ++ largeCentered) ] [ text "Create User" ]
             ]
-        , div [ style "flex" "2", flex, Flex.row ]
+        , div [ style "flex" "2", flex, Flex.row, Flex.alignItemsCenter ]
             [ viewInput (Input.text [ Input.onInput ChangedName ]) "Name"
             , viewInput (Input.text [ Input.onInput ChangedPhone ]) "Mobile Number"
             , viewInput (Html.map SelectedRole <| Multiselect.view page.selectedRoles) "Roles"
