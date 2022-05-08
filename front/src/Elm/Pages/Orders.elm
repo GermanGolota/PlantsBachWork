@@ -14,8 +14,7 @@ import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (ordersLink, viewNav)
-import Pages.NotPosted exposing (bgTeal)
-import Utils exposing (fillParent, flex, flex1, formatPrice, largeCentered, smallMargin)
+import Utils exposing (bgTeal, fillParent, flex, flex1, formatPrice, largeCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 

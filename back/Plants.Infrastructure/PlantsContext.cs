@@ -45,6 +45,7 @@ namespace Plants.Infrastructure
         public virtual DbSet<PlantToRegion> PlantToRegions { get; set; }
         public virtual DbSet<PlantsV> PlantsVs { get; set; }
         public virtual DbSet<PreparedForPostV> PreparedForPostVs { get; set; }
+        public virtual DbSet<UserToRole> UserToRoles { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -683,6 +684,15 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.SellerSold).HasColumnName("seller_sold");
 
                 entity.Property(e => e.SoilName).HasColumnName("soil_name");
+            });
+
+            modelBuilder.Entity<UserToRole>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("user_to_roles");
+
+                entity.Property(e => e.PersonId).HasColumnName("person_id");
             });
 
             modelBuilder.HasSequence("plantgroupidsequence");

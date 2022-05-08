@@ -13,7 +13,7 @@ import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (plantsLink, viewNav)
-import Utils exposing (chunkedView, fillParent, flex, flex1, largeFont, smallMargin)
+import Utils exposing (bgTeal, chunkedView, fillParent, flex, flex1, largeFont, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -114,10 +114,6 @@ viewPage resp page =
 
 filterMine onlyMine item =
     (onlyMine && item.isMine) || (onlyMine == False)
-
-
-bgTeal =
-    style "background-color" "var(--bs-teal)"
 
 
 viewItem item =

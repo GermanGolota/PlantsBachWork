@@ -134,7 +134,6 @@ viewLoading =
             , Text.danger
             , Text.warning
             , Text.info
-            , Text.light
             , Text.dark
             ]
 
@@ -282,3 +281,18 @@ createdDecoder =
         combine
         (D.at [ "item", "createdDate" ] D.string)
         (D.at [ "item", "createdHumanDate" ] D.string)
+
+
+buildQuery : List ( String, String ) -> String
+buildQuery items =
+    List.foldl addQuery "?" items
+
+
+addQuery : ( String, String ) -> String -> String
+addQuery ( key, value ) result =
+    result ++ key ++ "=" ++ value ++ "&"
+
+
+bgTeal : Html.Attribute msg
+bgTeal =
+    style "background-color" "var(--bs-teal)"

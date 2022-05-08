@@ -1,5 +1,6 @@
 module Pages.AddEditPlant exposing (..)
 
+import Available exposing (Available, availableDecoder)
 import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
@@ -17,7 +18,6 @@ import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import Multiselect
 import NavBar exposing (plantsLink, viewNav)
-import Pages.Search exposing (Available, availableDecoder)
 import Utils exposing (createdDecoder, existsDecoder, fillParent, flex, flex1, largeCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 

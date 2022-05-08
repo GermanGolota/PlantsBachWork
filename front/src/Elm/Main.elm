@@ -14,6 +14,49 @@ type UserRole
     | Manager
 
 
+allRoles =
+    [ Producer, Consumer, Manager ]
+
+
+rolesDecoder : D.Decoder (List Int) -> D.Decoder (List UserRole)
+rolesDecoder idsDecoder =
+    D.map convertRoles idsDecoder
+
+
+convertRoles : List Int -> List UserRole
+convertRoles roleIds =
+    List.map convertRole roleIds
+
+
+convertRole : Int -> UserRole
+convertRole roleId =
+    case roleId of
+        1 ->
+            Consumer
+
+        2 ->
+            Producer
+
+        3 ->
+            Manager
+
+        _ ->
+            Consumer
+
+
+roleToNumber : UserRole -> Int
+roleToNumber role =
+    case role of
+        Consumer ->
+            1
+
+        Producer ->
+            2
+
+        Manager ->
+            3
+
+
 type alias AuthResponse =
     { token : String
     , roles : List UserRole
@@ -53,12 +96,25 @@ init initFunc flags =
     initFunc authResp flags
 
 
-convertRoles roleIds =
-    List.map convertRole roleIds
+convertRolesStr roleIds =
+    List.map convertRoleStr roleIds
 
 
-convertRole : String -> UserRole
-convertRole roleId =
+roleToStr : UserRole -> String
+roleToStr role =
+    case role of
+        Consumer ->
+            "Consumer"
+
+        Producer ->
+            "Producer"
+
+        Manager ->
+            "Manager"
+
+
+convertRoleStr : String -> UserRole
+convertRoleStr roleId =
     case roleId of
         "Consumer" ->
             Consumer
@@ -77,7 +133,7 @@ decodeFlags : D.Decoder AuthResponse
 decodeFlags =
     D.map3 AuthResponse
         (D.field "token" D.string)
-        (D.field "roles" (D.list D.string) |> D.map convertRoles)
+        (D.field "roles" (D.list D.string) |> D.map convertRolesStr)
         (D.field "username" D.string)
 
 

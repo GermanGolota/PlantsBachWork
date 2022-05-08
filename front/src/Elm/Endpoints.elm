@@ -4,6 +4,7 @@ import Dict
 import Http exposing (header, request)
 import ImageList
 import Json.Decode as D
+import Main exposing (UserRole, roleToNumber)
 
 
 baseUrl : String
@@ -30,6 +31,10 @@ type Endpoint
     | AllOrders Bool
     | SendOrder Int String
     | ReceivedOrder Int
+    | SearchUsers
+    | AddRole String UserRole
+    | RemoveRole String UserRole
+    | CreateUser
 
 
 endpointToUrl : Endpoint -> String
@@ -96,6 +101,18 @@ endpointToUrl endpoint =
 
         ReceivedOrder orderId ->
             baseUrl ++ "orders/" ++ String.fromInt orderId ++ "/delivered"
+
+        SearchUsers ->
+            baseUrl ++ "users"
+
+        AddRole login role ->
+            baseUrl ++ "users/" ++ login ++ "/add/" ++ (String.fromInt <| roleToNumber role)
+
+        RemoveRole login role ->
+            baseUrl ++ "users/" ++ login ++ "/remove/" ++ (String.fromInt <| roleToNumber role)
+
+        CreateUser ->
+            baseUrl ++ "users/create"
 
 
 imageIdToUrl : String -> Int -> String

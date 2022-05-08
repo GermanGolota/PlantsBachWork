@@ -10,7 +10,7 @@ import ImageList
 import Json.Decode as D
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (plantsLink, viewNav)
-import Pages.Plant exposing (PlantModel, plantDecoder, viewPlantBase)
+import PlantHelper exposing (PlantModel, plantDecoder, viewPlantBase)
 import Utils exposing (SubmittedResult(..), flex, flex1, largeFont, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
