@@ -1,5 +1,6 @@
 module Pages.Search exposing (..)
 
+import Available exposing (Available, availableDecoder)
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
@@ -31,13 +32,6 @@ type alias View =
     { searchItems : Dict String String
     , availableValues : WebData Available
     , results : Maybe (WebData (List SearchResultItem))
-    }
-
-
-type alias Available =
-    { regions : Multiselect.Model
-    , soils : Multiselect.Model
-    , groups : Multiselect.Model
     }
 
 
@@ -272,30 +266,6 @@ searchResultDecoder =
         |> required "description" D.string
         |> required "price" D.float
         |> required "imageIds" (D.list D.int)
-
-
-availableDecoder : D.Decoder Available
-availableDecoder =
-    D.map3 Available
-        ((D.field "regions" <| D.dict D.string)
-            |> dictDecoder "region"
-        )
-        ((D.field "soils" <| D.dict D.string)
-            |> dictDecoder "soil"
-        )
-        (D.field "groups" (D.dict D.string)
-            |> dictDecoder "group"
-        )
-
-
-dictDecoder : String -> D.Decoder (Dict String String) -> D.Decoder Multiselect.Model
-dictDecoder tag base =
-    D.map (convertDict tag) base
-
-
-convertDict : String -> Dict String String -> Multiselect.Model
-convertDict tag dict =
-    Multiselect.initModel (Dict.toList dict) tag Show
 
 
 

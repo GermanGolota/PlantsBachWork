@@ -15,7 +15,7 @@ import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, convertRole, convertRoleStr, initBase, roleToStr, rolesDecoder)
 import Multiselect as Multiselect
 import NavBar exposing (usersLink, viewNav)
-import Utils exposing (buildQuery, chunkedView, fillParent, flatten, flex, flex1, largeCentered, smallMargin, unique)
+import Utils exposing (buildQuery, chunkedView, fillParent, flatten, flex, flex1, largeCentered, mediumMargin, smallMargin, unique)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -133,16 +133,16 @@ view model =
 
 viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
-    div [ flex, Flex.col ]
-        [ div [ flex1, smallMargin ]
-            [ Button.linkButton [ Button.primary, Button.attrs [ href "/user/add" ] ] [ text "Create User" ]
+    div ([ flex, Flex.col ] ++ fillParent)
+        [ div [ flex1, mediumMargin ]
+            [ Button.linkButton [ Button.primary, Button.attrs ([ href "/user/add" ] ++ largeCentered) ] [ text "Create User" ]
             ]
-        , div [ flex1, flex, Flex.row ]
+        , div [ style "flex" "2", flex, Flex.row ]
             [ viewInput (Input.text [ Input.onInput ChangedName ]) "Name"
             , viewInput (Input.text [ Input.onInput ChangedPhone ]) "Mobile Number"
             , viewInput (Html.map SelectedRole <| Multiselect.view page.selectedRoles) "Roles"
             ]
-        , div [ flex, Flex.row, style "flex" "8" ]
+        , div [ flex, Flex.row, style "flex" "16", style "overflow-y" "scroll" ]
             [ viewWebdata page.users (chunkedView 3 <| viewUser resp.roles)
             ]
         ]
