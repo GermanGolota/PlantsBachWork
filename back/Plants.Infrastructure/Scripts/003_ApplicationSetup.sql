@@ -69,32 +69,6 @@ CREATE TRIGGER person_prevent_bad_login
   FOR EACH ROW
   EXECUTE PROCEDURE person_check_login ();
 
---New
-CREATE OR REPLACE FUNCTION parse_role (roleName regrole)
-  RETURNS UserRoles
-  AS $$
-BEGIN
-  RETURN roleName::text::UserRoles;
-EXCEPTION
-  WHEN OTHERS THEN
-    RETURN 'other'::UserRoles;
-END
-$$
-LANGUAGE plpgsql;
-
-CREATE OR REPLACE VIEW current_user_roles AS (
-  SELECT DISTINCT
-    parse_role (auth.roleid::regrole) AS roleName
-  FROM
-    pg_auth_members auth
-  WHERE
-    auth.member::regrole = CURRENT_USER::regrole
-  EXCEPT (
-    SELECT
-      'other'::userroles));
-
-GRANT SELECT ON current_user_roles TO consumer, producer, manager;
-
 CREATE OR REPLACE PROCEDURE create_user (LOGIN name, userPass text, userRoles UserRoles[], firstName text, lastName text, phoneNumber text)
   AS $$
 DECLARE
@@ -258,53 +232,4 @@ CREATE TRIGGER plant_instruction_reject_no_soils
   BEFORE INSERT OR UPDATE ON plant_caring_instruction
   FOR EACH ROW
   EXECUTE PROCEDURE reject_instruction_no_soils ();
-
---Add user to group
-CREATE OR REPLACE FUNCTION get_role_priority (userRole UserRoles)
-  RETURNS integer
-  AS $$
-DECLARE
-  resultNumber int;
-BEGIN
-  IF userRole = 'consumer' THEN
-    resultNumber = 1;
-  ELSIF userRole = 'producer' THEN
-    resultNumber = 2;
-  ELSIF userRole = 'manager' THEN
-    resultNumber = 3;
-  ELSE
-    RAISE EXCEPTION 'There is no priority for this group';
-  END IF;
-  RETURN resultNumber;
-END
-$$
-LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION current_user_can_create_role (userRole UserRoles)
-  RETURNS boolean
-  AS $$
-BEGIN
-  RETURN (
-    SELECT
-      coalesce(MAX(get_role_priority (rolename)), -1) >= get_role_priority (userRole)
-    FROM
-      current_user_roles);
-END;
-$$
-LANGUAGE plpgsql;
-
-CREATE OR REPLACE PROCEDURE add_user_to_group (userName text, userRole UserRoles)
-  AS $$
-BEGIN
-  IF current_user_can_create_role (userRole) THEN
-    EXECUTE FORMAT('ALTER GROUP %s ADD USER %s', userRole, userName);
-  ELSE
-    RAISE EXCEPTION 'You cannot create role %', userRole::text
-      USING HINT = 'Yours role priority is lower than the priority of this role';
-    END IF;
-END;
-$$
-LANGUAGE plpgsql;
-
-GRANT EXECUTE ON PROCEDURE add_user_to_group TO consumer, producer, manager;
 
