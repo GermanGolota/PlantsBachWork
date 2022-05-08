@@ -6,13 +6,13 @@ import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), getAuthedQuery)
+import Endpoints exposing (Endpoint(..), getAuthedQuery, postAuthed)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (href, style)
+import Html.Attributes exposing (class, href, style)
 import Http
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (custom, required)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, convertRole, convertRoleStr, initBase, roleToStr, rolesDecoder)
+import Json.Decode.Pipeline exposing (custom, hardcoded, required)
+import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, convertRole, initBase, roleToNumber, roleToStr, rolesDecoder)
 import Multiselect as Multiselect
 import NavBar exposing (usersLink, viewNav)
 import Utils exposing (buildQuery, chunkedView, fillParent, flatten, flex, flex1, largeCentered, mediumMargin, smallMargin, unique)
@@ -40,6 +40,7 @@ type alias User =
     , contact : String
     , roles : List UserRole
     , login : String
+    , alteringResult : Maybe (WebData String)
     }
 
 
@@ -54,6 +55,8 @@ type Msg
     | ChangedName String
     | ChangedPhone String
     | CheckedRole UserRole String
+    | GotRemoveRole String (Result Http.Error Bool)
+    | GotAddRole String (Result Http.Error Bool)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -81,6 +84,9 @@ update msg m =
 
                 searchCmd name phone roles =
                     authedSearch name phone (mapRoles roles)
+
+                refreshCmd =
+                    authedSearch model.selectedName model.selectedName (mapRoles model.selectedRoles)
             in
             case msg of
                 GotUsers (Ok res) ->
@@ -113,7 +119,81 @@ update msg m =
                     ( authed { model | selectedPhone = Just phone }, searchCmd model.selectedName (Just phone) model.selectedRoles )
 
                 CheckedRole role login ->
-                    noOp
+                    case model.users of
+                        Loaded users ->
+                            let
+                                selectedUser =
+                                    Maybe.withDefault (User "" "" [] "" Nothing) <| List.head <| List.filter (\user -> user.login == login) users
+
+                                isRemove =
+                                    List.member role selectedUser.roles
+
+                                cmd =
+                                    if isRemove then
+                                        removeRole auth.token
+
+                                    else
+                                        addRole auth.token
+
+                                updateUser user =
+                                    if user.login == login then
+                                        { user | alteringResult = Just Loading }
+
+                                    else
+                                        user
+                            in
+                            ( authed <| { model | users = Loaded (List.map updateUser users) }, cmd role login )
+
+                        _ ->
+                            noOp
+
+                GotAddRole login (Ok _) ->
+                    case model.users of
+                        Loaded users ->
+                            ( m, refreshCmd )
+
+                        _ ->
+                            noOp
+
+                GotAddRole login (Err err) ->
+                    case model.users of
+                        Loaded users ->
+                            let
+                                updateUser user =
+                                    if user.login == login then
+                                        { user | alteringResult = Just (Loaded "Failed to add role") }
+
+                                    else
+                                        user
+                            in
+                            ( authed { model | users = Loaded (List.map updateUser users) }, Cmd.none )
+
+                        _ ->
+                            noOp
+
+                GotRemoveRole login (Ok _) ->
+                    case model.users of
+                        Loaded users ->
+                            ( m, refreshCmd )
+
+                        _ ->
+                            noOp
+
+                GotRemoveRole login (Err _) ->
+                    case model.users of
+                        Loaded users ->
+                            let
+                                updateUser user =
+                                    if user.login == login then
+                                        { user | alteringResult = Just (Loaded "Failed to remove role") }
+
+                                    else
+                                        user
+                            in
+                            ( authed { model | users = Loaded (List.map updateUser users) }, Cmd.none )
+
+                        _ ->
+                            noOp
 
                 NoOp ->
                     noOp
@@ -150,6 +230,24 @@ viewPage resp page =
 
 viewUser : List UserRole -> User -> Html Msg
 viewUser viewerRoles user =
+    let
+        btnViewBase =
+            userRolesBtns user.login user.roles viewerRoles
+
+        btnsMessage msg =
+            div [ flex, Flex.col ]
+                [ div (largeCentered ++ [ class "text-danger" ]) [ text msg ]
+                , btnViewBase
+                ]
+
+        btnsView =
+            case user.alteringResult of
+                Just res ->
+                    viewWebdata res btnsMessage
+
+                Nothing ->
+                    btnViewBase
+    in
     Card.config []
         |> Card.header largeCentered
             [ div largeCentered [ text user.name ]
@@ -158,7 +256,7 @@ viewUser viewerRoles user =
             [ Block.titleH4 largeCentered [ text user.login ]
             , Block.titleH4 largeCentered [ text user.contact ]
             , Block.custom <|
-                userRolesBtns user.login user.roles viewerRoles
+                btnsView
             ]
         |> Card.view
 
@@ -237,6 +335,24 @@ init resp flags =
 --cmds
 
 
+removeRole : String -> UserRole -> String -> Cmd Msg
+removeRole token role login =
+    let
+        expect =
+            Http.expectJson (GotRemoveRole login) (D.succeed True)
+    in
+    postAuthed token (RemoveRole login role) Http.emptyBody expect Nothing
+
+
+addRole : String -> UserRole -> String -> Cmd Msg
+addRole token role login =
+    let
+        expect =
+            Http.expectJson (GotAddRole login) (D.succeed True)
+    in
+    postAuthed token (AddRole login role) Http.emptyBody expect Nothing
+
+
 searchForUsers : String -> Maybe String -> Maybe String -> Maybe (List UserRole) -> Cmd Msg
 searchForUsers token name contact roles =
     let
@@ -263,19 +379,6 @@ searchForUsers token name contact roles =
     getAuthedQuery (buildQuery queryList) token SearchUsers expect Nothing
 
 
-roleToNumber : UserRole -> Int
-roleToNumber role =
-    case role of
-        Consumer ->
-            1
-
-        Producer ->
-            2
-
-        Manager ->
-            3
-
-
 usersDecoder : D.Decoder (List User)
 usersDecoder =
     D.field "items" (D.list userDecoder)
@@ -288,6 +391,7 @@ userDecoder =
         |> required "mobile" D.string
         |> custom (rolesDecoder (D.field "roleCodes" <| D.list D.int))
         |> required "login" D.string
+        |> hardcoded Nothing
 
 
 justOrEmpty : String -> Maybe a -> List ( String, a )

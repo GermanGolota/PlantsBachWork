@@ -40,6 +40,19 @@ convertRole roleId =
             Consumer
 
 
+roleToNumber : UserRole -> Int
+roleToNumber role =
+    case role of
+        Consumer ->
+            1
+
+        Producer ->
+            2
+
+        Manager ->
+            3
+
+
 type alias AuthResponse =
     { token : String
     , roles : List UserRole
