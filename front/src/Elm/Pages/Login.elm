@@ -18,38 +18,18 @@ import Http as Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
 import Json.Encode as E
-import Main exposing (AuthResponse, UserRole(..), baseApplication)
+import Main exposing (AuthResponse, UserRole(..), baseApplication, roleToStr, rolesDecoder)
 import Svg exposing (Svg, image, svg)
 import Svg.Attributes exposing (height, width)
 import TypedSvg.Types exposing (px)
 import Utils exposing (fillParent, filledBackground, flexCenter, mapStyles, rgba255, textCenter)
 
 
-convertRoles roleIds =
-    List.map convertRole roleIds
-
-
-convertRole : Int -> UserRole
-convertRole roleId =
-    case roleId of
-        1 ->
-            Consumer
-
-        2 ->
-            Producer
-
-        3 ->
-            Manager
-
-        _ ->
-            Consumer
-
-
 submitSuccessDecoder : D.Decoder AuthResponse
 submitSuccessDecoder =
     D.map3 AuthResponse
         (D.field "token" D.string)
-        (D.field "roles" (D.list D.int) |> D.map convertRoles)
+        (rolesDecoder (D.field "roles" (D.list D.int)))
         (D.field "username" D.string)
 
 
@@ -60,15 +40,7 @@ encodeResponse response =
 
 roleToValue : UserRole -> E.Value
 roleToValue role =
-    case role of
-        Consumer ->
-            E.string "Consumer"
-
-        Producer ->
-            E.string "Producer"
-
-        Manager ->
-            E.string "Manager"
+    E.string <| roleToStr role
 
 
 port notifyLoggedIn : E.Value -> Cmd msg

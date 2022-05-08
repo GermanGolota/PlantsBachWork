@@ -1,5 +1,4 @@
-import React, { useCallback, useState } from "react";
-import ReactDOM from "react-dom";
+import React, { useCallback, useState } from "react";import ReactDOM from "react-dom";
 import {
   Route,
   Link,
@@ -18,6 +17,7 @@ import { Elm as NotPostedElm } from "./Elm/Pages/NotPosted";
 import { Elm as PostPlantElm } from "./Elm/Pages/PostPlant";
 import { Elm as AddEditPlantElm } from "./Elm/Pages/AddEditPlant";
 import { Elm as OrdersElm } from "./Elm/Pages/Orders";
+import { Elm as UsersElm } from "./Elm/Pages/Users";
 import "./assets/tree.svg";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -34,6 +34,26 @@ const SearchPage = () => {
     let model = retrieve();
 
     return SearchElm.Pages.Search.init({
+      node: elmRef.current,
+      flags: model,
+    });
+  };
+
+  React.useEffect(() => {
+    setApp(elmApp());
+  }, []);
+
+  return <div ref={elmRef}></div>;
+};
+
+const UsersPage = () => {
+  const [app, setApp] = React.useState<UsersElm.Pages.Users.App | undefined>();
+  const elmRef = React.useRef(null);
+
+  const elmApp = () => {
+    let model = retrieve();
+
+    return UsersElm.Pages.Users.init({
       node: elmRef.current,
       flags: model,
     });
@@ -266,6 +286,7 @@ const App = () => (
         path="/orders/employee"
         element={<OrdersPage isEmployee={true} />}
       />
+      <Route path="/user" element={<UsersPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>

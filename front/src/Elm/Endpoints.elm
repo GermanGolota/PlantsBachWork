@@ -30,6 +30,7 @@ type Endpoint
     | AllOrders Bool
     | SendOrder Int String
     | ReceivedOrder Int
+    | SearchUsers
 
 
 endpointToUrl : Endpoint -> String
@@ -96,6 +97,9 @@ endpointToUrl endpoint =
 
         ReceivedOrder orderId ->
             baseUrl ++ "orders/" ++ String.fromInt orderId ++ "/delivered"
+
+        SearchUsers ->
+            baseUrl ++ "users"
 
 
 imageIdToUrl : String -> Int -> String

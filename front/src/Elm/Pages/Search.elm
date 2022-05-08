@@ -15,7 +15,7 @@ import Json.Decode.Pipeline exposing (required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar exposing (viewNav)
-import Utils exposing (fillParent, flex, formatPrice, largeFont, smallMargin, textCenter)
+import Utils exposing (buildQuery, fillParent, flex, formatPrice, largeFont, smallMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -39,16 +39,6 @@ type alias Available =
     , soils : Multiselect.Model
     , groups : Multiselect.Model
     }
-
-
-buildQuery : List ( String, String ) -> String
-buildQuery items =
-    List.foldl addQuery "?" items
-
-
-addQuery : ( String, String ) -> String -> String
-addQuery ( key, value ) result =
-    result ++ key ++ "=" ++ value ++ "&"
 
 
 type alias SearchResultItem =
@@ -95,11 +85,11 @@ update msg m =
             case ( msg, model.availableValues ) of
                 ( SetQuery key value, _ ) ->
                     let
-                        queried = 
-                            (setQuery key value model) 
+                        queried =
+                            setQuery key value model
 
                         updatedView =
-                            {queried | results = Just Loading}
+                            { queried | results = Just Loading }
                     in
                     ( Authorized auth updatedView, searchFull updatedView.searchItems updatedView.availableValues auth.token )
 
@@ -128,14 +118,13 @@ update msg m =
 
                         availableChanged =
                             Multiselect.getSelectedValues val.regions /= Multiselect.getSelectedValues newVal.regions
-                        
-                        updatedView = 
+
+                        updatedView =
                             if availableChanged then
-                                {setNew | results = Just Loading}
+                                { setNew | results = Just Loading }
 
                             else
                                 setNew
-
 
                         searchCmd =
                             if availableChanged then
@@ -157,12 +146,13 @@ update msg m =
                         availableChanged =
                             Multiselect.getSelectedValues val.soils /= Multiselect.getSelectedValues newVal.soils
 
-                        setNew = 
+                        setNew =
                             { model | availableValues = Loaded newVal }
 
                         updatedView =
                             if availableChanged then
-                                {setNew | results = Just Loading}
+                                { setNew | results = Just Loading }
+
                             else
                                 setNew
 
@@ -185,14 +175,14 @@ update msg m =
 
                         availableChanged =
                             Multiselect.getSelectedValues val.groups /= Multiselect.getSelectedValues newVal.groups
-                        
-                        
-                        setNew = 
+
+                        setNew =
                             { model | availableValues = Loaded newVal }
 
                         updatedView =
                             if availableChanged then
-                                {setNew | results = Just Loading}
+                                { setNew | results = Just Loading }
+
                             else
                                 setNew
 
@@ -337,9 +327,9 @@ pageView resp viewType =
             [ viewInput "Plant Name" <| Input.text [ Input.onInput (\val -> SetQuery "PlantName" val) ]
             , viewInput "Price" <|
                 div [ Flex.row, flex, Flex.alignItemsCenter ]
-                    [ Input.text [ Input.onInput (\val -> SetQuery "LowerPrice" val), Input.attrs [style "text-align" "right"] ]
+                    [ Input.text [ Input.onInput (\val -> SetQuery "LowerPrice" val), Input.attrs [ style "text-align" "right" ] ]
                     , i [ class "fa-solid fa-minus", smallMargin ] []
-                    , Input.text [ Input.onInput (\val -> SetQuery "TopPrice" val), Input.attrs [style "text-align" "right"] ]
+                    , Input.text [ Input.onInput (\val -> SetQuery "TopPrice" val), Input.attrs [ style "text-align" "right" ] ]
                     ]
             , viewInput "Created Before" <| Input.date [ Input.onInput (\val -> SetQuery "LastDate" val) ]
             ]
