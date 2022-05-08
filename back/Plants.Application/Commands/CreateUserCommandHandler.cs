@@ -24,7 +24,8 @@ namespace Plants.Application.Commands
         {
             const int TempPasswordLength = 8;
             var tempPassword = GetRandomAlphanumericString(TempPasswordLength);
-            await _emailer.SendInvitationEmail(request.Email, request.Login, tempPassword);
+            var lang = request.Language ?? "English";
+            await _emailer.SendInvitationEmail(request.Email, request.Login, tempPassword, lang);
             return await _user.CreateUser(request.Login, request.Roles, 
                 request.FirstName, request.LastName, request.PhoneNumber, tempPassword);
         }

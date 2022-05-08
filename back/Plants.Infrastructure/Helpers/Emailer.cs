@@ -13,7 +13,7 @@ namespace Plants.Infrastructure.Helpers
             _logger = logger;
         }
 
-        public Task SendInvitationEmail(string address, string login, string tempPassword)
+        public Task SendInvitationEmail(string address, string login, string tempPassword, string lang)
         {
             _logger.LogCritical("Creating user {0} with password {1}", login, tempPassword);
             return Task.CompletedTask;

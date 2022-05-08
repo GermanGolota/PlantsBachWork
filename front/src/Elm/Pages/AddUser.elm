@@ -142,6 +142,7 @@ encodeBody page =
         , ( "firstName", E.string page.firstName )
         , ( "lastName", E.string page.lastName )
         , ( "phoneNumber", E.string page.phone )
+        , ( "language", E.string page.selectedLanguage )
         ]
 
 
