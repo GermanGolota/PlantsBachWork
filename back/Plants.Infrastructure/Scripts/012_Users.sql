@@ -133,13 +133,14 @@ CREATE OR REPLACE FUNCTION search_users (userName text, mobileNumber text, userR
   RETURNS TABLE (
     full_name text,
     mobile text,
-    roles UserRoles[]
+    roles UserRoles[],
+    LOGIN text
   )
   AS $$
 BEGIN
   RETURN QUERY (
     SELECT
-      p.first_name || ' ' || p.last_name AS full_name, p.phone_number, ur.roles
+      p.first_name || ' ' || p.last_name AS full_name, p.phone_number, ur.roles, ur.login::text
     FROM user_to_roles ur
     JOIN person p ON ur.person_id = p.id
     WHERE

@@ -8,10 +8,10 @@ namespace Plants.Application.Requests
 {
     public record FindUsersRequest(string? Name, string? Contact, UserRole[]? Roles) : IRequest<FindUsersResult>;
     public record FindUsersResult(List<FindUsersResultItem> Items);
-    public record FindUsersResultItem(string FullName, string Mobile)
+    public record FindUsersResultItem(string FullName, string Mobile, string Login)
     {
         //for converter
-        public FindUsersResultItem() : this("", "")
+        public FindUsersResultItem() : this("", "", "")
         {
 
         }
