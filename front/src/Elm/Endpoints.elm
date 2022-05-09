@@ -1,4 +1,4 @@
-module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, imagesDecoder, postAuthed, postAuthedQuery)
+module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, imagesDecoder, instructioIdToCover, postAuthed, postAuthedQuery)
 
 import Dict
 import Http exposing (header, request)
@@ -35,6 +35,8 @@ type Endpoint
     | AddRole String UserRole
     | RemoveRole String UserRole
     | CreateUser
+    | FindInstructions
+    | CoverImage Int String
 
 
 endpointToUrl : Endpoint -> String
@@ -114,10 +116,21 @@ endpointToUrl endpoint =
         CreateUser ->
             baseUrl ++ "users/create"
 
+        FindInstructions ->
+            baseUrl ++ "instructions/find"
+
+        CoverImage id token ->
+            baseUrl ++ "file/instruction/" ++ String.fromInt id ++ "?token=" ++ token
+
 
 imageIdToUrl : String -> Int -> String
 imageIdToUrl token id =
     endpointToUrl <| Image id token
+
+
+instructioIdToCover : String -> Int -> String
+instructioIdToCover token id =
+    endpointToUrl <| CoverImage id token
 
 
 imagesDecoder : String -> List String -> D.Decoder ImageList.Model
