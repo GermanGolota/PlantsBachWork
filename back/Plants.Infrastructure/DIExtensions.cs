@@ -56,6 +56,7 @@ namespace Plants.Infrastructure
             services.AddScoped<IPlantsService, PlantsService>();
             services.AddScoped<IOrdersService, OrdersService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IInstructionsService, InstructionsService>();
             return services;
         }
 

@@ -21,5 +21,12 @@ namespace Plants.Presentation.Controllers
             var bytes = await _file.LoadPlantImage(id);
             return File(bytes, "application/octet-stream");
         }
+
+        [HttpGet("instruction/{id}")]
+        public async Task<FileResult> LoadInstruction([FromRoute] int id)
+        {
+            var bytes = await _file.LoadInstructionCoverImage(id);
+            return File(bytes, "application/octet-stream");
+        }
     }
 }
