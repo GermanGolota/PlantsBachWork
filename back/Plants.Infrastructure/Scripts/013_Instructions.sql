@@ -19,7 +19,7 @@ ALTER TABLE plant_caring_instruction
   ALTER COLUMN title SET NOT NULL;
 
 CREATE TABLE instruction_to_cover (
-  instruction_id serial PRIMARY KEY REFERENCES plant_caring_instruction (id),
+  instruction_id serial PRIMARY KEY REFERENCES plant_caring_instruction (id) ON DELETE CASCADE,
   image bytea
 );
 

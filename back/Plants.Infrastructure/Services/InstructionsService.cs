@@ -48,7 +48,7 @@ namespace Plants.Infrastructure.Services
             {
                 await using (var connection = ctx.Database.GetDbConnection())
                 {
-                    string sql = $"SELECT * FROM instruction_v WHERE id == @Id;";
+                    string sql = $"SELECT * FROM instruction_v WHERE id = @Id;";
                     var p = new
                     {
                         Id
