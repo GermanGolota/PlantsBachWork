@@ -303,7 +303,7 @@ pageView resp viewType =
                     ]
             , viewInput "Created Before" <| Input.date [ Input.onInput (\val -> SetQuery "LastDate" val) ]
             ]
-        , result
+        , div [ style "overflow-y" "scroll" ] [ result ]
         ]
 
 

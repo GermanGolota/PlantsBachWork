@@ -12,6 +12,8 @@ import FormatNumber exposing (format)
 import FormatNumber.Locales exposing (usLocale)
 import Html exposing (Attribute, Html, a, div)
 import Html.Attributes exposing (attribute, style)
+import Html.Parser
+import Html.Parser.Util
 import Json.Decode as D
 
 
@@ -296,3 +298,13 @@ addQuery ( key, value ) result =
 bgTeal : Html.Attribute msg
 bgTeal =
     style "background-color" "var(--bs-teal)"
+
+
+textHtml : String -> List (Html.Html msg)
+textHtml t =
+    case Html.Parser.run t of
+        Ok nodes ->
+            Html.Parser.Util.toVirtualDom nodes
+
+        Err _ ->
+            []

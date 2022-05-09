@@ -23,6 +23,8 @@ namespace Plants.Infrastructure
         public virtual DbSet<CurrentUserRole> CurrentUserRoles { get; set; }
         public virtual DbSet<DeliveryAddress> DeliveryAddresses { get; set; }
         public virtual DbSet<DictsV> DictsVs { get; set; }
+        public virtual DbSet<InstructionToCover> InstructionToCovers { get; set; }
+        public virtual DbSet<InstructionV> InstructionVs { get; set; }
         public virtual DbSet<Person> People { get; set; }
         public virtual DbSet<PersonAddressesV> PersonAddressesVs { get; set; }
         public virtual DbSet<PersonCredsV> PersonCredsVs { get; set; }
@@ -140,6 +142,45 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.Type).HasColumnName("type");
 
                 entity.Property(e => e.Values).HasColumnName("values");
+            });
+
+            modelBuilder.Entity<InstructionToCover>(entity =>
+            {
+                entity.HasKey(e => e.InstructionId)
+                    .HasName("instruction_to_cover_pkey");
+
+                entity.ToTable("instruction_to_cover");
+
+                entity.Property(e => e.InstructionId)
+                    .ValueGeneratedOnAdd()
+                    .HasColumnName("instruction_id");
+
+                entity.Property(e => e.Image).HasColumnName("image");
+
+                entity.HasOne(d => d.Instruction)
+                    .WithOne(p => p.InstructionToCover)
+                    .HasForeignKey<InstructionToCover>(d => d.InstructionId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("instruction_to_cover_instruction_id_fkey");
+            });
+
+            modelBuilder.Entity<InstructionV>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.ToTable("instruction_v");
+
+                entity.Property(e => e.Description).HasColumnName("description");
+
+                entity.Property(e => e.Hascover).HasColumnName("hascover");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.InstructionText).HasColumnName("instruction_text");
+
+                entity.Property(e => e.PlantGroupId).HasColumnName("plant_group_id");
+
+                entity.Property(e => e.Title).HasColumnName("title");
             });
 
             modelBuilder.Entity<Person>(entity =>
@@ -275,6 +316,10 @@ namespace Plants.Infrastructure
 
                 entity.Property(e => e.Id).HasColumnName("id");
 
+                entity.Property(e => e.Description)
+                    .IsRequired()
+                    .HasColumnName("description");
+
                 entity.Property(e => e.InstructionText)
                     .IsRequired()
                     .HasColumnName("instruction_text");
@@ -282,6 +327,10 @@ namespace Plants.Infrastructure
                 entity.Property(e => e.PlantGroupId).HasColumnName("plant_group_id");
 
                 entity.Property(e => e.PostedById).HasColumnName("posted_by_id");
+
+                entity.Property(e => e.Title)
+                    .IsRequired()
+                    .HasColumnName("title");
 
                 entity.HasOne(d => d.PlantGroup)
                     .WithMany(p => p.PlantCaringInstructions)

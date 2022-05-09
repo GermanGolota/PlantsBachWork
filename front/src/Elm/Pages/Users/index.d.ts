@@ -6,6 +6,12 @@ export namespace Elm {
   namespace Pages.Users {
     export interface App {
       ports: {
+        openEditor: {
+          subscribe(callback: (data: boolean) => void): void
+        }
+        editorChanged: {
+          send(data: string): void
+        }
         notifyLoggedIn: {
           subscribe(callback: (data: unknown) => void): void
         }

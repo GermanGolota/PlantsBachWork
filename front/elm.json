@@ -22,6 +22,7 @@
             "folkertdev/one-true-path-experiment": "6.0.0",
             "folkertdev/svg-path-lowlevel": "4.0.1",
             "gampleman/elm-visualization": "2.3.0",
+            "hecrj/html-parser": "2.4.0",
             "inkuzmin/elm-multiselect": "4.0.0",
             "rtfeldman/elm-iso8601-date-strings": "1.1.4",
             "rundis/elm-bootstrap": "5.2.0"

@@ -16,6 +16,24 @@ namespace Plants.Infrastructure.Services
             _ctx = ctx;
         }
 
+        public async Task<byte[]> LoadInstructionCoverImage(int instructionId)
+        {
+            var ctx = _ctx.CreateDbContext();
+            await using (ctx)
+            {
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = "SELECT image FROM instruction_to_cover WHERE instruction_id = @instructionId";
+                    var p = new
+                    {
+                        instructionId = instructionId
+                    };
+                    var images = await connection.QueryAsync<byte[]>(sql, p);
+                    return images.FirstOrDefault();
+                }
+            }
+        }
+
         public async Task<byte[]> LoadPlantImage(int plantImageId)
         {
             var ctx = _ctx.CreateDbContext();

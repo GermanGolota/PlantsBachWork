@@ -18,12 +18,15 @@ import { Elm as PostPlantElm } from "./Elm/Pages/PostPlant";
 import { Elm as AddEditPlantElm } from "./Elm/Pages/AddEditPlant";
 import { Elm as OrdersElm } from "./Elm/Pages/Orders";
 import { Elm as UsersElm } from "./Elm/Pages/Users";
+import { Elm as InstructionElm } from "./Elm/Pages/Instruction";
 import { Elm as AddUserElm } from "./Elm/Pages/AddUser";
+import { Elm as SearchInstructionsElm } from "./Elm/Pages/SearchInstructions";
 import "./assets/tree.svg";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./main.css";
 import { AuthResponse, retrieve, store } from "./Store";
+import AddInstructionPage from "./editor";
 
 const SearchPage = () => {
   const [app, setApp] = React.useState<
@@ -35,6 +38,57 @@ const SearchPage = () => {
     let model = retrieve();
 
     return SearchElm.Pages.Search.init({
+      node: elmRef.current,
+      flags: model,
+    });
+  };
+
+  React.useEffect(() => {
+    setApp(elmApp());
+  }, []);
+
+  return <div ref={elmRef}></div>;
+};
+
+const InstructionPage = () => {
+  const [app, setApp] = React.useState<
+    InstructionElm.Pages.Instruction.App | undefined
+  >();
+  const elmRef = React.useRef(null);
+
+  const { id } = useParams();
+
+  const elmApp = () => {
+    let model = retrieve();
+
+    let final = {
+      ...model,
+      id: Number(id),
+    };
+
+    return InstructionElm.Pages.Instruction.init({
+      node: elmRef.current,
+      flags: final,
+    });
+  };
+
+  React.useEffect(() => {
+    setApp(elmApp());
+  }, []);
+
+  return <div ref={elmRef}></div>;
+};
+
+const SearchInstructionsPage = () => {
+  const [app, setApp] = React.useState<
+    SearchInstructionsElm.Pages.SearchInstructions.App | undefined
+  >();
+  const elmRef = React.useRef(null);
+
+  const elmApp = () => {
+    let model = retrieve();
+
+    return SearchInstructionsElm.Pages.SearchInstructions.init({
       node: elmRef.current,
       flags: model,
     });
@@ -311,6 +365,9 @@ const App = () => (
       />
       <Route path="/user" element={<UsersPage />} />
       <Route path="/user/add" element={<AddUserPage />} />
+      <Route path="/instructions" element={<SearchInstructionsPage />} />
+      <Route path="/instructions/add" element={<AddInstructionPage />} />
+      <Route path="/instructions/:id" element={<InstructionPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>

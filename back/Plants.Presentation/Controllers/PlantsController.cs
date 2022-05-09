@@ -5,7 +5,9 @@ using Plants.Application.Commands;
 using Plants.Application.Requests;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using Plants.Presentation.Extensions;
 using System.Threading.Tasks;
 
 namespace Plants.Presentation.Controllers
@@ -71,18 +73,7 @@ namespace Plants.Presentation.Controllers
 
         private static List<byte[]> ReadFiles(IEnumerable<IFormFile> files)
         {
-            var totalBytes = new List<byte[]>();
-            foreach (var file in files)
-            {
-                using (var fileStream = file.OpenReadStream())
-                {
-                    byte[] bytes = new byte[file.Length];
-                    fileStream.Read(bytes, 0, (int)file.Length);
-                    totalBytes.Add(bytes);
-                }
-            }
-
-            return totalBytes;
+            return files.Select(file => file.ReadBytes()).ToList();
         }
     }
 
