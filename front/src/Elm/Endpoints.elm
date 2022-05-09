@@ -38,6 +38,7 @@ type Endpoint
     | FindInstructions
     | CoverImage Int String
     | CreateInstruction
+    | GetInstruction Int
 
 
 endpointToUrl : Endpoint -> String
@@ -125,6 +126,9 @@ endpointToUrl endpoint =
 
         CreateInstruction ->
             baseUrl ++ "instructions/create"
+
+        GetInstruction id ->
+            baseUrl ++ "instructions/" ++ String.fromInt id
 
 
 imageIdToUrl : String -> Int -> String

@@ -16,7 +16,7 @@ import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import Multiselect as Multiselect
 import NavBar exposing (instructionsLink, viewNav)
-import Utils exposing (buildQuery, chunkedView, fillParent, flex, flex1, largeCentered, smallMargin)
+import Utils exposing (buildQuery, chunkedView, fillParent, flex, flex1, intersect, largeCentered, mediumMargin, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -34,6 +34,7 @@ type alias View =
     , selectedGroup : Int
     , selectedDescription : String
     , selectedTitle : String
+    , showAdd : Bool
     }
 
 
@@ -178,8 +179,17 @@ viewPage resp page =
 
 viewMain : View -> Available -> Html Msg
 viewMain page av =
+    let
+        btnView =
+            if page.showAdd then
+                div [ flex, Flex.row, style "flex" "0.5", mediumMargin ] [ Button.linkButton [ Button.attrs [ href "/instructions/add" ], Button.primary ] [ text "Create" ] ]
+
+            else
+                div [] []
+    in
     div ([ Flex.col, flex ] ++ fillParent)
-        [ div [ flex, Flex.row, flex1 ] (viewSelections page av)
+        [ btnView
+        , div [ flex, Flex.row, flex1 ] (viewSelections page av)
         , div [ flex, Flex.row, style "flex" "8" ]
             [ viewWebdata page.instructions viewInstructions ]
         ]
@@ -246,7 +256,16 @@ viewInstruction ins =
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init resp flags =
-    initBase [ Producer, Consumer, Manager ] (View Loading Loading 1 "" "") (\res -> getAvailable res.token) resp
+    let
+        shouldShow =
+            case resp of
+                Just res ->
+                    intersect [ Producer, Manager ] res.roles
+
+                Nothing ->
+                    False
+    in
+    initBase [ Producer, Consumer, Manager ] (View Loading Loading 1 "" "" shouldShow) (\res -> getAvailable res.token) resp
 
 
 subscriptions : Model -> Sub Msg

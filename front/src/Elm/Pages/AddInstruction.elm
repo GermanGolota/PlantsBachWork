@@ -10,15 +10,13 @@ import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (href, style, value)
-import Html.Parser
-import Html.Parser.Util
 import Http
 import Json.Decode as D
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import Multiselect
-import NavBar exposing (plantsLink, viewNav)
+import NavBar exposing (instructionsLink, viewNav)
 import Transition exposing (constant)
-import Utils exposing (fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin)
+import Utils exposing (fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, textHtml)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -178,7 +176,7 @@ requestImages =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just plantsLink) viewPage
+    viewNav model (Just instructionsLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
@@ -274,16 +272,6 @@ viewMain page av =
                 [ text "Create" ]
             ]
         ]
-
-
-textHtml : String -> List (Html.Html msg)
-textHtml t =
-    case Html.Parser.run t of
-        Ok nodes ->
-            Html.Parser.Util.toVirtualDom nodes
-
-        Err _ ->
-            []
 
 
 
