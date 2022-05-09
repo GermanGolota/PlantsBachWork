@@ -4,6 +4,7 @@ import Html exposing (Html, div)
 import Json.Decode as D
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (plantsLink, viewNav)
+import Bootstrap.Utilities.Flex as Flex
 
 
 
@@ -28,9 +29,22 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg m =
+    let
+        noOp =
+            ( m, Cmd.none )
+    in
     case m of
         Authorized auth model ->
-            ( m, Cmd.none )
+             let
+                authed =
+                    Authorized auth
+
+                updateModel newModel =
+                    ( authed newModel, Cmd.none )
+            in
+            case msg of
+                NoOp ->
+                    noOp
 
         _ ->
             ( m, Cmd.none )

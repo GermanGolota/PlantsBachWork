@@ -26,6 +26,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./main.css";
 import { AuthResponse, retrieve, store } from "./Store";
+import AddInstructionPage from "./editor";
 
 const SearchPage = () => {
   const [app, setApp] = React.useState<
@@ -70,6 +71,7 @@ const SearchInstructionsPage = () => {
 
   return <div ref={elmRef}></div>;
 };
+
 const UsersPage = () => {
   const [app, setApp] = React.useState<UsersElm.Pages.Users.App | undefined>();
   const elmRef = React.useRef(null);
@@ -335,6 +337,7 @@ const App = () => (
       <Route path="/user" element={<UsersPage />} />
       <Route path="/user/add" element={<AddUserPage />} />
       <Route path="/instructions" element={<SearchInstructionsPage />} />
+      <Route path="/instructions/add" element={<AddInstructionPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>

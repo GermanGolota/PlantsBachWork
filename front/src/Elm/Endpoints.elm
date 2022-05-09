@@ -37,6 +37,7 @@ type Endpoint
     | CreateUser
     | FindInstructions
     | CoverImage Int String
+    | CreateInstruction
 
 
 endpointToUrl : Endpoint -> String
@@ -121,6 +122,9 @@ endpointToUrl endpoint =
 
         CoverImage id token ->
             baseUrl ++ "file/instruction/" ++ String.fromInt id ++ "?token=" ++ token
+
+        CreateInstruction ->
+            baseUrl ++ "instructions/create"
 
 
 imageIdToUrl : String -> Int -> String
