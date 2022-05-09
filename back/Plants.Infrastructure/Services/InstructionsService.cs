@@ -19,6 +19,28 @@ namespace Plants.Infrastructure.Services
             _ctx = ctxFactory;
         }
 
+        public async Task<int> Create(int GroupId, string Text, string Title, string Description, byte[] CoverImage)
+        {
+            var ctx = _ctx.CreateDbContext();
+            await using (ctx)
+            {
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = $"SELECT * FROM create_instruction(@GroupId, @Text, @Title, @Description, @CoverImage);";
+                    var p = new
+                    {
+                        GroupId,
+                        Text,
+                        Title,
+                        Description,
+                        CoverImage
+                    };
+                    var items = await connection.QueryAsync<int>(sql, p);
+                    return items.FirstOrDefault();
+                }
+            }
+        }
+
         public async Task<GetInstructionResultItem> GetBy(int Id)
         {
             var ctx = _ctx.CreateDbContext();
