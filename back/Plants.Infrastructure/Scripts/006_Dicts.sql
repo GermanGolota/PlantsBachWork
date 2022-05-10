@@ -22,5 +22,3 @@ CREATE VIEW dicts_v AS (
   FROM
     plant_region r);
 
-GRANT SELECT ON dicts_v TO consumer, producer, manager;
-
