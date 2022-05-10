@@ -13,7 +13,8 @@ CREATE TYPE UserRoles AS ENUM (
 );
 
 CREATE OR REPLACE PROCEDURE create_user_login (username name, userPass text, userRoles UserRoles[])
-  AS $$
+SECURITY DEFINER
+AS $$
 BEGIN
   EXECUTE FORMAT('CREATE USER %s WITH PASSWORD %L in group %s', username, userPass, array_to_string(userRoles, ', '));
 END;
@@ -47,6 +48,7 @@ $$;
 
 CREATE OR REPLACE FUNCTION person_check_login ()
   RETURNS TRIGGER
+  SECURITY DEFINER
   AS $BODY$
 BEGIN
   IF NOT EXISTS (
@@ -92,6 +94,7 @@ ALTER TABLE plant_post
 --set poster
 CREATE OR REPLACE FUNCTION get_current_user_id ()
   RETURNS integer
+  SECURITY DEFINER
   AS $$
 BEGIN
   RETURN COALESCE((
@@ -106,6 +109,7 @@ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION set_current_user_id_care_taker ()
   RETURNS TRIGGER
+  SECURITY DEFINER
   AS $BODY$
 DECLARE
   userId int;
@@ -129,6 +133,7 @@ CREATE TRIGGER plant_set_poster
 
 CREATE OR REPLACE FUNCTION set_current_user_id_seller ()
   RETURNS TRIGGER
+  SECURITY DEFINER
   AS $BODY$
 DECLARE
   userId int;
@@ -152,6 +157,7 @@ CREATE TRIGGER post_set_poster
 
 CREATE OR REPLACE FUNCTION set_current_user_id_instruction ()
   RETURNS TRIGGER
+  SECURITY DEFINER
   AS $BODY$
 DECLARE
   userId int;
@@ -182,37 +188,4 @@ INSERT INTO person_to_login (person_id, login)
 ALTER
 GROUP manager
   ADD USER postgres;
-
---instruction reject
-CREATE OR REPLACE FUNCTION reject_instruction_no_soils ()
-  RETURNS TRIGGER
-  AS $$
-DECLARE
-  typicalSoils text[];
-  soilQ tsquery;
-  textV tsvector;
-BEGIN
-  typicalSoils := (
-    SELECT
-      array_agg(DISTINCT s.soil_name)
-    FROM
-      plant p
-      JOIN plant_soil s ON p.soil_id = s.id
-    WHERE
-      p.group_id = NEW.plant_group_id);
-  soilQ := to_tsquery(array_to_string(typicalSoils, ' | '));
-  textV := to_tsvector(NEW.instruction_text);
-  IF NOT (textV @@ soilQ) THEN
-    RAISE EXCEPTION 'Instruction text must contain soil names that are typical for tihs plants group'
-      USING HINT = 'Such soils include ' || soilQ::text;
-    END IF;
-    RETURN NEW;
-END;
-$$
-LANGUAGE 'plpgsql';
-
-CREATE TRIGGER plant_instruction_reject_no_soils
-  BEFORE INSERT OR UPDATE ON plant_caring_instruction
-  FOR EACH ROW
-  EXECUTE PROCEDURE reject_instruction_no_soils ();
 
