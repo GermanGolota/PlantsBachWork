@@ -32,6 +32,7 @@
   },
   "scripts": {
     "start": "parcel index.html",
-    "ts-interop": "npx elm-typescript-interop"
+    "ts-interop": "npx elm-typescript-interop",
+    "build": "parcel build index.html"
   }
 }
