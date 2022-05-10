@@ -47,8 +47,8 @@ CREATE OR REPLACE FUNCTION search_instructions (groupId int, instructionTitle te
     id int,
     title text,
     description text,
-    has_cover boolean
-  )
+    has_cover boolean)
+  SECURITY DEFINER
   AS $$
 BEGIN
   RETURN QUERY (
@@ -68,6 +68,7 @@ LANGUAGE plpgsql;
 --producer
 CREATE OR REPLACE FUNCTION create_instruction (groupId int, instructionText text, instructionTitle text, instructionDescription text, coverImage bytea)
   RETURNS int
+  SECURITY DEFINER
   AS $$
 DECLARE
   instructionId int;
@@ -86,7 +87,8 @@ $$
 LANGUAGE plpgsql;
 
 CREATE OR REPLACE PROCEDURE edit_instruction (instructionId int, instructionText text, instructionTitle text, instructionDescription text, coverImage bytea)
-  AS $$
+SECURITY DEFINER
+AS $$
 BEGIN
   UPDATE
     plant_caring_instruction

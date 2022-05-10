@@ -1,5 +1,6 @@
 CREATE OR REPLACE FUNCTION parse_role (roleName regrole)
   RETURNS UserRoles
+  SECURITY DEFINER
   AS $$
 BEGIN
   RETURN roleName::text::UserRoles;
@@ -23,6 +24,7 @@ CREATE OR REPLACE VIEW current_user_roles AS (
 
 CREATE OR REPLACE FUNCTION get_role_priority (userRole UserRoles)
   RETURNS integer
+  SECURITY DEFINER
   AS $$
 DECLARE
   resultNumber int;
@@ -43,6 +45,7 @@ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION current_user_can_create_role (userRole UserRoles)
   RETURNS boolean
+  SECURITY DEFINER
   AS $$
 BEGIN
   RETURN (
@@ -55,7 +58,8 @@ $$
 LANGUAGE plpgsql;
 
 CREATE OR REPLACE PROCEDURE add_user_to_group (userName text, userRole UserRoles)
-  AS $$
+SECURITY DEFINER
+AS $$
 BEGIN
   IF current_user_can_create_role (userRole) THEN
     EXECUTE FORMAT('ALTER GROUP %s ADD USER %s', userRole, userName);
@@ -81,27 +85,6 @@ ALTER TABLE person_to_login
 
 CREATE OR REPLACE VIEW user_to_roles AS (
   SELECT
-    pl.login,
-    ARRAY_REMOVE(ARRAY_AGG(parse_role (auth.roleid::regrole)), 'other'::UserRoles)
-  FROM
-    person_to_login pl
-    JOIN pg_auth_members auth ON auth.member::regrole::name = pl.login
-  GROUP BY
-    pl.login);
-
-UPDATE
-  person_to_login
-SET
-  login = lower(login);
-
-ALTER TABLE person_to_login
-  ADD CHECK (LOGIN = lower(LOGIN));
-
-ALTER TABLE person_to_login
-  ADD UNIQUE (LOGIN);
-
-CREATE OR REPLACE VIEW user_to_roles AS (
-  SELECT
     pl.person_id,
     pl.login,
     ARRAY_REMOVE(ARRAY_AGG(parse_role (auth.roleid::regrole)), 'other'::UserRoles) AS roles
@@ -114,6 +97,7 @@ CREATE OR REPLACE VIEW user_to_roles AS (
 
 CREATE OR REPLACE FUNCTION current_user_can_create_all (userRoles UserRoles[])
   RETURNS boolean
+  SECURITY DEFINER
   AS $$
 DECLARE
   currentRole UserRoles;
@@ -134,8 +118,8 @@ CREATE OR REPLACE FUNCTION search_users (userName text, mobileNumber text, userR
     full_name text,
     mobile text,
     roles UserRoles[],
-    LOGIN text
-  )
+    LOGIN text)
+  SECURITY DEFINER
   AS $$
 BEGIN
   RETURN QUERY (
@@ -156,7 +140,8 @@ $$
 LANGUAGE plpgsql;
 
 CREATE OR REPLACE PROCEDURE remove_user_from_group (userName text, userRole UserRoles)
-  AS $$
+SECURITY DEFINER
+AS $$
 BEGIN
   IF current_user_can_create_role (userRole) THEN
     IF (
@@ -179,7 +164,8 @@ $$
 LANGUAGE plpgsql;
 
 CREATE OR REPLACE PROCEDURE create_user (username name, userPass text, userRoles UserRoles[], firstName text, lastName text, phoneNumber text)
-  AS $$
+SECURITY DEFINER
+AS $$
 DECLARE
   userId int;
 BEGIN

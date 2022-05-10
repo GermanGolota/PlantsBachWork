@@ -58,8 +58,8 @@ CREATE OR REPLACE FUNCTION get_financial (start_date timestamp without time zone
     group_name text,
     sold_count bigint,
     percent_sold numeric,
-    income numeric
-  )
+    income numeric)
+  SECURITY DEFINER
   AS $$
 BEGIN
   RETURN QUERY ( WITH group_to_post_count AS (

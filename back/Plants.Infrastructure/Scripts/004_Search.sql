@@ -27,9 +27,9 @@ CREATE OR REPLACE FUNCTION search_plant (plantName text, priceRangeBottom numeri
     id integer,
     plant_name text,
     description text,
-	price numeric,
-    imageIds integer[]
-  )
+    price numeric,
+    imageIds integer[])
+  SECURITY DEFINER
   AS $$
 BEGIN
   RETURN QUERY
@@ -37,7 +37,7 @@ BEGIN
     p.id,
     p.plant_name,
     p.description,
-	se.price,
+    se.price,
     array_remove(array_agg(i.relation_id), NULL)
   FROM
     plant_search_v se
@@ -45,9 +45,9 @@ BEGIN
     JOIN plant_group g ON g.id = p.group_id
     JOIN plant_soil s ON s.id = p.soil_id
     LEFT JOIN plant_to_image i ON i.plant_id = p.id
-	LEFT JOIN plant_order o on o.post_id = p.id
+    LEFT JOIN plant_order o ON o.post_id = p.id
   WHERE
-    o.customer_id is null
+    o.customer_id IS NULL
     AND (plantName IS NULL
       OR to_tsvector(se.plant_name) @@ to_tsquery(plantName))
     AND (priceRangeBottom IS NULL
@@ -64,7 +64,8 @@ BEGIN
     AND (regionIds IS NULL
       OR regionIds && se.regions)
   GROUP BY
-    p.id, se.price;
+    p.id,
+    se.price;
 END;
 $$
 LANGUAGE plpgsql;
