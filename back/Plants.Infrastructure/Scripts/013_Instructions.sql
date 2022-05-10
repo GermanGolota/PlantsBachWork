@@ -89,3 +89,18 @@ END
 $$
 LANGUAGE plpgsql;
 
+
+CREATE OR REPLACE PROCEDURE edit_instruction (instructionId int, instructionText text, instructionTitle text, instructionDescription text, coverImage bytea)
+  AS $$
+BEGIN
+	UPDATE plant_caring_instruction
+	SET instruction_text = instructionText, title = instructionTitle, description = instructionDescription
+	WHERE id = instructionId;
+  IF coverImage IS NOT NULL THEN  
+    UPDATE instruction_to_cover 
+	SET image = coverImage
+	WHERE instruction_id = instructionId;
+  END IF;
+END
+$$
+LANGUAGE plpgsql;

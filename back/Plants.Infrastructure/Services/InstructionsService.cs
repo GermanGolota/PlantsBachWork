@@ -41,6 +41,27 @@ namespace Plants.Infrastructure.Services
             }
         }
 
+        public async Task Edit(int InstructionId, string Text, string Title, string Description, byte[] CoverImage)
+        {
+            var ctx = _ctx.CreateDbContext();
+            await using (ctx)
+            {
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = $"CALL edit_instruction(@InstructionId, @Text, @Title, @Description, @CoverImage);";
+                    var p = new
+                    {
+                        InstructionId,
+                        Text,
+                        Title,
+                        Description,
+                        CoverImage
+                    };
+                    await connection.ExecuteAsync(sql, p);
+                }
+            }
+        }
+
         public async Task<GetInstructionResultItem> GetBy(int Id)
         {
             var ctx = _ctx.CreateDbContext();

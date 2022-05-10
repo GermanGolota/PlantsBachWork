@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from "react";import ReactDOM from "react-dom";
+import React, { useCallback, useState } from "react";
+import ReactDOM from "react-dom";
 import {
   Route,
   Link,
@@ -366,7 +367,14 @@ const App = () => (
       <Route path="/user" element={<UsersPage />} />
       <Route path="/user/add" element={<AddUserPage />} />
       <Route path="/instructions" element={<SearchInstructionsPage />} />
-      <Route path="/instructions/add" element={<AddInstructionPage />} />
+      <Route
+        path="/instructions/add"
+        element={<AddInstructionPage isEdit={false} />}
+      />
+      <Route
+        path="/instructions/:id/edit"
+        element={<AddInstructionPage isEdit={true} />}
+      />
       <Route path="/instructions/:id" element={<InstructionPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

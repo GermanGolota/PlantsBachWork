@@ -38,8 +38,22 @@ namespace Plants.Presentation.Controllers
             var req = new CreateInstructionCommand(cmd.GroupId, cmd.Text, cmd.Title, cmd.Description, bytes);
             return await _mediator.Send(req);
         }
+
+        [HttpPost("{id}/edit")]
+        public async Task<ActionResult<EditInstructionResult>> Create(
+            [FromRoute] int id, [FromForm] EditInstructionCommandDto cmd, IFormFile file
+            )
+        {
+            var bytes = file.ReadBytes();
+            var req = new EditInstructionCommand(id, cmd.Text, cmd.Title, cmd.Description, bytes);
+            return await _mediator.Send(req);
+        }
     }
 
     public record CreateInstructionCommandDto(int GroupId, string Text,
+      string Title, string Description);
+
+
+    public record EditInstructionCommandDto(string Text,
       string Title, string Description);
 }

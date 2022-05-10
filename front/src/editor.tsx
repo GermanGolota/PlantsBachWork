@@ -1,14 +1,17 @@
-import Modal from "react-modal";import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
+import Modal from "react-modal";
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import draftToHtml from "draftjs-to-html";
-import { convertToRaw, EditorState } from "draft-js";
-import { Elm as AddInstructionElm } from "./Elm/Pages/AddInstruction";
+import { ContentState, convertToRaw, EditorState } from "draft-js";
+import { Elm as AddEditInstructionElm } from "./Elm/Pages/AddEditInstruction";
 import React from "react";
 import { retrieve } from "./Store";
 import { Editor } from "react-draft-wysiwyg";
+import { useParams } from "react-router-dom";
+import htmlToDraft from "html-to-draftjs";
 
-const AddInstructionPage = () => {
+const AddInstructionPage = (props: { isEdit: boolean }) => {
   const [app, setApp] = React.useState<
-    AddInstructionElm.Pages.AddInstruction.App | undefined
+    AddEditInstructionElm.Pages.AddEditInstruction.App | undefined
   >();
   const [editorVisible, setEditorVisible] = React.useState<boolean>(false);
   const [state, setState] = React.useState<EditorState>(
@@ -16,10 +19,22 @@ const AddInstructionPage = () => {
   );
   const elmRef = React.useRef(null);
 
-  const elmApp = () => {
-    let model = retrieve();
+  const { id } = useParams();
 
-    return AddInstructionElm.Pages.AddInstruction.init({
+  const elmApp = () => {
+    let model: any = retrieve();
+    if (props.isEdit) {
+      model = {
+        ...model,
+        id: Number(id),
+      };
+    }
+    model = {
+      ...model,
+      isEdit: props.isEdit,
+    };
+
+    return AddEditInstructionElm.Pages.AddEditInstruction.init({
       node: elmRef.current,
       flags: model,
     });
@@ -28,7 +43,9 @@ const AddInstructionPage = () => {
   // Subscribe to state changes from Elm
   React.useEffect(() => {
     app &&
-      app.ports.openEditor.subscribe((_) => {
+      app.ports.openEditor.subscribe((txt) => {
+        let state = convertText(txt);
+        setState(state);
         setEditorVisible(true);
       });
   }, [app]);
@@ -62,6 +79,16 @@ const AddInstructionPage = () => {
   }
 
   return <div ref={elmRef}></div>;
+};
+
+const convertText = (text: string) => {
+  const blocksFromHtml = htmlToDraft(text);
+  const { contentBlocks, entityMap } = blocksFromHtml;
+  const contentState = ContentState.createFromBlockArray(
+    contentBlocks,
+    entityMap
+  );
+  return EditorState.createWithContent(contentState);
 };
 
 export default AddInstructionPage;

@@ -7,7 +7,7 @@ export namespace Elm {
     export interface App {
       ports: {
         openEditor: {
-          subscribe(callback: (data: boolean) => void): void
+          subscribe(callback: (data: string) => void): void
         }
         editorChanged: {
           send(data: string): void
