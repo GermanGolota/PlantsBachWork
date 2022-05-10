@@ -6,6 +6,7 @@ import Endpoints exposing (Endpoint(..), getAuthed, instructioIdToCover)
 import Html exposing (Html, div, img, text)
 import Html.Attributes exposing (alt, href, src, style)
 import Http
+import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
@@ -25,15 +26,6 @@ type alias Model =
 type View
     = Instruction (WebData InstructionView)
     | NoInstruction
-
-
-type alias InstructionView =
-    { id : Int
-    , title : String
-    , description : String
-    , imageUrl : Maybe String
-    , text : String
-    }
 
 
 
@@ -75,51 +67,6 @@ update msg m =
 
         _ ->
             ( m, Cmd.none )
-
-
-
---commands
-
-
-getInstruction : String -> Int -> Cmd Msg
-getInstruction token id =
-    let
-        expect =
-            Http.expectJson GotInstruction (decodeInstruction token)
-    in
-    getAuthed token (GetInstruction id) expect Nothing
-
-
-decodeInstruction : String -> D.Decoder (Maybe InstructionView)
-decodeInstruction token =
-    existsDecoder (decodeInstructionBase token)
-
-
-decodeInstructionBase : String -> D.Decoder InstructionView
-decodeInstructionBase token =
-    let
-        requiredItem name =
-            requiredAt [ "item", name ]
-    in
-    D.succeed InstructionView
-        |> requiredItem "id" D.int
-        |> requiredItem "title" D.string
-        |> requiredItem "description" D.string
-        |> custom (coverDecoder token)
-        |> requiredItem "instructionText" D.string
-
-
-coverDecoder : String -> D.Decoder (Maybe String)
-coverDecoder token =
-    D.at [ "item", "hasCover" ] D.bool |> D.andThen (coverImageDecoder token)
-
-
-coverImageDecoder token hasCover =
-    if hasCover then
-        D.map (\id -> Just (instructioIdToCover token id)) (D.at [ "item", "id" ] D.int)
-
-    else
-        D.succeed Nothing
 
 
 
@@ -195,7 +142,7 @@ init resp flags =
         initialCmd res =
             case insId of
                 Ok id ->
-                    getInstruction res.token id
+                    getInstruction GotInstruction res.token id
 
                 Err _ ->
                     Cmd.none
