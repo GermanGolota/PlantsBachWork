@@ -34,7 +34,7 @@ namespace Plants.Presentation.Controllers
         [HttpPost("create")]
         public async Task<ActionResult<CreateInstructionResult>> Create([FromForm] CreateInstructionCommandDto cmd, IFormFile file)
         {
-            var bytes = file.ReadBytes();
+            var bytes = file?.ReadBytes();
             var req = new CreateInstructionCommand(cmd.GroupId, cmd.Text, cmd.Title, cmd.Description, bytes);
             return await _mediator.Send(req);
         }
@@ -44,7 +44,7 @@ namespace Plants.Presentation.Controllers
             [FromRoute] int id, [FromForm] EditInstructionCommandDto cmd, IFormFile file
             )
         {
-            var bytes = file.ReadBytes();
+            var bytes = file?.ReadBytes();
             var req = new EditInstructionCommand(id, cmd.Text, cmd.Title, cmd.Description, bytes);
             return await _mediator.Send(req);
         }
