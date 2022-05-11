@@ -94,7 +94,6 @@ ALTER TABLE plant_post
 --set poster
 CREATE OR REPLACE FUNCTION get_current_user_id ()
   RETURNS integer
-  SECURITY DEFINER
   AS $$
 BEGIN
   RETURN COALESCE((
@@ -109,7 +108,6 @@ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION set_current_user_id_care_taker ()
   RETURNS TRIGGER
-  SECURITY DEFINER
   AS $BODY$
 DECLARE
   userId int;
@@ -133,7 +131,6 @@ CREATE TRIGGER plant_set_poster
 
 CREATE OR REPLACE FUNCTION set_current_user_id_seller ()
   RETURNS TRIGGER
-  SECURITY DEFINER
   AS $BODY$
 DECLARE
   userId int;
@@ -157,7 +154,6 @@ CREATE TRIGGER post_set_poster
 
 CREATE OR REPLACE FUNCTION set_current_user_id_instruction ()
   RETURNS TRIGGER
-  SECURITY DEFINER
   AS $BODY$
 DECLARE
   userId int;

@@ -68,7 +68,6 @@ LANGUAGE plpgsql;
 --producer
 CREATE OR REPLACE FUNCTION create_instruction (groupId int, instructionText text, instructionTitle text, instructionDescription text, coverImage bytea)
   RETURNS int
-  SECURITY DEFINER
   AS $$
 DECLARE
   instructionId int;
@@ -86,13 +85,14 @@ END
 $$
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE PROCEDURE edit_instruction (instructionId int, instructionText text, instructionTitle text, instructionDescription text, coverImage bytea)
+CREATE OR REPLACE PROCEDURE edit_instruction (instructionId int, groupId int, instructionText text, instructionTitle text, instructionDescription text, coverImage bytea)
 SECURITY DEFINER
 AS $$
 BEGIN
   UPDATE
     plant_caring_instruction
   SET
+    plant_group_id = groupId,
     instruction_text = instructionText,
     title = instructionTitle,
     description = instructionDescription

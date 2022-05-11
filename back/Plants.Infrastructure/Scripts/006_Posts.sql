@@ -164,7 +164,6 @@ ALTER TABLE plant_order
 
 CREATE OR REPLACE FUNCTION get_current_user_id_throw ()
   RETURNS integer
-  SECURITY DEFINER
   AS $BODY$
 DECLARE
   userId int;
@@ -182,7 +181,6 @@ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION set_current_user_id_order ()
   RETURNS TRIGGER
-  SECURITY DEFINER
   AS $BODY$
 DECLARE
   userId int;
