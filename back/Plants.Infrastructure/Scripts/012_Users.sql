@@ -1,5 +1,6 @@
 CREATE OR REPLACE FUNCTION parse_role (roleName regrole)
   RETURNS UserRoles
+  SECURITY DEFINER
   AS $$
 BEGIN
   RETURN roleName::text::UserRoles;
@@ -23,6 +24,7 @@ CREATE OR REPLACE VIEW current_user_roles AS (
 
 CREATE OR REPLACE FUNCTION get_role_priority (userRole UserRoles)
   RETURNS integer
+  SECURITY DEFINER
   AS $$
 DECLARE
   resultNumber int;
@@ -54,41 +56,7 @@ END;
 $$
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE PROCEDURE add_user_to_group (userName text, userRole UserRoles)
-  AS $$
-BEGIN
-  IF current_user_can_create_role (userRole) THEN
-    EXECUTE FORMAT('ALTER GROUP %s ADD USER %s', userRole, userName);
-  ELSE
-    RAISE EXCEPTION 'You cannot create role %', userRole::text
-      USING HINT = 'Yours role priority is lower than the priority of this role';
-    END IF;
-END;
-$$
-LANGUAGE plpgsql;
-
 --NEW
-UPDATE
-  person_to_login
-SET
-  login = lower(login);
-
-ALTER TABLE person_to_login
-  ADD CHECK (LOGIN = lower(LOGIN));
-
-ALTER TABLE person_to_login
-  ADD UNIQUE (LOGIN);
-
-CREATE OR REPLACE VIEW user_to_roles AS (
-  SELECT
-    pl.login,
-    ARRAY_REMOVE(ARRAY_AGG(parse_role (auth.roleid::regrole)), 'other'::UserRoles)
-  FROM
-    person_to_login pl
-    JOIN pg_auth_members auth ON auth.member::regrole::name = pl.login
-  GROUP BY
-    pl.login);
-
 UPDATE
   person_to_login
 SET
@@ -155,6 +123,15 @@ END
 $$
 LANGUAGE plpgsql;
 
+CREATE OR REPLACE PROCEDURE alter_group_remove (userName text, userRole UserRoles)
+SECURITY DEFINER
+AS $$
+BEGIN
+  EXECUTE FORMAT('ALTER GROUP %s DROP USER %s', userRole, userName);
+END;
+$$
+LANGUAGE plpgsql;
+
 CREATE OR REPLACE PROCEDURE remove_user_from_group (userName text, userRole UserRoles)
   AS $$
 BEGIN
@@ -166,7 +143,7 @@ BEGIN
         user_to_roles
       WHERE
         login = userName) > 1 THEN
-      EXECUTE FORMAT('ALTER GROUP %s DROP USER %s', userRole, userName);
+      CALL alter_group_remove (userName, userRole);
     ELSE
       RAISE EXCEPTION 'You cannot remove last role of the user%', userRole::text;
     END IF;
@@ -178,19 +155,55 @@ END;
 $$
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE PROCEDURE create_user (username name, userPass text, userRoles UserRoles[], firstName text, lastName text, phoneNumber text)
-  AS $$
+CREATE OR REPLACE PROCEDURE create_person (firstName text, lastName text, phoneNumber text, username name)
+SECURITY DEFINER
+AS $$
 DECLARE
   userId int;
 BEGIN
-  username := lower(username);
-  CALL create_user_login (username, userPass, userRoles);
   INSERT INTO person (first_name, last_name, phone_number)
     VALUES (firstName, lastName, phoneNumber)
   RETURNING
     id INTO userId;
   INSERT INTO person_to_login (person_id, login)
     VALUES (userId, username);
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE PROCEDURE create_user (username name, userPass text, userRoles UserRoles[], firstName text, lastName text, phoneNumber text)
+  AS $$
+BEGIN
+  IF current_user_can_create_all (userRoles) THEN
+    username := lower(username);
+    CALL create_user_login (username, userPass, userRoles);
+    CALL create_person (firstName, lastName, phoneNumber, username);
+  ELSE
+    RAISE EXCEPTION 'You cannot create such user'
+      USING HINT = 'Yours role priority is lower than the priority of this role';
+    END IF;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE PROCEDURE alter_group_add (userName text, userRole UserRoles)
+SECURITY DEFINER
+AS $$
+BEGIN
+  EXECUTE FORMAT('ALTER GROUP %s ADD USER %s', userRole, userName);
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE PROCEDURE add_user_to_group (userName text, userRole UserRoles)
+  AS $$
+BEGIN
+  IF current_user_can_create_role (userRole) THEN
+    CALL alter_group_add (userName, userRole);
+  ELSE
+    RAISE EXCEPTION 'You cannot create role %', userRole::text
+      USING HINT = 'Yours role priority is lower than the priority of this role';
+    END IF;
 END;
 $$
 LANGUAGE plpgsql;

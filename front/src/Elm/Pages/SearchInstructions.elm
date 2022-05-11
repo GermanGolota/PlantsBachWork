@@ -174,11 +174,11 @@ view model =
 
 viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
-    viewWebdata page.available (viewMain page)
+    viewWebdata page.available (viewMain (intersect [Producer, Manager] resp.roles) page)
 
 
-viewMain : View -> Available -> Html Msg
-viewMain page av =
+viewMain : Bool -> View -> Available -> Html Msg
+viewMain isProducer page av =
     let
         btnView =
             if page.showAdd then
@@ -191,7 +191,7 @@ viewMain page av =
         [ btnView
         , div [ flex, Flex.row, flex1 ] (viewSelections page av)
         , div [ flex, Flex.row, style "flex" "8" ]
-            [ viewWebdata page.instructions viewInstructions ]
+            [ viewWebdata page.instructions (viewInstructions isProducer) ]
         ]
 
 
@@ -232,13 +232,20 @@ viewSelections page av =
     ]
 
 
-viewInstructions : List Instruction -> Html Msg
-viewInstructions ins =
-    chunkedView 3 viewInstruction ins
+viewInstructions : Bool -> List Instruction -> Html Msg
+viewInstructions isProducer ins =
+    chunkedView 3 (viewInstruction isProducer) ins
 
 
-viewInstruction : Instruction -> Html Msg
-viewInstruction ins =
+viewInstruction : Bool -> Instruction -> Html Msg
+viewInstruction isProducer ins =
+    let
+        editBtn = 
+            if isProducer then
+                Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ String.fromInt ins.id ++ "/edit", smallMargin ] ] [ text "Edit" ]
+            else
+                div [] []
+    in
     Card.config [ Card.attrs (fillParent ++ [ style "flex" "1" ]) ]
         |> Card.header [ class "text-center" ]
             [ Html.img ([ src (Maybe.withDefault "" ins.imageUrl), alt "No cover for this instruction" ] ++ fillParent) []
@@ -248,7 +255,7 @@ viewInstruction ins =
             , Block.text [] [ text ins.description ]
             , Block.custom <|
                 div [ flex, Flex.row, Flex.justifyEnd, Flex.alignItemsCenter ]
-                    [ Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ String.fromInt ins.id ] ] [ text "Open Full" ]
+                    [ editBtn, Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ String.fromInt ins.id ] ] [ text "Open Full" ]
                     ]
             ]
         |> Card.view

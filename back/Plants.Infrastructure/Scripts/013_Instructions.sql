@@ -1,10 +1,6 @@
 ALTER TABLE plant_caring_instruction
   ADD COLUMN title text;
 
-DROP TRIGGER plant_instruction_reject_no_soils ON plant_caring_instruction;
-
-DROP FUNCTION reject_instruction_no_soils;
-
 UPDATE
   plant_caring_instruction p1
 SET
@@ -51,8 +47,8 @@ CREATE OR REPLACE FUNCTION search_instructions (groupId int, instructionTitle te
     id int,
     title text,
     description text,
-    has_cover boolean
-  )
+    has_cover boolean)
+  SECURITY DEFINER
   AS $$
 BEGIN
   RETURN QUERY (
@@ -89,18 +85,28 @@ END
 $$
 LANGUAGE plpgsql;
 
-
-CREATE OR REPLACE PROCEDURE edit_instruction (instructionId int, instructionText text, instructionTitle text, instructionDescription text, coverImage bytea)
-  AS $$
+CREATE OR REPLACE PROCEDURE edit_instruction (instructionId int, groupId int, instructionText text, instructionTitle text, instructionDescription text, coverImage bytea)
+SECURITY DEFINER
+AS $$
 BEGIN
-	UPDATE plant_caring_instruction
-	SET instruction_text = instructionText, title = instructionTitle, description = instructionDescription
-	WHERE id = instructionId;
-  IF coverImage IS NOT NULL THEN  
-    UPDATE instruction_to_cover 
-	SET image = coverImage
-	WHERE instruction_id = instructionId;
+  UPDATE
+    plant_caring_instruction
+  SET
+    plant_group_id = groupId,
+    instruction_text = instructionText,
+    title = instructionTitle,
+    description = instructionDescription
+  WHERE
+    id = instructionId;
+  IF coverImage IS NOT NULL THEN
+    UPDATE
+      instruction_to_cover
+    SET
+      image = coverImage
+    WHERE
+      instruction_id = instructionId;
   END IF;
 END
 $$
 LANGUAGE plpgsql;
+
