@@ -355,7 +355,7 @@ pageView : AuthResponse -> View -> Html Msg
 pageView resp viewType =
     let
         viewFunc =
-            resultsView (intersect [ Manager, Producer ] resp.roles) resp.token
+            resultsView (List.member Consumer resp.roles) (intersect [ Manager, Producer ] resp.roles) resp.token
 
         result =
             case viewType.results of
@@ -394,20 +394,23 @@ viewAvailable av =
         ]
 
 
-resultsView : Bool -> String -> List SearchResultItem -> Html Msg
-resultsView showDelete token items =
+resultsView : Bool -> Bool -> String -> List SearchResultItem -> Html Msg
+resultsView showOrder showDelete token items =
     let
         viewFunc =
-            resultView showDelete token
+            resultView showOrder showDelete token
     in
     Utils.chunkedView 3 viewFunc items
 
 
-resultView : Bool -> String -> SearchResultItem -> Html Msg
-resultView showDelete token item =
+resultView : Bool -> Bool -> String -> SearchResultItem -> Html Msg
+resultView showOrder showDelete token item =
     let
         url =
             imageIdToUrl token (Maybe.withDefault -1 (List.head item.imageIds))
+
+        orderBtn =
+            Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ String.fromInt item.id ++ "/order" ], Button.disabled (not showOrder) ] [ text "Order" ]
 
         msgText val =
             if val then
@@ -446,7 +449,7 @@ resultView showDelete token item =
                     [ div [ largeFont ] [ text <| formatPrice item.price ]
                     , div [ flex, Flex.row ]
                         [ deleteBtn
-                        , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ String.fromInt item.id ++ "/order" ] ] [ text "Order" ]
+                        , orderBtn
                         , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ String.fromInt item.id ] ] [ text "Open" ]
                         ]
                     ]
