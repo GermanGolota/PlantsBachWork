@@ -87,7 +87,7 @@ viewMain link pageView resp model =
 viewNavBase : String -> List UserRole -> Maybe Link -> Html msg -> Html msg
 viewNavBase username roles currentLink baseView =
     div fillScreen
-        [ div ([ flex, Flex.row ] ++ fillParent) [ navBar username roles currentLink, div [ style "flex" "3", style "margin-left" "25%" ] [ baseView ] ]
+        [ div ([ flex, Flex.row ] ++ fillParent) [ navBar username roles currentLink, div [ style "flex" "3", style "margin-left" "25vw" ] [ baseView ] ]
         ]
 
 
@@ -96,6 +96,7 @@ navBar username roles currentLink =
     div
         [ flex1
         , style "height" "100%"
+        , style "width" "25vw"
         , style "margin-right" "0.5em"
         , class "bg-light"
         , style "position" "fixed"
