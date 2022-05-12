@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Plants.Application.Commands;
 using Plants.Application.Contracts;
 using Plants.Application.Requests;
 using Plants.Infrastructure.Helpers;
@@ -68,6 +69,33 @@ namespace Plants.Infrastructure.Services
                         deliveryId
                     };
                     await connection.ExecuteAsync(sql, p);
+                }
+            }
+        }
+
+        public async Task<RejectOrderResult> Reject(int orderId)
+        {
+            var ctx = _ctx.CreateDbContext();
+            await using (ctx)
+            {
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = @"DELETE FROM plant_order WHERE post_id = @orderId";
+                    var p = new
+                    {
+                        orderId
+                    };
+                    bool succ;
+                    try
+                    {
+                        var deleted = await connection.ExecuteAsync(sql, p);
+                        succ = deleted == 1;
+                    }
+                    catch
+                    {
+                        succ = false;
+                    }
+                    return new RejectOrderResult(succ);
                 }
             }
         }

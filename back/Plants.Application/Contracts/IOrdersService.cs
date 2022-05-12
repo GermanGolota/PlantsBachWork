@@ -1,4 +1,5 @@
-﻿using Plants.Application.Requests;
+﻿using Plants.Application.Commands;
+using Plants.Application.Requests;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -9,5 +10,6 @@ namespace Plants.Application.Contracts
         Task<IEnumerable<OrdersResultItem>> GetOrders(bool onlyMine);
         Task ConfirmStarted(int orderId, string trackingNumber);
         Task ConfirmReceived(int deliveryId);
+        Task<RejectOrderResult> Reject(int orderId);
     }
 }
