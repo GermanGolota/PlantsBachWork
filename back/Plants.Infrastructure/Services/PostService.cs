@@ -71,6 +71,26 @@ namespace Plants.Infrastructure.Services
             }
         }
 
+        public async Task<DeletePostResult> Delete(int postId)
+        {
+            var ctx = _ctx.CreateDbContext();
+            await using (ctx)
+            {
+                await using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = "SELECT * FROM delete_post(@postId)";
+                    var p = new
+                    {
+                        postId = postId
+                    };
+                    var res = await connection.QueryAsync<int>(sql, p);
+                    var first = res.FirstOrDefault();
+                    bool deleted = first == postId;
+                    return new DeletePostResult(deleted);
+                }
+            }
+        }
+
         internal record PostResultDb(bool WasPlaced, int ReasonCode);
     }
 }

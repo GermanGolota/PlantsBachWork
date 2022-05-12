@@ -81,6 +81,8 @@ GRANT EXECUTE ON FUNCTION set_current_user_id_order TO consumer;
 
 GRANT EXECUTE ON FUNCTION order_store_user_address TO consumer;
 
+GRANT EXECUTE ON FUNCTION delete_post TO producer, manager;
+
 --views
 GRANT SELECT ON dicts_v TO consumer, producer, manager;
 

@@ -8,5 +8,6 @@ namespace Plants.Application.Contracts
     {
         Task<PostResultItem?> GetBy(int postId);
         Task<PlaceOrderResult> Order(int postId, string city, int mailNumber);
+        Task<DeletePostResult> Delete(int postId);
     }
 }

@@ -28,5 +28,11 @@ namespace Plants.Presentation.Controllers
         {
             return Ok(await _mediator.Send(new PlaceOrderCommand(id, city, mailNumber)));
         }
+
+        [HttpPost("{id}/delete")]
+        public async Task<ActionResult<DeletePostResult>> Delete([FromRoute] int id)
+        {
+            return await _mediator.Send(new DeletePostCommand(id));
+        }
     }
 }

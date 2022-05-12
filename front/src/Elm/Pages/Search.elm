@@ -7,16 +7,16 @@ import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
-import Endpoints exposing (Endpoint(..), endpointToUrl, getAuthedQuery, imageIdToUrl)
+import Endpoints exposing (Endpoint(..), endpointToUrl, getAuthedQuery, imageIdToUrl, postAuthed)
 import Html exposing (Html, div, i, text)
 import Html.Attributes exposing (alt, class, href, src, style)
 import Http
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (required)
+import Json.Decode.Pipeline exposing (hardcoded, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar exposing (viewNav)
-import Utils exposing (buildQuery, fillParent, flex, formatPrice, largeFont, smallMargin, textCenter)
+import Utils exposing (buildQuery, fillParent, flex, flex1, formatPrice, intersect, largeCentered, largeFont, smallMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -41,6 +41,7 @@ type alias SearchResultItem =
     , description : String
     , price : Float
     , imageIds : List Int
+    , wasAbleToDelete : Maybe (WebData Bool)
     }
 
 
@@ -55,6 +56,8 @@ type Msg
     | RegionsMS Multiselect.Msg
     | SoilMS Multiselect.Msg
     | GroupMS Multiselect.Msg
+    | SelectedDeletePost Int
+    | GotDeletePost Int (Result Http.Error Bool)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -189,6 +192,67 @@ update msg m =
                     in
                     ( authed updatedView, Cmd.batch [ Cmd.map GroupMS subCmd, searchCmd ] )
 
+                ( SelectedDeletePost id, Loaded val ) ->
+                    let
+                        updateResult result =
+                            if result.id == id then
+                                { result | wasAbleToDelete = Just Loading }
+
+                            else
+                                result
+
+                        updatedList =
+                            case model.results of
+                                Just (Loaded results) ->
+                                    List.map updateResult results
+
+                                _ ->
+                                    []
+                    in
+                    ( authed { model | results = Just <| Loaded updatedList }, deletePlant auth.token id )
+
+                ( GotDeletePost id (Err err), Loaded _ ) ->
+                    case model.results of
+                        Just (Loaded vals) ->
+                            let
+                                updateResult resultItem =
+                                    if resultItem.id == id then
+                                        { resultItem | wasAbleToDelete = Just Error }
+
+                                    else
+                                        resultItem
+
+                                updatedResults =
+                                    Just <| Loaded <| List.map updateResult vals
+                            in
+                            ( authed <| View model.searchItems model.availableValues updatedResults, Cmd.none )
+
+                        _ ->
+                            ( m, Cmd.none )
+
+                ( GotDeletePost id (Ok res), Loaded val ) ->
+                    if res then
+                        ( m, searchFull model.searchItems model.availableValues auth.token )
+
+                    else
+                        case model.results of
+                            Just (Loaded vals) ->
+                                let
+                                    updateResult resultItem =
+                                        if resultItem.id == id then
+                                            { resultItem | wasAbleToDelete = Just (Loaded res) }
+
+                                        else
+                                            resultItem
+
+                                    updatedResults =
+                                        Just <| Loaded <| List.map updateResult vals
+                                in
+                                ( authed <| View model.searchItems model.availableValues updatedResults, Cmd.none )
+
+                            _ ->
+                                ( m, Cmd.none )
+
                 ( _, _ ) ->
                     ( m, Cmd.none )
 
@@ -243,6 +307,15 @@ setQuery key value viewType =
 --commands
 
 
+deletePlant : String -> Int -> Cmd Msg
+deletePlant token id =
+    postAuthed token (DeletePost id) Http.emptyBody (Http.expectJson (GotDeletePost id) deletedDecoder) Nothing
+
+
+deletedDecoder =
+    D.field "deleted" D.bool
+
+
 getAvailable : String -> Cmd Msg
 getAvailable token =
     Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing
@@ -266,6 +339,7 @@ searchResultDecoder =
         |> required "description" D.string
         |> required "price" D.float
         |> required "imageIds" (D.list D.int)
+        |> hardcoded Nothing
 
 
 
@@ -281,7 +355,7 @@ pageView : AuthResponse -> View -> Html Msg
 pageView resp viewType =
     let
         viewFunc =
-            resultsView resp.token
+            resultsView (intersect [ Manager, Producer ] resp.roles) resp.token
 
         result =
             case viewType.results of
@@ -320,20 +394,45 @@ viewAvailable av =
         ]
 
 
-resultsView : String -> List SearchResultItem -> Html Msg
-resultsView token items =
+resultsView : Bool -> String -> List SearchResultItem -> Html Msg
+resultsView showDelete token items =
     let
         viewFunc =
-            resultView token
+            resultView showDelete token
     in
     Utils.chunkedView 3 viewFunc items
 
 
-resultView : String -> SearchResultItem -> Html Msg
-resultView token item =
+resultView : Bool -> String -> SearchResultItem -> Html Msg
+resultView showDelete token item =
     let
         url =
             imageIdToUrl token (Maybe.withDefault -1 (List.head item.imageIds))
+
+        msgText val =
+            if val then
+                div largeCentered [ text "Successfully Deleted" ]
+
+            else
+                div largeCentered [ text "Failed to delete" ]
+
+        msgItem =
+            case item.wasAbleToDelete of
+                Just val ->
+                    viewWebdata val msgText
+
+                Nothing ->
+                    div [] []
+
+        deleteBtn =
+            if showDelete then
+                div [ flex, Flex.col, flex1 ]
+                    [ msgItem
+                    , Button.button [ Button.onClick (SelectedDeletePost item.id), Button.danger ] [ text "Remove" ]
+                    ]
+
+            else
+                div [] []
     in
     Card.config [ Card.attrs (fillParent ++ [ style "flex" "1" ]) ]
         |> Card.header [ class "text-center" ]
@@ -346,7 +445,8 @@ resultView token item =
                 div [ flex, Flex.row, style "justify-content" "space-between", Flex.alignItemsCenter ]
                     [ div [ largeFont ] [ text <| formatPrice item.price ]
                     , div [ flex, Flex.row ]
-                        [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ String.fromInt item.id ++ "/order" ] ] [ text "Order" ]
+                        [ deleteBtn
+                        , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ String.fromInt item.id ++ "/order" ] ] [ text "Order" ]
                         , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ String.fromInt item.id ] ] [ text "Open" ]
                         ]
                     ]

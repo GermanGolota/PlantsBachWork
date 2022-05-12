@@ -40,6 +40,7 @@ type Endpoint
     | CreateInstruction
     | EditInstruction Int
     | GetInstruction Int
+    | DeletePost Int
 
 
 endpointToUrl : Endpoint -> String
@@ -133,6 +134,9 @@ endpointToUrl endpoint =
 
         EditInstruction id ->
             baseUrl ++ "instructions/" ++ String.fromInt id ++ "/edit"
+
+        DeletePost id ->
+            baseUrl ++ "post/" ++ String.fromInt id ++ "/delete"
 
 
 imageIdToUrl : String -> Int -> String
