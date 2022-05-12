@@ -21,7 +21,7 @@ GRANT UPDATE ON plant_to_region_id_seq TO producer, manager;
 
 GRANT UPDATE ON plant_to_image_relation_id_seq TO producer, manager;
 
-GRANT SELECT, INSERT ON plant_post TO producer, manager;
+GRANT SELECT, INSERT, DELETE ON plant_post TO producer, manager;
 
 GRANT SELECT ON plant_post TO consumer;
 
@@ -30,6 +30,8 @@ GRANT INSERT ON plant_caring_instruction TO producer, manager;
 GRANT UPDATE ON plant_caring_instruction_id_seq TO producer, manager;
 
 GRANT SELECT, INSERT ON plant_order TO consumer;
+
+GRANT SELECT ON plant_order TO producer, manager;
 
 GRANT SELECT, INSERT ON delivery_address TO consumer;
 

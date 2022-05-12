@@ -56,7 +56,9 @@ namespace Plants.Infrastructure.Services
                     string sql = "SELECT * FROM place_order(@postId, @city, @postNumber)";
                     var p = new
                     {
-                        postId, city, postNumber
+                        postId,
+                        city,
+                        postNumber
                     };
                     var res = (await connection.QueryAsync<PostResultDb>(sql, p)).FirstOrDefault();
                     var message = (res.WasPlaced, res.ReasonCode) switch
@@ -78,15 +80,22 @@ namespace Plants.Infrastructure.Services
             {
                 await using (var connection = ctx.Database.GetDbConnection())
                 {
-                    string sql = "SELECT * FROM delete_post(@postId)";
+                    string sql = "DELETE FROM plant_post WHERE plant_id = @postId";
                     var p = new
                     {
                         postId = postId
                     };
-                    var res = await connection.QueryAsync<int>(sql, p);
-                    var first = res.FirstOrDefault();
-                    bool deleted = first == postId;
-                    return new DeletePostResult(deleted);
+                    bool result;
+                    try
+                    {
+                        var res = await connection.ExecuteAsync(sql, p);
+                        result = res == 1;
+                    }
+                    catch
+                    {
+                        result = false;
+                    }
+                    return new DeletePostResult(result);
                 }
             }
         }

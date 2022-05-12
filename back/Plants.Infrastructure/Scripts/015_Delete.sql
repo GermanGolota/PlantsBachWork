@@ -1,31 +1,35 @@
-CREATE OR REPLACE FUNCTION delete_post (postId int)
-  RETURNS integer
-  AS $$
+CREATE OR REPLACE FUNCTION delete_only_creator_or_manager ()
+  RETURNS TRIGGER
+  AS $BODY$
 DECLARE
-  deletedId int;
+  userId int;
 BEGIN
-  RETURN delete_post_as (postId, get_current_user_id_throw ())
-END
-$$
-LANGUAGE plpgsql;
+  userId := get_current_user_id_throw ();
+  IF NOT (
+    SELECT
+      'manager'::UserRoles = ANY (ur.roles) OR OLD.seller_id = ur.person_id
+  FROM
+    user_to_roles ur
+  WHERE
+    ur.person_id = userId) THEN
+    RAISE EXCEPTION 'You cannot delete post you have not created';
+  END IF;
+  IF EXISTS (
+    SELECT
+      o.post_id
+    FROM
+      plant_order o
+    WHERE
+      o.post_id = OLD.plant_id) THEN
+  RAISE EXCEPTION 'You cannot delete ordered post';
+END IF;
+  RETURN OLD;
+END;
+$BODY$
+LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION delete_post_as (postId int, userId int)
-  RETURNS integer
-  SECURITY DEFINER
-  AS $$
-DECLARE
-  deletedId int;
-BEGIN
-  DELETE p FROM plant_post p
-  JOIN user_to_roles ur ON ur.person_id = userId
-  LEFT JOIN plant_order o ON o.post_id = p.plant_id
-  WHERE p.plant_id = postId
-    AND ('manager'::UserRoles = ANY (ur.roles)
-      OR p.seller_id = ur.person_id)
-    AND o.post_id IS NULL
-  RETURNING
-    id INTO deletedId;
-END
-$$
-LANGUAGE plpgsql;
+CREATE TRIGGER post_prevent_unlawfull_delete
+  BEFORE DELETE ON plant_post
+  FOR EACH ROW
+  EXECUTE PROCEDURE delete_only_creator_or_manager ();
 
