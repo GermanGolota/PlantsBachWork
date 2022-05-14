@@ -36,5 +36,11 @@ namespace Plants.Presentation.Controllers
         {
             return await _mediator.Send(new ConfirmDeliveryCommand(id), token);
         }
+
+        [HttpPost("{id}/reject")]
+        public async Task<ActionResult<RejectOrderResult>> RejectOrder([FromRoute] int id, CancellationToken token)
+        {
+            return await _mediator.Send(new RejectOrderCommand(id), token);
+        }
     }
 }

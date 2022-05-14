@@ -299,7 +299,11 @@ view model =
 
 
 viewPage : AuthResponse -> View -> Html Msg
-viewPage _ page =
+viewPage auth page =
+    let
+        allowOrder =
+            List.member Consumer auth.roles
+    in
     case page of
         NoPlant ->
             div [] [ text "Please select a plant", Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href "/search" ] ] [ text "Return to search" ] ]
@@ -310,23 +314,23 @@ viewPage _ page =
                     viewPlantFull p.id
 
                 orderView =
-                    viewOrderFull p.id
+                    viewOrderFull allowOrder p.id
             in
             case p.plantType of
                 JustPlant pl ->
-                    viewWebdata pl (plantView viewPlant)
+                    viewWebdata pl (plantView <| viewPlant allowOrder)
 
                 Order { plant, addresses, selected, result } ->
                     viewWebdata plant (orderView selected addresses result)
 
 
-viewOrderFull : Int -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
-viewOrderFull id selected del result p =
-    viewPlantFull id (viewOrder selected del result) p
+viewOrderFull : Bool -> Int -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
+viewOrderFull allowOrder id selected del result p =
+    viewPlantFull id (viewOrder allowOrder selected del result) p
 
 
-viewOrder : SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Int -> PlantModel -> Html Msg
-viewOrder selected del result id pl =
+viewOrder : Bool -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Int -> PlantModel -> Html Msg
+viewOrder allowOrder selected del result id pl =
     let
         header textT =
             div largeCentered [ text textT ]
@@ -348,7 +352,7 @@ viewOrder selected del result id pl =
                    , customRadio False "Pay on arrival" True
                    , viewWebdata del (viewLocation selected)
                    , resultView
-                   , interactionButtons True id
+                   , interactionButtons allowOrder True id
                    ]
             )
         ]
@@ -475,13 +479,13 @@ viewPlantFull id viewFunc p =
             div [] [ text "This plant is no longer available, sorry" ]
 
 
-viewPlant : Int -> PlantModel -> Html Msg
-viewPlant id plant =
-    viewPlantBase False (\str -> NoOp) Images (interactionButtons False id) plant
+viewPlant : Bool -> Int -> PlantModel -> Html Msg
+viewPlant allowOrder id plant =
+    viewPlantBase False (\str -> NoOp) Images (interactionButtons allowOrder False id) plant
 
 
-interactionButtons : Bool -> Int -> Html Msg
-interactionButtons isOrder id =
+interactionButtons : Bool -> Bool -> Int -> Html Msg
+interactionButtons allowOrder isOrder id =
     let
         backUrl =
             if isOrder then
@@ -510,10 +514,22 @@ interactionButtons isOrder id =
 
             else
                 Button.attrs []
+
+        orderBtn =
+            if allowOrder then
+                Button.linkButton
+                    [ Button.primary
+                    , Button.attrs [ smallMargin, href orderUrl, largeFont ]
+                    , orderOnClick
+                    ]
+                    [ text orderText ]
+
+            else
+                div [] []
     in
     div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
         [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href backUrl, largeFont ] ] [ text "Back" ]
-        , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href orderUrl, largeFont ], orderOnClick ] [ text orderText ]
+        , orderBtn
         ]
 
 
