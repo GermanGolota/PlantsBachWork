@@ -44,13 +44,13 @@ GRANT INSERT ON plant_to_region TO producer;
 GRANT SELECT ON person TO consumer, producer, manager;
 
 --procedures
-GRANT EXECUTE ON PROCEDURE add_user_to_group TO consumer, producer, manager;
+GRANT EXECUTE ON PROCEDURE add_user_to_group TO producer, manager;
 
-GRANT EXECUTE ON PROCEDURE create_person TO consumer, producer, manager;
+GRANT EXECUTE ON PROCEDURE create_person TO producer, manager;
 
-GRANT EXECUTE ON PROCEDURE create_user TO consumer, producer, manager;
+GRANT EXECUTE ON PROCEDURE create_user TO producer, manager;
 
-GRANT EXECUTE ON PROCEDURE remove_user_from_group TO consumer, producer, manager;
+GRANT EXECUTE ON PROCEDURE remove_user_from_group TO producer, manager;
 
 GRANT EXECUTE ON PROCEDURE edit_instruction TO producer, manager;
 

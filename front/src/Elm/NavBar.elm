@@ -37,7 +37,7 @@ instructionsLink =
 
 
 usersLink =
-    Link "/user" "Manage Users" "fa-solid fa-users" Nothing
+    Link "/user" "Manage Users" "fa-solid fa-users" <| Just [ Producer, Manager ]
 
 
 ordersLink =
