@@ -8,11 +8,6 @@ FROM
 WHERE
   p1.id = p.id;
 
-CREATE TABLE instruction_to_cover (
-  instruction_id serial PRIMARY KEY REFERENCES plant_caring_instruction (id) ON DELETE CASCADE,
-  image bytea NOT NULL
-);
-
 CREATE OR REPLACE VIEW instruction_v AS (
   SELECT
     i.id,

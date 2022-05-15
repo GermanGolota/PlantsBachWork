@@ -119,18 +119,6 @@ CREATE VIEW current_user_addresses AS (
   WHERE
     id = get_current_user_id ());
 
-UPDATE
-  plant_order p
-SET
-  delivery_address_id = (
-    SELECT
-      pa.id
-    FROM
-      person_addresses_v pa
-    WHERE
-      pa.id = p.customer_id
-    LIMIT 1);
-
 CREATE OR REPLACE FUNCTION get_current_user_id_throw ()
   RETURNS integer
   AS $BODY$

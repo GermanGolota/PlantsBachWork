@@ -56,12 +56,6 @@ END;
 $$
 LANGUAGE plpgsql;
 
---NEW
-UPDATE
-  person_to_login
-SET
-  login = lower(login);
-
 CREATE OR REPLACE VIEW user_to_roles AS (
   SELECT
     pl.person_id,
