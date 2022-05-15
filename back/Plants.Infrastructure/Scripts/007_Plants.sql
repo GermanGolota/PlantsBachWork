@@ -126,12 +126,6 @@ END;
 $$
 LANGUAGE plpgsql;
 
-DELETE FROM plant_post
-WHERE price <= 0;
-
-ALTER TABLE plant_post
-  ADD CHECK (price >= 0);
-
 CREATE OR REPLACE FUNCTION create_plant (plantName text, description text, regionIds int[], soilId int, groupId int, created timestamp without time zone, pictures bytea[])
   RETURNS int
   AS $$

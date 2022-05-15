@@ -62,12 +62,6 @@ UPDATE
 SET
   login = lower(login);
 
-ALTER TABLE person_to_login
-  ADD CHECK (LOGIN = lower(LOGIN));
-
-ALTER TABLE person_to_login
-  ADD UNIQUE (LOGIN);
-
 CREATE OR REPLACE VIEW user_to_roles AS (
   SELECT
     pl.person_id,

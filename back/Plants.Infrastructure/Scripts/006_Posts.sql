@@ -96,34 +96,6 @@ CREATE OR REPLACE VIEW plant_post_v AS (
       LEFT JOIN person_creds_v seller_creds ON seller_creds.id = post.seller_id
       LEFT JOIN person_creds_v care_taker_creds ON care_taker_creds.id = post.care_taker_id);
 
-ALTER TABLE plant_order
-  ADD COLUMN created date;
-
-UPDATE
-  plant_order
-SET
-  created = CURRENT_DATE
-WHERE
-  created IS NULL;
-
-ALTER TABLE plant_post
-  ALTER COLUMN created SET NOT NULL;
-
-ALTER TABLE plant_post
-  ALTER COLUMN created SET DEFAULT CURRENT_DATE;
-
-ALTER TABLE plant_order
-  ADD COLUMN delivery_address_id INT REFERENCES delivery_address (id);
-
-ALTER TABLE delivery_address
-  DROP COLUMN region_id;
-
-ALTER TABLE plant_order
-  ALTER COLUMN created SET DEFAULT CURRENT_DATE;
-
-ALTER TABLE plant_order
-  ALTER COLUMN created SET NOT NULL;
-
 INSERT INTO delivery_address (city, nova_poshta_number, person_id)
   VALUES ('Odessa', 15, 1);
 
@@ -158,9 +130,6 @@ SET
     WHERE
       pa.id = p.customer_id
     LIMIT 1);
-
-ALTER TABLE plant_order
-  ALTER COLUMN delivery_address_id SET NOT NULL;
 
 CREATE OR REPLACE FUNCTION get_current_user_id_throw ()
   RETURNS integer

@@ -1,6 +1,3 @@
-ALTER TABLE plant_caring_instruction
-  ADD COLUMN title text;
-
 UPDATE
   plant_caring_instruction p1
 SET
@@ -11,24 +8,10 @@ FROM
 WHERE
   p1.id = p.id;
 
-ALTER TABLE plant_caring_instruction
-  ALTER COLUMN title SET NOT NULL;
-
 CREATE TABLE instruction_to_cover (
   instruction_id serial PRIMARY KEY REFERENCES plant_caring_instruction (id) ON DELETE CASCADE,
   image bytea NOT NULL
 );
-
-ALTER TABLE plant_caring_instruction
-  ADD COLUMN description text;
-
-UPDATE
-  plant_caring_instruction
-SET
-  description = SUBSTRING(instruction_text, 1, 10);
-
-ALTER TABLE plant_caring_instruction
-  ALTER COLUMN description SET NOT NULL;
 
 CREATE OR REPLACE VIEW instruction_v AS (
   SELECT

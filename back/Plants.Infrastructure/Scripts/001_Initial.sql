@@ -16,7 +16,8 @@ CREATE TABLE plant_soil (
 CREATE TABLE delivery_address (
     id serial PRIMARY KEY,
     city text,
-    nova_poshta_number smallint
+    nova_poshta_number smallint,
+    UNIQUE (city, nova_poshta_number)
 );
 
 CREATE TABLE person (
@@ -42,18 +43,23 @@ CREATE TABLE plant_caring_instruction (
     id serial PRIMARY KEY,
     instruction_text text,
     posted_by_id int NOT NULL REFERENCES person (id),
-    plant_group_id int NOT NULL REFERENCES plant_group (id)
+    plant_group_id int NOT NULL REFERENCES plant_group (id),
+    title text NOT NULL,
+    description text NOT NULL
 );
 
 CREATE TABLE plant_post (
     plant_id serial PRIMARY KEY REFERENCES plant (id),
     seller_id int NOT NULL REFERENCES person (id),
-    price decimal
+    price decimal NOT NULL CHECK (price >= 0),
+    created date NOT NULL DEFAULT CURRENT_DATE
 );
 
 CREATE TABLE plant_order (
     post_id int PRIMARY KEY REFERENCES plant_post (plant_id),
-    customer_id int NOT NULL REFERENCES person (id)
+    customer_id int NOT NULL REFERENCES person (id),
+    delivery_address_id int REFERENCES delivery_address (id),
+    created timestamptz DEFAULT now() NOT NULL
 );
 
 CREATE TABLE plant_delivery (

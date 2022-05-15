@@ -24,7 +24,7 @@ LANGUAGE plpgsql;
 --Creating roles for persons
 CREATE TABLE person_to_login (
   person_id int PRIMARY KEY REFERENCES person (id) ON DELETE CASCADE,
-  login name UNIQUE
+  login name UNIQUE CHECK (LOGIN = lower(LOGIN))
 );
 
 DO $$
@@ -76,20 +76,6 @@ CREATE TABLE plant_to_image (
   plant_id int REFERENCES plant (id) NOT NULL,
   image bytea NOT NULL
 );
-
---add create
-ALTER TABLE plant_post
-  ADD COLUMN created date;
-
-UPDATE
-  plant_post
-SET
-  created = CURRENT_DATE
-WHERE
-  created IS NULL;
-
-ALTER TABLE plant_post
-  ALTER COLUMN created SET NOT NULL;
 
 --set poster
 CREATE OR REPLACE FUNCTION get_current_user_id ()

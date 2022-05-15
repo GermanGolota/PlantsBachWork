@@ -117,9 +117,3 @@ CREATE TRIGGER order_store_used_address
   FOR EACH ROW
   EXECUTE PROCEDURE order_store_user_address ();
 
-ALTER TABLE delivery_address
-  DROP COLUMN person_id;
-
-ALTER TABLE delivery_address
-  ADD UNIQUE (CITY, NOVA_POSHTA_NUMBER);
-

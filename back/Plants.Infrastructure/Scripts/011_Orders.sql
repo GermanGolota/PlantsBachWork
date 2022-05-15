@@ -1,9 +1,3 @@
-ALTER TABLE plant_order
-  ALTER COLUMN created TYPE timestamptz;
-
-ALTER TABLE plant_order
-  ALTER COLUMN created SET DEFAULT now();
-
 --case : 0 - created, 1 - delivering, 2 - delivered
 CREATE OR REPLACE VIEW plant_orders_v AS (
   SELECT
