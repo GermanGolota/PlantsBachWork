@@ -73,8 +73,8 @@ CREATE TRIGGER person_prevent_bad_login
 
 CREATE TABLE plant_to_image (
   relation_id serial PRIMARY KEY,
-  plant_id int REFERENCES plant (id),
-  image bytea
+  plant_id int REFERENCES plant (id) NOT NULL,
+  image bytea NOT NULL
 );
 
 --add create

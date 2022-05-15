@@ -4,9 +4,6 @@ ALTER TABLE plant_order
 ALTER TABLE plant_order
   ALTER COLUMN created SET DEFAULT now();
 
-DELETE FROM plant_shipment
-WHERE delivery_id IN (1, 20);
-
 --case : 0 - created, 1 - delivering, 2 - delivered
 CREATE OR REPLACE VIEW plant_orders_v AS (
   SELECT

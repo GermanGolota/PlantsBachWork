@@ -1,7 +1,7 @@
 CREATE TABLE person_to_delivery (
   id serial PRIMARY KEY,
-  person_id int REFERENCES person (id),
-  delivery_address_id int REFERENCES delivery_address (id) ON DELETE CASCADE
+  person_id int NOT NULL REFERENCES person (id),
+  delivery_address_id int NOT NULL REFERENCES delivery_address (id) ON DELETE CASCADE
 );
 
 INSERT INTO person_to_delivery (person_id, delivery_address_id)
