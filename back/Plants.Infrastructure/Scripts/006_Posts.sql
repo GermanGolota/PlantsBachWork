@@ -1,23 +1,3 @@
-CREATE TYPE plant_post_model AS (
-  id integer,
-  plant_name text,
-  description text,
-  price numeric,
-  soil_name text,
-  regions text[],
-  group_name text,
-  created date,
-  seller_name text,
-  seller_phone text,
-  seller_cared bigint,
-  seller_sold bigint,
-  seller_instructions bigint,
-  care_taker_cared bigint,
-  care_taker_sold bigint,
-  care_taker_isntructions bigint,
-  images int[]
-);
-
 CREATE OR REPLACE FUNCTION array_length_no_nulls (arr integer[])
   RETURNS bigint
   SECURITY DEFINER
@@ -95,9 +75,6 @@ CREATE OR REPLACE VIEW plant_post_v AS (
       JOIN person seller ON seller.id = post.seller_id
       LEFT JOIN person_creds_v seller_creds ON seller_creds.id = post.seller_id
       LEFT JOIN person_creds_v care_taker_creds ON care_taker_creds.id = post.care_taker_id);
-
-INSERT INTO delivery_address (city, nova_poshta_number, person_id)
-  VALUES ('Odessa', 15, 1);
 
 CREATE VIEW person_addresses_v AS (
   SELECT

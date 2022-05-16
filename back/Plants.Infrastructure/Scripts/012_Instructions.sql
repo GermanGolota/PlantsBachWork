@@ -1,13 +1,3 @@
-UPDATE
-  plant_caring_instruction p1
-SET
-  title = g.group_name || ' instruction ' || '#' || p.id
-FROM
-  plant_caring_instruction p
-  JOIN plant_group g ON g.id = plant_group_id
-WHERE
-  p1.id = p.id;
-
 CREATE OR REPLACE VIEW instruction_v AS (
   SELECT
     i.id,
