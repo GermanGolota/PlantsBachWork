@@ -42,6 +42,7 @@ type Endpoint
     | GetInstruction Int
     | DeletePost Int
     | RejectOrder Int
+    | ChangePassword
 
 
 endpointToUrl : Endpoint -> String
@@ -141,6 +142,9 @@ endpointToUrl endpoint =
 
         RejectOrder orderId ->
             baseUrl ++ "orders/" ++ String.fromInt orderId ++ "/reject"
+
+        ChangePassword ->
+            baseUrl ++ "users/changePass"
 
 
 imageIdToUrl : String -> Int -> String
