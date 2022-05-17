@@ -45,5 +45,13 @@ namespace Plants.Presentation.Controllers
         {
             return await _mediator.Send(command);
         }
+
+        [HttpPost("changePass")]
+        public async Task<ActionResult<ChangePasswordResult>> ChangePassword([FromBody] PasswordChangeDto password)
+        {
+            return await _mediator.Send(new ChangePasswordCommand(password.Password));
+        }
     }
+
+    public record PasswordChangeDto(string Password);
 }
