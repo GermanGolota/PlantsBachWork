@@ -14,7 +14,7 @@ import Http
 import Iso8601 exposing (toTime)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase, UserRole(..), baseApplication, initBase, updateBase, viewBase)
 import NavBar exposing (statsLink, viewNav)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Time
@@ -52,15 +52,15 @@ update msg model =
         datesValid from to =
             convertToTime from <= convertToTime to
 
-        updateOnDate from to token =
+        updateOnDate from to token navState =
             if datesValid from to then
-                ( Authorized token <| Financials (BothSelected from to (ValidDates Loading)), getFin from to token.token )
+                ( Authorized token (Financials (BothSelected from to (ValidDates Loading))) navState, getFin from to token.token )
 
             else
-                ( Authorized token <| Financials (BothSelected from to BadDates), Cmd.none )
+                ( Authorized token (Financials (BothSelected from to BadDates)) navState, Cmd.none )
     in
     case ( msg, model ) of
-        ( PieEvent pieEvent, Authorized token (Totals (Loaded viewType)) ) ->
+        ( PieEvent pieEvent, Authorized token (Totals (Loaded viewType)) navState ) ->
             case pieEvent of
                 ChartItemClicked plantId ->
                     let
@@ -68,11 +68,11 @@ update msg model =
                             List.head <| List.filter (\item -> item.id == id) viewType.items
 
                         totals =
-                            Authorized token (Totals <| Loaded { viewType | selectedItem = getById plantId })
+                            Authorized token (Totals <| Loaded { viewType | selectedItem = getById plantId }) navState
                     in
                     ( totals, Cmd.none )
 
-        ( PieEvent pieEvent, Authorized token (Financials (BothSelected from to (ValidDates (Loaded fin)))) ) ->
+        ( PieEvent pieEvent, Authorized token (Financials (BothSelected from to (ValidDates (Loaded fin)))) navState ) ->
             case pieEvent of
                 ChartItemClicked plantId ->
                     let
@@ -80,42 +80,42 @@ update msg model =
                             List.head <| List.filter (\item -> item.id == id) fin.items
 
                         finA =
-                            Authorized token (Financials <| BothSelected from to <| ValidDates <| Loaded { fin | selectedItem = getById plantId })
+                            Authorized token (Financials <| BothSelected from to <| ValidDates <| Loaded { fin | selectedItem = getById plantId }) navState
                     in
                     ( finA, Cmd.none )
 
-        ( Switched, Authorized token viewType ) ->
-            Tuple.mapFirst (\viewType2 -> Authorized token viewType2) (switchView viewType token.token)
+        ( Switched, Authorized token viewType navState ) ->
+            Tuple.mapFirst (\viewType2 -> Authorized token viewType2 navState) (switchView viewType token.token)
 
-        ( GotTotals (Ok res), Authorized token (Totals _) ) ->
-            ( Authorized token (Totals <| Loaded <| TotalsView res Nothing), Cmd.none )
+        ( GotTotals (Ok res), Authorized token (Totals _) navState ) ->
+            ( Authorized token (Totals <| Loaded <| TotalsView res Nothing) navState, Cmd.none )
 
-        ( GotTotals (Err err), Authorized token (Totals _) ) ->
-            ( Authorized token (Totals <| Error), Cmd.none )
+        ( GotTotals (Err err), Authorized token (Totals _) navState ) ->
+            ( Authorized token (Totals <| Error) navState, Cmd.none )
 
-        ( DateLeftSelected date, Authorized token (Financials NoDateSelected) ) ->
-            ( Authorized token <| Financials <| OnlyLeftSelected date, Cmd.none )
+        ( DateLeftSelected date, Authorized token (Financials NoDateSelected) navState ) ->
+            ( Authorized token (Financials <| OnlyLeftSelected date) navState, Cmd.none )
 
-        ( DateRightSelected date, Authorized token (Financials NoDateSelected) ) ->
-            ( Authorized token <| Financials <| OnlyRightSelected date, Cmd.none )
+        ( DateRightSelected date, Authorized token (Financials NoDateSelected) navState ) ->
+            ( Authorized token (Financials <| OnlyRightSelected date) navState, Cmd.none )
 
-        ( DateLeftSelected left, Authorized token (Financials (OnlyRightSelected right)) ) ->
-            updateOnDate left right token
+        ( DateLeftSelected left, Authorized token (Financials (OnlyRightSelected right)) navState ) ->
+            updateOnDate left right token navState
 
-        ( DateLeftSelected left, Authorized token (Financials (BothSelected oldLeft right _)) ) ->
-            updateOnDate left right token
+        ( DateLeftSelected left, Authorized token (Financials (BothSelected oldLeft right _)) navState ) ->
+            updateOnDate left right token navState
 
-        ( DateRightSelected right, Authorized token (Financials (OnlyLeftSelected left)) ) ->
-            updateOnDate left right token
+        ( DateRightSelected right, Authorized token (Financials (OnlyLeftSelected left)) navState ) ->
+            updateOnDate left right token navState
 
-        ( DateRightSelected right, Authorized token (Financials (BothSelected left oldRight _)) ) ->
-            updateOnDate left right token
+        ( DateRightSelected right, Authorized token (Financials (BothSelected left oldRight _)) navState ) ->
+            updateOnDate left right token navState
 
-        ( GotFinancial (Ok res), Authorized token (Financials (BothSelected left right (ValidDates _))) ) ->
-            ( Authorized token <| Financials <| BothSelected left right <| ValidDates <| Loaded <| FinancialView res Nothing, Cmd.none )
+        ( GotFinancial (Ok res), Authorized token (Financials (BothSelected left right (ValidDates _))) navState ) ->
+            ( Authorized token (Financials <| BothSelected left right <| ValidDates <| Loaded <| FinancialView res Nothing) navState, Cmd.none )
 
-        ( GotFinancial (Err err), Authorized token (Financials (BothSelected left right (ValidDates _))) ) ->
-            ( Authorized token <| Financials <| BothSelected left right <| ValidDates <| Error, Cmd.none )
+        ( GotFinancial (Err err), Authorized token (Financials (BothSelected left right (ValidDates _))) navState ) ->
+            ( Authorized token (Financials <| BothSelected left right <| ValidDates <| Error) navState, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -208,7 +208,7 @@ viewRow key value =
         ]
 
 
-view : Model -> Html.Html Msg
+view : Model -> Html.Html (MsgBase Msg)
 view model =
     viewNav model (Just statsLink) viewMain
 
@@ -497,7 +497,7 @@ financialItemDecoder =
 --init
 
 
-init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd (MsgBase Msg) )
 init response _ =
     let
         cmds resp =
@@ -520,16 +520,16 @@ getFin from to token =
     Endpoints.getAuthedQuery ("?from=" ++ from ++ "&to=" ++ to) token StatsFinancial (Http.expectJson GotFinancial financialDecoder) Nothing
 
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model -> Sub (MsgBase Msg)
 subscriptions model =
     Sub.none
 
 
-main : Program D.Value Model Msg
+main : Program D.Value Model (MsgBase Msg)
 main =
     baseApplication
         { init = init
         , view = view
-        , update = update
+        , update = updateBase update
         , subscriptions = subscriptions
         }

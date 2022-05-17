@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import Bootstrap.Dropdown as Dropdown
 import Browser
 import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (href)
@@ -140,15 +141,35 @@ decodeFlags =
 type ModelBase model
     = Unauthorized
     | NotLoggedIn
-    | Authorized AuthResponse model
+    | Authorized AuthResponse model Dropdown.State
 
 
-initBase : List UserRole -> model -> (AuthResponse -> Cmd msg) -> Maybe AuthResponse -> ( ModelBase model, Cmd msg )
+type MsgBase msg
+    = NavChanged Dropdown.State
+    | Main msg
+
+
+updateBase : (msg -> ModelBase model -> ( ModelBase model, Cmd msg )) -> MsgBase msg -> ModelBase model -> ( ModelBase model, Cmd (MsgBase msg) )
+updateBase func msg m =
+    case msg of
+        NavChanged newState ->
+            case m of
+                Authorized auth model navState ->
+                    ( Authorized auth model newState, Cmd.none )
+
+                _ ->
+                    ( m, Cmd.none )
+
+        Main msgI ->
+            Tuple.mapSecond (Cmd.map Main) (func msgI m)
+
+
+initBase : List UserRole -> model -> (AuthResponse -> Cmd msg) -> Maybe AuthResponse -> ( ModelBase model, Cmd (MsgBase msg) )
 initBase requiredRoles initialModel initialCmd response =
     case response of
         Just resp ->
             if intersect requiredRoles resp.roles then
-                ( Authorized resp initialModel, initialCmd resp )
+                ( Authorized resp initialModel Dropdown.initialState, Cmd.map (\bsg -> Main bsg) <| initialCmd resp )
 
             else
                 ( Unauthorized, Cmd.none )
@@ -169,5 +190,5 @@ viewBase authorizedView modelB =
                 , a [ href "/login" ] [ text "Go to login" ]
                 ]
 
-        Authorized resp authM ->
+        Authorized resp authM _ ->
             authorizedView resp authM

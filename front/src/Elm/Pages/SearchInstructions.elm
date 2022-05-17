@@ -13,7 +13,7 @@ import Html.Attributes exposing (alt, class, href, src, style, value)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase, UserRole(..), baseApplication, initBase, updateBase)
 import Multiselect as Multiselect
 import NavBar exposing (instructionsLink, viewNav)
 import Utils exposing (buildQuery, chunkedView, fillParent, flex, flex1, intersect, largeCentered, mediumMargin, smallMargin)
@@ -66,10 +66,10 @@ update msg m =
             ( m, Cmd.none )
     in
     case m of
-        Authorized auth model ->
+        Authorized auth model navState ->
             let
-                authed =
-                    Authorized auth
+                authed md =
+                    Authorized auth md navState
 
                 triggerSearch withModel =
                     search withModel.selectedTitle withModel.selectedDescription withModel.selectedGroup auth.token
@@ -167,14 +167,14 @@ coverImageDecoder token hasCover =
 --view
 
 
-view : Model -> Html Msg
+view : Model -> Html (MsgBase Msg)
 view model =
     viewNav model (Just instructionsLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
-    viewWebdata page.available (viewMain (intersect [Producer, Manager] resp.roles) page)
+    viewWebdata page.available (viewMain (intersect [ Producer, Manager ] resp.roles) page)
 
 
 viewMain : Bool -> View -> Available -> Html Msg
@@ -240,9 +240,10 @@ viewInstructions isProducer ins =
 viewInstruction : Bool -> Instruction -> Html Msg
 viewInstruction isProducer ins =
     let
-        editBtn = 
+        editBtn =
             if isProducer then
                 Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ String.fromInt ins.id ++ "/edit", smallMargin ] ] [ text "Edit" ]
+
             else
                 div [] []
     in
@@ -255,13 +256,14 @@ viewInstruction isProducer ins =
             , Block.text [] [ text ins.description ]
             , Block.custom <|
                 div [ flex, Flex.row, Flex.justifyEnd, Flex.alignItemsCenter ]
-                    [ editBtn, Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ String.fromInt ins.id ] ] [ text "Open Full" ]
+                    [ editBtn
+                    , Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ String.fromInt ins.id ] ] [ text "Open Full" ]
                     ]
             ]
         |> Card.view
 
 
-init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd (MsgBase Msg) )
 init resp flags =
     let
         shouldShow =
@@ -275,16 +277,16 @@ init resp flags =
     initBase [ Producer, Consumer, Manager ] (View Loading Loading 1 "" "" shouldShow) (\res -> getAvailable res.token) resp
 
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model -> Sub (MsgBase Msg)
 subscriptions model =
     Sub.none
 
 
-main : Program D.Value Model Msg
+main : Program D.Value Model (MsgBase Msg)
 main =
     baseApplication
         { init = init
         , view = view
-        , update = update
+        , update = updateBase update
         , subscriptions = subscriptions
         }

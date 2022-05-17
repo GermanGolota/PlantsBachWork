@@ -4,6 +4,7 @@ import Available exposing (Available, availableDecoder)
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
+import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
@@ -13,7 +14,7 @@ import Html.Attributes exposing (alt, class, href, src, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase, UserRole(..), baseApplication, initBase, updateBase, viewBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar exposing (viewNav)
 import Utils exposing (buildQuery, fillParent, flex, flex1, formatPrice, intersect, largeCentered, largeFont, smallMargin, textCenter)
@@ -63,10 +64,10 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg m =
     case m of
-        Authorized auth model ->
+        Authorized auth model navState ->
             let
                 authed viewType =
-                    Authorized auth viewType
+                    Authorized auth viewType navState
 
                 availableList available =
                     case available of
@@ -88,13 +89,13 @@ update msg m =
                         updatedView =
                             { queried | results = Just Loading }
                     in
-                    ( Authorized auth updatedView, searchFull updatedView.searchItems updatedView.availableValues auth.token )
+                    ( Authorized auth updatedView navState, searchFull updatedView.searchItems updatedView.availableValues auth.token )
 
                 ( GotSearch (Ok res), _ ) ->
-                    ( updateData model auth <| Loaded res, Cmd.none )
+                    ( updateData navState model auth <| Loaded res, Cmd.none )
 
                 ( GotSearch (Err err), _ ) ->
-                    ( updateData model auth Error, Cmd.none )
+                    ( updateData navState model auth Error, Cmd.none )
 
                 ( GotAvailable (Ok res), _ ) ->
                     ( authed { model | availableValues = Loaded res }, Cmd.none )
@@ -293,9 +294,9 @@ updateAvailableGroup av model =
     { av | groups = model }
 
 
-updateData : View -> AuthResponse -> WebData (List SearchResultItem) -> Model
-updateData model auth data =
-    Authorized auth <| View model.searchItems model.availableValues <| Just data
+updateData : Dropdown.State -> View -> AuthResponse -> WebData (List SearchResultItem) -> Model
+updateData navState model auth data =
+    Authorized auth (View model.searchItems model.availableValues <| Just data) navState
 
 
 setQuery : String -> String -> View -> View
@@ -346,7 +347,7 @@ searchResultDecoder =
 --view
 
 
-view : Model -> Html Msg
+view : Model -> Html (MsgBase Msg)
 view model =
     viewNav model (Just NavBar.searchLink) pageView
 
@@ -467,7 +468,7 @@ multiSelectInput msg model =
     Html.map msg <| Multiselect.view model
 
 
-init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd (MsgBase Msg) )
 init resp _ =
     let
         cmds authResp =
@@ -476,16 +477,16 @@ init resp _ =
     initBase [ Producer, Consumer, Manager ] (View (Dict.fromList []) Loading Nothing) cmds resp
 
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model -> Sub (MsgBase Msg)
 subscriptions model =
     Sub.none
 
 
-main : Program D.Value Model Msg
+main : Program D.Value Model (MsgBase Msg)
 main =
     baseApplication
         { init = init
         , view = view
-        , update = update
+        , update = updateBase update
         , subscriptions = subscriptions
         }

@@ -13,7 +13,7 @@ import Html.Attributes exposing (href, style, value)
 import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, updateBase)
 import Multiselect
 import NavBar exposing (instructionsLink, viewNav)
 import Transition exposing (constant)
@@ -82,10 +82,10 @@ update msg m =
             ( m, Cmd.none )
     in
     case m of
-        Authorized auth model ->
+        Authorized auth model navState ->
             let
-                authed =
-                    Authorized auth
+                authed md =
+                    Authorized auth md navState
 
                 updateModel newModel =
                     case model of
@@ -248,7 +248,7 @@ requestImages =
 --view
 
 
-view : Model -> Html Msg
+view : Model -> Html (MsgBase Msg)
 view model =
     viewNav model (Just instructionsLink) viewPage
 
@@ -378,7 +378,7 @@ emptyView =
     View "" 1 "" "" Nothing Loading Nothing
 
 
-init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
+init : Maybe AuthResponse -> D.Value -> ( ModelBase ViewType, Cmd (MsgBase Msg) )
 init resp flags =
     let
         initialModel =
@@ -411,16 +411,16 @@ init resp flags =
 --subs
 
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model -> Sub (MsgBase Msg)
 subscriptions model =
-    editorChanged EditorTextUpdated
+    Sub.map (\msg -> Main msg) <| editorChanged EditorTextUpdated
 
 
-main : Program D.Value Model Msg
+main : Program D.Value Model (MsgBase Msg)
 main =
     baseApplication
         { init = init
         , view = view
-        , update = update
+        , update = updateBase update
         , subscriptions = subscriptions
         }
