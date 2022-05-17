@@ -12,7 +12,7 @@ import Html.Attributes exposing (class, href, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase, UserRole(..), allRoles, baseApplication, convertRole, initBase, roleToNumber, roleToStr, rolesDecoder, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), UserRole(..), allRoles, baseApplication, convertRole, initBase, roleToNumber, roleToStr, rolesDecoder)
 import Multiselect as Multiselect
 import NavBar exposing (usersLink, viewNav)
 import UserRolesSelector exposing (userRolesBtns)
@@ -67,10 +67,10 @@ update msg m =
             ( m, Cmd.none )
     in
     case m of
-        Authorized auth model navState ->
+        Authorized auth model ->
             let
-                authed md =
-                    Authorized auth md navState
+                authed =
+                    Authorized auth
 
                 authedSearch =
                     searchForUsers auth.token
@@ -207,7 +207,7 @@ update msg m =
 --view
 
 
-view : Model -> Html (MsgBase Msg)
+view : Model -> Html Msg
 view model =
     viewNav model (Just usersLink) viewPage
 
@@ -274,7 +274,7 @@ viewInput input desc =
 --init
 
 
-init : Maybe AuthResponse -> D.Value -> ( Model, Cmd (MsgBase Msg) )
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init resp flags =
     let
         initialCmd res =
@@ -382,16 +382,16 @@ justOrEmpty key val =
 --subs
 
 
-subscriptions : Model -> Sub (MsgBase Msg)
+subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
 
 
-main : Program D.Value Model (MsgBase Msg)
+main : Program D.Value Model Msg
 main =
     baseApplication
         { init = init
         , view = view
-        , update = updateBase update
+        , update = update
         , subscriptions = subscriptions
         }

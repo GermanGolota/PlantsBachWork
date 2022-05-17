@@ -10,7 +10,7 @@ import Html.Attributes exposing (class, style, value)
 import Http
 import Json.Decode as D
 import Json.Encode as E
-import Main exposing (AuthResponse, ModelBase(..), MsgBase, UserRole(..), baseApplication, initBase, roleToNumber, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, roleToNumber)
 import NavBar exposing (usersLink, viewNav)
 import UserRolesSelector exposing (userRolesBtns)
 import Utils exposing (SubmittedResult(..), fillParent, flex, flexCenter, largeCentered, mediumMargin, submittedDecoder)
@@ -66,10 +66,10 @@ update msg m =
             ( m, Cmd.none )
     in
     case m of
-        Authorized auth model navState ->
+        Authorized auth model ->
             let
-                authed md =
-                    Authorized auth md navState
+                authed =
+                    Authorized auth
 
                 updateModel newModel =
                     ( authed newModel, Cmd.none )
@@ -150,7 +150,7 @@ encodeBody page =
 --view
 
 
-view : Model -> Html (MsgBase Msg)
+view : Model -> Html Msg
 view model =
     viewNav model (Just usersLink) viewPage
 
@@ -222,7 +222,7 @@ viewBtn =
 --init
 
 
-init : Maybe AuthResponse -> D.Value -> ( Model, Cmd (MsgBase Msg) )
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init resp flags =
     let
         initialLang =
@@ -231,16 +231,16 @@ init resp flags =
     initBase [ Producer, Consumer, Manager ] (View "" "" "" "" "" initialLang [] Nothing) (\res -> Cmd.none) resp
 
 
-subscriptions : Model -> Sub (MsgBase Msg)
+subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
 
 
-main : Program D.Value Model (MsgBase Msg)
+main : Program D.Value Model Msg
 main =
     baseApplication
         { init = init
         , view = view
-        , update = updateBase update
+        , update = update
         , subscriptions = subscriptions
         }

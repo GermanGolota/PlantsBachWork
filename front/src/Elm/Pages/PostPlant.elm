@@ -8,7 +8,7 @@ import Html.Attributes exposing (class, href, style)
 import Http
 import ImageList
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), MsgBase, UserRole(..), baseApplication, initBase, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (plantsLink, viewNav)
 import PlantHelper exposing (PlantModel, plantDecoder, viewPlantBase)
 import Utils exposing (SubmittedResult(..), flex, flex1, largeFont, smallMargin, submittedDecoder)
@@ -52,10 +52,10 @@ update msg m =
             ( m, Cmd.none )
     in
     case m of
-        Authorized auth model navState ->
+        Authorized auth model ->
             let
-                authed md =
-                    Authorized auth md navState
+                authed =
+                    Authorized auth
             in
             case model of
                 Plant id plantView ->
@@ -139,7 +139,7 @@ submitCommand token plantId price =
 --view
 
 
-view : Model -> Html (MsgBase Msg)
+view : Model -> Html Msg
 view model =
     viewNav model (Just plantsLink) viewPage
 
@@ -230,7 +230,7 @@ viewRes res =
             baseView "bg-warning" msg
 
 
-init : Maybe AuthResponse -> D.Value -> ( Model, Cmd (MsgBase Msg) )
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init resp flags =
     let
         initial =
@@ -267,16 +267,16 @@ decodePlantId flags =
     D.decodeValue (D.field "plantId" D.string) flags
 
 
-subscriptions : Model -> Sub (MsgBase Msg)
+subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
 
 
-main : Program D.Value Model (MsgBase Msg)
+main : Program D.Value Model Msg
 main =
     baseApplication
         { init = init
         , view = view
-        , update = updateBase update
+        , update = update
         , subscriptions = subscriptions
         }

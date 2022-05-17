@@ -12,7 +12,7 @@ import Http
 import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase, UserRole(..), baseApplication, initBase, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (ordersLink, viewNav)
 import Utils exposing (bgTeal, fillParent, flex, flex1, formatPrice, largeCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -110,10 +110,10 @@ update msg m =
             ( m, Cmd.none )
     in
     case m of
-        Authorized auth model navState ->
+        Authorized auth model ->
             let
-                authed md =
-                    Authorized auth md navState
+                authed =
+                    Authorized auth
             in
             case msg of
                 GotOrders (Ok res) ->
@@ -340,7 +340,7 @@ statusDecoder =
 --view
 
 
-view : Model -> Html (MsgBase Msg)
+view : Model -> Html Msg
 view model =
     viewNav model (Just ordersLink) viewPage
 
@@ -556,7 +556,7 @@ viewInfoRow desc val =
 --init
 
 
-init : Maybe AuthResponse -> D.Value -> ( Model, Cmd (MsgBase Msg) )
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init resp flags =
     let
         isProducer =
@@ -610,16 +610,16 @@ getData token viewType =
 --subs
 
 
-subscriptions : Model -> Sub (MsgBase Msg)
+subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
 
 
-main : Program D.Value Model (MsgBase Msg)
+main : Program D.Value Model Msg
 main =
     baseApplication
         { init = init
         , view = view
-        , update = updateBase update
+        , update = update
         , subscriptions = subscriptions
         }

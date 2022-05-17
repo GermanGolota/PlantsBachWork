@@ -1,12 +1,14 @@
 module NavBar exposing (..)
 
 import Assets exposing (treeIcon)
-import Bootstrap.Dropdown as Dropdown
+import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Grid.Row as Row
 import Bootstrap.Utilities.Flex as Flex
 import Color
 import Html exposing (Html, a, div, i, text)
 import Html.Attributes exposing (class, href, style)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), viewBase)
+import Main exposing (AuthResponse, ModelBase, UserRole(..), viewBase)
 import TypedSvg.Types exposing (px)
 import Utils exposing (fillParent, fillScreen, flex, flex1, intersect, largeFont, smallMargin)
 
@@ -68,40 +70,29 @@ getLinksFor roles =
     List.filter roleIntersect allLinks
 
 
-viewNav : ModelBase model -> Maybe Link -> (AuthResponse -> model -> Html msg) -> Html (MsgBase msg)
+viewNav : ModelBase model -> Maybe Link -> (AuthResponse -> model -> Html msg) -> Html msg
 viewNav model link pageView =
     let
-        navState =
-            case model of
-                Authorized _ _ navig ->
-                    Just navig
-
-                _ ->
-                    Nothing
-
         viewP =
-            viewMain navState link pageView
+            viewMain link pageView
     in
     viewBase viewP model
 
 
-viewMain : Maybe Dropdown.State -> Maybe Link -> (AuthResponse -> model -> Html msg) -> AuthResponse -> model -> Html (MsgBase msg)
-viewMain dropState link pageView resp model =
-    viewNavBase dropState resp.username resp.roles link (pageView resp model)
+viewMain : Maybe Link -> (AuthResponse -> model -> Html msg) -> AuthResponse -> model -> Html msg
+viewMain link pageView resp model =
+    viewNavBase resp.username resp.roles link (pageView resp model)
 
 
-viewNavBase : Maybe Dropdown.State -> String -> List UserRole -> Maybe Link -> Html msg -> Html (MsgBase msg)
-viewNavBase dropState username roles currentLink baseView =
+viewNavBase : String -> List UserRole -> Maybe Link -> Html msg -> Html msg
+viewNavBase username roles currentLink baseView =
     div fillScreen
-        [ div ([ flex, Flex.row ] ++ fillParent)
-            [ navBar dropState username roles currentLink
-            , Html.map (\msgType -> Main msgType) (div [ style "flex" "3", style "margin-left" "25vw" ] [ baseView ])
-            ]
+        [ div ([ flex, Flex.row ] ++ fillParent) [ navBar username roles currentLink, div [ style "flex" "3", style "margin-left" "25vw" ] [ baseView ] ]
         ]
 
 
-navBar : Maybe Dropdown.State -> String -> List UserRole -> Maybe Link -> Html (MsgBase msg)
-navBar dropState username roles currentLink =
+navBar : String -> List UserRole -> Maybe Link -> Html msg
+navBar username roles currentLink =
     div
         [ flex1
         , style "height" "100%"
@@ -117,33 +108,9 @@ navBar dropState username roles currentLink =
                     ]
                 , linksView currentLink <| getLinksFor roles
                 ]
-            , div [ flex, Flex.row ] [ dropdownView dropState <| userView username ]
+            , div [] [ userView username ]
             ]
         ]
-
-
-dropdownView state main =
-    case state of
-        Just val ->
-            Dropdown.dropdown
-                val
-                { options = []
-                , toggleMsg = NavChanged
-                , toggleButton =
-                    Dropdown.toggle [] [ main ]
-                , items =
-                    [ Dropdown.header [ text "Header" ]
-                    , Dropdown.buttonItem [] [ text "Item 1" ]
-                    , Dropdown.buttonItem [] [ text "Item 2" ]
-                    , Dropdown.divider
-                    , Dropdown.header [ text "Another heading" ]
-                    , Dropdown.buttonItem [] [ text "Item 3" ]
-                    , Dropdown.buttonItem [] [ text "Item 4" ]
-                    ]
-                }
-
-        Nothing ->
-            main
 
 
 linksView : Maybe Link -> List Link -> Html msg

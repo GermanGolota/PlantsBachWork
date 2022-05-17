@@ -15,7 +15,7 @@ import Http
 import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase, UserRole(..), baseApplication, initBase, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import Multiselect
 import NavBar exposing (plantsLink, viewNav)
 import Utils exposing (createdDecoder, existsDecoder, fillParent, flex, flex1, largeCentered, smallMargin)
@@ -91,10 +91,10 @@ update msg m =
             ( m, Cmd.none )
     in
     case m of
-        Authorized auth model navState ->
+        Authorized auth model ->
             let
-                authed md =
-                    Authorized auth md navState
+                authed =
+                    Authorized auth
 
                 setPlant plant =
                     case model of
@@ -366,7 +366,7 @@ update msg m =
 --view
 
 
-view : Model -> Html (MsgBase Msg)
+view : Model -> Html Msg
 view model =
     viewNav model (Just plantsLink) viewPage
 
@@ -528,7 +528,7 @@ viewInput desc input =
     [ div (largeCentered ++ [ flex1 ]) [ text desc ], div [ flex1 ] [ input ] ]
 
 
-init : Maybe AuthResponse -> D.Value -> ( Model, Cmd (MsgBase Msg) )
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init resp flags =
     let
         initial =
@@ -575,7 +575,7 @@ decodeInitial flags =
 --subs
 
 
-subscriptions : Model -> Sub (MsgBase Msg)
+subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
 
@@ -724,11 +724,11 @@ filesParts files =
 --main
 
 
-main : Program D.Value Model (MsgBase Msg)
+main : Program D.Value Model Msg
 main =
     baseApplication
         { init = init
         , view = view
-        , update = updateBase update
+        , update = update
         , subscriptions = subscriptions
         }

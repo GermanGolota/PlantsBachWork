@@ -11,7 +11,7 @@ import Http
 import ImageList as ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase, UserRole(..), baseApplication, initBase, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import Maybe exposing (map)
 import NavBar exposing (searchLink, viewNav)
 import PlantHelper exposing (PlantModel, plantDecoder, viewDesc, viewPlantBase, viewPlantLeft)
@@ -87,10 +87,10 @@ update msg m =
             ( m, Cmd.none )
     in
     case m of
-        Authorized auth model navState ->
+        Authorized auth model ->
             let
                 authed newModel =
-                    Authorized auth newModel navState
+                    Authorized auth newModel
 
                 authedPlant plantView =
                     authed <| Plant plantView
@@ -293,7 +293,7 @@ getPlantCommand token plantId =
 --view
 
 
-view : Model -> Html (MsgBase Msg)
+view : Model -> Html Msg
 view model =
     viewNav model (Just searchLink) viewPage
 
@@ -537,7 +537,7 @@ interactionButtons allowOrder isOrder id =
 --init
 
 
-init : Maybe AuthResponse -> D.Value -> ( Model, Cmd (MsgBase Msg) )
+init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init resp flags =
     let
         initialModel =
@@ -605,16 +605,16 @@ decodePlantId flags =
     D.decodeValue (D.field "plantId" D.string) flags
 
 
-subscriptions : Model -> Sub (MsgBase Msg)
+subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
 
 
-main : Program D.Value Model (MsgBase Msg)
+main : Program D.Value Model Msg
 main =
     baseApplication
         { init = init
         , view = view
-        , update = updateBase update
+        , update = update
         , subscriptions = subscriptions
         }
