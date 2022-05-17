@@ -3,7 +3,7 @@
 // Type definitions for Elm ports
 
 export namespace Elm {
-  namespace Pages.AddEditInstruction {
+  namespace Pages.Profile {
     export interface App {
       ports: {
         openEditor: {
@@ -20,6 +20,6 @@ export namespace Elm {
     export function init(options: {
       node?: HTMLElement | null;
       flags: any;
-    }): Elm.Pages.AddEditInstruction.App;
+    }): Elm.Pages.Profile.App;
   }
 }

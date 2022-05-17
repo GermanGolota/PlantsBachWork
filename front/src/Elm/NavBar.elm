@@ -149,5 +149,5 @@ userView : String -> Html msg
 userView username =
     div [ flex, Flex.row, smallMargin, style "border-top" "solid gray 1px", Flex.alignItemsCenter, largeFont ]
         [ i [ class "fa-solid fa-user", style "margin-right" "2em", smallMargin ] []
-        , text username
+        , a [ href "/profile" ] [ text username ]
         ]
