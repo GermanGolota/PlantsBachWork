@@ -10,7 +10,7 @@ import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder, postAuthed)
 import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, href, style, value)
+import Html.Attributes exposing (class, href, selected, style, value)
 import Http
 import ImageList
 import Json.Decode as D
@@ -433,7 +433,7 @@ rightView resultView isEdit additionalImages plant =
     let
         btnMsg =
             if isEdit then
-                "Edit"
+                "Save Changes"
 
             else
                 "Add"
@@ -480,8 +480,19 @@ leftView isEdit plant av =
                 _ ->
                     String.join ", " (List.map File.name plant.uploadedFiles)
 
-        viewOption ( val, desc ) =
-            Select.item [ value val ] [ text desc ]
+        isSelected isGroup val =
+            let
+                parsed =
+                    Maybe.withDefault -1 <| String.toInt val
+            in
+            if isGroup then
+                plant.group == parsed
+
+            else
+                plant.soil == parsed
+
+        viewOption isGroup ( val, desc ) =
+            Select.item [ value val, selected <| isSelected isGroup val ] [ text desc ]
 
         pareOrNoOp ev str =
             case String.toInt str of
@@ -491,8 +502,8 @@ leftView isEdit plant av =
                 Nothing ->
                     NoOp
 
-        viewOptions vals =
-            List.map viewOption (Multiselect.getValues vals)
+        viewOptions vals isGroup =
+            List.map (viewOption isGroup) (Multiselect.getValues vals)
 
         dateInput =
             if isEdit then
@@ -513,11 +524,11 @@ leftView isEdit plant av =
         ++ viewInput "Regions" (Html.map RegionsMS <| Multiselect.view plant.regions)
         ++ viewInput "Soil"
             (Select.select [ Select.onChange (pareOrNoOp SoilUpdate) ]
-                (viewOptions av.soils)
+                (viewOptions av.soils False)
             )
         ++ viewInput "Group"
             (Select.select [ Select.onChange (pareOrNoOp GroupUpdate) ]
-                (viewOptions av.groups)
+                (viewOptions av.groups True)
             )
         ++ viewInput "Description" (Input.text [ Input.onInput DescriptionUpdate, Input.value plant.description ])
         ++ viewInput "Created Date" dateInput

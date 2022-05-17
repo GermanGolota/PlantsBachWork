@@ -146,12 +146,8 @@ namespace Plants.Infrastructure.Services
             {
                 using (var connection = ctx.Database.GetDbConnection())
                 {
-                    string sql = "ALTER ROLE session_user WITH ENCRYPTED password '@newPassword';";
-                    var p = new
-                    {
-                        newPassword
-                    };
-                    await connection.ExecuteAsync(sql, p);
+                    string sql = $"ALTER ROLE session_user WITH ENCRYPTED password '{newPassword.Replace("'", "''")}';";
+                    await connection.ExecuteAsync(sql);
                 }
             }
         }

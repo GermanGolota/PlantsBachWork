@@ -1,9 +1,11 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Plants.Application.Commands;
 using Plants.Application.Contracts;
 using Plants.Application.Requests;
 using Plants.Infrastructure.Helpers;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -12,10 +14,12 @@ namespace Plants.Infrastructure.Services
     public class PostService : IPostService
     {
         private readonly PlantsContextFactory _ctx;
+        private readonly ILogger<PostService> _logger;
 
-        public PostService(PlantsContextFactory ctx)
+        public PostService(PlantsContextFactory ctx, ILogger<PostService> logger)
         {
             _ctx = ctx;
+            _logger = logger;
         }
 
         public async Task<PostResultItem> GetBy(int postId)
@@ -91,8 +95,9 @@ namespace Plants.Infrastructure.Services
                         var res = await connection.ExecuteAsync(sql, p);
                         result = res == 1;
                     }
-                    catch
+                    catch (Exception e)
                     {
+                        _logger.LogError(e, "Failed to delete post with {0}", e.Message);
                         result = false;
                     }
                     return new DeletePostResult(result);

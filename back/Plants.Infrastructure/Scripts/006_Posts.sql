@@ -104,7 +104,7 @@ DECLARE
 BEGIN
   userId := get_current_user_id ();
   IF userId = - 1 THEN
-    RAISE EXCEPTION 'There is no person attached to %', CURRENT_USER
+    RAISE EXCEPTION 'There is no person attached to %', SESSION_USER
       USING HINT = 'Please, consider using credentials that have a person attached to them';
     ELSE
       RETURN userId;

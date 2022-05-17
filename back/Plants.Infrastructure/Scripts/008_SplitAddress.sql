@@ -15,6 +15,7 @@ CREATE OR REPLACE VIEW person_addresses_v AS (
 -- 1 - plant not posted
 -- 2 - already ordered
 CREATE OR REPLACE FUNCTION place_order (IN postId int, delivery_city text, post_number integer, OUT wasPlaced boolean, OUT reasonCode integer)
+SECURITY DEFINER
 AS $$
 DECLARE
   userId int;

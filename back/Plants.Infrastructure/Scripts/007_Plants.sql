@@ -77,6 +77,7 @@ CREATE VIEW prepared_for_post_v AS (
 -- 2 - already posted
 -- 3 - bad price
 CREATE OR REPLACE FUNCTION post_plant (IN plantId int, IN price numeric, OUT wasPlaced boolean, OUT reasonCode integer)
+SECURITY DEFINER
 AS $$
 DECLARE
   plantExists boolean;
@@ -128,6 +129,7 @@ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION create_plant (plantName text, description text, regionIds int[], soilId int, groupId int, created timestamp without time zone, pictures bytea[])
   RETURNS int
+  SECURITY DEFINER
   AS $$
 DECLARE
   plantId int;

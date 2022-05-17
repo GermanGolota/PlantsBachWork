@@ -1,6 +1,7 @@
 --set poster
 CREATE OR REPLACE FUNCTION get_current_user_id ()
   RETURNS integer
+  SECURITY DEFINER
   AS $$
 BEGIN
   RETURN COALESCE((
@@ -8,7 +9,7 @@ BEGIN
       p.person_id
     FROM person_to_login p
     WHERE
-      p.login = CURRENT_USER), -1);
+      p.login = SESSION_USER), -1);
 END
 $$
 LANGUAGE plpgsql;
@@ -21,7 +22,7 @@ DECLARE
 BEGIN
   userId := get_current_user_id ();
   IF userId = - 1 THEN
-    RAISE EXCEPTION 'There is no person attached to %', CURRENT_USER
+    RAISE EXCEPTION 'There is no person attached to %', SESSION_USER
       USING HINT = 'Please, consider using credentials that have a person attached to them';
     ELSE
       NEW.care_taker_id = userId;
@@ -44,7 +45,7 @@ DECLARE
 BEGIN
   userId := get_current_user_id ();
   IF userId = - 1 THEN
-    RAISE EXCEPTION 'There is no person attached to %', CURRENT_USER
+    RAISE EXCEPTION 'There is no person attached to %', SESSION_USER
       USING HINT = 'Please, consider using credentials that have a person attached to them';
     ELSE
       NEW.seller_id = userId;
@@ -67,7 +68,7 @@ DECLARE
 BEGIN
   userId := get_current_user_id ();
   IF userId = - 1 THEN
-    RAISE EXCEPTION 'There is no person attached to %', CURRENT_USER
+    RAISE EXCEPTION 'There is no person attached to %', SESSION_USER
       USING HINT = 'Please, consider using credentials that have a person attached to them';
     ELSE
       NEW.posted_by_id = userId;

@@ -1,9 +1,11 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Plants.Application.Commands;
 using Plants.Application.Contracts;
 using Plants.Application.Requests;
 using Plants.Infrastructure.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -12,10 +14,12 @@ namespace Plants.Infrastructure.Services
     internal class OrdersService : IOrdersService
     {
         private readonly PlantsContextFactory _ctx;
+        private readonly ILogger<OrdersService> _logger;
 
-        public OrdersService(PlantsContextFactory ctxFactory)
+        public OrdersService(PlantsContextFactory ctxFactory, ILogger<OrdersService> logger)
         {
             _ctx = ctxFactory;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<OrdersResultItem>> GetOrders(bool onlyMine)
@@ -62,8 +66,7 @@ namespace Plants.Infrastructure.Services
             {
                 await using (var connection = ctx.Database.GetDbConnection())
                 {
-                    string sql = @"INSERT INTO plant_shipment(delivery_id)
-                            VALUES(@deliveryId);";
+                    string sql = @"CALL confirm_received(@deliveryId);";
                     var p = new
                     {
                         deliveryId
@@ -91,8 +94,9 @@ namespace Plants.Infrastructure.Services
                         var deleted = await connection.ExecuteAsync(sql, p);
                         succ = deleted == 1;
                     }
-                    catch
+                    catch(Exception e)
                     {
+                        _logger.LogError(e, "Failed to delete with {0}", e.Message);
                         succ = false;
                     }
                     return new RejectOrderResult(succ);

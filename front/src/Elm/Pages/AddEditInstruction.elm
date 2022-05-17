@@ -208,7 +208,7 @@ submitEditCommand : String -> Int -> View -> Cmd Msg
 submitEditCommand token id page =
     let
         expect =
-            Http.expectJson GotSubmit (D.succeed -1)
+            Http.expectJson GotSubmit (D.field "instructionId" D.int)
     in
     postAuthed token (EditInstruction id) (bodyEncoder page) expect Nothing
 

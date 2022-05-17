@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Plants.Application.Contracts;
 using Plants.Infrastructure.Helpers;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace Plants.Infrastructure.Services
             try
             {
                 ctx = _contextFactory.CreateFromCreds(login, password);
-                var roles = ctx.CurrentUserRoles.ToList();
+                var roles = ctx.CurrentUserRoles.FromSqlRaw("SELECT * FROM current_user_roles;").ToList();
                 result = new CredsResponse(roles.Select(x => x.RoleName).ToArray());
             }
             catch (PostgresException ex)

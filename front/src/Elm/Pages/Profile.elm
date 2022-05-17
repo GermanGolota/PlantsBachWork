@@ -2,6 +2,7 @@ module Pages.Profile exposing (..)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
+import Bootstrap.ListGroup as ListGroup
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), postAuthed)
 import Html exposing (Html, div, text)
@@ -13,6 +14,7 @@ import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication
 import NavBar exposing (viewNav)
 import Utils exposing (SubmittedResult(..), fillParent, flex, flexCenter, largeCentered, mediumMargin, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
+import Main exposing (roleToStr)
 
 
 
@@ -119,7 +121,9 @@ viewPage resp page =
     in
     div ([ flex, Flex.row, mediumMargin ] ++ fillParent ++ flexCenter)
         [ div [ flex, Flex.col, class "modal__container" ]
-            [ div largeCentered [ text "New Password" ]
+            [ div largeCentered [ text "My Roles" ]
+            , ListGroup.ul (List.map (\role -> ListGroup.li [] [ text <| roleToStr role ]) resp.roles)
+            , div largeCentered [ text "New Password" ]
             , Input.password
                 [ Input.value page.password
                 , Input.onInput NewPasswordChanged
