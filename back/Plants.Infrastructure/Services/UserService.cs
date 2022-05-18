@@ -42,7 +42,7 @@ namespace Plants.Infrastructure.Services
             }
         }
 
-        public async Task<CreateUserResult> CreateUser(string Login, List<UserRole> roles, string FirstName, 
+        public async Task<CreateUserResult> CreateUser(string Login, List<UserRole> roles, string FirstName,
             string LastName, string PhoneNumber, string Password)
         {
             var ctx = _ctx.CreateDbContext();
@@ -67,7 +67,7 @@ namespace Plants.Infrastructure.Services
                         await connection.ExecuteAsync(sql, p);
                         res = new CreateUserResult(true, "Successfully created user!");
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         res = new CreateUserResult(false, e.Message);
                     }
@@ -137,6 +137,19 @@ namespace Plants.Infrastructure.Services
             var converter = new UserRoleConverter();
             var Roles = roles?.Select(x => converter.ConvertToProvider(x) as string)?.ToArray();
             return Roles;
+        }
+
+        public async Task ChangeMyPassword(string newPassword)
+        {
+            var ctx = _ctx.CreateDbContext();
+            await using (ctx)
+            {
+                using (var connection = ctx.Database.GetDbConnection())
+                {
+                    string sql = $"ALTER ROLE session_user WITH ENCRYPTED password '{newPassword.Replace("'", "''")}';";
+                    await connection.ExecuteAsync(sql);
+                }
+            }
         }
     }
 }

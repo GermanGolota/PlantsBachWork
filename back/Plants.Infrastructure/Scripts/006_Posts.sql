@@ -76,25 +76,18 @@ CREATE OR REPLACE VIEW plant_post_v AS (
       LEFT JOIN person_creds_v seller_creds ON seller_creds.id = post.seller_id
       LEFT JOIN person_creds_v care_taker_creds ON care_taker_creds.id = post.care_taker_id);
 
-CREATE VIEW person_addresses_v AS (
+CREATE OR REPLACE VIEW current_user_addresses AS (
   SELECT
-    p.id,
     array_agg(d.city) AS cities,
     array_agg(d.nova_poshta_number) AS posts
   FROM
-    delivery_address d
-    JOIN person p ON p.id = d.person_id
+    person_to_delivery pd
+    JOIN delivery_address d ON d.id = pd.delivery_address_id
+    JOIN person p ON p.id = pd.person_id
+  WHERE
+    p.id = get_current_user_id ()
   GROUP BY
     p.id);
-
-CREATE VIEW current_user_addresses AS (
-  SELECT
-    cities,
-    posts
-  FROM
-    person_addresses_v
-  WHERE
-    id = get_current_user_id ());
 
 CREATE OR REPLACE FUNCTION get_current_user_id_throw ()
   RETURNS integer
@@ -104,7 +97,7 @@ DECLARE
 BEGIN
   userId := get_current_user_id ();
   IF userId = - 1 THEN
-    RAISE EXCEPTION 'There is no person attached to %', CURRENT_USER
+    RAISE EXCEPTION 'There is no person attached to %', SESSION_USER
       USING HINT = 'Please, consider using credentials that have a person attached to them';
     ELSE
       RETURN userId;

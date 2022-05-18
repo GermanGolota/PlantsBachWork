@@ -49,3 +49,25 @@ CREATE OR REPLACE VIEW current_user_orders AS (
   WHERE
     o.customer_id = get_current_user_id_throw ());
 
+CREATE OR REPLACE PROCEDURE confirm_received (deliveryId int)
+SECURITY DEFINER
+AS $$
+DECLARE
+  buyerId int;
+BEGIN
+  SELECT
+    customer_id INTO buyerId
+  FROM
+    plant_order
+  WHERE
+    post_id = deliveryId;
+  IF buyerId = get_current_user_id_throw () THEN
+    INSERT INTO plant_shipment (delivery_id)
+      VALUES (deliveryId);
+  ELSE
+    RAISE EXCEPTION 'You cannot confirm delivery on order you have not made';
+  END IF;
+END
+$$
+LANGUAGE plpgsql;
+

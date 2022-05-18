@@ -18,7 +18,7 @@ namespace Plants.Application.Commands
         {
             await _instructions.Edit(request.InstructionId, request.GroupId,
                 request.Text, request.Title, request.Description, request.CoverImage);
-            return new EditInstructionResult();
+            return new EditInstructionResult(request.InstructionId);
         }
     }
 }

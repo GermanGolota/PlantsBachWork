@@ -1,5 +1,4 @@
-import React, { useCallback, useState } from "react";
-import ReactDOM from "react-dom";
+import React, { useCallback, useState } from "react";import ReactDOM from "react-dom";
 import {
   Route,
   Link,
@@ -21,6 +20,7 @@ import { Elm as OrdersElm } from "./Elm/Pages/Orders";
 import { Elm as UsersElm } from "./Elm/Pages/Users";
 import { Elm as InstructionElm } from "./Elm/Pages/Instruction";
 import { Elm as AddUserElm } from "./Elm/Pages/AddUser";
+import { Elm as ProfileElm } from "./Elm/Pages/Profile";
 import { Elm as SearchInstructionsElm } from "./Elm/Pages/SearchInstructions";
 import "./assets/tree.svg";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -90,6 +90,28 @@ const SearchInstructionsPage = () => {
     let model = retrieve();
 
     return SearchInstructionsElm.Pages.SearchInstructions.init({
+      node: elmRef.current,
+      flags: model,
+    });
+  };
+
+  React.useEffect(() => {
+    setApp(elmApp());
+  }, []);
+
+  return <div ref={elmRef}></div>;
+};
+
+const ProfilePage = () => {
+  const [app, setApp] = React.useState<
+    ProfileElm.Pages.Profile.App | undefined
+  >();
+  const elmRef = React.useRef(null);
+
+  const elmApp = () => {
+    let model = retrieve();
+
+    return ProfileElm.Pages.Profile.init({
       node: elmRef.current,
       flags: model,
     });
@@ -303,7 +325,7 @@ const StatsPage = () => {
   return <div ref={elmRef}></div>;
 };
 
-const LoginPage = () => {
+const LoginPage = (props: { isNew: boolean }) => {
   const [app, setApp] = React.useState<LoginElm.Pages.Login.App | undefined>();
   const elmRef = React.useRef(null);
 
@@ -315,7 +337,11 @@ const LoginPage = () => {
 
   React.useEffect(() => {
     if (retrieve()) {
-      window.location.replace("/search");
+      if (props.isNew) {
+        localStorage.clear();
+      } else {
+        window.location.replace("/search");
+      }
     }
     setApp(elmApp());
   }, []);
@@ -344,7 +370,8 @@ const NotFound = () => {
 const App = () => (
   <BrowserRouter>
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/login" element={<LoginPage isNew={false} />} />
+      <Route path="/login/new" element={<LoginPage isNew={true} />} />
       <Route path="/stats" element={<StatsPage />} />
       <Route path="/search" element={<SearchPage />} />
       <Route path="/notPosted" element={<NotPostedPage />} />
@@ -376,6 +403,7 @@ const App = () => (
         element={<AddInstructionPage isEdit={true} />}
       />
       <Route path="/instructions/:id" element={<InstructionPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>

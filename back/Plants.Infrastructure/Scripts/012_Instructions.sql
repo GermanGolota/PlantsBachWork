@@ -36,6 +36,7 @@ LANGUAGE plpgsql;
 --producer
 CREATE OR REPLACE FUNCTION create_instruction (groupId int, instructionText text, instructionTitle text, instructionDescription text, coverImage bytea)
   RETURNS int
+  SECURITY DEFINER
   AS $$
 DECLARE
   instructionId int;
@@ -67,12 +68,11 @@ BEGIN
   WHERE
     id = instructionId;
   IF coverImage IS NOT NULL THEN
-    UPDATE
-      instruction_to_cover
-    SET
-      image = coverImage
-    WHERE
-      instruction_id = instructionId;
+    INSERT INTO instruction_to_cover (instruction_id, image)
+      VALUES (instructionId, coverImage)
+    ON CONFLICT (instruction_id)
+      DO UPDATE SET
+        image = coverImage;
   END IF;
 END
 $$

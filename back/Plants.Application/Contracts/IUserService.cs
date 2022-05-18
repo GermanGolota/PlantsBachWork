@@ -13,5 +13,7 @@ namespace Plants.Application.Contracts
         Task AddRole(string login, UserRole role);
         Task<CreateUserResult> CreateUser(string Login, List<UserRole> Roles, string FirstName, 
             string LastName, string PhoneNumber, string Password);
+
+        Task ChangeMyPassword(string newPassword);
     }
 }
