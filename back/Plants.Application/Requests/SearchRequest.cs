@@ -15,7 +15,7 @@ namespace Plants.Application.Requests
     public record SearchResult(List<SearchResultItem> Items);
     public record SearchResultItem(int Id, string PlantName, string Description, int[] ImageIds, double Price)
     {
-        //user by converter
+        //used by converter
         public SearchResultItem() : this(0, "", "", null, 0)
         {
 

@@ -16,8 +16,8 @@ namespace Plants.Application.Requests
         }
         public async Task<SearchResult> Handle(SearchRequest request, CancellationToken cancellationToken)
         {
-            var (a, b, c, d, e, f, g) = request;
-            var res = await _service.Search(a, b, c, d, e, f, g);
+            var (plantName, priceBottom, priceTop, date, groupIds, regionIds, soilIds) = request;
+            var res = await _service.Search(plantName, priceBottom, priceTop, date, groupIds, regionIds, soilIds);
             return new SearchResult(res.ToList());
         }
     }
