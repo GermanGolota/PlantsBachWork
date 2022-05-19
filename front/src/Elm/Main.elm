@@ -75,15 +75,15 @@ type alias ApplicationConfig model msg =
 baseApplication : ApplicationConfig model msg -> Program D.Value model msg
 baseApplication config =
     Browser.element
-        { init = init config.init
+        { init = mainInit config.init
         , view = config.view
         , update = config.update
         , subscriptions = config.subscriptions
         }
 
 
-init : (Maybe AuthResponse -> D.Value -> ( model, Cmd msg )) -> D.Value -> ( model, Cmd msg )
-init initFunc flags =
+mainInit : (Maybe AuthResponse -> D.Value -> ( model, Cmd msg )) -> D.Value -> ( model, Cmd msg )
+mainInit initFunc flags =
     let
         authResp =
             case D.decodeValue decodeFlags flags of

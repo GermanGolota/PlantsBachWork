@@ -17,6 +17,8 @@ GRANT SELECT, DELETE ON plant_post TO producer, manager;
 
 GRANT SELECT, DELETE ON plant_order TO producer, manager;
 
+GRANT INSERT ON plant_delivery TO producer, manager;
+
 --views
 GRANT SELECT ON current_user_roles TO consumer, producer, manager;
 
