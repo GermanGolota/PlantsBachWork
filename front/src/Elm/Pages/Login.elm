@@ -23,6 +23,7 @@ import Svg exposing (Svg, image, svg)
 import Svg.Attributes exposing (height, width)
 import TypedSvg.Types exposing (px)
 import Utils exposing (fillParent, filledBackground, flexCenter, mapStyles, rgba255, textCenter)
+import Webdata exposing (WebData(..), viewWebdata)
 
 
 submitSuccessDecoder : D.Decoder AuthResponse
@@ -72,15 +73,14 @@ submit model =
 
 
 type CredsStatus
-    = Unknown
-    | BadCredentials
+    = BadCredentials
     | GoodCredentials
 
 
 type alias Model =
     { username : String
     , password : String
-    , status : CredsStatus
+    , status : Maybe (WebData CredsStatus)
     }
 
 
@@ -93,7 +93,7 @@ type Msg
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init _ _ =
-    ( Model "" "" Unknown, Cmd.none )
+    ( Model "" "" Nothing, Cmd.none )
 
 
 greenColor : Float -> Color
@@ -151,12 +151,28 @@ viewFormMain model =
         updateLogin login =
             UsernameUpdated login
 
+        credView tuple =
+            Form.group [ Form.attrs [ style "color" <| toCssString <| Tuple.first tuple ] ]
+                [ text <| Tuple.second tuple ]
+
         credDisplay =
-            displayFromCredStatus model.status
+            case model.status of
+                Just status ->
+                    viewWebdata status (\cred -> credView <| displayFromCredStatus cred)
+
+                Nothing ->
+                    div [] []
+
+        btnDisabled =
+            case model.status of
+                Just _ ->
+                    True
+
+                Nothing ->
+                    False
     in
     div []
-        [ Form.group [ Form.attrs [ style "color" <| toCssString <| Tuple.first credDisplay ] ]
-            [ text <| Tuple.second credDisplay ]
+        [ credDisplay
         , Form.form
             []
             [ Form.group []
@@ -178,6 +194,7 @@ viewFormMain model =
             [ Button.button
                 [ Button.primary
                 , Button.onClick Submitted
+                , Button.disabled btnDisabled
                 , Button.attrs
                     [ style "margin" "10px auto"
                     , style "width" "100%"
@@ -197,27 +214,24 @@ displayFromCredStatus status =
         GoodCredentials ->
             ( Color.green, "Those credentials are valid! You would be redirected shortly" )
 
-        Unknown ->
-            ( Color.white, "" )
-
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         UsernameUpdated login ->
-            ( { model | username = login, status = Unknown }, Cmd.none )
+            ( { model | username = login, status = Nothing }, Cmd.none )
 
         PasswordUpdate pass ->
-            ( { model | password = pass, status = Unknown }, Cmd.none )
+            ( { model | password = pass, status = Nothing }, Cmd.none )
 
         Submitted ->
-            ( model, submit model )
+            ( { model | status = Just Loading }, submit model )
 
         SubmitRequest (Ok response) ->
-            ( { model | status = GoodCredentials }, notifyLoggedIn <| encodeResponse response )
+            ( { model | status = Just <| Loaded GoodCredentials }, notifyLoggedIn <| encodeResponse response )
 
         SubmitRequest (Err err) ->
-            ( { model | status = BadCredentials }, Cmd.none )
+            ( { model | status = Just <| Loaded BadCredentials }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
