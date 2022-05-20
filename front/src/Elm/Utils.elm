@@ -27,6 +27,10 @@ largeCentered =
     [ largeFont, textCenter ]
 
 
+mediumCentered =
+    [ mediumFont, textCenter ]
+
+
 largeFont : Attribute msg
 largeFont =
     style "font-size" "2rem"

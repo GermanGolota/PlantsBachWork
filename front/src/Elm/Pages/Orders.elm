@@ -14,7 +14,7 @@ import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (ordersLink, viewNav)
-import Utils exposing (bgTeal, fillParent, flex, flex1, formatPrice, largeCentered, smallMargin)
+import Utils exposing (bgTeal, fillParent, flex, flex1, formatPrice, mediumCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -437,7 +437,7 @@ viewOrder rejected ttns viewType order =
         rejectRes =
             case Dict.get orderId rejected of
                 Just val ->
-                    viewWebdata val (\succ -> div largeCentered [ text <| rejectText succ ])
+                    viewWebdata val (\succ -> div mediumCentered [ text <| rejectText succ ])
 
                 Nothing ->
                     div [] []
@@ -457,7 +457,7 @@ viewOrder rejected ttns viewType order =
                             div [ flex, Flex.col, Flex.alignItemsCenter ]
                                 [ div [ flex, Flex.row, flex1 ]
                                     [ rejectBtn
-                                    , div (largeCentered ++ [ smallMargin ]) [ text "Tracking Number" ]
+                                    , div (mediumCentered ++ [ smallMargin ]) [ text "Tracking Number" ]
                                     , Input.text [ Input.onInput (SelectedTtn (getPostId order)), Input.value ttn ]
                                     , Button.button
                                         [ Button.primary, Button.onClick <| ConfirmSend (getPostId order), Button.attrs [ smallMargin ] ]
@@ -510,7 +510,7 @@ viewOrderBase fill order viewAdd btnView =
     let
         imgCol =
             div [ flex, Flex.col, smallMargin, flex1 ]
-                [ div largeCentered [ text ("#" ++ String.fromInt order.postId ++ " from " ++ order.orderedDate) ]
+                [ div mediumCentered [ text ("#" ++ String.fromInt order.postId ++ " from " ++ order.orderedDate) ]
                 , Html.map (\e -> Images e order.postId) (ImageList.view order.images)
                 ]
 
