@@ -108,6 +108,7 @@ namespace Plants.Infrastructure.Services
                         (false, 1) => "This plant does not exist",
                         (false, 2) => "This plant have already been posted",
                         (false, 3) => "Price cannot have this value!",
+                        (false, 4) => "You cannot post plant that is in a planning stage",
                         (false, _) => "Failed to post plant!"
                     };
                     return new CreatePostResult(res.WasPlaced, message);

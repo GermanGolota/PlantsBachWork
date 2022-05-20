@@ -76,17 +76,20 @@ CREATE VIEW prepared_for_post_v AS (
 -- 1 - plant does not exist
 -- 2 - already posted
 -- 3 - bad price
+-- 4 - is in planing
 CREATE OR REPLACE FUNCTION post_plant (IN plantId int, IN price numeric, OUT wasPlaced boolean, OUT reasonCode integer)
 SECURITY DEFINER
 AS $$
 DECLARE
   plantExists boolean;
   postExists boolean;
+  isInPlanning boolean;
 BEGIN
   CREATE TEMP TABLE IF NOT EXISTS post_results AS
   SELECT
     p.id AS plant_id,
-    po.plant_id AS post_id
+    po.plant_id AS post_id,
+    p.created AS created
   FROM
     plant p
   LEFT JOIN plant_post po ON po.plant_id = p.id
@@ -103,6 +106,11 @@ LIMIT 1;
       post_id
     FROM
       post_results) IS NOT NULL;
+  isInPlanning := (
+    SELECT
+      created >= CURRENT_DATE
+    FROM
+      post_results);
   IF plantExists THEN
     IF postExists THEN
       wasPlaced := FALSE;
@@ -112,10 +120,15 @@ LIMIT 1;
         wasPlaced := FALSE;
         reasonCode := 3;
       ELSE
-        INSERT INTO plant_post (plant_id, price)
-          VALUES (plantId, price);
-        wasPlaced := TRUE;
-        reasonCode := 0;
+        IF isInPlanning THEN
+          wasPlaced := FALSE;
+          reasonCode := 4;
+        ELSE
+          INSERT INTO plant_post (plant_id, price)
+            VALUES (plantId, price);
+          wasPlaced := TRUE;
+          reasonCode := 0;
+        END IF;
       END IF;
     END IF;
   ELSE
