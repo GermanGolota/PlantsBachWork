@@ -27,6 +27,8 @@ services:
     environment:
       ConnectionTemplate: Host=db;Database=plants;Username={0};Password={1}
       CORS:Origins: localhost:1234, front:8002
+      Auth:AuthKey: "Set this key in secure configuration storage in prod mode"
+      Auth:TokenValidityHours: 5000
     depends_on:
       - migration
 
