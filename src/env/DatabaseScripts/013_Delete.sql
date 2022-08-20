@@ -1,11 +1,13 @@
-CREATE OR REPLACE FUNCTION delete_only_creator_or_manager (isOrder boolean)
+CREATE OR REPLACE FUNCTION delete_only_creator_or_manager ()
   RETURNS TRIGGER
   SECURITY DEFINER
   AS $BODY$
 DECLARE
+  isOrder boolean;
   userId int;
   posterId int;
 BEGIN
+  isOrder := TG_ARGV[0] = 'order';
   IF isOrder THEN
     posterId := (
       SELECT
@@ -35,10 +37,10 @@ LANGUAGE 'plpgsql';
 CREATE TRIGGER post_prevent_unlawfull_delete
   BEFORE DELETE ON plant_post
   FOR EACH ROW
-  EXECUTE PROCEDURE delete_only_creator_or_manager (FALSE);
+  EXECUTE PROCEDURE delete_only_creator_or_manager ('post');
 
 CREATE TRIGGER order_prevent_unlawfull_delete
   BEFORE DELETE ON plant_order
   FOR EACH ROW
-  EXECUTE PROCEDURE delete_only_creator_or_manager (TRUE);
+  EXECUTE PROCEDURE delete_only_creator_or_manager ('order');
 
