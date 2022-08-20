@@ -34,7 +34,7 @@ services:
       ASPNETCORE_Kestrel__Certificates__Default__Password: "password"
       ASPNETCORE_Kestrel__Certificates__Default__Path: /https/aspnetapp.pfx
     volumes:
-      - ./env/certs:/https/
+      - ~/.aspnet/https:/https
 
     depends_on:
       - migration

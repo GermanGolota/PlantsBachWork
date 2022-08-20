@@ -369,5 +369,3 @@ elm-stuff
 dist
 #db
 src/db
-#docker key
-!src/env/certs/aspnetapp.pfx
