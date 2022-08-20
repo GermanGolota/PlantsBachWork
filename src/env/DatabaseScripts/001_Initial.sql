@@ -80,6 +80,13 @@ CREATE TABLE plant_to_image (
     image bytea NOT NULL
 );
 
+CREATE TABLE plant_to_region (
+    id serial PRIMARY KEY,
+    plant_id int REFERENCES plant (id) NOT NULL,
+    plant_region_id int REFERENCES plant_region (id) NOT NULL,
+    CONSTRAINT plant_to_region_unique UNIQUE (plant_id, plant_region_id)
+);
+
 CREATE TABLE person_to_delivery (
     id serial PRIMARY KEY,
     person_id int NOT NULL REFERENCES person (id),

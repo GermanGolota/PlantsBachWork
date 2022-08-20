@@ -1,0 +1,47 @@
+version: "3.3"
+services:
+  db:
+    image: 'postgres:latest'
+    ports:
+      - 8000:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password1!
+      POSTGRES_DB: plants
+      PGDATA: var/lib/postgresql/data
+    volumes:
+      - ./db:/var/lib/postgresql/data
+
+  migration:
+    build: env
+    environment:
+      Migration:DbConnectionString: User ID=postgres;Password=password1!;Host=db;Port=5432;Database=plants;
+    depends_on:
+      - db
+
+  back:
+    build: back/
+    ports:
+      - 8001:80
+      - 5001:443
+    environment:
+      ConnectionTemplate: Host=db;Database=plants;Username={0};Password={1}
+      AllowedHosts: "*"
+      Auth:AuthKey: "Set this key in secure configuration storage in prod mode"
+      Auth:TokenValidityHours: 5000
+      ASPNETCORE_URLS: "https://+;http://+"
+      ASPNETCORE_HTTPS_PORT: 5001
+      ASPNETCORE_Kestrel__Certificates__Default__Password: "password"
+      ASPNETCORE_Kestrel__Certificates__Default__Path: /https/aspnetapp.pfx
+    volumes:
+      - ~/.aspnet/https:/https
+
+    depends_on:
+      - migration
+
+  front:
+    build: front/
+    ports:
+      - 8002:80
+    depends_on:
+      - back
