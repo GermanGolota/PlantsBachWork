@@ -23,12 +23,19 @@ services:
     build: back/
     ports:
       - 8001:80
-      - 5001:80
+      - 5001:443
     environment:
       ConnectionTemplate: Host=db;Database=plants;Username={0};Password={1}
-      CORS:Origins: localhost:1234, front:8002
+      AllowedHosts: "*"
       Auth:AuthKey: "Set this key in secure configuration storage in prod mode"
       Auth:TokenValidityHours: 5000
+      ASPNETCORE_URLS: "https://+;http://+"
+      ASPNETCORE_HTTPS_PORT: 5001
+      ASPNETCORE_Kestrel__Certificates__Default__Password: "password"
+      ASPNETCORE_Kestrel__Certificates__Default__Path: /https/aspnetapp.pfx
+    volumes:
+      - ./env/certs:/https/
+
     depends_on:
       - migration
 
