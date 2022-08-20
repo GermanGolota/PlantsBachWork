@@ -20,15 +20,19 @@ services:
       - db
 
   back:
-    build: back/Plants.Presentation
+    build: back/
     ports:
       - 8001:80
       - 5001:80
     environment:
       ConnectionTemplate: Host=db;Database=plants;Username={0};Password={1}
       CORS:Origins: localhost:1234, front:8002
+    depends_on:
+      - migration
 
   front:
     build: front/
     ports:
       - 8002:80
+    depends_on:
+      - back
