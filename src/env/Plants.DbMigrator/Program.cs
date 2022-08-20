@@ -17,5 +17,9 @@ var host = Host.CreateDefaultBuilder(args)
     })
     .Build();
 
+//TODO: actual wait logic
+//Wait for db to come up
+await Task.Delay(TimeSpan.FromSeconds(30));
+
 var migrator = host.Services.GetRequiredService<Migrator>();
 await migrator.MigrateAsync();

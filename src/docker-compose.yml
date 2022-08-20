@@ -18,4 +18,3 @@ services:
       Migration:DbConnectionString: User ID=postgres;Password=password1!;Host=db;Port=5432;Database=plants;
     depends_on:
       - db
-    restart: on-failure:1
