@@ -50,7 +50,10 @@ public class Migrator
     {
         var options = _options.Value;
         var scriptFiles = await _loader.GetFullFileNames(options.ScriptsLocation, "*.sql");
-        var loadTasks = scriptFiles.Select(file => _loader.LoadFileAsync(file));
+        var loadTasks = scriptFiles
+            //load files in order
+            .OrderBy(x => x.Split('_').FirstOrDefault())
+            .Select(file => _loader.LoadFileAsync(file));
         return await Task.WhenAll(loadTasks);
     }
 }
