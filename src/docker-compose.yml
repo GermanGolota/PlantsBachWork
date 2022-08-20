@@ -3,7 +3,7 @@ services:
   db:
     image: 'postgres:latest'
     ports:
-      - 80015432
+      - 8001:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password1!

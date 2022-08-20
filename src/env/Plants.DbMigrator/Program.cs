@@ -6,7 +6,7 @@ var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
     {
         services.AddOptions<MigratorConfig>()
-                .BindConfiguration("Configurator")
+                .BindConfiguration("Migration")
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
         services.AddTransient<IFileLoader, FileLoader>();
