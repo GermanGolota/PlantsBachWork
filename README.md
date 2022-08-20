@@ -1,3 +1,8 @@
+#About
+This is an application that is supposed to be used as a platform for plant-selling business.
+It uses combined Elm-React frontend that calls to ASP.NET Core backend, which interacts with Postgresql database.
+You may find all of the documents that include techical tasks and all of the diagrams.
+This application was used as a course work submission.
 #Running the application
 You can run the application in the docker-container that would spin up the database, add migrations to it and start backend and frontend
 To use it, you would need to trust self-signed SSl certificate, to do so run:
