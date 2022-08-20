@@ -3,7 +3,7 @@ services:
   db:
     image: 'postgres:latest'
     ports:
-      - 8001:5432
+      - 8000:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password1!
@@ -18,3 +18,17 @@ services:
       Migration:DbConnectionString: User ID=postgres;Password=password1!;Host=db;Port=5432;Database=plants;
     depends_on:
       - db
+
+  back:
+    build: back/Plants.Presentation
+    ports:
+      - 8001:80
+      - 5001:80
+    environment:
+      ConnectionTemplate: Host=db;Database=plants;Username={0};Password={1}
+      CORS:Origins: localhost:1234, front:8002
+
+  front:
+    build: front/
+    ports:
+      - 8002:80
