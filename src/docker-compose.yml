@@ -36,7 +36,7 @@ services:
       - 8001:80
       - 5001:443
     environment:
-      ConnectionTemplate: Host=db;Database=plants;Username={0};Password={1}
+      DbConnectionTemplate: Host=db;Database=plants;Username={0};Password={1}
       AllowedHosts: "*"
       Auth:AuthKey: "Set this key in secure configuration storage in prod mode"
       Auth:TokenValidityHours: 5000

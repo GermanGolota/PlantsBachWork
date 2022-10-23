@@ -45,7 +45,7 @@ namespace Plants.Infrastructure.Helpers
         public PlantsContext CreateFromCreds(string login, string pass)
         {
             var optionsBuilder = new DbContextOptionsBuilder<PlantsContext>();
-            var connectionStr = string.Format(_config.ConnectionTemplate, login, pass);
+            var connectionStr = String.Format(_config.DbConnectionTemplate, login, pass);
             optionsBuilder.UseNpgsql(connectionStr);
             return new PlantsContext(optionsBuilder.Options);
         }

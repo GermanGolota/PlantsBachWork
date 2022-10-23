@@ -2,6 +2,7 @@
 {
     public class ConnectionConfig
     {
-        public string ConnectionTemplate { get; set; }
+        public string DbConnectionTemplate { get; set; }
+        public string EventStoreConnection { get; set; }
     }
 }
