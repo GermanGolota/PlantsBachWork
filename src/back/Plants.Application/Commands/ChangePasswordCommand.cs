@@ -1,18 +1,17 @@
 ﻿using MediatR;
 
-namespace Plants.Application.Commands
+namespace Plants.Application.Commands;
+
+public record ChangePasswordCommand(string NewPassword) : IRequest<ChangePasswordResult>;
+public record ChangePasswordResult(bool Success, string Message)
 {
-    public record ChangePasswordCommand(string NewPassword) : IRequest<ChangePasswordResult>;
-    public record ChangePasswordResult(bool Success, string Message)
+    public ChangePasswordResult() : this(true, "")
     {
-        public ChangePasswordResult() : this(true, "")
-        {
 
-        }
+    }
 
-        public ChangePasswordResult(string msg) : this(false, msg)
-        {
+    public ChangePasswordResult(string msg) : this(false, msg)
+    {
 
-        }
     }
 }

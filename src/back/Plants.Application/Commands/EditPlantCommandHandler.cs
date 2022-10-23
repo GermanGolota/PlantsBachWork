@@ -1,25 +1,22 @@
 ﻿using MediatR;
 using Plants.Application.Contracts;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Plants.Application.Commands
+namespace Plants.Application.Commands;
+
+public class EditPlantCommandHandler : IRequestHandler<EditPlantCommand, EditPlantResult>
 {
-    public class EditPlantCommandHandler : IRequestHandler<EditPlantCommand, EditPlantResult>
+    private readonly IPlantsService _plants;
+
+    public EditPlantCommandHandler(IPlantsService plants)
     {
-        private readonly IPlantsService _plants;
+        _plants = plants;
+    }
 
-        public EditPlantCommandHandler(IPlantsService plants)
-        {
-            _plants = plants;
-        }
-
-        public async Task<EditPlantResult> Handle(EditPlantCommand request, CancellationToken cancellationToken)
-        {
-            await _plants.Edit(request.PlantId, request.PlantName, 
-                request.PlantDescription, request.RegionIds, request.SoilId, request.GroupId,
-                request.RemovedImages, request.NewImages);
-            return new EditPlantResult();
-        }
+    public async Task<EditPlantResult> Handle(EditPlantCommand request, CancellationToken cancellationToken)
+    {
+        await _plants.Edit(request.PlantId, request.PlantName, 
+            request.PlantDescription, request.RegionIds, request.SoilId, request.GroupId,
+            request.RemovedImages, request.NewImages);
+        return new EditPlantResult();
     }
 }

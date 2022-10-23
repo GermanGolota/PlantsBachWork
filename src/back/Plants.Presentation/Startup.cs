@@ -1,100 +1,90 @@
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Plants.Core;
 using Plants.Infrastructure;
 using Plants.Presentation.Extensions;
 using Plants.Presentation.Middleware;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace Plants.Presentation
+namespace Plants.Presentation;
+
+public class Startup
 {
-    public class Startup
+    private const string DevPolicyName = "dev";
+    private const string ProdPolicyName = "prod";
+
+    public Startup(IConfiguration configuration)
     {
-        private const string DevPolicyName = "dev";
-        private const string ProdPolicyName = "prod";
+        Configuration = configuration;
+    }
 
-        public Startup(IConfiguration configuration)
+    public IConfiguration Configuration { get; }
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddMediatR(typeof(Plants.Application.AssemblyTag).Assembly);
+        services.AddControllers();
+        services.AddInfrastructure(Configuration);
+        services.AddSwagger();
+
+        services.AddCors(opt =>
         {
-            Configuration = configuration;
-        }
-
-        public IConfiguration Configuration { get; }
-
-        public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddMediatR(typeof(Plants.Application.AssemblyTag).Assembly);
-            services.AddControllers();
-            services.AddInfrastructure(Configuration);
-            services.AddSwagger();
-
-            services.AddCors(opt =>
+            opt.AddPolicy(DevPolicyName, options =>
             {
-                opt.AddPolicy(DevPolicyName, options =>
-                {
-                    options.AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader();
-                });
-
-                opt.AddPolicy(ProdPolicyName, options =>
-                {
-                    var config = Configuration["AllowedHosts"];
-                    options.WithOrigins(config)
-                        .AllowAnyMethod()
-                        .AllowAnyHeader();
-                });
+                options.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
             });
 
-            services.AddAuthorization(options =>
+            opt.AddPolicy(ProdPolicyName, options =>
             {
-                UserRole[] allRoles = (UserRole[])Enum.GetValues(typeof(UserRole));
-                UserRole[] passedRoles = new UserRole[allRoles.Length];
-                for (int i = 0; i < allRoles.Length; i++)
-                {
-                    var policyName = allRoles[i].ToString();
-                    options.AddPolicy(policyName, (policy) => policy.RequireClaim(policyName));
-                }
+                var config = Configuration["AllowedHosts"];
+                options.WithOrigins(config)
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
             });
-        }
+        });
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        services.AddAuthorization(options =>
         {
-            if (env.IsDevelopment())
+            UserRole[] allRoles = (UserRole[])Enum.GetValues(typeof(UserRole));
+            UserRole[] passedRoles = new UserRole[allRoles.Length];
+            for (int i = 0; i < allRoles.Length; i++)
             {
-                app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Plants v1"));
-                app.UseCors(DevPolicyName);
+                var policyName = allRoles[i].ToString();
+                options.AddPolicy(policyName, (policy) => policy.RequireClaim(policyName));
             }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-                app.UseHsts();
-                app.UseCors(ProdPolicyName);
-            }
+        });
+    }
 
-            app.UseHttpsRedirection();
-            app.UseAuthentication();
-            app.UseStaticFiles();
-
-            app.UseExceptionHandler(handler => handler.UseCustomErrors(env));
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-            app.UseMiddleware<UrlAuthMiddleware>();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Plants v1"));
+            app.UseCors(DevPolicyName);
         }
+        else
+        {
+            app.UseExceptionHandler("/Error");
+            app.UseHsts();
+            app.UseCors(ProdPolicyName);
+        }
+
+        app.UseHttpsRedirection();
+        app.UseAuthentication();
+        app.UseStaticFiles();
+
+        app.UseExceptionHandler(handler => handler.UseCustomErrors(env));
+
+        app.UseRouting();
+
+        app.UseAuthorization();
+        app.UseMiddleware<UrlAuthMiddleware>();
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+        });
     }
 }

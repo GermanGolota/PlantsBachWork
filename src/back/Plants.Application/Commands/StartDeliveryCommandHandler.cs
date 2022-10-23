@@ -1,23 +1,20 @@
 ﻿using MediatR;
 using Plants.Application.Contracts;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Plants.Application.Commands
+namespace Plants.Application.Commands;
+
+public class StartDeliveryCommandHandler : IRequestHandler<StartDeliveryCommand, StartDeliveryResult>
 {
-    public class StartDeliveryCommandHandler : IRequestHandler<StartDeliveryCommand, StartDeliveryResult>
+    private readonly IOrdersService _orders;
+
+    public StartDeliveryCommandHandler(IOrdersService orders)
     {
-        private readonly IOrdersService _orders;
+        _orders = orders;
+    }
 
-        public StartDeliveryCommandHandler(IOrdersService orders)
-        {
-            _orders = orders;
-        }
-
-        public async Task<StartDeliveryResult> Handle(StartDeliveryCommand request, CancellationToken cancellationToken)
-        {
-            await _orders.ConfirmStarted(request.OrderId, request.TrackingNumber);
-            return new StartDeliveryResult(true);
-        }
+    public async Task<StartDeliveryResult> Handle(StartDeliveryCommand request, CancellationToken cancellationToken)
+    {
+        await _orders.ConfirmStarted(request.OrderId, request.TrackingNumber);
+        return new StartDeliveryResult(true);
     }
 }

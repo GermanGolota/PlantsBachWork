@@ -1,32 +1,29 @@
 ﻿using MediatR;
 using Plants.Application.Contracts;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Plants.Application.Requests
+namespace Plants.Application.Requests;
+
+public class PostRequestHandler : IRequestHandler<PostRequest, PostResult>
 {
-    public class PostRequestHandler : IRequestHandler<PostRequest, PostResult>
+    private readonly IPostService _post;
+
+    public PostRequestHandler(IPostService post)
     {
-        private readonly IPostService _post;
+        _post = post;
+    }
 
-        public PostRequestHandler(IPostService post)
+    public async Task<PostResult> Handle(PostRequest request, CancellationToken cancellationToken)
+    {
+        var item = await _post.GetBy(request.PostId);
+        PostResult res;
+        if (item is not null)
         {
-            _post = post;
+            res = new PostResult(item);
         }
-
-        public async Task<PostResult> Handle(PostRequest request, CancellationToken cancellationToken)
+        else
         {
-            var item = await _post.GetBy(request.PostId);
-            PostResult res;
-            if (item is not null)
-            {
-                res = new PostResult(item);
-            }
-            else
-            {
-                res = new PostResult();
-            }
-            return res;
+            res = new PostResult();
         }
+        return res;
     }
 }

@@ -1,9 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿namespace Plants.Application.Contracts;
 
-namespace Plants.Application.Contracts
+public interface IEmailer
 {
-    public interface IEmailer
-    {
-        Task SendInvitationEmail(string address, string login, string tempPassword, string lang);
-    }
+    Task SendInvitationEmail(string address, string login, string tempPassword, string lang);
 }

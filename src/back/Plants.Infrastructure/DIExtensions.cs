@@ -6,101 +6,99 @@ using Plants.Application.Contracts;
 using Plants.Infrastructure.Config;
 using Plants.Infrastructure.Helpers;
 using Plants.Infrastructure.Services;
-using System.Linq;
 using System.Text;
 
-namespace Plants.Infrastructure
+namespace Plants.Infrastructure;
+
+public static class DIExtensions
 {
-    public static class DIExtensions
+    const string AuthSectionName = "Auth";
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        const string AuthSectionName = "Auth";
-        public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
-        {
-            services.AddHttpContextAccessor();
-            services.AddScoped<PlantsContextFactory>();
-            services.AddAuth(config)
-                .AddEventSourcing()
-                .AddServices();
-            return services;
-        }
+        services.AddHttpContextAccessor();
+        services.AddScoped<PlantsContextFactory>();
+        services.AddAuth(config)
+            .AddEventSourcing()
+            .AddServices();
+        return services;
+    }
 
-        private static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration config)
+    private static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration config)
+    {
+        string key = GetAuthKey(config);
+        services.AddScoped<SymmetricEncrypter>();
+        services.AddScoped<IJWTokenManager, JWTokenManager>();
+        services.AddScoped<IEmailer, Emailer>();
+        services.BindConfigSection<AuthConfig>(config, AuthSectionName);
+        services.BindConfigSection<ConnectionConfig>(config);
+        services.AddAuthentication(x =>
         {
-            string key = GetAuthKey(config);
-            services.AddScoped<SymmetricEncrypter>();
-            services.AddScoped<IJWTokenManager, JWTokenManager>();
-            services.AddScoped<IEmailer, Emailer>();
-            services.BindConfigSection<AuthConfig>(config, AuthSectionName);
-            services.BindConfigSection<ConnectionConfig>(config);
-            services.AddAuthentication(x =>
-            {
-                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-           .AddJwtBearer(x =>
-           {
-               x.RequireHttpsMetadata = false;
-               x.SaveToken = true;
-               x.TokenValidationParameters = GetValidationParams(key);
-           });
-            return services;
-        }
+            x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+       .AddJwtBearer(x =>
+       {
+           x.RequireHttpsMetadata = false;
+           x.SaveToken = true;
+           x.TokenValidationParameters = GetValidationParams(key);
+       });
+        return services;
+    }
 
-        private static IServiceCollection AddServices(this IServiceCollection services)
-        {
-            services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IStatsService, StatsService>();
-            services.AddScoped<ISearchService, SearchService>();
-            services.AddScoped<IInfoService, InfoService>();
-            services.AddScoped<IFileService, FileService>();
-            services.AddScoped<IPostService, PostService>();
-            services.AddScoped<IPlantsService, PlantsService>();
-            services.AddScoped<IOrdersService, OrdersService>();
-            services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IInstructionsService, InstructionsService>();
-            return services;
-        }
+    private static IServiceCollection AddServices(this IServiceCollection services)
+    {
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IStatsService, StatsService>();
+        services.AddScoped<ISearchService, SearchService>();
+        services.AddScoped<IInfoService, InfoService>();
+        services.AddScoped<IFileService, FileService>();
+        services.AddScoped<IPostService, PostService>();
+        services.AddScoped<IPlantsService, PlantsService>();
+        services.AddScoped<IOrdersService, OrdersService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IInstructionsService, InstructionsService>();
+        return services;
+    }
 
-        private static IServiceCollection AddEventSourcing(this IServiceCollection services)
-        {
-            services.AddTransient<EventStoreClientFactory>();
-            return services;
-        }
+    private static IServiceCollection AddEventSourcing(this IServiceCollection services)
+    {
+        services.AddTransient<EventStoreClientFactory>();
+        return services;
+    }
 
-        public static TokenValidationParameters GetValidationParams(string key)
+    public static TokenValidationParameters GetValidationParams(string key)
+    {
+        return new TokenValidationParameters
         {
-            return new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
-                ValidateIssuer = false,
-                ValidateAudience = false
-            };
-        }
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
+    }
 
-        public static string GetAuthKey(IConfiguration config)
-        {
-            return config
-                .GetSection(AuthSectionName)
-                .Get<AuthConfig>()
-                .AuthKey;
-        }
+    public static string GetAuthKey(IConfiguration config)
+    {
+        return config
+            .GetSection(AuthSectionName)
+            .Get<AuthConfig>()
+            .AuthKey;
+    }
 
-        /// <summary>
-        /// Would bind a section, that corresponds to linear subdivisioning of 
-        /// config into sections using <param name="sectionNames"></param>
-        /// If no section names is provided, then an entire config would be used
-        /// </summary>
-        public static IServiceCollection BindConfigSection<T>(this IServiceCollection services,
-          IConfiguration config, params string[] sectionNames) where T : class
+    /// <summary>
+    /// Would bind a section, that corresponds to linear subdivisioning of 
+    /// config into sections using <param name="sectionNames"></param>
+    /// If no section names is provided, then an entire config would be used
+    /// </summary>
+    public static IServiceCollection BindConfigSection<T>(this IServiceCollection services,
+      IConfiguration config, params string[] sectionNames) where T : class
+    {
+        services.Configure<T>(options =>
         {
-            services.Configure<T>(options =>
-            {
-                sectionNames
-                    .Aggregate(config, (config, sectionName) => config.GetSection(sectionName))
-                    .Bind(options);
-            });
-            return services;
-        }
+            sectionNames
+                .Aggregate(config, (config, sectionName) => config.GetSection(sectionName))
+                .Bind(options);
+        });
+        return services;
     }
 }
