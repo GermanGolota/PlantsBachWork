@@ -19,6 +19,7 @@ namespace Plants.Infrastructure
             services.AddHttpContextAccessor();
             services.AddScoped<PlantsContextFactory>();
             services.AddAuth(config)
+                .AddEventSourcing()
                 .AddServices();
             return services;
         }
@@ -57,6 +58,12 @@ namespace Plants.Infrastructure
             services.AddScoped<IOrdersService, OrdersService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IInstructionsService, InstructionsService>();
+            return services;
+        }
+
+        private static IServiceCollection AddEventSourcing(this IServiceCollection services)
+        {
+            services.AddTransient<EventStoreClientFactory>();
             return services;
         }
 
