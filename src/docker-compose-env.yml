@@ -28,4 +28,4 @@ services:
       - "2113:2113"
     volumes:
       - ./es/data:/var/lib/eventstore
-      - ./es/logs:/var/log/eventstore
+      - ./es/eslogs:/var/log/eventstore
