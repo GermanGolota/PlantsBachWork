@@ -2,6 +2,5 @@
 
 public interface ICommandSender
 {
-    Task SendExternalCommandAsync(Command command);
-    void SendLocalCommand(Command command);
+    Task<IEnumerable<Event>> SendCommandAsync(Command command);
 }

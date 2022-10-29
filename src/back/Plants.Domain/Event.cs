@@ -1,3 +1,3 @@
 ﻿namespace Plants.Domain;
 
-public record Event(Guid Id, AggregateDescription Aggregate, Guid CommandId, DateTime Time, string Name);
+public abstract record Event(Guid Id, AggregateDescription Aggregate, long EventNumber, Guid CommandId, DateTime Time, string Name);

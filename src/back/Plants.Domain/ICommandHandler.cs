@@ -7,5 +7,5 @@ public interface ICommandHandler<T> where T : Command
 
 public interface IDomainCommandHandler<T> where T : Command
 {
-    void Handle(T command);
+    IEnumerable<Event> Handle(T command);
 }
