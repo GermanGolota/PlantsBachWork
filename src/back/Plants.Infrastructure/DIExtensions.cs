@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using EventStore.ClientAPI;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -68,6 +69,8 @@ public static class DIExtensions
     {
         services.AddSingleton<TypeHelper>();
         services.AddSingleton<CQRSHelper>();
+        services.AddTransient<EventStoreConnectionFactory>();
+        services.AddSingleton(factory => factory.GetRequiredService<EventStoreConnectionFactory>().Create());
         services.AddSingleton<AggregateHelper>();
         services.AddTransient<ICommandSender, CommandSender>();
         services.AddTransient<IEventStore, EventStoreEventStore>();
