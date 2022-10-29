@@ -1,7 +1,6 @@
-﻿namespace Plants.Core.Entities
+﻿namespace Plants.Core.Entities;
+
+public partial class PersonToLogin
 {
-    public partial class PersonToLogin
-    {
-        public string Login { get; set; }
-    }
+    public string Login { get; set; }
 }

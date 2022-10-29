@@ -11,13 +11,24 @@ services:
       PGDATA: var/lib/postgresql/data
     volumes:
       - ./db:/var/lib/postgresql/data
-
-  migration:
-    build: env
+  
+  eventstore:
+    image: eventstore/eventstore:21.10.0-buster-slim
     environment:
-      Migration:DbConnectionString: User ID=postgres;Password=password1!;Host=db;Port=5432;Database=plants;
-    depends_on:
-      - db
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_RUN_PROJECTIONS=All
+      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
+      - EVENTSTORE_EXT_TCP_PORT=1113
+      - EVENTSTORE_HTTP_PORT=2113
+      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_ENABLE_EXTERNAL_TCP=true
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+    ports:
+      - "1113:1113"
+      - "2113:2113"
+    volumes:
+      - ./es/data:/var/lib/eventstore
+      - ./es/eslogs:/var/log/eventstore
 
   back:
     build: back/
@@ -25,7 +36,7 @@ services:
       - 8001:80
       - 5001:443
     environment:
-      ConnectionTemplate: Host=db;Database=plants;Username={0};Password={1}
+      DbConnectionTemplate: Host=db;Database=plants;Username={0};Password={1}
       AllowedHosts: "*"
       Auth:AuthKey: "Set this key in secure configuration storage in prod mode"
       Auth:TokenValidityHours: 5000
@@ -38,6 +49,7 @@ services:
 
     depends_on:
       - migration
+      - eventstore
 
   front:
     build: front/

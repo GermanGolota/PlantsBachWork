@@ -1,7 +1,6 @@
-﻿namespace Plants.Core.Entities
+﻿namespace Plants.Core.Entities;
+
+public partial class CurrentUserRole
 {
-    public partial class CurrentUserRole
-    {
-        public UserRole RoleName { get; set; }
-    }
+    public UserRole RoleName { get; set; }
 }

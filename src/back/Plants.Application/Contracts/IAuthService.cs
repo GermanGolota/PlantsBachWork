@@ -1,7 +1,6 @@
-﻿namespace Plants.Application.Contracts
+﻿namespace Plants.Application.Contracts;
+
+public interface IAuthService
 {
-    public interface IAuthService
-    {
-        CredsResponse CheckCreds(string login, string password);
-    }
+    CredsResponse CheckCreds(string login, string password);
 }

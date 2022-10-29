@@ -369,3 +369,6 @@ elm-stuff
 dist
 #db
 src/db
+#es
+src/es/data
+src/es/eslogs

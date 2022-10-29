@@ -1,0 +1,31 @@
+version: "3.3"
+services:
+  db:
+    image: 'postgres:latest'
+    ports:
+      - 8000:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password1!
+      POSTGRES_DB: plants
+      PGDATA: var/lib/postgresql/data
+    volumes:
+      - ./db:/var/lib/postgresql/data
+  
+  eventstore:
+    image: eventstore/eventstore:21.10.0-buster-slim
+    environment:
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_RUN_PROJECTIONS=All
+      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
+      - EVENTSTORE_EXT_TCP_PORT=1113
+      - EVENTSTORE_HTTP_PORT=2113
+      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_ENABLE_EXTERNAL_TCP=true
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+    ports:
+      - "1113:1113"
+      - "2113:2113"
+    volumes:
+      - ./es/data:/var/lib/eventstore
+      - ./es/eslogs:/var/log/eventstore
