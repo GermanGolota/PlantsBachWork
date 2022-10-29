@@ -19,10 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Plants.Application\Plants.Application.csproj" />
     <ProjectReference Include="..\Plants.Infrastructure\Plants.Infrastructure.csproj" />
   </ItemGroup>
