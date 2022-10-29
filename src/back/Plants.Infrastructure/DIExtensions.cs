@@ -3,7 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Plants.Application.Contracts;
+using Plants.Domain;
+using Plants.Domain.Persistence;
 using Plants.Infrastructure.Config;
+using Plants.Infrastructure.Domain;
+using Plants.Infrastructure.Domain.Helpers;
 using Plants.Infrastructure.Helpers;
 using Plants.Infrastructure.Services;
 using System.Text;
@@ -62,7 +66,12 @@ public static class DIExtensions
 
     private static IServiceCollection AddEventSourcing(this IServiceCollection services)
     {
-        services.AddTransient<EventStoreClientFactory>();
+        services.AddSingleton<TypeHelper>();
+        services.AddSingleton<CQRSHelper>();
+        services.AddSingleton<AggregateHelper>();
+        services.AddTransient<ICommandSender, CommandSender>();
+        services.AddTransient<IEventStore, EventStoreEventStore>();
+        services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
         return services;
     }
 
