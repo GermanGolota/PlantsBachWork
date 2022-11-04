@@ -11,16 +11,22 @@ internal class CommandSender : ICommandSender
     private readonly ILogger<CommandSender> _logger;
     private readonly IServiceProvider _service;
     private readonly AggregateHelper _aggregate;
+    private readonly IEventStore _eventStore;
 
-    public CommandSender(CQRSHelper helper, ILogger<CommandSender> logger, IServiceProvider service, AggregateHelper aggregate)
+    public CommandSender(CQRSHelper helper, 
+        ILogger<CommandSender> logger, 
+        IServiceProvider service, 
+        AggregateHelper aggregate,
+        IEventStore eventStore)
     {
         _helper = helper;
         _logger = logger;
         _service = service;
         _aggregate = aggregate;
+        _eventStore = eventStore;
     }
 
-    public async Task<IEnumerable<Event>> SendCommandAsync(Command command)
+    public async Task SendCommandAsync(Command command)
     {
         var events = new List<Event>();
         var commandType = command.GetType();
@@ -63,6 +69,9 @@ internal class CommandSender : ICommandSender
             _logger.LogError("Send command with no handlers");
         }
 
-        return events;
+        foreach (var @event in events)
+        {
+            await _eventStore.AppendEventAsync(@event);
+        }
     }
 }
