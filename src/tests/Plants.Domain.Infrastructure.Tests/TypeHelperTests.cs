@@ -1,7 +1,7 @@
 using Plants.Infrastructure.Domain.Helpers;
 using System.Reflection;
 
-namespace Plants.Infrastructure.Tests;
+namespace Plants.Domain.Infrastructure.Tests;
 
 public class TypeHelperTests
 {
@@ -11,7 +11,7 @@ public class TypeHelperTests
         var assemblies = TypeHelper.LoadPlantAssemblies(Assembly.GetExecutingAssembly()).Distinct().ToList();
 
         assemblies.Should().NotBeEmpty();
-        assemblies.Should().Contain(Assembly.Load(new AssemblyName("Plants.Infrastructure.Tests")));
+        assemblies.Should().Contain(Assembly.Load(new AssemblyName("Plants.Domain.Infrastructure.Tests")));
     }
 
     [Fact]

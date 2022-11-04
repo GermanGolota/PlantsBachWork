@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Domain", "Domain\Pla
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{265565B2-3883-40E9-88F8-BF6B9C7E1F29}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Infrastructure.Tests", "..\tests\Plants.Infrastructure.Tests\Plants.Infrastructure.Tests.csproj", "{2AFD362A-2C83-4922-A92A-582838861F85}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Domain.Infrastructure.Tests", "..\tests\Plants.Domain.Infrastructure.Tests\Plants.Domain.Infrastructure.Tests.csproj", "{2AFD362A-2C83-4922-A92A-582838861F85}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Domain", "Domain", "{1DA048AE-2144-404A-B711-3768F13FC069}"
 EndProject

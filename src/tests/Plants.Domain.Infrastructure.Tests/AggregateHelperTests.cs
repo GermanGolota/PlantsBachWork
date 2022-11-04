@@ -1,7 +1,7 @@
 ﻿using Plants.Infrastructure.Domain.Helpers;
 using System.Reflection;
 
-namespace Plants.Infrastructure.Tests;
+namespace Plants.Domain.Infrastructure.Tests;
 
 public class AggregateHelperTests
 {
@@ -13,4 +13,12 @@ public class AggregateHelperTests
 
         sut.AggregateCtors.Should().NotBeEmpty();
     }
+
+    private class SampleAggregate : AggregateBase
+    {
+        public SampleAggregate(Guid id) : base(id)
+        {
+        }
+    }
 }
+

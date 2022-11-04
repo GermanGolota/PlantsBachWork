@@ -4,11 +4,11 @@ using Plants.Infrastructure.Config;
 
 namespace Plants.Infrastructure.Helpers;
 
-public class EventStoreConnectionFactory
+internal class EventStoreConnectionFactory
 {
-    private readonly IOptions<ConnectionConfig> _options;
+    private readonly IOptions<EventStoreConfig> _options;
 
-    public EventStoreConnectionFactory(IOptions<ConnectionConfig> options)
+    public EventStoreConnectionFactory(IOptions<EventStoreConfig> options)
     {
         _options = options;
     }

@@ -1,12 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Plants.Domain;
 using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
 
-namespace Plants.Infrastructure.Domain;
+namespace Plants.Domain.Infrastructure;
 
-public class CommandSender : ICommandSender
+internal class CommandSender : ICommandSender
 {
     private readonly CQRSHelper _helper;
     private readonly ILogger<CommandSender> _logger;

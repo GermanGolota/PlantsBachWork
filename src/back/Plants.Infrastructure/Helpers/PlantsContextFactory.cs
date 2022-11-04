@@ -10,11 +10,11 @@ public class PlantsContextFactory
 {
     private readonly IHttpContextAccessor _httpContext;
     private readonly SymmetricEncrypter _encrypter;
-    private readonly ConnectionConfig _config;
+    private readonly DbConfig _config;
 
     public PlantsContextFactory(
         IHttpContextAccessor httpContext,
-        IOptions<ConnectionConfig> options,
+        IOptions<DbConfig> options,
         SymmetricEncrypter encrypter)
     {
         _httpContext = httpContext;
@@ -43,7 +43,7 @@ public class PlantsContextFactory
     public PlantsContext CreateFromCreds(string login, string pass)
     {
         var optionsBuilder = new DbContextOptionsBuilder<PlantsContext>();
-        var connectionStr = String.Format(_config.DbConnectionTemplate, login, pass);
+        var connectionStr = String.Format(_config.DatabaseConnectionTemplate, login, pass);
         optionsBuilder.UseNpgsql(connectionStr);
         return new PlantsContext(optionsBuilder.Options);
     }

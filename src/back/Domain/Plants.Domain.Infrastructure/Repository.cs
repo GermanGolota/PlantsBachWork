@@ -1,10 +1,9 @@
-﻿using Plants.Domain;
-using Plants.Domain.Persistence;
+﻿using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
 
-namespace Plants.Infrastructure.Domain;
+namespace Plants.Domain.Infrastructure;
 
-public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate : AggregateBase
+internal class Repository<TAggregate> : IRepository<TAggregate> where TAggregate : AggregateBase
 {
     private readonly IEventStore _store;
     private readonly AggregateHelper _helper;

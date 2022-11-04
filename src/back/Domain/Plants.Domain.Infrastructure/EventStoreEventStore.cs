@@ -8,9 +8,9 @@ using System.Reflection;
 using System.Text;
 using StreamPosition = EventStore.ClientAPI.StreamPosition;
 
-namespace Plants.Infrastructure.Domain;
+namespace Plants.Domain.Infrastructure;
 
-public class EventStoreEventStore : IEventStore
+internal class EventStoreEventStore : IEventStore
 {
     private readonly IEventStoreConnection _connection;
 
