@@ -24,8 +24,6 @@ public static class DiExtensions
 
     private static IServiceCollection AddEventSourcing(this IServiceCollection services)
     {
-        var helper = new TypeHelper();
-        services.AddSingleton(helper);
         services.AddSingleton<CQRSHelper>();
         services.AddTransient<EventStoreConnectionFactory>();
         services.AddSingleton(factory => factory.GetRequiredService<EventStoreConnectionFactory>().Create());
@@ -33,14 +31,14 @@ public static class DiExtensions
         services.AddTransient<ICommandSender, CommandSender>();
         services.AddTransient<IEventStore, EventStoreEventStore>();
         services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
-        services.RegisterExternalCommands(helper);
+        services.RegisterExternalCommands();
         return services;
     }
 
-    private static IServiceCollection RegisterExternalCommands(this IServiceCollection services, TypeHelper helper)
+    private static IServiceCollection RegisterExternalCommands(this IServiceCollection services)
     {
         var baseType = typeof(ICommandHandler<>);
-        foreach (var type in helper.Types.Where(x => x.IsAssignableToGenericType(baseType) && x != baseType))
+        foreach (var type in Helpers.Type.Types.Where(x => x.IsAssignableToGenericType(baseType) && x != baseType))
         {
             foreach (var @interface in type.GetInterfaces().Where(x => x.IsAssignableToGenericType(baseType)))
             {

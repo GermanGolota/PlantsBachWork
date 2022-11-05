@@ -7,11 +7,11 @@ public class TypeHelper
     public IEnumerable<Type> Types { get; }
     public IEnumerable<Assembly> Assemblies { get; }
 
-    public TypeHelper() : this(Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly())
+    internal TypeHelper() : this(Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly())
     {
     }
 
-    public TypeHelper(Assembly root)
+    internal TypeHelper(Assembly root)
     {
         Assemblies = LoadPlantAssemblies(root).Distinct().ToList();
         Types = Assemblies.SelectMany(x => x.GetTypes()).Distinct().ToList();

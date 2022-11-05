@@ -4,6 +4,7 @@ using Plants.Domain.Infrastructure;
 using Plants.Infrastructure;
 using Plants.Presentation.Extensions;
 using Plants.Presentation.Middleware;
+using Plants.Shared;
 
 namespace Plants.Presentation;
 
@@ -23,6 +24,8 @@ public class Startup
     {
         services.AddMediatR(typeof(Plants.Application.AssemblyTag).Assembly);
         services
+            .BindConfigSections(Configuration)
+            .AddShared()
             .AddInfrastructure(Configuration)
             .AddDomainInfrastructure(Configuration)
             .AddControllers();
