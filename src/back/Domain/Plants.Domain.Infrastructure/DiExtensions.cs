@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
@@ -68,12 +67,16 @@ public static class DiExtensions
         services.AddTransient(typeof(IProjectionRepository<>), typeof(MongoDBRepository<>));
         services.AddTransient(typeof(IProjectionQueryService<>), typeof(MongoDBRepository<>));
 
+        var baseClassMap = new BsonClassMap(typeof(AggregateBase));
+        baseClassMap.MapProperty(nameof(AggregateBase.Version));
+        baseClassMap.MapProperty(nameof(AggregateBase.Name));
+        baseClassMap.MapIdProperty(nameof(AggregateBase.Id));
         var helper = InfraHelpers.Aggregate;
         foreach (var (_, type) in helper.Aggregates)
         {
-            var map = new BsonClassMap(type);
+            var map = new BsonClassMap(type, baseClassMap);
             var ctor = helper.AggregateCtors[type];
-            map.MapConstructor(ctor, "Id");
+            map.MapConstructor(ctor, nameof(AggregateBase.Id));
             map.AutoMap();
             BsonClassMap.RegisterClassMap(map);
         }
