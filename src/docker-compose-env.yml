@@ -10,8 +10,8 @@ services:
       POSTGRES_DB: plants
       PGDATA: var/lib/postgresql/data
     volumes:
-      - ./db:/var/lib/postgresql/data
-  
+      - ./persist/db:/var/lib/postgresql/data
+
   eventstore:
     image: eventstore/eventstore:21.10.0-buster-slim
     environment:
@@ -27,5 +27,16 @@ services:
       - "1113:1113"
       - "2113:2113"
     volumes:
-      - ./es/data:/var/lib/eventstore
-      - ./es/eslogs:/var/log/eventstore
+      - ./persist/es/data:/var/lib/eventstore
+      - ./persist/es/eslogs:/var/log/eventstore
+
+  mongo:
+    image: mongo:4.4.17
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+
+    volumes:
+      - ./persist/mongo:/data/db

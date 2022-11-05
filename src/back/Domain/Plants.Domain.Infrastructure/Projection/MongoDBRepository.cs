@@ -10,7 +10,7 @@ public class MongoDBRepository<T> : IProjectionQueryService<T>, IProjectionRepos
 
     public MongoDBRepository(IMongoDatabase mongoDatabase)
     {
-        this._mongoDatabase = mongoDatabase;
+        _mongoDatabase = mongoDatabase;
     }
 
     private string CollectionName => typeof(T).Name;
