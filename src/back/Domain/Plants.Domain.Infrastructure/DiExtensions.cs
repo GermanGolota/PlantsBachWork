@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Projection;
 using Plants.Domain.Persistence;
 using Plants.Domain.Projection;
@@ -26,6 +27,7 @@ public static class DiExtensions
     private static IServiceCollection AddEventSourcing(this IServiceCollection services)
     {
         services.AddSingleton<CqrsHelper>();
+        services.AddTransient<RepositoryFactory>();
         services.AddTransient<EventStoreConnectionFactory>();
         services.AddSingleton(factory => factory.GetRequiredService<EventStoreConnectionFactory>().Create());
         services.AddSingleton(_ => InfrastructureHelpers.Aggregate);
@@ -39,7 +41,7 @@ public static class DiExtensions
     private static IServiceCollection RegisterExternalCommands(this IServiceCollection services)
     {
         var baseType = typeof(ICommandHandler<>);
-        foreach (var type in Helpers.Type.Types.Where(x => x.IsAssignableToGenericType(baseType) && x != baseType))
+        foreach (var type in Shared.Helpers.Type.Types.Where(x => x.IsAssignableToGenericType(baseType) && x != baseType))
         {
             foreach (var @interface in type.GetInterfaces().Where(x => x.IsAssignableToGenericType(baseType)))
             {

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
 
@@ -9,21 +10,21 @@ internal class CommandSender : ICommandSender
 {
     private readonly CqrsHelper _helper;
     private readonly ILogger<CommandSender> _logger;
-    private readonly IServiceProvider _service;
-    private readonly AggregateHelper _aggregate;
     private readonly IEventStore _eventStore;
+    private readonly RepositoryFactory _repositoryFactory;
+    private readonly IServiceProvider _service;
 
-    public CommandSender(CqrsHelper helper, 
-        ILogger<CommandSender> logger, 
-        IServiceProvider service, 
-        AggregateHelper aggregate,
-        IEventStore eventStore)
+    public CommandSender(CqrsHelper helper,
+        ILogger<CommandSender> logger,
+        IEventStore eventStore,
+        RepositoryFactory repositoryFactory,
+        IServiceProvider service)
     {
         _helper = helper;
         _logger = logger;
-        _service = service;
-        _aggregate = aggregate;
         _eventStore = eventStore;
+        _repositoryFactory = repositoryFactory;
+        _service = service;
     }
 
     public async Task SendCommandAsync(Command command)
@@ -50,17 +51,10 @@ internal class CommandSender : ICommandSender
                 else
                 {
                     //aggregate command
-                    var aggregateId = command.Aggregate.Id;
-                    var aggregateName = command.Aggregate.Name;
-                    if (_aggregate.Aggregates.TryGetValue(aggregateName, out var aggregateType))
-                    {
-                        var repositoryType = typeof(IRepository<>).MakeGenericType(aggregateType);
-                        var repository = _service.GetRequiredService(repositoryType);
-                        var method = repository.GetType().GetMethod(nameof(IRepository<AggregateBase>.GetByIdAsync));
-                        AggregateBase aggregate = (AggregateBase)await (dynamic)method.Invoke(repository, new object[] { aggregateId });
-                        var newEvents = (IEnumerable<Event>)handler.Invoke(aggregate, new object[] { command });
-                        events.AddRange(newEvents);
-                    }
+                    var loadFunction = _repositoryFactory.CreateFor(command.Aggregate.Name);
+                    var aggregate = await loadFunction(command.Aggregate.Id);
+                    var newEvents = (IEnumerable<Event>)handler.Invoke(aggregate, new object[] { command });
+                    events.AddRange(newEvents);
                 }
             }
         }
