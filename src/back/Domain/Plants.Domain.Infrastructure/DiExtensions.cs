@@ -28,6 +28,7 @@ public static class DiExtensions
     {
         services.AddSingleton<CqrsHelper>();
         services.AddTransient<RepositoryCaller>();
+        services.AddTransient<EventSubscriber>();
         services.AddTransient<EventStoreConnectionFactory>();
         services.AddSingleton(factory => factory.GetRequiredService<EventStoreConnectionFactory>().Create());
         services.AddSingleton(_ => InfrastructureHelpers.Aggregate);

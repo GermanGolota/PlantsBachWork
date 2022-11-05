@@ -13,18 +13,21 @@ internal class CommandSender : ICommandSender
     private readonly IEventStore _eventStore;
     private readonly RepositoryCaller _caller;
     private readonly IServiceProvider _service;
+    private readonly EventSubscriber _subscriber;
 
     public CommandSender(CqrsHelper helper,
         ILogger<CommandSender> logger,
         IEventStore eventStore,
         RepositoryCaller caller,
-        IServiceProvider service)
+        IServiceProvider service,
+        EventSubscriber subscriber)
     {
         _helper = helper;
         _logger = logger;
         _eventStore = eventStore;
         _caller = caller;
         _service = service;
+        _subscriber = subscriber;
     }
 
     public async Task SendCommandAsync(Command command)
@@ -65,6 +68,8 @@ internal class CommandSender : ICommandSender
         foreach (var @event in events)
         {
             await _eventStore.AppendEventAsync(@event);
+            //TODO: Attach subscriber to event store instead of putting it here
+            await _subscriber.ProcessEvent(@event);
         }
     }
 }
