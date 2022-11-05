@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Plants.Infrastructure.Domain.Helpers;
+namespace Plants.Shared;
 
 public class TypeHelper
 {
@@ -11,7 +11,7 @@ public class TypeHelper
     {
     }
 
-    internal TypeHelper(Assembly root)
+    public TypeHelper(Assembly root)
     {
         Assemblies = LoadPlantAssemblies(root).Distinct().ToList();
         Types = Assemblies.SelectMany(x => x.GetTypes()).Distinct().ToList();

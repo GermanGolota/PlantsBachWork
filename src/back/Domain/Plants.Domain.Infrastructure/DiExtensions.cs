@@ -7,6 +7,7 @@ using Plants.Domain.Projection;
 using Plants.Infrastructure.Config;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Infrastructure.Helpers;
+using Plants.Shared;
 
 namespace Plants.Domain.Infrastructure;
 

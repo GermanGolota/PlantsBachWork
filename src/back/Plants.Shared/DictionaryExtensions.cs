@@ -1,4 +1,4 @@
-﻿namespace Plants.Infrastructure.Helpers;
+﻿namespace Plants.Shared;
 
 public static class DictionaryExtensions
 {

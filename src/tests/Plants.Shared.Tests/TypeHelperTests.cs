@@ -1,7 +1,6 @@
-using Plants.Infrastructure.Domain.Helpers;
 using System.Reflection;
 
-namespace Plants.Domain.Infrastructure.Tests;
+namespace Plants.Shared.Tests;
 
 public class TypeHelperTests
 {
