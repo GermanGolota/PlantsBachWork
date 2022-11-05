@@ -10,7 +10,7 @@ public class TypeHelperTests
         var assemblies = TypeHelper.LoadPlantAssemblies(Assembly.GetExecutingAssembly()).Distinct().ToList();
 
         assemblies.Should().NotBeEmpty();
-        assemblies.Should().Contain(Assembly.Load(new AssemblyName("Plants.Domain.Infrastructure.Tests")));
+        assemblies.Should().Contain(Assembly.Load(this.GetType().Assembly.GetName()));
     }
 
     [Fact]
