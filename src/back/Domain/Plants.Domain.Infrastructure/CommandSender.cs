@@ -11,19 +11,19 @@ internal class CommandSender : ICommandSender
     private readonly CqrsHelper _helper;
     private readonly ILogger<CommandSender> _logger;
     private readonly IEventStore _eventStore;
-    private readonly AggregateLoader _loader;
+    private readonly RepositoryCaller _caller;
     private readonly IServiceProvider _service;
 
     public CommandSender(CqrsHelper helper,
         ILogger<CommandSender> logger,
         IEventStore eventStore,
-        AggregateLoader loader,
+        RepositoryCaller caller,
         IServiceProvider service)
     {
         _helper = helper;
         _logger = logger;
         _eventStore = eventStore;
-        _loader = loader;
+        _caller = caller;
         _service = service;
     }
 
@@ -51,7 +51,7 @@ internal class CommandSender : ICommandSender
                 else
                 {
                     //aggregate command
-                    var aggregate = await _loader.LoadAsync(command.Aggregate);
+                    var aggregate = await _caller.LoadAsync(command.Aggregate);
                     var newEvents = (IEnumerable<Event>)handler.Invoke(aggregate, new object[] { command });
                     events.AddRange(newEvents);
                 }
