@@ -367,8 +367,5 @@ node_modules
 elm-stuff
 .cache
 dist
-#db
-src/db
-#es
-src/es/data
-src/es/eslogs
+#persist
+src/persist
