@@ -6,9 +6,9 @@ namespace Plants.Infrastructure.Helpers;
 
 internal class EventStoreConnectionFactory
 {
-    private readonly IOptions<EventStoreConfig> _options;
+    private readonly IOptions<ConnectionConfig> _options;
 
-    public EventStoreConnectionFactory(IOptions<EventStoreConfig> options)
+    public EventStoreConnectionFactory(IOptions<ConnectionConfig> options)
     {
         _options = options;
     }

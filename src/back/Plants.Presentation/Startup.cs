@@ -22,8 +22,10 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddMediatR(typeof(Plants.Application.AssemblyTag).Assembly);
-        services.AddControllers();
-        services.AddInfrastructure(Configuration).AddDomainInfrastructure();
+        services
+            .AddInfrastructure(Configuration)
+            .AddDomainInfrastructure(Configuration)
+            .AddControllers();
         services.AddSwagger();
 
         services.AddCors(opt =>
