@@ -14,7 +14,6 @@ namespace Plants.Infrastructure;
 
 public static class DIExtensions
 {
-    const string AuthSectionName = "Auth";
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         services.AddHttpContextAccessor();
@@ -30,8 +29,6 @@ public static class DIExtensions
         services.AddScoped<SymmetricEncrypter>();
         services.AddScoped<IJWTokenManager, JWTokenManager>();
         services.AddScoped<IEmailer, Emailer>();
-        services.BindConfigSection<AuthConfig>(config, AuthSectionName);
-        services.BindConfigSection<DbConfig>(config);
         services.AddAuthentication(x =>
         {
             x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -75,25 +72,8 @@ public static class DIExtensions
     public static string GetAuthKey(IConfiguration config)
     {
         return config
-            .GetSection(AuthSectionName)
+            .GetSection(AuthConfig.Section)
             .Get<AuthConfig>()
             .AuthKey;
-    }
-
-    /// <summary>
-    /// Would bind a section, that corresponds to linear subdivisioning of 
-    /// config into sections using <param name="sectionNames"></param>
-    /// If no section names is provided, then an entire config would be used
-    /// </summary>
-    public static IServiceCollection BindConfigSection<T>(this IServiceCollection services,
-      IConfiguration config, params string[] sectionNames) where T : class
-    {
-        services.Configure<T>(options =>
-        {
-            sectionNames
-                .Aggregate(config, (config, sectionName) => config.GetSection(sectionName))
-                .Bind(options);
-        });
-        return services;
     }
 }

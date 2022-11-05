@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Plants.Domain.Infrastructure.Projection;
 using Plants.Domain.Persistence;
@@ -13,10 +14,10 @@ namespace Plants.Domain.Infrastructure;
 
 public static class DiExtensions
 {
-    public static IServiceCollection AddDomainInfrastructure(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddDomainInfrastructure(this IServiceCollection services)
     {
         services.AddEventSourcing()
-            .AddProjection(config);
+            .AddProjection();
 
         return services;
     }
@@ -48,12 +49,10 @@ public static class DiExtensions
         return services;
     }
 
-    private static IServiceCollection AddProjection(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddProjection(this IServiceCollection services)
     {
-        //TODO: Add section
-        var config = configuration.Get<ConnectionConfig>();
-        services.AddSingleton(x => new MongoClient(config.MongoDbConnection));
-        services.AddSingleton(x => x.GetRequiredService<MongoClient>().GetDatabase(config.MongoDbDatabaseName));
+        services.AddSingleton(x => new MongoClient(x.GetRequiredService<IOptions<ConnectionConfig>>().Value.MongoDbConnection));
+        services.AddSingleton(x => x.GetRequiredService<MongoClient>().GetDatabase(x.GetRequiredService<IOptions<ConnectionConfig>>().Value.MongoDbDatabaseName));
 
         services.AddTransient(typeof(IProjectionRepository<>), typeof(MongoDBRepository<>));
         services.AddTransient(typeof(IProjectionQueryService<>), typeof(MongoDBRepository<>));

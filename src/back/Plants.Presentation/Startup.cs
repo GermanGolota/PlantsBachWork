@@ -27,7 +27,7 @@ public class Startup
             .BindConfigSections(Configuration)
             .AddShared()
             .AddInfrastructure(Configuration)
-            .AddDomainInfrastructure(Configuration)
+            .AddDomainInfrastructure()
             .AddControllers();
         services.AddSwagger();
 
