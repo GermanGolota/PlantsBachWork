@@ -28,7 +28,7 @@ public static class DiExtensions
         services.AddSingleton<CQRSHelper>();
         services.AddTransient<EventStoreConnectionFactory>();
         services.AddSingleton(factory => factory.GetRequiredService<EventStoreConnectionFactory>().Create());
-        services.AddSingleton(_ => InfraHelpers.Aggregate);
+        services.AddSingleton(_ => InfrastructureHelpers.Aggregate);
         services.AddTransient<ICommandSender, CommandSender>();
         services.AddTransient<IEventStore, EventStoreEventStore>();
         services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
@@ -71,7 +71,7 @@ public static class DiExtensions
         baseClassMap.MapProperty(nameof(AggregateBase.Version));
         baseClassMap.MapProperty(nameof(AggregateBase.Name));
         baseClassMap.MapIdProperty(nameof(AggregateBase.Id));
-        var helper = InfraHelpers.Aggregate;
+        var helper = InfrastructureHelpers.Aggregate;
         foreach (var (_, type) in helper.Aggregates)
         {
             var map = new BsonClassMap(type, baseClassMap);
