@@ -7,13 +7,13 @@ namespace Plants.Domain.Infrastructure;
 
 internal class CommandSender : ICommandSender
 {
-    private readonly CQRSHelper _helper;
+    private readonly CqrsHelper _helper;
     private readonly ILogger<CommandSender> _logger;
     private readonly IServiceProvider _service;
     private readonly AggregateHelper _aggregate;
     private readonly IEventStore _eventStore;
 
-    public CommandSender(CQRSHelper helper, 
+    public CommandSender(CqrsHelper helper, 
         ILogger<CommandSender> logger, 
         IServiceProvider service, 
         AggregateHelper aggregate,

@@ -7,9 +7,9 @@ internal class Repository<TAggregate> : IRepository<TAggregate> where TAggregate
 {
     private readonly IEventStore _store;
     private readonly AggregateHelper _helper;
-    private readonly CQRSHelper _cqrs;
+    private readonly CqrsHelper _cqrs;
 
-    public Repository(IEventStore store, AggregateHelper helper, CQRSHelper cqrs)
+    public Repository(IEventStore store, AggregateHelper helper, CqrsHelper cqrs)
     {
         _store = store;
         _helper = helper;

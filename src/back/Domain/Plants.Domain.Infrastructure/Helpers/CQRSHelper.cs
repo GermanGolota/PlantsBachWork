@@ -4,13 +4,13 @@ using System.Reflection;
 
 namespace Plants.Infrastructure.Domain.Helpers;
 
-public class CQRSHelper
+internal class CqrsHelper
 {
     //addlist
     public IReadOnlyDictionary<Type, List<MethodInfo>> CommandHandlers { get; }
     public IReadOnlyDictionary<Type, List<MethodInfo>> EventHandlers { get; }
 
-    public CQRSHelper(TypeHelper helper)
+    public CqrsHelper(TypeHelper helper)
     {
         var commands = new Dictionary<Type, List<MethodInfo>>();
         var events = new Dictionary<Type, List<MethodInfo>>();
