@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Plants.Domain.Infrastructure.Projection;
 using Plants.Domain.Persistence;
@@ -28,7 +29,7 @@ public static class DiExtensions
         services.AddSingleton<CQRSHelper>();
         services.AddTransient<EventStoreConnectionFactory>();
         services.AddSingleton(factory => factory.GetRequiredService<EventStoreConnectionFactory>().Create());
-        services.AddSingleton<AggregateHelper>();
+        services.AddSingleton(_ => InfraHelpers.Aggregate);
         services.AddTransient<ICommandSender, CommandSender>();
         services.AddTransient<IEventStore, EventStoreEventStore>();
         services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
@@ -51,11 +52,31 @@ public static class DiExtensions
 
     private static IServiceCollection AddProjection(this IServiceCollection services)
     {
-        services.AddSingleton(x => new MongoClient(x.GetRequiredService<IOptions<ConnectionConfig>>().Value.MongoDbConnection));
-        services.AddSingleton(x => x.GetRequiredService<MongoClient>().GetDatabase(x.GetRequiredService<IOptions<ConnectionConfig>>().Value.MongoDbDatabaseName));
+        services.AddSingleton(factory =>
+        {
+            var connectionString = factory.GetRequiredService<IOptions<ConnectionConfig>>().Value.MongoDbConnection;
+            var client = new MongoClient(connectionString);
+            return client;
+        });
+        services.AddSingleton(factory =>
+        {
+            var databaseName = factory.GetRequiredService<IOptions<ConnectionConfig>>().Value.MongoDbDatabaseName;
+            var client = factory.GetRequiredService<MongoClient>();
+            return client.GetDatabase(databaseName);
+        });
 
         services.AddTransient(typeof(IProjectionRepository<>), typeof(MongoDBRepository<>));
         services.AddTransient(typeof(IProjectionQueryService<>), typeof(MongoDBRepository<>));
+
+        var helper = InfraHelpers.Aggregate;
+        foreach (var (_, type) in helper.Aggregates)
+        {
+            var map = new BsonClassMap(type);
+            var ctor = helper.AggregateCtors[type];
+            map.MapConstructor(ctor, "Id");
+            map.AutoMap();
+            BsonClassMap.RegisterClassMap(map);
+        }
 
         return services;
     }
