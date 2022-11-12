@@ -27,11 +27,18 @@ internal class EventStoreEventStore : IEventStore
             StreamEventsSlice currentSlice;
             long nextSliceStart = StreamPosition.Start;
 
+            int slicesCount = 0;
+
             do
             {
+                slicesCount++;
                 currentSlice = await _connection.ReadStreamEventsForwardAsync(id.ToString(), nextSliceStart, 200, false);
                 if (currentSlice.Status != SliceReadStatus.Success)
                 {
+                    if (slicesCount == 1)
+                    {
+                        break;
+                    }
                     throw new EventStoreAggregateNotFoundException($"Aggregate {id} not found");
                 }
                 nextSliceStart = currentSlice.NextEventNumber;
@@ -62,9 +69,10 @@ internal class EventStoreEventStore : IEventStore
                 Serialize(@event),
                 Encoding.UTF8.GetBytes("{}"));
 
+            var eventNumber = metadata.EventNumber - 1;
             var writeResult = await _connection.AppendToStreamAsync(
                 metadata.Aggregate.Id.ToString(),
-                metadata.EventNumber == AggregateBase.NewAggregateVersion ? ExpectedVersion.NoStream : metadata.EventNumber,
+                eventNumber,
                 eventData);
 
             return writeResult.NextExpectedVersion;
