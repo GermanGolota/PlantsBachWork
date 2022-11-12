@@ -2,6 +2,23 @@
 
 public static class TypeExtensions
 {
+    /// <summary>
+    /// Checks for assignability, excluding the type itself
+    /// </summary>
+    public static bool IsStrictlyAssignableToGenericType(this Type givenType, Type genericType)
+    {
+        bool result;
+        if (givenType == genericType)
+        {
+            result = false;
+        }
+        else
+        {
+            result = givenType.IsAssignableToGenericType(genericType);
+        }
+        return result;
+    }
+
     public static bool IsAssignableToGenericType(this Type givenType, Type genericType)
     {
         bool result;
@@ -14,10 +31,9 @@ public static class TypeExtensions
         }
         else
         {
-            Type baseType = givenType.BaseType;
-            if (baseType is not null)
+            if (givenType.BaseType is not null)
             {
-                result = baseType.IsAssignableToGenericType(genericType);
+                result = givenType.BaseType.IsAssignableToGenericType(genericType);
             }
             else
             {
@@ -36,4 +52,8 @@ public static class TypeExtensions
     {
         return givenType.GetInterfaces().Any(it => it.IsGenericType && it.GetGenericTypeDefinition() == genericType);
     }
+
+    public static IEnumerable<Type> GetImplementations(this Type type, Type genericType) =>
+        type.GetInterfaces().Where(x => x.IsAssignableToGenericType(genericType));
+
 }

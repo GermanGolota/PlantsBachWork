@@ -1,6 +1,7 @@
 ﻿using Plants.Domain;
 using Plants.Shared;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Plants.Infrastructure.Domain.Helpers;
 
@@ -12,33 +13,44 @@ internal class CqrsHelper
 
     public CqrsHelper(TypeHelper helper)
     {
+        var commandHandlerType = typeof(ICommandHandler<>);
+        var domainHandler = typeof(IDomainCommandHandler<>);
+        var eventHandler = typeof(IEventHandler<>);
+
         var commands = new Dictionary<Type, List<MethodInfo>>();
         var events = new Dictionary<Type, List<MethodInfo>>();
         foreach (var type in helper.Types)
         {
-            if (type.IsAssignableToGenericType(typeof(IDomainCommandHandler<>)))
+            if (type.IsStrictlyAssignableToGenericType(domainHandler))
             {
-                //todo: actually find type of cmd, instead of getting first
-                var commandType = type.GetGenericArguments()[0];
-                var method = type.GetMethod(nameof(IDomainCommandHandler<Command>.Handle));
-                commands.AddList(commandType, method!);
-            }
-            else
-            {
-                if (type.IsAssignableToGenericType(typeof(ICommandHandler<>)))
+                var handlers = type.GetImplementations(domainHandler);
+                foreach (var handler in handlers)
                 {
-                    var commandType = type.GetGenericArguments()[0];
-                    var method = type.GetMethod(nameof(ICommandHandler<Command>.HandleAsync));
+                    var commandType = handler.GetGenericArguments()[0];
+                    var method = type.GetMethod(nameof(IDomainCommandHandler<Command>.Handle), new[] { commandType });
                     commands.AddList(commandType, method!);
                 }
-                else
+            }
+
+            if (type.IsStrictlyAssignableToGenericType(commandHandlerType))
+            {
+                var handlers = type.GetImplementations(commandHandlerType);
+                foreach (var handler in handlers)
                 {
-                    if (type.IsAssignableToGenericType(typeof(IEventHandler<>)))
-                    {
-                        var eventType = type.GetGenericArguments()[0];
-                        var method = type.GetMethod(nameof(IEventHandler<Event>.Handle));
-                        events.AddList(eventType, method!);
-                    }
+                    var commandType = handler.GetGenericArguments()[0];
+                    var method = type.GetMethod(nameof(ICommandHandler<Command>.HandleAsync), new[] { commandType });
+                    commands.AddList(commandType, method!);
+                }
+            }
+
+            if (type.IsStrictlyAssignableToGenericType(eventHandler))
+            {
+                var handlers = type.GetImplementations(eventHandler);
+                foreach (var handler in handlers)
+                {
+                    var eventType = handler.GetGenericArguments()[0];
+                    var method = type.GetMethod(nameof(IEventHandler<Event>.Handle), new[] { eventType });
+                    events.AddList(eventType, method!);
                 }
             }
         }
