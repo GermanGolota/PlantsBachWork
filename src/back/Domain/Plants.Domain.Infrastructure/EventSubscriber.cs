@@ -1,41 +1,26 @@
-﻿using Microsoft.Extensions.Logging;
-using Plants.Domain.Infrastructure.Helpers;
-using Plants.Infrastructure.Domain.Helpers;
+﻿using Plants.Domain.Infrastructure.Helpers;
 
 namespace Plants.Domain.Infrastructure;
 
 internal class EventSubscriber
 {
-    private readonly CqrsHelper _cqrs;
-    private readonly ILogger<EventSubscriber> _logger;
     private readonly RepositoryCaller _caller;
 
-    public EventSubscriber(
-        CqrsHelper cqrs,
-        ILogger<EventSubscriber> logger,
-        RepositoryCaller caller)
+    public EventSubscriber(RepositoryCaller caller)
     {
-        _cqrs = cqrs;
-        _logger = logger;
         _caller = caller;
     }
 
-    //TODO: Think about processing multiple events at a time
-    public async Task ProcessEvent(Event @event)
+    public async Task UpdateAggregateAsync(AggregateDescription desc, IEnumerable<Event> newEvents)
     {
-        var eventType = @event.GetType();
-        if (_cqrs.EventHandlers.TryGetValue(eventType, out var handlers))
+        var aggregate = await _caller.LoadAsync(desc);
+        if (aggregate.Version == 0)
         {
-            var aggregate = await _caller.LoadAsync(@event.Metadata.Aggregate);
-            foreach (var handler in handlers)
-            {
-                handler.Invoke(aggregate, new object[] { @event });
-                await _caller.UpdateAsync(aggregate);
-            }
+            await _caller.CreateAsync(aggregate);
         }
         else
         {
-            _logger.LogWarning("No event subscriber for '{type}'", eventType);
+            await _caller.UpdateAsync(aggregate);
         }
     }
 }

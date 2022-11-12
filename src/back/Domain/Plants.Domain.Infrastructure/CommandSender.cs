@@ -68,8 +68,12 @@ internal class CommandSender : ICommandSender
         foreach (var @event in events)
         {
             await _eventStore.AppendEventAsync(@event);
-            //TODO: Attach subscriber to event store instead of putting it here
-            await _subscriber.ProcessEvent(@event);
+        }
+
+        //TODO: Attach subscriber to event store instead of putting it here
+        foreach (var (aggregate, aggEvents) in events.GroupBy(x => x.Metadata.Aggregate).Select(x => (x.Key, x.ToList())))
+        {
+            await _subscriber.UpdateAggregateAsync(aggregate, aggEvents);
         }
     }
 }

@@ -27,10 +27,23 @@ internal class RepositoryCaller
 
     public async Task UpdateAsync(AggregateBase aggregate)
     {
-        var aggregateType = _aggregate.Aggregates[aggregate.Name];
-        var repositoryType = typeof(IProjectionRepository<>).MakeGenericType(aggregateType);
-        var repository = _service.GetRequiredService(repositoryType);
+        var repository = GetProjectionRepository(aggregate);
         var method = repository.GetType().GetMethod(nameof(IProjectionRepository<AggregateBase>.UpdateAsync));
         await (Task)method.Invoke(repository, new object[] { aggregate });
     }
+
+    public async Task CreateAsync(AggregateBase aggregate)
+    {
+        var repository = GetProjectionRepository(aggregate);
+        var method = repository.GetType().GetMethod(nameof(IProjectionRepository<AggregateBase>.InsertAsync));
+        await (Task)method.Invoke(repository, new object[] { aggregate });
+    }
+
+    private object GetProjectionRepository(AggregateBase aggregate)
+    {
+        var aggregateType = _aggregate.Aggregates[aggregate.Name];
+        var repositoryType = typeof(IProjectionRepository<>).MakeGenericType(aggregateType);
+        return _service.GetRequiredService(repositoryType);
+    }
+
 }
