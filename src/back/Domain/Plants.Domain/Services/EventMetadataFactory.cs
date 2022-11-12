@@ -9,9 +9,15 @@ public sealed class EventMetadataFactory
         _dateTime = dateTime;
     }
 
-    public EventMetadata Create<T>(AggregateDescription aggregate, long eventNumber, Guid commandId) where T : Event
+    public EventMetadata Create<T>(Command command, long eventNumber) where T : Event
     {
         var name = typeof(T).Name.Replace("Event", "");
-        return new EventMetadata(Guid.NewGuid(), aggregate, eventNumber, commandId, _dateTime.UtcNow, name);
+        return new EventMetadata(Guid.NewGuid(), command.Metadata.Aggregate, eventNumber, command.Metadata.Id, _dateTime.UtcNow, name);
     }
+}
+
+public static class EventFactory
+{
+    private static Lazy<EventMetadataFactory> _factory = new Lazy<EventMetadataFactory>(() => new EventMetadataFactory(new DateTimeProvider()));
+    public static EventMetadataFactory Shared => _factory.Value;
 }
