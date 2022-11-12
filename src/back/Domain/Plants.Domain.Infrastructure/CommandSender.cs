@@ -54,7 +54,7 @@ internal class CommandSender : ICommandSender
                 else
                 {
                     //aggregate command
-                    var aggregate = await _caller.LoadAsync(command.Aggregate);
+                    var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate);
                     var newEvents = (IEnumerable<Event>)handler.Invoke(aggregate, new object[] { command });
                     events.AddRange(newEvents);
                 }
