@@ -1,3 +1,4 @@
+using EventStore.ClientAPI;
 using Plants.Presentation;
 
 var host = Host.CreateDefaultBuilder(args)
@@ -8,4 +9,6 @@ var host = Host.CreateDefaultBuilder(args)
         .Build();
 
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+var connection = host.Services.GetRequiredService<IEventStoreConnection>();
+await connection.ConnectAsync();
 host.Run();

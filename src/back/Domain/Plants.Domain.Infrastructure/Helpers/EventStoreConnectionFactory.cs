@@ -13,6 +13,9 @@ internal class EventStoreConnectionFactory
         _options = options;
     }
 
-    public IEventStoreConnection Create() =>
-        EventStoreConnection.Create(new Uri(_options.Value.EventStoreConnection));
+    public IEventStoreConnection Create()
+    {
+        var connection = EventStoreConnection.Create(_options.Value.EventStoreConnection);
+        return connection;
+    }
 }
