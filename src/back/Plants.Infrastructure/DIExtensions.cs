@@ -3,11 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Plants.Application.Contracts;
-using Plants.Domain;
-using Plants.Domain.Persistence;
+using Plants.Domain.Services;
 using Plants.Infrastructure.Config;
 using Plants.Infrastructure.Domain;
-using Plants.Infrastructure.Domain.Helpers;
 using Plants.Infrastructure.Helpers;
 using Plants.Infrastructure.Services;
 using System.Text;
@@ -16,13 +14,12 @@ namespace Plants.Infrastructure;
 
 public static class DIExtensions
 {
-    const string AuthSectionName = "Auth";
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         services.AddHttpContextAccessor();
+        services.AddScoped<IUserNameProvider, UserNameProvider>();
         services.AddScoped<PlantsContextFactory>();
         services.AddAuth(config)
-            .AddEventSourcing()
             .AddServices();
         return services;
     }
@@ -33,8 +30,6 @@ public static class DIExtensions
         services.AddScoped<SymmetricEncrypter>();
         services.AddScoped<IJWTokenManager, JWTokenManager>();
         services.AddScoped<IEmailer, Emailer>();
-        services.BindConfigSection<AuthConfig>(config, AuthSectionName);
-        services.BindConfigSection<ConnectionConfig>(config);
         services.AddAuthentication(x =>
         {
             x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -64,34 +59,6 @@ public static class DIExtensions
         return services;
     }
 
-    private static IServiceCollection AddEventSourcing(this IServiceCollection services)
-    {
-        var helper = new TypeHelper();
-        services.AddSingleton(helper);
-        services.AddSingleton<CQRSHelper>();
-        services.AddTransient<EventStoreConnectionFactory>();
-        services.AddSingleton(factory => factory.GetRequiredService<EventStoreConnectionFactory>().Create());
-        services.AddSingleton<AggregateHelper>();
-        services.AddTransient<ICommandSender, CommandSender>();
-        services.AddTransient<IEventStore, EventStoreEventStore>();
-        services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
-        services.RegisterExternalCommands(helper);
-        return services;
-    }
-
-    private static IServiceCollection RegisterExternalCommands(this IServiceCollection services, TypeHelper helper)
-    {
-        var baseType = typeof(ICommandHandler<>);
-        foreach (var type in helper.Types.Where(x => x.IsAssignableToGenericType(baseType) && x != baseType))
-        {
-            foreach (var @interface in type.GetInterfaces().Where(x => x.IsAssignableToGenericType(baseType)))
-            {
-                services.AddTransient(@interface, type);
-            }
-        }
-        return services;
-    }
-
     public static TokenValidationParameters GetValidationParams(string key)
     {
         return new TokenValidationParameters
@@ -106,25 +73,8 @@ public static class DIExtensions
     public static string GetAuthKey(IConfiguration config)
     {
         return config
-            .GetSection(AuthSectionName)
+            .GetSection(AuthConfig.Section)
             .Get<AuthConfig>()
             .AuthKey;
-    }
-
-    /// <summary>
-    /// Would bind a section, that corresponds to linear subdivisioning of 
-    /// config into sections using <param name="sectionNames"></param>
-    /// If no section names is provided, then an entire config would be used
-    /// </summary>
-    public static IServiceCollection BindConfigSection<T>(this IServiceCollection services,
-      IConfiguration config, params string[] sectionNames) where T : class
-    {
-        services.Configure<T>(options =>
-        {
-            sectionNames
-                .Aggregate(config, (config, sectionName) => config.GetSection(sectionName))
-                .Bind(options);
-        });
-        return services;
     }
 }

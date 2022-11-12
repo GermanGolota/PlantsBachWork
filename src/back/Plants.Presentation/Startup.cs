@@ -1,8 +1,10 @@
 using MediatR;
 using Plants.Core;
+using Plants.Domain.Infrastructure;
 using Plants.Infrastructure;
 using Plants.Presentation.Extensions;
 using Plants.Presentation.Middleware;
+using Plants.Shared;
 
 namespace Plants.Presentation;
 
@@ -21,8 +23,12 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddMediatR(typeof(Plants.Application.AssemblyTag).Assembly);
-        services.AddControllers();
-        services.AddInfrastructure(Configuration);
+        services
+            .BindConfigSections(Configuration)
+            .AddShared()
+            .AddInfrastructure(Configuration)
+            .AddDomainInfrastructure()
+            .AddControllers();
         services.AddSwagger();
 
         services.AddCors(opt =>

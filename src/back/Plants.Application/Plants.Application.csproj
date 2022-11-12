@@ -8,12 +8,12 @@
 
   <ItemGroup>
     <PackageReference Include="Humanizer" Version="2.14.1" />
-    <PackageReference Include="MediatR" Version="10.0.1" />
+    <PackageReference Include="MediatR" Version="11.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Plants.Core\Plants.Core.csproj" />
-    <ProjectReference Include="..\Plants.Domain\Plants.Domain.csproj" />
+    <ProjectReference Include="..\Domain\Plants.Domain\Plants.Domain.csproj" />
   </ItemGroup>
 
 </Project>
