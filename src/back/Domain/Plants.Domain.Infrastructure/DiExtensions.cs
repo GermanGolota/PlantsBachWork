@@ -30,7 +30,8 @@ public static class DiExtensions
         services.AddSingleton<CqrsHelper>();
         services.AddTransient<RepositoryCaller>();
         services.AddTransient<EventSubscriber>();
-        services.AddSingleton<CommandMetadataFactory>();
+        services.AddScoped<CommandMetadataFactory>();
+        services.AddScoped<EventMetadataFactory>();
         services.AddTransient<EventStoreConnectionFactory>();
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton(factory => factory.GetRequiredService<EventStoreConnectionFactory>().Create());

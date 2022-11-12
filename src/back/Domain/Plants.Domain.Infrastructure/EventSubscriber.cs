@@ -26,7 +26,7 @@ internal class EventSubscriber
         var eventType = @event.GetType();
         if (_cqrs.EventHandlers.TryGetValue(eventType, out var handlers))
         {
-            var aggregate = await _caller.LoadAsync(@event.Aggregate);
+            var aggregate = await _caller.LoadAsync(@event.Metadata.Aggregate);
             foreach (var handler in handlers)
             {
                 handler.Invoke(aggregate, new object[] { @event });

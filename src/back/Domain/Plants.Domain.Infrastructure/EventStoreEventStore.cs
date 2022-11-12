@@ -51,25 +51,27 @@ internal class EventStoreEventStore : IEventStore
 
     public async Task<long> AppendEventAsync(Event @event)
     {
+        var metadata = @event.Metadata;
         try
         {
+
             var eventData = new EventData(
-                @event.Id,
+                metadata.Id,
                 @event.GetType().AssemblyQualifiedName,
                 true,
                 Serialize(@event),
                 Encoding.UTF8.GetBytes("{}"));
 
             var writeResult = await _connection.AppendToStreamAsync(
-                @event.Aggregate.Id.ToString(),
-                @event.EventNumber == AggregateBase.NewAggregateVersion ? ExpectedVersion.NoStream : @event.EventNumber,
+                metadata.Aggregate.Id.ToString(),
+                metadata.EventNumber == AggregateBase.NewAggregateVersion ? ExpectedVersion.NoStream : metadata.EventNumber,
                 eventData);
 
             return writeResult.NextExpectedVersion;
         }
         catch (EventStoreConnectionException ex)
         {
-            throw new EventStoreCommunicationException($"Error while appending event {@event.Id} for aggregate {@event.Aggregate.Id}", ex);
+            throw new EventStoreCommunicationException($"Error while appending event {metadata.Id} for aggregate {metadata.Aggregate.Id}", ex);
         }
     }
 
