@@ -9,7 +9,12 @@ public abstract class AggregateBase
     }
 
     public const long NewAggregateVersion = -1;
-    public long Version { get; } = NewAggregateVersion;
+    public long Version { get; private set; } = NewAggregateVersion;
     public Guid Id { get; }
     public string Name { get; }
+
+    public void BumpVersion()
+    {
+        Version++;
+    }
 }

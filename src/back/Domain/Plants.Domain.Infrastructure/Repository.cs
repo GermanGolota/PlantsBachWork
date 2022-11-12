@@ -24,6 +24,7 @@ internal class Repository<TAggregate> : IRepository<TAggregate> where TAggregate
             var aggregate = (TAggregate)ctor.Invoke(new object[] { id });
             var events = await _store.ReadEventsAsync(id);
             var handlerBase = typeof(IEventHandler<>);
+            var bumpFunc = aggregateType.GetMethod(nameof(AggregateBase.BumpVersion));
             foreach (var @event in events)
             {
                 var eventType = @event.GetType();
@@ -33,6 +34,7 @@ internal class Repository<TAggregate> : IRepository<TAggregate> where TAggregate
                     foreach (var handler in handlers.Where(x => x.DeclaringType == aggregateType))
                     {
                         handler.Invoke(aggregate, new object[] { @event });
+                        bumpFunc!.Invoke(aggregate, null);
                     }
                 }
             }
