@@ -6,6 +6,7 @@ using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Projection;
 using Plants.Domain.Persistence;
 using Plants.Domain.Projection;
+using Plants.Domain.Services;
 using Plants.Infrastructure.Config;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Infrastructure.Helpers;
@@ -30,6 +31,7 @@ public static class DiExtensions
         services.AddTransient<RepositoryCaller>();
         services.AddTransient<EventSubscriber>();
         services.AddTransient<EventStoreConnectionFactory>();
+        services.AddTransient<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton(factory => factory.GetRequiredService<EventStoreConnectionFactory>().Create());
         services.AddSingleton(_ => InfrastructureHelpers.Aggregate);
         services.AddTransient<ICommandSender, CommandSender>();
