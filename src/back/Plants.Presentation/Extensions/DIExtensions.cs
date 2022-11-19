@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
+using Plants.Presentation.Examples;
+using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Extensions;
 
@@ -30,7 +32,11 @@ public static class DIExtensions
                 {securityScheme, Array.Empty<string>()}
             };
             c.AddSecurityRequirement(requiremenets);
+            c.ExampleFilters();
         });
+
+        services.AddSwaggerExamplesFromAssemblyOf<LoginRequestExample>();
+
         return services;
     }
 }
