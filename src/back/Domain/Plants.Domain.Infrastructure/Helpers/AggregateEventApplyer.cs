@@ -13,32 +13,38 @@ internal class AggregateEventApplyer
         _aggregateHelper = aggregateHelper;
     }
 
-    public TAggregate ApplyEvents<TAggregate>(Guid aggregateId, IEnumerable<Event> events) where TAggregate : AggregateBase
+    public AggregateBase ApplyEvents(AggregateDescription desc, IEnumerable<Event> events)
     {
-        var aggregateType = typeof(TAggregate);
-        if (_aggregateHelper.AggregateCtors.TryGetValue(aggregateType, out var ctor))
+        if (_aggregateHelper.Aggregates.TryGetFor(desc.Name, out var aggregateType))
         {
-            var aggregate = (TAggregate)ctor.Invoke(new object[] { aggregateId });
-            var handlerBase = typeof(IEventHandler<>);
-            var bumpFunc = aggregateType.GetMethod(nameof(AggregateBase.BumpVersion));
-            foreach (var @event in events)
+            if (_aggregateHelper.AggregateCtors.TryGetValue(aggregateType, out var ctor))
             {
-                var eventType = @event.GetType();
-                var handlerType = handlerBase.MakeGenericType(eventType);
-                if (_cqrs.EventHandlers.TryGetValue(eventType, out var handlers))
+                var aggregate = (AggregateBase)ctor.Invoke(new object[] { desc.Id });
+                var handlerBase = typeof(IEventHandler<>);
+                var bumpFunc = aggregateType.GetMethod(nameof(AggregateBase.BumpVersion));
+                foreach (var @event in events)
                 {
-                    foreach (var handler in handlers.Where(x => x.DeclaringType == aggregateType))
+                    var eventType = @event.GetType();
+                    var handlerType = handlerBase.MakeGenericType(eventType);
+                    if (_cqrs.EventHandlers.TryGetValue(eventType, out var handlers))
                     {
-                        handler.Invoke(aggregate, new object[] { @event });
-                        bumpFunc!.Invoke(aggregate, null);
+                        foreach (var handler in handlers.Where(x => x.DeclaringType == aggregateType))
+                        {
+                            handler.Invoke(aggregate, new object[] { @event });
+                            bumpFunc!.Invoke(aggregate, null);
+                        }
                     }
                 }
+                return aggregate;
             }
-            return aggregate;
+            else
+            {
+                throw new Exception($"Cannot construct '{aggregateType}'");
+            }
         }
         else
         {
-            throw new Exception($"Cannot construct '{aggregateType}'");
+            throw new Exception($"Cannot find '{desc.Name}'");
         }
     }
 }
