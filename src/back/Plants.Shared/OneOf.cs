@@ -42,6 +42,9 @@ public class OneOf<T0, T1>
             func1(_t1);
         }
     }
+
+    public static implicit operator OneOf<T0, T1>(T0 first) => new(first);
+    public static implicit operator OneOf<T0, T1>(T1 second) => new(second);
 }
 
 public static class OneOfExtensions

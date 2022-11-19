@@ -39,18 +39,27 @@ public static class DiExtensions
         services.AddTransient<ICommandSender, CommandSender>();
         services.AddTransient<IEventStore, EventStoreEventStore>();
         services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
-        services.RegisterExternalCommands();
+        services.RegisterExternalServices();
         return services;
     }
 
-    private static IServiceCollection RegisterExternalCommands(this IServiceCollection services)
+    private static IServiceCollection RegisterExternalServices(this IServiceCollection services)
     {
-        var baseType = typeof(ICommandHandler<>);
-        foreach (var type in Shared.Helpers.Type.Types.Where(x => x.IsAssignableToGenericType(baseType) && x != baseType))
+        var baseHandlerType = typeof(ICommandHandler<>);
+        var subType = typeof(IEventSubscriber);
+        foreach (var type in Shared.Helpers.Type.Types)
         {
-            foreach (var @interface in type.GetInterfaces().Where(x => x.IsAssignableToGenericType(baseType)))
+            if (type.IsAssignableToGenericType(baseHandlerType) && type != baseHandlerType)
             {
-                services.AddTransient(@interface, type);
+                foreach (var @interface in type.GetInterfaces().Where(x => x.IsAssignableToGenericType(baseHandlerType)))
+                {
+                    services.AddTransient(@interface, type);
+                }
+            }
+
+            if (type.IsAssignableTo(subType))
+            {
+                services.AddTransient(type);
             }
         }
         return services;

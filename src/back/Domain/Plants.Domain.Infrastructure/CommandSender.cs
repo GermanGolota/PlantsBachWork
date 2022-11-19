@@ -8,21 +8,21 @@ namespace Plants.Domain.Infrastructure;
 
 internal class CommandSender : ICommandSender
 {
-    private readonly CqrsHelper _helper;
+    private readonly CqrsHelper _cqrs;
     private readonly ILogger<CommandSender> _logger;
     private readonly IEventStore _eventStore;
     private readonly RepositoryCaller _caller;
     private readonly IServiceProvider _service;
     private readonly EventSubscriber _subscriber;
 
-    public CommandSender(CqrsHelper helper,
+    public CommandSender(CqrsHelper cqrs,
         ILogger<CommandSender> logger,
         IEventStore eventStore,
         RepositoryCaller caller,
         IServiceProvider service,
         EventSubscriber subscriber)
     {
-        _helper = helper;
+        _cqrs = cqrs;
         _logger = logger;
         _eventStore = eventStore;
         _caller = caller;
@@ -40,7 +40,7 @@ internal class CommandSender : ICommandSender
             throw new Exception("Can't send generic command!");
         }
 
-        if (_helper.CommandHandlers.TryGetValue(commandType, out var handlers))
+        if (_cqrs.CommandHandlers.TryGetValue(commandType, out var handlers))
         {
             foreach (var handler in handlers)
             {
@@ -71,9 +71,29 @@ internal class CommandSender : ICommandSender
         }
 
         //TODO: Attach subscriber to event store instead of putting it here
+        await HandleEvents(events);
+    }
+
+    private async Task HandleEvents(List<Event> events)
+    {
         foreach (var (aggregate, aggEvents) in events.GroupBy(x => x.Metadata.Aggregate).Select(x => (x.Key, x.ToList())))
         {
             await _subscriber.UpdateAggregateAsync(aggregate, aggEvents);
+            foreach (var (subscriberType, eventFilter) in _cqrs.EventSubscribers[aggregate.Name])
+            {
+                var eventsToHandle = eventFilter.Match(
+                    filter => aggEvents.Where(x => filter.EventNames.Contains(x.Metadata.Name)),
+                    all => aggEvents);
+                if (eventsToHandle.Any())
+                {
+                    var sub = (IEventSubscriber)_service.GetRequiredService(subscriberType);
+                    foreach (var @event in eventsToHandle)
+                    {
+                        await sub.HandleAsync(@event);
+                    }
+                }
+            }
         }
+
     }
 }
