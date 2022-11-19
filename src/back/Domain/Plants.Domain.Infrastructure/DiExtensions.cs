@@ -23,7 +23,7 @@ public static class DiExtensions
 
         return services;
     }
-    
+
 
     private static IServiceCollection AddEventSourcing(this IServiceCollection services)
     {
@@ -58,7 +58,7 @@ public static class DiExtensions
                 }
             }
 
-            if (type.IsAssignableTo(subType))
+            if (type.IsAssignableTo(subType) && type != subType)
             {
                 services.AddTransient(type);
             }

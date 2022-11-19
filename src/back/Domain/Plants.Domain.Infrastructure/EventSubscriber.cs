@@ -22,15 +22,9 @@ internal class EventSubscriber
     public async Task UpdateAggregateAsync(AggregateDescription desc, IEnumerable<Event> newEvents)
     {
         var aggregate = await _caller.LoadAsync(desc);
-        var newAggregate = _eventApplyer.ApplyEventsTo(aggregate, newEvents);
-        if (newAggregate.Version is 0)
-        {
-            await _caller.CreateAsync(aggregate);
-        }
-        else
-        {
-            await _caller.UpdateAsync(aggregate);
-        }
+        //would make sense for times in which we would load projection and apply events to it
+        //var newAggregate = _eventApplyer.ApplyEventsTo(aggregate, newEvents);
+        await _caller.InsertOrUpdateProjectionAsync(aggregate);
     }
 
     public async Task UpdateSubscribersAsync(AggregateDescription aggregate, List<Event> aggEvents)

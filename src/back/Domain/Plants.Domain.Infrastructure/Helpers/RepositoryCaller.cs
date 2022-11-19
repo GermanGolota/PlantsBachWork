@@ -29,19 +29,12 @@ internal class RepositoryCaller
         throw new Exception("Aggregate was not found");
     }
 
-    public async Task UpdateAsync(AggregateBase aggregate)
+    public async Task InsertOrUpdateProjectionAsync(AggregateBase aggregate)
     {
         var repository = GetProjectionRepository(aggregate);
-        var method = repository.GetType().GetMethod(nameof(IProjectionRepository<AggregateBase>.UpdateAsync));
-        await (Task)method.Invoke(repository, new object[] { aggregate });
-    }
-
-    public async Task CreateAsync(AggregateBase aggregate)
-    {
-        var repository = GetProjectionRepository(aggregate);
-        var method = repository.GetType().GetMethod(nameof(IProjectionRepository<AggregateBase>.InsertAsync));
-        await (Task)method.Invoke(repository, new object[] { aggregate });
-    }
+        var method = typeof(ProjectionRepositoryExtensions).GetMethod(nameof(ProjectionRepositoryExtensions.InsertOrUpdateAsync));
+        await (Task)method.Invoke(null, new object[] { repository, aggregate });
+    } 
 
     private object GetProjectionRepository(AggregateBase aggregate)
     {
