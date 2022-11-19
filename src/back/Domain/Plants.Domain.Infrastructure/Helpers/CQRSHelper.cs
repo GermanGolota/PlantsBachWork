@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Plants.Domain;
+﻿using Plants.Domain;
 using Plants.Shared;
 using System.Reflection;
 
@@ -11,18 +10,20 @@ internal class CqrsHelper
     public IReadOnlyDictionary<Type, List<MethodInfo>> CommandHandlers { get; }
     public IReadOnlyDictionary<Type, List<MethodInfo>> EventHandlers { get; }
     //Aggregate to subscription
-    public IReadOnlyDictionary<string, List<(Type SubscriberType, OneOf<FilteredEvents, AllEvents> Events)>> EventSubscribers { get; }
+    public IReadOnlyDictionary<string, List<(OneOf<FilteredEvents, AllEvents> Filter, object Transpose)>> EventSubscriptions { get; }
 
     public CqrsHelper(TypeHelper helper)
     {
         var commandHandlerType = typeof(ICommandHandler<>);
         var domainHandler = typeof(IDomainCommandHandler<>);
         var eventHandler = typeof(IEventHandler<>);
-        var eventSubscriber = typeof(IEventSubscriber);
+        var subscriptionType = typeof(IAggregateSubscription<,>);
+        var aggregateType = typeof(AggregateBase);
+        var eventSubscriptionType = typeof(EventSubscription<,>);
 
         var commands = new Dictionary<Type, List<MethodInfo>>();
         var events = new Dictionary<Type, List<MethodInfo>>();
-        var subs = new Dictionary<string, List<(Type SubscriberType, OneOf<FilteredEvents, AllEvents> Events)>>();
+        var subs = new Dictionary<string, List<(OneOf<FilteredEvents, AllEvents> filter, object Transpose)>>();
         foreach (var type in helper.Types)
         {
             if (type.IsStrictlyAssignableToGenericType(domainHandler))
@@ -58,17 +59,33 @@ internal class CqrsHelper
                 }
             }
 
-            if (type.IsAssignableTo(eventSubscriber) && type != eventSubscriber)
+            if (type.IsStrictlyAssignableToGenericType(subscriptionType))
             {
-                var aggregateNameProp = type.GetProperty(nameof(IEventSubscriber.Aggregate), BindingFlags.Static | BindingFlags.Public);
-                var eventFilterProp = type.GetProperty(nameof(IEventSubscriber.Events), BindingFlags.Static | BindingFlags.Public);
-                var aggregate = (string)aggregateNameProp.GetValue(null);
-                var filter = (OneOf<FilteredEvents, AllEvents>)eventFilterProp.GetValue(null);
-                subs.AddList(aggregate, (type, filter));
+                var subscriptionInterface = type.GetImplementations(subscriptionType).Single();
+                if (subscriptionInterface.GetGenericArguments() is [Type receiver, Type transmitter])
+                {
+                    var subscriptionsProp = type.GetProperty(nameof(IAggregateSubscription<AggregateBase, AggregateBase>.Subscriptions), BindingFlags.Static | BindingFlags.Public);
+                    var subscriptions = (IEnumerable<object>)subscriptionsProp.GetValue(null);
+                    foreach (var subscription in subscriptions)
+                    {
+                        var currentSubscriptionType = eventSubscriptionType.MakeGenericType(receiver, transmitter);
+                        var filterProp = currentSubscriptionType.GetProperty(nameof(EventSubscription<AggregateBase, AggregateBase>.EventFilter));
+                        var transposeProp = currentSubscriptionType.GetProperty(nameof(EventSubscription<AggregateBase, AggregateBase>.TransposeEvent));
+                        var filter = (OneOf<FilteredEvents, AllEvents>)filterProp.GetValue(subscription);
+                        var transpose = transposeProp.GetValue(subscription);
+
+                        subs.AddList(transmitter.Name, (filter, transpose));
+                    }
+                }
+                else
+                {
+                    throw new Exception("Cannot find type definitions for subscriptions");
+                }
             }
         }
+
         CommandHandlers = commands;
         EventHandlers = events;
-        EventSubscribers = subs;
+        EventSubscriptions = subs;
     }
 }

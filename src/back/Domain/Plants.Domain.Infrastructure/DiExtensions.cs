@@ -31,6 +31,7 @@ public static class DiExtensions
         services.AddTransient<RepositoryCaller>();
         services.AddTransient<EventSubscriber>();
         services.AddTransient<AggregateEventApplyer>();
+        services.AddTransient(typeof(TransposeApplyer<>));
         services.AddScoped<CommandMetadataFactory>();
         services.AddScoped<EventMetadataFactory>();
         services.AddScoped(typeof(EventSubscriberHelper<>));
@@ -48,7 +49,6 @@ public static class DiExtensions
     private static IServiceCollection RegisterExternalServices(this IServiceCollection services)
     {
         var baseHandlerType = typeof(ICommandHandler<>);
-        var subType = typeof(IEventSubscriber);
         foreach (var type in Shared.Helpers.Type.Types)
         {
             if (type.IsAssignableToGenericType(baseHandlerType) && type != baseHandlerType)
@@ -57,11 +57,6 @@ public static class DiExtensions
                 {
                     services.AddTransient(@interface, type);
                 }
-            }
-
-            if (type.IsAssignableTo(subType) && type != subType)
-            {
-                services.AddTransient(type);
             }
         }
         return services;
