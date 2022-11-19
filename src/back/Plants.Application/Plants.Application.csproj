@@ -4,11 +4,13 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Humanizer" Version="2.14.1" />
     <PackageReference Include="MediatR" Version="11.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
   </ItemGroup>
 
   <ItemGroup>
