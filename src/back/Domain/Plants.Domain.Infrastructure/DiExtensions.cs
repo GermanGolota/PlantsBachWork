@@ -33,6 +33,7 @@ public static class DiExtensions
         services.AddTransient<AggregateEventApplyer>();
         services.AddScoped<CommandMetadataFactory>();
         services.AddScoped<EventMetadataFactory>();
+        services.AddScoped(typeof(EventSubscriberHelper<>));
         services.AddTransient<EventStoreConnectionFactory>();
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
         services.AddTransient(factory => factory.GetRequiredService<EventStoreConnectionFactory>().Create());
