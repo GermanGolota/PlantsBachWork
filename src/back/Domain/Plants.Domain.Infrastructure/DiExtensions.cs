@@ -23,13 +23,14 @@ public static class DiExtensions
 
         return services;
     }
-
+    
 
     private static IServiceCollection AddEventSourcing(this IServiceCollection services)
     {
         services.AddSingleton<CqrsHelper>();
         services.AddTransient<RepositoryCaller>();
         services.AddTransient<EventSubscriber>();
+        services.AddTransient<AggregateEventApplyer>();
         services.AddScoped<CommandMetadataFactory>();
         services.AddScoped<EventMetadataFactory>();
         services.AddTransient<EventStoreConnectionFactory>();
