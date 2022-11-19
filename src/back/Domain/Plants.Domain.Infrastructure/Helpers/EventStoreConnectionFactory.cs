@@ -16,6 +16,8 @@ internal class EventStoreConnectionFactory
     public IEventStoreConnection Create()
     {
         var connection = EventStoreConnection.Create(_options.Value.EventStoreConnection);
+        //TODO: Refactor
+        connection.ConnectAsync().GetAwaiter().GetResult();
         return connection;
     }
 }
