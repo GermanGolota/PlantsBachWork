@@ -20,22 +20,7 @@ internal class AggregateEventApplyer
             if (_aggregateHelper.AggregateCtors.TryGetValue(aggregateType, out var ctor))
             {
                 var aggregate = (AggregateBase)ctor.Invoke(new object[] { desc.Id });
-                var handlerBase = typeof(IEventHandler<>);
-                var bumpFunc = aggregateType.GetMethod(nameof(AggregateBase.BumpVersion));
-                foreach (var @event in events)
-                {
-                    var eventType = @event.GetType();
-                    var handlerType = handlerBase.MakeGenericType(eventType);
-                    if (_cqrs.EventHandlers.TryGetValue(eventType, out var handlers))
-                    {
-                        foreach (var handler in handlers.Where(x => x.DeclaringType == aggregateType))
-                        {
-                            handler.Invoke(aggregate, new object[] { @event });
-                            bumpFunc!.Invoke(aggregate, null);
-                        }
-                    }
-                }
-                return aggregate;
+                return ApplyEventsTo(aggregate, events);
             }
             else
             {
@@ -45,6 +30,33 @@ internal class AggregateEventApplyer
         else
         {
             throw new Exception($"Cannot find '{desc.Name}'");
+        }
+    }
+
+    public AggregateBase ApplyEventsTo(AggregateBase aggregate, IEnumerable<Event> events)
+    {
+        if (_aggregateHelper.Aggregates.TryGetFor(aggregate.Name, out var aggregateType))
+        {
+            var handlerBase = typeof(IEventHandler<>);
+            var bumpFunc = aggregateType.GetMethod(nameof(AggregateBase.BumpVersion));
+            foreach (var @event in events)
+            {
+                var eventType = @event.GetType();
+                var handlerType = handlerBase.MakeGenericType(eventType);
+                if (_cqrs.EventHandlers.TryGetValue(eventType, out var handlers))
+                {
+                    foreach (var handler in handlers.Where(x => x.DeclaringType == aggregateType))
+                    {
+                        handler.Invoke(aggregate, new object[] { @event });
+                        bumpFunc!.Invoke(aggregate, null);
+                    }
+                }
+            }
+            return aggregate;
+        }
+        else
+        {
+            throw new Exception($"Cannot find '{aggregate.Name}'");
         }
     }
 }
