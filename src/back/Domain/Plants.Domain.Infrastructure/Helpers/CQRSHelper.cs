@@ -13,7 +13,7 @@ internal class CqrsHelper
     //Aggregate to subscription
     public IReadOnlyDictionary<string, List<(Type SubscriberType, OneOf<FilteredEvents, AllEvents> Events)>> EventSubscribers { get; }
 
-    public CqrsHelper(TypeHelper helper, IServiceProvider services)
+    public CqrsHelper(TypeHelper helper)
     {
         var commandHandlerType = typeof(ICommandHandler<>);
         var domainHandler = typeof(IDomainCommandHandler<>);
@@ -58,10 +58,13 @@ internal class CqrsHelper
                 }
             }
 
-            if (type.IsAssignableTo(eventSubscriber))
+            if (type.IsAssignableTo(eventSubscriber) && type != eventSubscriber)
             {
-                var subscriber = (IEventSubscriber)services.GetRequiredService(type);
-                subs.AddList(subscriber.Aggregate, (type, subscriber.Events));
+                var aggregateNameProp = type.GetProperty(nameof(IEventSubscriber.Aggregate), BindingFlags.Static | BindingFlags.Public);
+                var eventFilterProp = type.GetProperty(nameof(IEventSubscriber.Events), BindingFlags.Static | BindingFlags.Public);
+                var aggregate = (string)aggregateNameProp.GetValue(null);
+                var filter = (OneOf<FilteredEvents, AllEvents>)eventFilterProp.GetValue(null);
+                subs.AddList(aggregate, (type, filter));
             }
         }
         CommandHandlers = commands;

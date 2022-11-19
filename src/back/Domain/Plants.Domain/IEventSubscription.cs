@@ -4,8 +4,8 @@ namespace Plants.Domain;
 
 public interface IEventSubscriber
 {
-    string Aggregate { get; }
-    OneOf<FilteredEvents, AllEvents> Events { get; }
+    static abstract string Aggregate { get; }
+    static abstract OneOf<FilteredEvents, AllEvents> Events { get; }
     Task HandleAsync(Event @event);
 }
 
