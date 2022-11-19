@@ -78,7 +78,6 @@ internal class CommandSender : ICommandSender
     {
         foreach (var (aggregate, aggEvents) in events.GroupBy(x => x.Metadata.Aggregate).Select(x => (x.Key, x.ToList())))
         {
-            //primary aggregate
             await _subscriber.UpdateAggregateAsync(aggregate, aggEvents);
             await _subscriber.UpdateSubscribersAsync(aggregate, aggEvents);
         }

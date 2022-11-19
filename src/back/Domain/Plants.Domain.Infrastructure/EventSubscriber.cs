@@ -35,7 +35,6 @@ internal class EventSubscriber
 
     public async Task UpdateSubscribersAsync(AggregateDescription aggregate, List<Event> aggEvents)
     {
-        //subs
         foreach (var (subscriberType, eventFilter) in _cqrs.EventSubscribers[aggregate.Name])
         {
             var eventsToHandle = eventFilter.Match(
