@@ -3,10 +3,10 @@ using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Examples;
 
-internal class AddPlantRequestExample : IExamplesProvider<AddPlantDto>
+internal class AddPlantRequestExample : IExamplesProvider<AddPlantDto2>
 {
-    public AddPlantDto GetExamples() =>
-        new AddPlantDto(
+    public AddPlantDto2 GetExamples() =>
+        new AddPlantDto2(
             "Example plant name",
             "Example plant description",
             new[] { 1, 2 },
