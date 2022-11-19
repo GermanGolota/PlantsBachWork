@@ -28,7 +28,11 @@ public class Startup
             .AddShared()
             .AddInfrastructure(Configuration)
             .AddDomainInfrastructure()
-            .AddControllers();
+            .AddControllers()
+            .AddJsonOptions(_ =>
+            {
+                _.JsonSerializerOptions.Converters.AddOneOfConverter();
+            });
         services.AddSwagger();
 
         services.AddCors(opt =>
@@ -44,15 +48,14 @@ public class Startup
             {
                 var config = Configuration["AllowedHosts"];
                 options.WithOrigins(config)
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
+                                    .AllowAnyMethod()
+                                    .AllowAnyHeader();
             });
         });
 
         services.AddAuthorization(options =>
         {
             UserRole[] allRoles = (UserRole[])Enum.GetValues(typeof(UserRole));
-            UserRole[] passedRoles = new UserRole[allRoles.Length];
             for (int i = 0; i < allRoles.Length; i++)
             {
                 var policyName = allRoles[i].ToString();

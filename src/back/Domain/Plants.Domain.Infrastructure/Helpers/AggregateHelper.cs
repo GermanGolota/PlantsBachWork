@@ -7,7 +7,7 @@ namespace Plants.Infrastructure.Domain.Helpers;
 public class AggregateHelper
 {
     public IReadOnlyDictionary<Type, ConstructorInfo> AggregateCtors { get; }
-    public IReadOnlyDictionary<string, Type> Aggregates { get; }
+    public ITwoWayDictionary<string, Type> Aggregates { get; }
     public AggregateHelper(TypeHelper helper)
     {
         Dictionary<Type, ConstructorInfo> ctors = new();
@@ -36,6 +36,6 @@ public class AggregateHelper
             throw new AggregateException("Failed to load some aggregates", exceptions);
         }
         AggregateCtors = ctors;
-        Aggregates = aggregates;
+        Aggregates = new TwoWayDictionary<string, Type>(aggregates);
     }
 }
