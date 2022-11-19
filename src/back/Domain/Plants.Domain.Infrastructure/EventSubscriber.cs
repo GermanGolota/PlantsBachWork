@@ -32,7 +32,11 @@ internal class EventSubscriber
         foreach (var (subscriberType, eventFilter) in _cqrs.EventSubscribers[aggregate.Name])
         {
             var eventsToHandle = eventFilter.Match(
-                filter => aggEvents.Where(x => filter.EventNames.Contains(x.Metadata.Name)),
+                filter =>
+                {
+                    var eventNames = filter.EventNames.Select(x => x.Replace("Event", ""));
+                    return aggEvents.Where(x => eventNames.Contains(x.Metadata.Name));
+                },
                 all => aggEvents);
             if (eventsToHandle.Any())
             {
