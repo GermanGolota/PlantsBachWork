@@ -31,14 +31,15 @@ internal class RepositoryCaller
 
     public async Task InsertOrUpdateProjectionAsync(AggregateBase aggregate)
     {
-        var repository = GetProjectionRepository(aggregate);
+        var repository = GetProjectionRepository(aggregate, out var aggregateType);
         var method = typeof(ProjectionRepositoryExtensions).GetMethod(nameof(ProjectionRepositoryExtensions.InsertOrUpdateAsync));
+        method = method!.MakeGenericMethod(new[] { aggregateType });
         await (Task)method.Invoke(null, new object[] { repository, aggregate });
-    } 
+    }
 
-    private object GetProjectionRepository(AggregateBase aggregate)
+    private object GetProjectionRepository(AggregateBase aggregate, out Type aggregateType)
     {
-        if (_aggregate.Aggregates.TryGetFor(aggregate.Name, out var aggregateType))
+        if (_aggregate.Aggregates.TryGetFor(aggregate.Name, out aggregateType))
         {
             var repositoryType = typeof(IProjectionRepository<>).MakeGenericType(aggregateType);
             return _service.GetRequiredService(repositoryType);
