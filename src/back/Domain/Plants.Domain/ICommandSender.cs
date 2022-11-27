@@ -1,6 +1,17 @@
-﻿namespace Plants.Domain;
+﻿using Plants.Shared;
+
+namespace Plants.Domain;
 
 public interface ICommandSender
 {
-    Task SendCommandAsync(Command command);
+    Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCommandAsync(Command command);
+}
+
+public record struct CommandAcceptedResult();
+public record struct CommandForbidden(string[] Reasons)
+{
+	public CommandForbidden(string reason) : this(new[] {reason})
+	{
+
+	}
 }
