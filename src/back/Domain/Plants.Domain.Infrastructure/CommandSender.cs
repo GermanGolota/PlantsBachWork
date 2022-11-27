@@ -103,7 +103,7 @@ internal class CommandSender : ICommandSender
             {
                 var service = _service.GetRequiredService(check.DeclaringType!);
                 var task = (Task<CommandForbidden?>)check.Invoke(service, new object[] { command })!;
-                var dependency = new OneOf<object, AggregateBase>(service);
+                var dependency = new OneOf<AggregateBase, object>(service);
                 checkResults.Add((await task, handle, dependency));
             }
             else
@@ -111,7 +111,7 @@ internal class CommandSender : ICommandSender
                 //aggregate command
                 var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate);
                 var checkResult = (CommandForbidden?)check.Invoke(aggregate, new object[] { command });
-                var dependency = new OneOf<object, AggregateBase>(aggregate);
+                var dependency = new OneOf<AggregateBase, object>(aggregate);
                 checkResults.Add((checkResult, handle, dependency));
             }
         }
