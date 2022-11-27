@@ -19,7 +19,7 @@ public class OneOf<T0, T1>
         _isT0 = true;
     }
 
-    public OneOf(T1 value)
+    public OneOf(T1 value) 
     {
         _t0 = default!;
         _t1 = value;

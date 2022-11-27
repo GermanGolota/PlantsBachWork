@@ -2,6 +2,9 @@
 
 public static class TypeExtensions
 {
+    public static bool IsStrictlyAssignableTo(this Type givenType, Type targetType) =>
+        givenType != targetType && givenType.IsAssignableTo(targetType);
+
     /// <summary>
     /// Checks for assignability, excluding the type itself
     /// </summary>

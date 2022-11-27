@@ -8,15 +8,19 @@ public class AggregateHelper
 {
     public IReadOnlyDictionary<Type, ConstructorInfo> AggregateCtors { get; }
     public ITwoWayDictionary<string, Type> Aggregates { get; }
+    public ITwoWayDictionary<string, Type> Events { get; }
+    public ITwoWayDictionary<string, Type> Commands { get; }
+
     public AggregateHelper(TypeHelper helper)
     {
         Dictionary<Type, ConstructorInfo> ctors = new();
         Dictionary<string, Type> aggregates = new();
+        Dictionary<string, Type> events = new();
+        Dictionary<string, Type> commands = new();
         List<Exception> exceptions = new List<Exception>();
         foreach (var type in helper.Types)
         {
-            var baseType = typeof(AggregateBase);
-            if (type.IsAssignableTo(baseType) && type != baseType)
+            if (type.IsStrictlyAssignableTo(typeof(AggregateBase)))
             {
                 var ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
                     null, new Type[1] { typeof(Guid) }, new[] { new ParameterModifier(1) });
@@ -30,6 +34,16 @@ public class AggregateHelper
                 }
                 aggregates.Add(type.Name, type);
             }
+
+            if (type.IsStrictlyAssignableTo(typeof(Event)))
+            {
+                events.Add(type.Name, type);
+            }
+
+            if (type.IsStrictlyAssignableTo(typeof(Command)))
+            {
+                commands.Add(type.Name, type);
+            }
         }
         if (exceptions.Any())
         {
@@ -37,5 +51,7 @@ public class AggregateHelper
         }
         AggregateCtors = ctors;
         Aggregates = new TwoWayDictionary<string, Type>(aggregates);
+        Events = new TwoWayDictionary<string, Type>(events);
+        Commands = new TwoWayDictionary<string, Type>(commands);
     }
 }
