@@ -4,6 +4,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Plants.Domain;
 using Plants.Domain.Persistence;
+using Plants.Infrastructure.Domain.Helpers;
+using Plants.Shared;
 using System.Reflection;
 using System.Text;
 using StreamPosition = EventStore.ClientAPI.StreamPosition;
@@ -13,10 +15,12 @@ namespace Plants.Domain.Infrastructure;
 internal class EventStoreEventStore : IEventStore
 {
     private readonly IEventStoreConnection _connection;
+    private readonly AggregateHelper _helper;
 
-    public EventStoreEventStore(IEventStoreConnection connection)
+    public EventStoreEventStore(IEventStoreConnection connection, AggregateHelper helper)
     {
         _connection = connection;
+        _helper = helper;
     }
 
     public async Task<IEnumerable<Event>> ReadEventsAsync(Guid id)
@@ -44,7 +48,7 @@ internal class EventStoreEventStore : IEventStore
                 nextSliceStart = currentSlice.NextEventNumber;
                 foreach (var resolvedEvent in currentSlice.Events)
                 {
-                    events.Add(Deserialize(resolvedEvent.Event.EventType, resolvedEvent.Event.Data));
+                    events.Add(Deserialize(_helper.Events.Get(resolvedEvent.Event.EventType), resolvedEvent.Event.Data));
                 }
             } while (currentSlice.IsEndOfStream == false);
 
@@ -64,7 +68,7 @@ internal class EventStoreEventStore : IEventStore
 
             var eventData = new EventData(
                 metadata.Id,
-                @event.GetType().AssemblyQualifiedName,
+                _helper.Events.Get(@event.GetType()),
                 true,
                 Serialize(@event),
                 Encoding.UTF8.GetBytes("{}"));
@@ -83,10 +87,10 @@ internal class EventStoreEventStore : IEventStore
         }
     }
 
-    private static Event Deserialize(string eventType, byte[] data)
+    private static Event Deserialize(Type eventType, byte[] data)
     {
         JsonSerializerSettings settings = new JsonSerializerSettings { ContractResolver = new PrivateSetterContractResolver() };
-        return (Event)JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), Type.GetType(eventType), settings);
+        return (Event)JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), eventType, settings);
     }
 
     private static byte[] Serialize(Event @event)

@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
+using Plants.Shared;
+using System.Reflection;
 
 namespace Plants.Domain.Infrastructure;
 
@@ -30,48 +32,91 @@ internal class CommandSender : ICommandSender
         _subscriber = subscriber;
     }
 
-    public async Task SendCommandAsync(Command command)
+    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCommandAsync(Command command)
     {
-        var events = new List<Event>();
         var commandType = command.GetType();
         if (commandType == typeof(Command))
         {
             _logger.LogError("Tried to send command with no type");
             throw new Exception("Can't send generic command!");
         }
-
-        if (_cqrs.CommandHandlers.TryGetValue(commandType, out var handlers))
+        OneOf<CommandAcceptedResult, CommandForbidden> result;
+        if (_cqrs.CommandHandlers.TryGetValue(commandType, out var handlePairs))
         {
-            foreach (var handler in handlers)
+            var checkResults = await PerformChecks(command, handlePairs);
+            var checkFailures = checkResults.Where(_ => _.CheckFailure.HasValue).Select(_ => _.CheckFailure!.Value);
+            if (checkFailures.Any())
             {
-                //external cmd
-                if (handler.ReturnType.IsAssignableTo(typeof(Task<IEnumerable<Event>>)))
+                var reasons = checkFailures.Select(failure => failure.Reasons).Flatten().ToArray();
+                result = new CommandForbidden(reasons);
+            }
+            else
+            {
+                var events = await ExecuteHandlers(command, checkResults);
+                foreach (var @event in events)
                 {
-                    var service = _service.GetRequiredService(handler.DeclaringType!);
-                    var task = (Task<IEnumerable<Event>>)handler.Invoke(service, new object[] { command })!;
-                    events.AddRange(await task);
+                    await _eventStore.AppendEventAsync(@event);
                 }
-                else
-                {
-                    //aggregate command
-                    var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate);
-                    var newEvents = (IEnumerable<Event>)handler.Invoke(aggregate, new object[] { command });
-                    events.AddRange(newEvents);
-                }
+
+                //TODO: Attach subscriber to event store instead of putting it here
+                await HandleEvents(events);
+
+                result = new CommandAcceptedResult();
             }
         }
         else
         {
             _logger.LogError("Send command with no handlers");
+            result = new CommandForbidden("Failed to find any handler for command");
         }
 
-        foreach (var @event in events)
+        return result;
+    }
+
+    private static async Task<List<Event>> ExecuteHandlers(Command command, List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object>)> checkResults)
+    {
+        List<Event> events = new();
+        foreach (var (_, handle, dependency) in checkResults)
         {
-            await _eventStore.AppendEventAsync(@event);
+            var newEvents = await dependency.MatchAsync(
+                aggregate =>
+                {
+                    return Task.FromResult((IEnumerable<Event>)handle.Invoke(aggregate, new object[] { command }));
+                },
+                async service =>
+                {
+                    return await (Task<IEnumerable<Event>>)handle.Invoke(service, new object[] { command })!;
+                });
+            events.AddRange(newEvents);
         }
 
-        //TODO: Attach subscriber to event store instead of putting it here
-        await HandleEvents(events);
+        return events;
+    }
+
+    private async Task<List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object>)>> PerformChecks(Command command, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs)
+    {
+        List<(CommandForbidden? CheckResult, MethodInfo Handle, OneOf<AggregateBase, object>)> checkResults = new();
+        foreach (var (check, handle) in handlePairs)
+        {
+            //external cmd
+            if (check.ReturnType.IsAssignableTo(typeof(Task)))
+            {
+                var service = _service.GetRequiredService(check.DeclaringType!);
+                var task = (Task<CommandForbidden?>)check.Invoke(service, new object[] { command })!;
+                var dependency = new OneOf<AggregateBase, object>(service);
+                checkResults.Add((await task, handle, dependency));
+            }
+            else
+            {
+                //aggregate command
+                var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate);
+                var checkResult = (CommandForbidden?)check.Invoke(aggregate, new object[] { command });
+                var dependency = new OneOf<AggregateBase, object>(aggregate);
+                checkResults.Add((checkResult, handle, dependency));
+            }
+        }
+
+        return checkResults;
     }
 
     private async Task HandleEvents(List<Event> events)

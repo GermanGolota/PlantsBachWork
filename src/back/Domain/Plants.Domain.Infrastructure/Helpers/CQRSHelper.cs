@@ -6,8 +6,7 @@ namespace Plants.Infrastructure.Domain.Helpers;
 
 internal class CqrsHelper
 {
-    //addlist
-    public IReadOnlyDictionary<Type, List<MethodInfo>> CommandHandlers { get; }
+    public IReadOnlyDictionary<Type, List<(MethodInfo Checker, MethodInfo Handler)>> CommandHandlers { get; }
     public IReadOnlyDictionary<Type, List<MethodInfo>> EventHandlers { get; }
     //Aggregate to subscription
     public IReadOnlyDictionary<string, List<(OneOf<FilteredEvents, AllEvents> Filter, object Transpose)>> EventSubscriptions { get; }
@@ -21,7 +20,7 @@ internal class CqrsHelper
         var aggregateType = typeof(AggregateBase);
         var eventSubscriptionType = typeof(EventSubscription<,>);
 
-        var commands = new Dictionary<Type, List<MethodInfo>>();
+        var commands = new Dictionary<Type, List<(MethodInfo Checker, MethodInfo Handler)>>();
         var events = new Dictionary<Type, List<MethodInfo>>();
         var subs = new Dictionary<string, List<(OneOf<FilteredEvents, AllEvents> filter, object Transpose)>>();
         foreach (var type in helper.Types)
@@ -32,8 +31,9 @@ internal class CqrsHelper
                 foreach (var handler in handlers)
                 {
                     var commandType = handler.GetGenericArguments()[0];
-                    var method = type.GetMethod(nameof(IDomainCommandHandler<Command>.Handle), new[] { commandType });
-                    commands.AddList(commandType, method!);
+                    var handleMethod = type.GetMethod(nameof(IDomainCommandHandler<Command>.Handle), new[] { commandType });
+                    var checkMethod = type.GetMethod(nameof(IDomainCommandHandler<Command>.ShouldForbid), new[] { commandType });
+                    commands.AddList(commandType, (checkMethod, handleMethod));
                 }
             }
 
@@ -43,8 +43,9 @@ internal class CqrsHelper
                 foreach (var handler in handlers)
                 {
                     var commandType = handler.GetGenericArguments()[0];
-                    var method = type.GetMethod(nameof(ICommandHandler<Command>.HandleAsync), new[] { commandType });
-                    commands.AddList(commandType, method!);
+                    var handleMethod = type.GetMethod(nameof(ICommandHandler<Command>.HandleAsync), new[] { commandType });
+                    var checkMethod = type.GetMethod(nameof(ICommandHandler<Command>.ShouldForbidAsync), new[] { commandType });
+                    commands.AddList(commandType, (checkMethod, handleMethod));
                 }
             }
 
