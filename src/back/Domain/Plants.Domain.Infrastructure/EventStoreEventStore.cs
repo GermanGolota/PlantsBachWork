@@ -2,7 +2,6 @@
 using EventStore.ClientAPI.Exceptions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Plants.Domain;
 using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Shared;
@@ -89,7 +88,7 @@ internal class EventStoreEventStore : IEventStore
 
     private static Event Deserialize(Type eventType, byte[] data)
     {
-        JsonSerializerSettings settings = new JsonSerializerSettings { ContractResolver = new PrivateSetterContractResolver() };
+        var settings = new JsonSerializerSettings { ContractResolver = new PrivateSetterContractResolver() };
         return (Event)JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), eventType, settings);
     }
 

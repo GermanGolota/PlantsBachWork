@@ -1,6 +1,6 @@
 ﻿using Plants.Domain;
 
-namespace Plants.Application.Aggregates;
+namespace Plants.Application.Aggregates.Plant;
 
 public class Plant : AggregateBase
 {
