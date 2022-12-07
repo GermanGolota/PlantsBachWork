@@ -1,4 +1,5 @@
 ﻿using Plants.Application.Contracts;
+using Plants.Core;
 using Plants.Domain;
 using Plants.Domain.Projection;
 using Plants.Domain.Services;
@@ -16,6 +17,7 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>
     public string LastName { get; private set; }
     public string PhoneNumber { get; private set; }
     public string Login { get; private set; }
+    public UserRole[] Roles { get; private set; }
 
     public void Handle(UserCreatedEvent @event)
     {
@@ -26,6 +28,7 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>
             LastName = user.LastName;
             PhoneNumber = user.PhoneNumber;
             Login = user.Login;
+            Roles = user.Roles;
         }
     }
 }
@@ -33,7 +36,7 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>
 public record UserCreatedEvent(EventMetadata Metadata, UserCreationDto Data) : Event(Metadata);
 public record CreateUserCommand(CommandMetadata Metadata, UserCreationDto Data) : Command(Metadata);
 
-public record UserCreationDto(string FirstName, string LastName, string PhoneNumber, string Login, string Email, string Language);
+public record UserCreationDto(string FirstName, string LastName, string PhoneNumber, string Login, string Email, string Language, UserRole[] Roles);
 
 internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
 {
@@ -62,9 +65,10 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
         var tempPassword = StringHelper.GetRandomAlphanumericString(TempPasswordLength);
         var lang = user.Language ?? "English";
         await _emailer.SendInvitationEmail(user.Email, user.Login, tempPassword, lang);
+        var metadata = EventFactory.Shared.Create<UserCreatedEvent>(command, 0) with { Id = user.Login.ToGuid() };
         return new[]
         {
-            new UserCreatedEvent(EventFactory.Shared.Create<UserCreatedEvent>(command, 0), user)
+            new UserCreatedEvent(metadata, user)
         };
     }
 }
