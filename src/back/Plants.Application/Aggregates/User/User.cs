@@ -5,7 +5,7 @@ using Plants.Domain.Projection;
 using Plants.Domain.Services;
 using Plants.Shared;
 
-namespace Plants.Application.Aggregates.User;
+namespace Plants.Application.Aggregates;
 
 public class User : AggregateBase, IEventHandler<UserCreatedEvent>
 {
