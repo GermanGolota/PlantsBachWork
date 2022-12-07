@@ -7,7 +7,7 @@ using Plants.Shared;
 
 namespace Plants.Application.Aggregates;
 
-public class User : AggregateBase, IEventHandler<UserCreatedEvent>
+public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IDomainCommandHandler<ChangeRoleCommand>, IEventHandler<RoleChangedEvent>
 {
     public User(Guid id) : base(id)
     {
@@ -31,12 +31,35 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>
             Roles = user.Roles;
         }
     }
+
+    public IEnumerable<Event> Handle(ChangeRoleCommand command) =>
+        new[]
+        {
+            new RoleChangedEvent(EventFactory.Shared.Create<RoleChangedEvent>(command, Version + 1), command.Role)
+        };
+
+    //TODO: Add authorization attribute
+    public CommandForbidden? ShouldForbid(ChangeRoleCommand command) =>
+        null;
+
+    public void Handle(RoleChangedEvent @event)
+    {
+        if (Roles.Contains(@event.Role))
+        {
+            Roles = Roles.Where(x => x != @event.Role).ToArray();
+        }
+        else
+        {
+            Roles = Roles.Append(@event.Role).ToArray();
+        }
+    }
+
 }
+
+public record UserCreationDto(string FirstName, string LastName, string PhoneNumber, string Login, string Email, string Language, UserRole[] Roles);
 
 public record UserCreatedEvent(EventMetadata Metadata, UserCreationDto Data) : Event(Metadata);
 public record CreateUserCommand(CommandMetadata Metadata, UserCreationDto Data) : Command(Metadata);
-
-public record UserCreationDto(string FirstName, string LastName, string PhoneNumber, string Login, string Email, string Language, UserRole[] Roles);
 
 internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
 {
@@ -72,3 +95,6 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
         };
     }
 }
+
+public record ChangeRoleCommand(CommandMetadata Metadata, UserRole Role) : Command(Metadata);
+public record RoleChangedEvent(EventMetadata Metadata, UserRole Role) : Event(Metadata);
