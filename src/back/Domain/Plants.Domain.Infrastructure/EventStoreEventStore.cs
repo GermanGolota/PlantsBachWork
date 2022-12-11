@@ -77,11 +77,12 @@ internal class EventStoreEventStore : IEventStore
     }
 
 
-    public async Task<IEnumerable<(Command Command, IEnumerable<Event> Events)>> ReadEventsAsync(Guid id)
+    public async Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(Guid id)
     {
         try
         {
-            var events = new List<(Command Command, List<Event> Events)>();
+            var idToCommand = new Dictionary<Guid, Command>();
+            var events = new Dictionary<Command, List<Event>>();
             StreamEventsSlice currentSlice;
             long nextSliceStart = StreamPosition.Start;
 
@@ -106,21 +107,16 @@ internal class EventStoreEventStore : IEventStore
                     if (_helper.Events.ContainsKey(eventType))
                     {
                         var @event = DeserializeEvent(_helper.Events.Get(eventType), resolvedEvent.Event.Data);
-                        if(lastCommand is null)
-                        {
-                            throw new Exception("First record was not a command");
-                        }
-                        else
-                        {
-                            events.Last().Events.Add(@event);
-                        }
+                        var command = idToCommand[@event.Metadata.CommandId];
+                        events.AddList(command, @event);
                     }
                     else
                     {
                         if (_helper.Commands.ContainsKey(eventType))
                         {
-                            lastCommand = DeserializeCommand(_helper.Commands.Get(eventType), resolvedEvent.Event.Data);
-                            events.Add((lastCommand, new List<Event>()));
+                            var command = DeserializeCommand(_helper.Commands.Get(eventType), resolvedEvent.Event.Data);
+                            idToCommand.Add(command.Metadata.Id, command);
+                            events[command] = new List<Event>();
                         }
                         else
                         {
@@ -130,7 +126,7 @@ internal class EventStoreEventStore : IEventStore
                 }
             } while (currentSlice.IsEndOfStream == false);
 
-            return events.Select(x => (x.Item1, x.Item2.Select(_ => _)));
+            return events.Select(x => new CommandHandlingResult(x.Key, x.Value.Select(_ => _)));
         }
         catch (EventStoreConnectionException ex)
         {
