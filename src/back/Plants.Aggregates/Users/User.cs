@@ -1,6 +1,6 @@
 ﻿using Plants.Core;
 
-namespace Plants.Aggregates.User;
+namespace Plants.Aggregates.Users;
 
 public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandler<RoleChangedEvent>
 {

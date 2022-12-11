@@ -1,6 +1,6 @@
 ﻿using Plants.Core;
 
-namespace Plants.Aggregates.Plant;
+namespace Plants.Aggregates.Plants;
 
 public class Plant : AggregateBase, IDomainCommandHandler<CreatePlantCommand>, IEventHandler<PlantCreatedEvent>
 {

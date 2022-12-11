@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Plants.Aggregates.Plant;
+using Plants.Aggregates.Plants;
 using Plants.Domain;
 using Plants.Domain.Services;
 using Plants.Presentation.Examples;

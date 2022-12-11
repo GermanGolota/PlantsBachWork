@@ -1,7 +1,7 @@
 ﻿using Plants.Aggregates.Services;
 using Plants.Shared;
 
-namespace Plants.Aggregates.User;
+namespace Plants.Aggregates.Users;
 
 internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
 {
@@ -31,7 +31,7 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
         var tempPassword = StringHelper.GetRandomAlphanumericString(TempPasswordLength);
         var lang = user.Language ?? "English";
         await _emailer.SendInvitationEmail(user.Email, user.Login, tempPassword, lang);
-        await _changer.Create(user.Login, user.Roles);
+        await _changer.Create(user.Login, tempPassword, $"{user.FirstName} {user.LastName}", user.Roles);
         var metadata = EventFactory.Shared.Create<UserCreatedEvent>(command, 0) with { Id = user.Login.ToGuid() };
         return new[]
         {

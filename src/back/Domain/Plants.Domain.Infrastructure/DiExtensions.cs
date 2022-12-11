@@ -67,8 +67,7 @@ public static class DiExtensions
         services.AddSingleton(factory =>
         {
             var connectionString = factory.GetRequiredService<IOptions<ConnectionConfig>>().Value.MongoDbConnection;
-            var client = new MongoClient(connectionString);
-            return client;
+            return new MongoClient(connectionString);
         });
         services.AddSingleton(factory =>
         {

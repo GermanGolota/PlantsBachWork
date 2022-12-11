@@ -1,7 +1,7 @@
 ﻿using Plants.Aggregates.Services;
 using Plants.Shared;
 
-namespace Plants.Aggregates.User;
+namespace Plants.Aggregates.Users;
 
 internal class ChangeRoleCommandHandler : ICommandHandler<ChangeRoleCommand>
 {
@@ -20,7 +20,7 @@ internal class ChangeRoleCommandHandler : ICommandHandler<ChangeRoleCommand>
     public async Task<IEnumerable<Event>> HandleAsync(ChangeRoleCommand command)
     {
         var user = await _userRepo.GetByIdAsync(command.Metadata.Aggregate.Id);
-        await _updater.Change(user.Login, command.Role);
+        await _updater.ChangeRole(user.Login, $"{user.FirstName} {user.LastName}", user.Roles, command.Role);
         return new[]
         {
             new RoleChangedEvent(EventFactory.Shared.Create<RoleChangedEvent>(command, user.Version + 1), command.Role)
