@@ -1,6 +1,4 @@
-﻿using Plants.Aggregates.Services;
-using Plants.Core;
-using Plants.Shared;
+﻿using Plants.Core;
 
 namespace Plants.Aggregates.User;
 
@@ -56,40 +54,6 @@ public record UserCreationDto(string FirstName, string LastName, string PhoneNum
 
 public record UserCreatedEvent(EventMetadata Metadata, UserCreationDto Data) : Event(Metadata);
 public record CreateUserCommand(CommandMetadata Metadata, UserCreationDto Data) : Command(Metadata);
-
-internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
-{
-    private readonly IProjectionQueryService<User> _userQuery;
-    private readonly IEmailer _emailer;
-
-    public CreateUserCommandHandler(IProjectionQueryService<User> userQuery, IEmailer emailer)
-    {
-        _userQuery = userQuery;
-        _emailer = emailer;
-    }
-
-    public async Task<CommandForbidden?> ShouldForbidAsync(CreateUserCommand command, IUserIdentity userIdentity) =>
-        userIdentity.HasRoles(UserCheckType.All, command.Data.Roles)
-        ?? await _userQuery.Exists(command.Metadata.Id) switch
-        {
-            true => new CommandForbidden("Plant already created"),
-            false => null
-        };
-
-    public async Task<IEnumerable<Event>> HandleAsync(CreateUserCommand command)
-    {
-        const int TempPasswordLength = 8;
-        var user = command.Data;
-        var tempPassword = StringHelper.GetRandomAlphanumericString(TempPasswordLength);
-        var lang = user.Language ?? "English";
-        await _emailer.SendInvitationEmail(user.Email, user.Login, tempPassword, lang);
-        var metadata = EventFactory.Shared.Create<UserCreatedEvent>(command, 0) with { Id = user.Login.ToGuid() };
-        return new[]
-        {
-            new UserCreatedEvent(metadata, user)
-        };
-    }
-}
 
 public record ChangeRoleCommand(CommandMetadata Metadata, UserRole Role) : Command(Metadata);
 public record RoleChangedEvent(EventMetadata Metadata, UserRole Role) : Event(Metadata);
