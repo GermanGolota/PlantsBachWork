@@ -83,11 +83,10 @@ internal class EventStoreEventStore : IEventStore
         {
             var idToCommand = new Dictionary<Guid, Command>();
             var events = new Dictionary<Command, List<Event>>();
+
             StreamEventsSlice currentSlice;
             long nextSliceStart = StreamPosition.Start;
-
             int slicesCount = 0;
-            Command? lastCommand = null;
             do
             {
                 slicesCount++;
@@ -126,7 +125,7 @@ internal class EventStoreEventStore : IEventStore
                 }
             } while (currentSlice.IsEndOfStream == false);
 
-            return events.Select(x => new CommandHandlingResult(x.Key, x.Value.Select(_ => _)));
+            return events.Select(x => new CommandHandlingResult(x.Key, x.Value.Select(_ => _))).OrderBy(_ => _.Command.Metadata.Time);
         }
         catch (EventStoreConnectionException ex)
         {

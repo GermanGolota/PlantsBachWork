@@ -23,7 +23,7 @@ internal class Repository<TAggregate> : IRepository<TAggregate> where TAggregate
         if (_aggregateHelper.Aggregates.TryGetFor(typeof(TAggregate), out var aggregateName))
         {
             var desc = new AggregateDescription(id, aggregateName);
-            return (TAggregate)_applyer.ApplyEvents(desc, events.SelectMany(x => x.Events));
+            return (TAggregate)_applyer.ApplyEvents(desc, events);
         }
         else
         {
