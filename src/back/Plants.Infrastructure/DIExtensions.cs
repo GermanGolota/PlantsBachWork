@@ -3,9 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Plants.Application.Contracts;
-using Plants.Domain.Services;
 using Plants.Infrastructure.Config;
-using Plants.Infrastructure.Domain;
 using Plants.Infrastructure.Helpers;
 using Plants.Infrastructure.Services;
 using System.Text;
@@ -17,7 +15,6 @@ public static class DIExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         services.AddHttpContextAccessor();
-        services.AddScoped<IIdentityProvider, IdentityProvider>();
         services.AddScoped<PlantsContextFactory>();
         services.AddAuth(config)
             .AddServices();

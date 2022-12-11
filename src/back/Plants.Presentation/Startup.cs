@@ -1,4 +1,5 @@
 using MediatR;
+using Plants.Aggregates.Infrastructure;
 using Plants.Core;
 using Plants.Domain.Infrastructure;
 using Plants.Infrastructure;
@@ -28,6 +29,7 @@ public class Startup
             .AddShared()
             .AddInfrastructure(Configuration)
             .AddDomainInfrastructure()
+            .AddAggregatesInfrastructure()
             .AddControllers()
             .AddJsonOptions(_ =>
             {

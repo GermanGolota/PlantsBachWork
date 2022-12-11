@@ -1,7 +1,7 @@
 ﻿namespace Plants.Domain.Services;
 
 /// <summary>
-/// Gets the username of the caller
+/// Gets the identity of the caller
 /// </summary>
 public interface IIdentityProvider
 {

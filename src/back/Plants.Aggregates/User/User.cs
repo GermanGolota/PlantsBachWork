@@ -1,11 +1,8 @@
-﻿using Plants.Application.Contracts;
+﻿using Plants.Aggregates.Services;
 using Plants.Core;
-using Plants.Domain;
-using Plants.Domain.Projection;
-using Plants.Domain.Services;
 using Plants.Shared;
 
-namespace Plants.Application.Aggregates;
+namespace Plants.Aggregates.User;
 
 public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IDomainCommandHandler<ChangeRoleCommand>, IEventHandler<RoleChangedEvent>
 {
@@ -38,9 +35,8 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IDomainComma
             new RoleChangedEvent(EventFactory.Shared.Create<RoleChangedEvent>(command, Version + 1), command.Role)
         };
 
-    //TODO: Add authorization attribute
-    public CommandForbidden? ShouldForbid(ChangeRoleCommand command) =>
-        null;
+    public CommandForbidden? ShouldForbid(ChangeRoleCommand command, IUserIdentity identity) =>
+        identity.HasRole(command.Role);
 
     public void Handle(RoleChangedEvent @event)
     {
@@ -72,14 +68,13 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
         _emailer = emailer;
     }
 
-    public async Task<CommandForbidden?> ShouldForbidAsync(CreateUserCommand command)
-    {
-        return (await _userQuery.Exists(command.Metadata.Id)) switch
+    public async Task<CommandForbidden?> ShouldForbidAsync(CreateUserCommand command, IUserIdentity userIdentity) =>
+        userIdentity.HasRoles(UserCheckType.All, command.Data.Roles)
+        ?? await _userQuery.Exists(command.Metadata.Id) switch
         {
             true => new CommandForbidden("Plant already created"),
             false => null
         };
-    }
 
     public async Task<IEnumerable<Event>> HandleAsync(CreateUserCommand command)
     {

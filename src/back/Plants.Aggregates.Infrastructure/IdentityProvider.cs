@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Plants.Core;
-using Plants.Domain;
-using Plants.Domain.Services;
 using System.Security.Claims;
 
-namespace Plants.Infrastructure.Domain;
+namespace Plants.Aggregates.Infrastructure;
 
 internal class IdentityProvider : IIdentityProvider
 {
