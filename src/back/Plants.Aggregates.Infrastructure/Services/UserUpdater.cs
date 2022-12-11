@@ -3,7 +3,7 @@ using Plants.Core;
 
 namespace Plants.Aggregates.Infrastructure.Services;
 
-internal class UserChanger : IUserChanger
+internal class UserUpdater : IUserUpdater
 {
     public Task Change(string username, UserRole role)
     {

@@ -7,9 +7,9 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
 {
     private readonly IProjectionQueryService<User> _userQuery;
     private readonly IEmailer _emailer;
-    private readonly IUserChanger _changer;
+    private readonly IUserUpdater _changer;
 
-    public CreateUserCommandHandler(IProjectionQueryService<User> userQuery, IEmailer emailer, IUserChanger changer)
+    public CreateUserCommandHandler(IProjectionQueryService<User> userQuery, IEmailer emailer, IUserUpdater changer)
     {
         _userQuery = userQuery;
         _emailer = emailer;

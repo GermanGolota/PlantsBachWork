@@ -10,7 +10,7 @@ public static class DiExtensions
     {
         services.AddTransient<IEmailer, Emailer>();
         services.AddScoped<IIdentityProvider, IdentityProvider>();
-        services.AddScoped<IUserChanger, UserChanger>();
+        services.AddScoped<IUserUpdater, UserUpdater>();
 
         return services;
     }

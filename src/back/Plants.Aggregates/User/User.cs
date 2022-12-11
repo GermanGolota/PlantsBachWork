@@ -2,7 +2,7 @@
 
 namespace Plants.Aggregates.User;
 
-public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IDomainCommandHandler<ChangeRoleCommand>, IEventHandler<RoleChangedEvent>
+public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandler<RoleChangedEvent>
 {
     public User(Guid id) : base(id)
     {
@@ -26,15 +26,6 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IDomainComma
             Roles = user.Roles;
         }
     }
-
-    public IEnumerable<Event> Handle(ChangeRoleCommand command) =>
-        new[]
-        {
-            new RoleChangedEvent(EventFactory.Shared.Create<RoleChangedEvent>(command, Version + 1), command.Role)
-        };
-
-    public CommandForbidden? ShouldForbid(ChangeRoleCommand command, IUserIdentity identity) =>
-        identity.HasRole(command.Role);
 
     public void Handle(RoleChangedEvent @event)
     {
