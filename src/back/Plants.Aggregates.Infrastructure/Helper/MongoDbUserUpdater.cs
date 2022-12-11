@@ -23,27 +23,59 @@ internal class MongoDbUserUpdater : IUserUpdater
 
     public async Task ChangeRole(string username, string fullName, UserRole[] oldRoles, UserRole changedRole)
     {
+        var document = (oldRoles.Contains(changedRole)) switch
+        {
+            true => new BsonDocument
+            {
+                { "revokeRolesFromUser", username },
+                { "roles", new BsonDocument
+                    {
+                        {"role", changedRole.ToString()},
+                        {"db", _options.Value.MongoDbDatabaseName }
+                    }
+                }
+            },
+            false => new BsonDocument
+            {
+                { "grantRolesToUser", username },
+                { "roles", new BsonArray(new []{ changedRole})}
+            }
+        };
+        await RunDocumentCommand(document);
     }
 
     public async Task Create(string username, string password, string fullName, UserRole[] roles)
     {
-        var options = _options.Value;
-        var client = new MongoClient(options.MongoDbConnection);
         var roleArray = new BsonArray(roles.Select(x => x.ToString()));
-        var user = new BsonDocument {
+        var document = new BsonDocument {
             { "createUser", username },
             { "pwd", password },
             { "roles", roleArray }
         };
 
-        var db = client
-            .GetDatabase(options.MongoDbDatabaseName);
-
-        await db.RunCommandAsync<BsonDocument>(user);
-
+        var result = await RunDocumentCommand(document);
     }
 
     public async Task UpdatePassword(string username, string oldPassword, string newPassword)
     {
+        var document = new BsonDocument
+        {
+            { "updateUser", username },
+            { "pwd", newPassword }
+        };
+
+        var result = await RunDocumentCommand(document);
     }
+
+    private async Task<BsonDocument> RunDocumentCommand(BsonDocument document)
+    {
+        var options = _options.Value;
+        var client = new MongoClient(options.MongoDbConnection);
+
+
+        var db = client.GetDatabase(options.MongoDbDatabaseName);
+
+        return await db.RunCommandAsync<BsonDocument>(document);
+    }
+
 }
