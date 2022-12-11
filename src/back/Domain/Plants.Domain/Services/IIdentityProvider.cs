@@ -3,7 +3,7 @@
 /// <summary>
 /// Gets the username of the caller
 /// </summary>
-public interface IUserNameProvider
+public interface IIdentityProvider
 {
-    string UserName { get; }
+    IUserIdentity Identity { get; }
 }

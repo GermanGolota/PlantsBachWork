@@ -17,7 +17,7 @@ public static class DIExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         services.AddHttpContextAccessor();
-        services.AddScoped<IUserNameProvider, UserNameProvider>();
+        services.AddScoped<IIdentityProvider, IdentityProvider>();
         services.AddScoped<PlantsContextFactory>();
         services.AddAuth(config)
             .AddServices();

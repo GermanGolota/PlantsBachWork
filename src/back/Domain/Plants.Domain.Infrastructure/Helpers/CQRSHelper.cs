@@ -13,6 +13,7 @@ internal class CqrsHelper
 
     public CqrsHelper(TypeHelper helper)
     {
+        var identityType = typeof(IUserIdentity);
         var commandHandlerType = typeof(ICommandHandler<>);
         var domainHandler = typeof(IDomainCommandHandler<>);
         var eventHandler = typeof(IEventHandler<>);
@@ -32,7 +33,7 @@ internal class CqrsHelper
                 {
                     var commandType = handler.GetGenericArguments()[0];
                     var handleMethod = type.GetMethod(nameof(IDomainCommandHandler<Command>.Handle), new[] { commandType });
-                    var checkMethod = type.GetMethod(nameof(IDomainCommandHandler<Command>.ShouldForbid), new[] { commandType });
+                    var checkMethod = type.GetMethod(nameof(IDomainCommandHandler<Command>.ShouldForbid), new[] { commandType, identityType });
                     commands.AddList(commandType, (checkMethod, handleMethod));
                 }
             }
@@ -44,7 +45,7 @@ internal class CqrsHelper
                 {
                     var commandType = handler.GetGenericArguments()[0];
                     var handleMethod = type.GetMethod(nameof(ICommandHandler<Command>.HandleAsync), new[] { commandType });
-                    var checkMethod = type.GetMethod(nameof(ICommandHandler<Command>.ShouldForbidAsync), new[] { commandType });
+                    var checkMethod = type.GetMethod(nameof(ICommandHandler<Command>.ShouldForbidAsync), new[] { commandType, identityType });
                     commands.AddList(commandType, (checkMethod, handleMethod));
                 }
             }

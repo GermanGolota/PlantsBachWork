@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Persistence;
+using Plants.Domain.Services;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Shared;
 using System.Reflection;
@@ -16,13 +17,15 @@ internal class CommandSender : ICommandSender
     private readonly RepositoryCaller _caller;
     private readonly IServiceProvider _service;
     private readonly EventSubscriber _subscriber;
+    private readonly IIdentityProvider _identityProvider;
 
     public CommandSender(CqrsHelper cqrs,
         ILogger<CommandSender> logger,
         IEventStore eventStore,
         RepositoryCaller caller,
         IServiceProvider service,
-        EventSubscriber subscriber)
+        EventSubscriber subscriber,
+        IIdentityProvider identityProvider)
     {
         _cqrs = cqrs;
         _logger = logger;
@@ -30,6 +33,7 @@ internal class CommandSender : ICommandSender
         _caller = caller;
         _service = service;
         _subscriber = subscriber;
+        _identityProvider = identityProvider;
     }
 
     public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCommandAsync(Command command)
@@ -95,6 +99,8 @@ internal class CommandSender : ICommandSender
 
     private async Task<List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object>)>> PerformChecks(Command command, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs)
     {
+        var identity = _identityProvider.Identity;
+
         List<(CommandForbidden? CheckResult, MethodInfo Handle, OneOf<AggregateBase, object>)> checkResults = new();
         foreach (var (check, handle) in handlePairs)
         {
@@ -102,7 +108,7 @@ internal class CommandSender : ICommandSender
             if (check.ReturnType.IsAssignableTo(typeof(Task)))
             {
                 var service = _service.GetRequiredService(check.DeclaringType!);
-                var task = (Task<CommandForbidden?>)check.Invoke(service, new object[] { command })!;
+                var task = (Task<CommandForbidden?>)check.Invoke(service, new object[] { command, identity })!;
                 var dependency = new OneOf<AggregateBase, object>(service);
                 checkResults.Add((await task, handle, dependency));
             }
@@ -110,7 +116,7 @@ internal class CommandSender : ICommandSender
             {
                 //aggregate command
                 var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate);
-                var checkResult = (CommandForbidden?)check.Invoke(aggregate, new object[] { command });
+                var checkResult = (CommandForbidden?)check.Invoke(aggregate, new object[] { command, identity });
                 var dependency = new OneOf<AggregateBase, object>(aggregate);
                 checkResults.Add((checkResult, handle, dependency));
             }
