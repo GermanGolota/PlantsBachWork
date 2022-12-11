@@ -47,11 +47,16 @@ internal class CommandSender : ICommandSender
         OneOf<CommandAcceptedResult, CommandForbidden> result;
         if (_cqrs.CommandHandlers.TryGetValue(commandType, out var handlePairs))
         {
+            var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate);
+            await _eventStore.AppendCommandAsync(command, aggregate.Version + 1);
+            //TODO: Move the rest to sub?
             var checkResults = await PerformChecks(command, handlePairs);
             var checkFailures = checkResults.Where(_ => _.CheckFailure.HasValue).Select(_ => _.CheckFailure!.Value);
             if (checkFailures.Any())
             {
                 var reasons = checkFailures.Select(failure => failure.Reasons).Flatten().ToArray();
+                var metadata = EventFactory.Shared.Create<FailEvent>(command, aggregate.Version + 2);
+                await _eventStore.AppendEventAsync(new FailEvent(metadata, reasons));
                 result = new CommandForbidden(reasons);
             }
             else
@@ -61,7 +66,6 @@ internal class CommandSender : ICommandSender
                 {
                     await _eventStore.AppendEventAsync(@event);
                 }
-
                 //TODO: Attach subscriber to event store instead of putting it here
                 await HandleEvents(events);
 
@@ -97,7 +101,7 @@ internal class CommandSender : ICommandSender
         return events;
     }
 
-    private async Task<List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object>)>> PerformChecks(Command command, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs)
+    private async Task<List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object> Dependency)>> PerformChecks(Command command, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs)
     {
         var identity = _identityProvider.Identity;
 

@@ -6,6 +6,8 @@ public interface ITwoWayDictionary<T0, T1> : IEnumerable<KeyValuePair<T0, T1>>
 {
     bool TryGetFor(T1 t1, out T0 t0);
     bool TryGetFor(T0 t0, out T1 t1);
+    bool ContainsKey(T0 t0);
+    bool ContainsKey(T1 t1);
 }
 
 public static class TwoWayDictionaryExtensions
@@ -52,4 +54,10 @@ public class TwoWayDictionary<T0, T1> : ITwoWayDictionary<T0, T1>
 
     IEnumerator IEnumerable.GetEnumerator() => _forward.GetEnumerator();
     public IEnumerator<KeyValuePair<T0, T1>> GetEnumerator() => _forward.GetEnumerator();
+
+    public bool ContainsKey(T0 t0) =>
+        _forward.ContainsKey(t0);
+
+    public bool ContainsKey(T1 t1) =>
+        _backward.ContainsKey(t1);
 }

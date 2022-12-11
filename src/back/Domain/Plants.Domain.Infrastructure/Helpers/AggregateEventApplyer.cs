@@ -1,4 +1,5 @@
 ﻿using Plants.Infrastructure.Domain.Helpers;
+using System;
 
 namespace Plants.Domain.Infrastructure.Helpers;
 
@@ -38,9 +39,16 @@ internal class AggregateEventApplyer
         if (_aggregateHelper.Aggregates.TryGetFor(aggregate.Name, out var aggregateType))
         {
             var handlerBase = typeof(IEventHandler<>);
-            var bumpFunc = aggregateType.GetMethod(nameof(AggregateBase.BumpVersion));
+            var bumpFunc = aggregateType.GetMethod(nameof(AggregateBase.BumpVersion))!;
+            Guid? lastCommandId = null;
             foreach (var @event in events)
             {
+                if (lastCommandId is null || @event.Metadata.CommandId != lastCommandId)
+                {
+                    bumpFunc.Invoke(aggregate, null);
+                    lastCommandId = @event.Metadata.CommandId;
+                }
+
                 var eventType = @event.GetType();
                 var handlerType = handlerBase.MakeGenericType(eventType);
                 if (_cqrs.EventHandlers.TryGetValue(eventType, out var handlers))
@@ -48,7 +56,7 @@ internal class AggregateEventApplyer
                     foreach (var handler in handlers.Where(x => x.DeclaringType == aggregateType))
                     {
                         handler.Invoke(aggregate, new object[] { @event });
-                        bumpFunc!.Invoke(aggregate, null);
+                        bumpFunc.Invoke(aggregate, null);
                     }
                 }
             }
