@@ -5,16 +5,18 @@ using Plants.Domain.Services;
 using Plants.Presentation.Examples;
 using Swashbuckle.AspNetCore.Filters;
 
-namespace Plants.Presentation.Controllers;
+namespace Plants.Presentation.Controllers.v2;
 
 [ApiController]
 [Route("v2/plants")]
-public class PlantsControllerV2 : ControllerBase
+[ApiVersion("2")]
+[ApiExplorerSettings(GroupName = "v2")]
+public class PlantsController : ControllerBase
 {
     private readonly CommandMetadataFactory _metadataFactory;
     private readonly ICommandSender _sender;
 
-    public PlantsControllerV2(CommandMetadataFactory metadataFactory, ICommandSender sender)
+    public PlantsController(CommandMetadataFactory metadataFactory, ICommandSender sender)
     {
         _metadataFactory = metadataFactory;
         _sender = sender;
@@ -22,6 +24,7 @@ public class PlantsControllerV2 : ControllerBase
 
     [HttpPost("add")]
     [SwaggerRequestExample(typeof(AddPlantDto), typeof(AddPlantRequestExample))]
+    [ApiVersion("2")]
     public async Task<ActionResult<Guid>> Create
         ([FromBody] AddPlantDto2 body, CancellationToken token)
     {

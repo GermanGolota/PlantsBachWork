@@ -35,7 +35,7 @@ public class Startup
             {
                 _.JsonSerializerOptions.Converters.AddOneOfConverter();
             });
-        services.AddSwagger();
+        services.AddPlantsSwagger();
 
         services.AddCors(opt =>
         {
@@ -71,8 +71,7 @@ public class Startup
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
-            app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Plants v1"));
+            app.UsePlantsSwagger();
             app.UseCors(DevPolicyName);
         }
         else

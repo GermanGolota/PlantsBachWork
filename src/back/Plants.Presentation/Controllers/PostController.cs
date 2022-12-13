@@ -7,6 +7,8 @@ namespace Plants.Presentation.Controllers;
 
 [ApiController]
 [Route("post")]
+[ApiVersion("1")]
+[ApiExplorerSettings(GroupName = "v1")]
 public class PostController : ControllerBase
 {
     private readonly IMediator _mediator;

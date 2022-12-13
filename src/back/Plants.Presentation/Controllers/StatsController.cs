@@ -1,5 +1,4 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Plants.Application.Requests;
 
@@ -7,7 +6,8 @@ namespace Plants.Presentation.Controllers;
 
 [ApiController]
 [Route("stats")]
-[Authorize(Policy = "Manager")]
+[ApiVersion("1")]
+[ApiExplorerSettings(GroupName = "v1")]
 public class StatsController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -8,6 +8,8 @@ namespace Plants.Presentation.Controllers;
 
 [ApiController]
 [Route("plants")]
+[ApiVersion("1")]
+[ApiExplorerSettings(GroupName = "v1")]
 public class PlantsController : ControllerBase
 {
     private readonly IMediator _mediator;
