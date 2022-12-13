@@ -16,15 +16,12 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandle
 
     public void Handle(UserCreatedEvent @event)
     {
-        if (Version is AggregateBase.NewAggregateVersion)
-        {
-            var user = @event.Data;
-            FirstName = user.FirstName;
-            LastName = user.LastName;
-            PhoneNumber = user.PhoneNumber;
-            Login = user.Login;
-            Roles = user.Roles;
-        }
+        var user = @event.Data;
+        FirstName = user.FirstName;
+        LastName = user.LastName;
+        PhoneNumber = user.PhoneNumber;
+        Login = user.Login;
+        Roles = user.Roles;
     }
 
     public void Handle(RoleChangedEvent @event)

@@ -12,7 +12,7 @@ public class Plant : AggregateBase, IDomainCommandHandler<CreatePlantCommand>, I
 
     public CommandForbidden? ShouldForbid(CreatePlantCommand command, IUserIdentity userIdentity) =>
          userIdentity.HasRole(UserRole.Producer)
-        .And(this.IsNew);
+        .And(this.RequireNew);
 
     public IEnumerable<Event> Handle(CreatePlantCommand command) =>
          new[]

@@ -12,11 +12,13 @@ public interface IAggregateSubscription<TIn, TOut> where TIn : AggregateBase whe
 public record EventSubscription<TIn, TOut>
     (
         OneOf<FilteredEvents, AllEvents> EventFilter,
-        OneOf<SimpleTranspose, AggregateLoadingTranspose<TIn>> TransposeEvent
+        AggregateLoadingTranspose<TIn> TransposeEvent
     ) where TIn : AggregateBase where TOut : AggregateBase;
 
-public record SimpleTranspose(Func<Event, Event> Transpose);
-public record AggregateLoadingTranspose<TAggregate>(Func<Event, Guid> ExtractId, Func<Event, TAggregate, Event> Transpose);
+/// <summary>
+/// you should move event version by additional 1 (for parent command)
+/// </summary>
+public record AggregateLoadingTranspose<TAggregate>(Func<Event, Guid> ExtractId, Func<IEnumerable<Event>, TAggregate, IEnumerable<Event>> Transpose);
 
 public record FilteredEvents(string[] EventNames);
 public record AllEvents();

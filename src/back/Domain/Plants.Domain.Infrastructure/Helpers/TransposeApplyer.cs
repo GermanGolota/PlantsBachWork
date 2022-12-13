@@ -1,5 +1,4 @@
 ﻿using Plants.Domain.Persistence;
-using Plants.Shared;
 
 namespace Plants.Domain.Infrastructure.Helpers;
 
@@ -12,11 +11,10 @@ internal class TransposeApplyer<TIn> where TIn : AggregateBase
         _repo = repo;
     }
 
-    public Task<Event> CallTransposeAsync(OneOf<SimpleTranspose, AggregateLoadingTranspose<TIn>> transpose, Event @event) =>
-        transpose.MatchAsync(simple => Task.FromResult(simple.Transpose(@event)), async loading =>
-        {
-            var id = loading.ExtractId(@event);
-            var aggregate = await _repo.GetByIdAsync(id);
-            return loading.Transpose(@event, aggregate);
-        });
+    public async Task<IEnumerable<Event>> CallTransposeAsync(AggregateLoadingTranspose<TIn> transpose, IEnumerable<Event> events)
+    {
+        var id = transpose.ExtractId(events.First());
+        var aggregate = await _repo.GetByIdAsync(id);
+        return transpose.Transpose(events, aggregate);
+    }
 }

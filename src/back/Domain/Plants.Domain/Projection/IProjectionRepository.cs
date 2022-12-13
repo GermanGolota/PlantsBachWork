@@ -1,4 +1,6 @@
-﻿namespace Plants.Domain.Projection;
+﻿using Plants.Domain.Extensions;
+
+namespace Plants.Domain.Projection;
 
 public interface IProjectionRepository<T>
 {
@@ -11,16 +13,10 @@ public static class ProjectionRepositoryExtensions
 {
     public static Task InsertOrUpdateAsync<TAggregate>(this IProjectionRepository<TAggregate> repository, TAggregate aggregate) where TAggregate : AggregateBase
     {
-        Task finalTask;
-        var version = aggregate.Version;
-        if (version is AggregateBase.NewAggregateVersion || version is AggregateBase.NewAggregateVersion + 1)
+        return aggregate.RequireNew() switch
         {
-            finalTask = repository.InsertAsync(aggregate);
-        }
-        else
-        {
-            finalTask = repository.UpdateAsync(aggregate);
-        }
-        return finalTask;
+            null => repository.InsertAsync(aggregate),
+            CommandForbidden _ => repository.UpdateAsync(aggregate)
+        };
     }
 }

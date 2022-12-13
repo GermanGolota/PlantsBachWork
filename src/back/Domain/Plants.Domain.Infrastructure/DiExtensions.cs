@@ -34,7 +34,6 @@ public static class DiExtensions
         services.AddTransient(typeof(TransposeApplyer<>));
         services.AddScoped<CommandMetadataFactory>();
         services.AddScoped<EventMetadataFactory>();
-        services.AddScoped(typeof(EventSubscriberHelper<>));
         services.AddTransient<EventStoreConnectionFactory>();
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
         services.AddTransient(factory => factory.GetRequiredService<EventStoreConnectionFactory>().Create());
@@ -81,6 +80,7 @@ public static class DiExtensions
 
         var baseClassMap = new BsonClassMap(typeof(AggregateBase));
         baseClassMap.MapProperty(nameof(AggregateBase.Version));
+        baseClassMap.MapProperty(nameof(AggregateBase.CommandsProcessed));
         baseClassMap.MapProperty(nameof(AggregateBase.Name));
         baseClassMap.MapIdProperty(nameof(AggregateBase.Id));
         var helper = InfrastructureHelpers.Aggregate;

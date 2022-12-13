@@ -42,7 +42,7 @@ internal class AggregateEventApplyer
         if (_aggregateHelper.Aggregates.TryGetFor(aggregate.Name, out var aggregateType))
         {
             var handlerBase = typeof(IEventHandler<>);
-            var bumpFunc = aggregateType.GetMethod(nameof(AggregateBase.BumpVersion))!;
+            var recordFunc = aggregateType.GetMethod(nameof(AggregateBase.Record))!;
             foreach (var (command, events) in results)
             {
                 //command
@@ -53,7 +53,8 @@ internal class AggregateEventApplyer
                         handler.Invoke(aggregate, new[] { command });
                     }
                 }
-                bumpFunc.Invoke(aggregate, null);
+                var commandRecord = command.ToOneOf<Command, Event>();
+                recordFunc.Invoke(aggregate, new[] { commandRecord });
                 foreach (var @event in events)
                 {
                     var eventType = @event.GetType();
@@ -63,7 +64,8 @@ internal class AggregateEventApplyer
                         foreach (var handler in handlers.Where(x => x.DeclaringType == aggregateType))
                         {
                             handler.Invoke(aggregate, new object[] { @event });
-                            bumpFunc.Invoke(aggregate, null);
+                            var eventRecord = @event.ToOneOf<Command, Event>();
+                            recordFunc.Invoke(aggregate, new[] { eventRecord });
                         }
                     }
                 }
