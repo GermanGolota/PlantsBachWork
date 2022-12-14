@@ -41,7 +41,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("create")]
-    public async Task<ActionResult<CreateUserResult>> RemoveRole(
+    public async Task<ActionResult<CreateUserResult>> CreateUser(
         [FromBody] CreateUserCommand command)
     {
         return await _mediator.Send(command);
