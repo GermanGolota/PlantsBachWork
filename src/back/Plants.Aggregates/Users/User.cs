@@ -2,7 +2,7 @@
 
 namespace Plants.Aggregates.Users;
 
-public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandler<RoleChangedEvent>
+public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandler<RoleChangedEvent>, IEventHandler<PasswordChangedEvent>
 {
     public User(Guid id) : base(id)
     {
@@ -36,6 +36,10 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandle
         }
     }
 
+    public void Handle(PasswordChangedEvent @event)
+    {
+
+    }
 }
 
 public record UserCreationDto(string FirstName, string LastName, string PhoneNumber, string Login, string Email, string Language, UserRole[] Roles);
@@ -45,3 +49,6 @@ public record CreateUserCommand(CommandMetadata Metadata, UserCreationDto Data) 
 
 public record ChangeRoleCommand(CommandMetadata Metadata, UserRole Role) : Command(Metadata);
 public record RoleChangedEvent(EventMetadata Metadata, UserRole Role) : Event(Metadata);
+
+public record ChangeOwnPasswordCommand(CommandMetadata Metadata, string OldPassword, string NewPassword) : Command(Metadata);
+public record PasswordChangedEvent(EventMetadata Metadata) : Event(Metadata);
