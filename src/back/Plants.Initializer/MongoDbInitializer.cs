@@ -20,7 +20,6 @@ public class MongoDbInitializer
 
     public async Task CreateRoles(AccessorsDefinition definiton)
     {
-
         //TODO: Fix multiple envs not working
         var db = _client.GetDatabase("admin");
         var dbName = _connection.MongoDbDatabaseName;
@@ -38,16 +37,16 @@ public class MongoDbInitializer
             .ToArray();
 
         var getRolesCommand = BsonDocument.Parse($$"""
-    {
-        "rolesInfo": [{{allRoles.DelimitList()}}]
-    }
-    """);
+        {
+            "rolesInfo": [{{allRoles.DelimitList()}}]
+        }
+        """);
 
         var accessTypeToPermissions = new Dictionary<AllowType, string[]>
-{
-    {AllowType.Read, new[]{"find"} },
-    {AllowType.Write, new[]{"insert", "update"}}
-};
+        {
+            {AllowType.Read, new[]{"find"} },
+            {AllowType.Write, new[]{"insert", "update"}}
+        };
 
         var rolesResult = await db.RunCommandAsync<BsonDocument>(getRolesCommand);
         var existingRoles = rolesResult.GetElement("roles").Value.AsBsonArray.Select(x => x.AsBsonDocument.GetElement("role").Value.ToString());
@@ -55,59 +54,59 @@ public class MongoDbInitializer
         foreach (var role in existingRoles)
         {
             var dropRole = BsonDocument.Parse($$"""
-        {
-            "dropRole": "{{role}}"
-        }
-        """);
+            {
+                "dropRole": "{{role}}"
+            }
+            """);
             var dropResult = await db.RunCommandAsync<BsonDocument>(dropRole);
         }
 
 
         Func<UserRole, string, string> buildPrivelege = (role, aggregate) =>
             $$"""
-    {
-        "resource":{ "db":"{{dbName}}", "collection":"{{aggregate}}"},
-        "actions": [{{definiton.Defined[aggregate][role].SelectMany(type => accessTypeToPermissions[type]).DelimitList()}}]
-    }
-    """;
+            {
+                "resource":{ "db":"{{dbName}}", "collection":"{{aggregate}}"},
+                "actions": [{{definiton.Defined[aggregate][role].SelectMany(type => accessTypeToPermissions[type]).DelimitList()}}]
+            }
+            """;
 
         Dictionary<UserRole, string> roleToDefinition = new()
-{
-    {UserRole.Consumer,  $$"""
-    {
-    "createRole": "{{UserRole.Consumer}}",
-    "privileges": [
         {
-            "resource": { "cluster" : true }, 
-            "actions": ["changeOwnPassword"]
-        },
-        {{String.Join(",\n", definiton.RoleToAggregate[UserRole.Consumer].Select(agg => buildPrivelege(UserRole.Consumer, agg)))}}
-     ],
-     "roles":[]
-    }
-    """},
-    {UserRole.Producer, $$"""
-    {
-    "createRole": "{{UserRole.Producer}}",
-    "privileges": [
-        {
-            "resource": { "cluster" : true }, 
-            "actions": ["changeOwnPassword"]
-        },
-        {{String.Join(",\n", definiton.RoleToAggregate[UserRole.Producer].Select(agg => buildPrivelege(UserRole.Producer, agg)))}}
-     ],
-     "roles":[]
-    }
-    """ },
-    {UserRole.Manager,  $$"""
-    {
-    "createRole": "{{UserRole.Manager}}",
-    "privileges": [
-     ],
-     "roles":["dbOwner"]
-    }
-    """}
-};
+            {UserRole.Consumer,  $$"""
+            {
+            "createRole": "{{UserRole.Consumer}}",
+            "privileges": [
+                {
+                    "resource": { "cluster" : true }, 
+                    "actions": ["changeOwnPassword"]
+                },
+                {{String.Join(",\n", definiton.RoleToAggregate[UserRole.Consumer].Select(agg => buildPrivelege(UserRole.Consumer, agg)))}}
+             ],
+             "roles":[]
+            }
+            """},
+            {UserRole.Producer, $$"""
+            {
+            "createRole": "{{UserRole.Producer}}",
+            "privileges": [
+                {
+                    "resource": { "cluster" : true }, 
+                    "actions": ["changeOwnPassword"]
+                },
+                {{String.Join(",\n", definiton.RoleToAggregate[UserRole.Producer].Select(agg => buildPrivelege(UserRole.Producer, agg)))}}
+             ],
+             "roles":[]
+            }
+            """ },
+            {UserRole.Manager,  $$"""
+            {
+            "createRole": "{{UserRole.Manager}}",
+            "privileges": [
+             ],
+             "roles":["dbOwner"]
+            }
+            """}
+        };
 
         foreach (var (role, definition) in roleToDefinition)
         {
