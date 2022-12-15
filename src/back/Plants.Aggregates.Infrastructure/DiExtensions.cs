@@ -21,7 +21,6 @@ public static class DiExtensions
 
         services.AddTransient<IEmailer, Emailer>();
         services.AddScoped<IIdentityProvider, IdentityProvider>();
-        services.AddScoped<IUserUpdater, UserUpdater>();
 
         services.AddTransient<UsersManager>(factory =>
         {
