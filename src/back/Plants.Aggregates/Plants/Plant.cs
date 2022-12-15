@@ -1,7 +1,8 @@
-﻿using Plants.Core;
+﻿namespace Plants.Aggregates.Plants;
 
-namespace Plants.Aggregates.Plants;
-
+[Allow(Consumer, Read)]
+[Allow(Producer, Read)]
+[Allow(Producer, Write)]
 public class Plant : AggregateBase, IDomainCommandHandler<CreatePlantCommand>, IEventHandler<PlantCreatedEvent>
 {
     public Plant(Guid id) : base(id)
@@ -11,7 +12,7 @@ public class Plant : AggregateBase, IDomainCommandHandler<CreatePlantCommand>, I
     public string PlantName { get; private set; }
 
     public CommandForbidden? ShouldForbid(CreatePlantCommand command, IUserIdentity userIdentity) =>
-         userIdentity.HasRole(UserRole.Producer)
+         userIdentity.HasRole(Producer)
         .And(this.RequireNew);
 
     public IEnumerable<Event> Handle(CreatePlantCommand command) =>

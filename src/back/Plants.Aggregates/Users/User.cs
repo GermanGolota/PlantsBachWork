@@ -2,6 +2,9 @@
 
 namespace Plants.Aggregates.Users;
 
+[Allow(Consumer, Read)]
+[Allow(Producer, Read)]
+[Allow(Producer, Write)]
 public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandler<RoleChangedEvent>, IEventHandler<PasswordChangedEvent>
 {
     public User(Guid id) : base(id)
