@@ -1,26 +1,25 @@
-﻿using EventStore.ClientAPI;
+﻿using EventStore.Client;
 using Plants.Core;
 
 namespace Plants.Initializer;
 
 internal class EventStoreInitializer
 {
-    private readonly IEventStoreConnection _connection;
+    private readonly EventStoreClient _client;
 
-    public EventStoreInitializer(IEventStoreConnection connection)
+    public EventStoreInitializer(EventStoreClient client)
     {
-        _connection = connection;
+        _client = client;
     }
 
     public async Task Initialize(AccessorsDefinition definiton)
     {
-        foreach (var aggregate in definiton.Flat.Select(_=>_.Aggregate).Distinct())
+        foreach (var aggregate in definiton.Flat.Select(_ => _.Aggregate).Distinct())
         {
             var meta = BuildFor(aggregate, definiton);
-            await _connection.SetStreamMetadataAsync(aggregate, ExpectedVersion.Any, meta);
+            await _client.SetStreamMetadataAsync(aggregate, StreamState.Any, meta);
         }
     }
-
 
     private StreamMetadata BuildFor(string aggregateName, AccessorsDefinition definition)
     {
@@ -45,11 +44,14 @@ internal class EventStoreInitializer
             }
         }
 
-        return StreamMetadata.Build()
-            .SetReadRoles(readRoles.ToArray())
-            .SetWriteRoles(writeRoles.ToArray())
-            .SetDeleteRole(managerRole)
-            .SetMetadataReadRole(managerRole)
-            .SetMetadataWriteRole(managerRole);
+        var managerArray = new[] { managerRole };
+        var acl = new StreamAcl(
+            readRoles: readRoles.ToArray(), 
+            writeRoles: writeRoles.ToArray(), 
+            deleteRoles: managerArray, 
+            metaReadRoles: managerArray, 
+            metaWriteRoles: managerArray);
+
+        return new StreamMetadata(acl: acl);
     }
 }

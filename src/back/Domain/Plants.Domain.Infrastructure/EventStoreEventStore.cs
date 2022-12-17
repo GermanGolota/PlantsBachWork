@@ -1,6 +1,4 @@
-﻿using EventStore.ClientAPI;
-using EventStore.ClientAPI.Exceptions;
-using Microsoft.Extensions.Logging;
+﻿using EventStore.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Plants.Domain.Persistence;
@@ -8,69 +6,66 @@ using Plants.Infrastructure.Domain.Helpers;
 using Plants.Shared;
 using System.Reflection;
 using System.Text;
-using StreamPosition = EventStore.ClientAPI.StreamPosition;
 
 namespace Plants.Domain.Infrastructure;
 
 internal class EventStoreEventStore : IEventStore
 {
-    private readonly IEventStoreConnection _connection;
+    private readonly EventStoreClient _client;
     private readonly AggregateHelper _helper;
 
-    public EventStoreEventStore(IEventStoreConnection connection, AggregateHelper helper)
+    public EventStoreEventStore(EventStoreClient client, AggregateHelper helper)
     {
-        _connection = connection;
+        _client = client;
         _helper = helper;
     }
 
-    public async Task<long> AppendEventAsync(Event @event)
+    public async Task<ulong> AppendEventAsync(Event @event)
     {
         var metadata = @event.Metadata;
         try
         {
-
             var eventData = new EventData(
-                metadata.Id,
+                Uuid.FromGuid(metadata.Id),
                 _helper.Events.Get(@event.GetType()),
-                true,
                 Serialize(@event),
                 Encoding.UTF8.GetBytes("{}"));
 
             var eventNumber = metadata.EventNumber - 1;
-            var writeResult = await _connection.AppendToStreamAsync(
+            var writeResult = await _client.AppendToStreamAsync(
                 metadata.Aggregate.Id.ToString(),
                 eventNumber,
-                eventData);
+                new[] { eventData });
 
-            return writeResult.NextExpectedVersion;
+            return writeResult.NextExpectedStreamRevision.ToUInt64();
         }
-        catch (EventStoreConnectionException ex)
+        catch (EventStoreException ex)
         {
             throw new EventStoreCommunicationException($"Error while appending event {metadata.Id} for aggregate {metadata.Aggregate.Id}", ex);
         }
     }
 
-    public async Task<long> AppendCommandAsync(Command command, long version)
+    public async Task<ulong> AppendCommandAsync(Command command, ulong version)
     {
         var metadata = command.Metadata;
         try
         {
+
             var eventData = new EventData(
-            metadata.Id,
+            Uuid.FromGuid(metadata.Id),
                 _helper.Commands.Get(command.GetType()),
-            true,
                 Serialize(command),
                 Encoding.UTF8.GetBytes("{}"));
 
-            var eventNumber = version - 1;
-            var writeResult = await _connection.AppendToStreamAsync(
+            var eventNumber = version == AggregateBase.NewAggregateVersion ? StreamRevision.None : new StreamRevision(version);
+            var writeResult = await _client.AppendToStreamAsync(
                 metadata.Aggregate.Id.ToString(),
                 eventNumber,
-                eventData);
+                new[] { eventData });
 
-            return writeResult.NextExpectedVersion;
+            return writeResult.NextExpectedStreamRevision.ToUInt64();
         }
-        catch (EventStoreConnectionException ex)
+        catch (EventStoreException ex)
         {
             throw new EventStoreCommunicationException($"Error while appending event {metadata.Id} for aggregate {metadata.Aggregate.Id}", ex);
         }
@@ -84,62 +79,60 @@ internal class EventStoreEventStore : IEventStore
             var idToCommand = new Dictionary<Guid, Command>();
             var events = new Dictionary<Command, List<Event>>();
 
-            StreamEventsSlice currentSlice;
-            long nextSliceStart = StreamPosition.Start;
-            int slicesCount = 0;
-            do
+            var readResult = _client.ReadStreamAsync(
+                 Direction.Forwards,
+                 id.ToString(),
+                 StreamPosition.Start
+             );
+
+            var result = _client.ReadStreamAsync(Direction.Forwards, id.ToString(), StreamPosition.Start);
+            if (await readResult.ReadState == ReadState.StreamNotFound)
             {
-                slicesCount++;
-                currentSlice = await _connection.ReadStreamEventsForwardAsync(id.ToString(), nextSliceStart, 200, false);
-                if (currentSlice.Status != SliceReadStatus.Success)
+                readResult.ReadState.Dispose();
+                return Array.Empty<CommandHandlingResult>();
+            }
+
+            var readEvents = await readResult.ToListAsync();
+            readResult.ReadState.Dispose();
+            foreach (var resolvedEvent in readEvents)
+            {
+                var eventType = resolvedEvent.Event.EventType;
+                if (_helper.Events.ContainsKey(eventType))
                 {
-                    if (slicesCount == 1)
-                    {
-                        break;
-                    }
-                    throw new EventStoreAggregateNotFoundException($"Aggregate {id} not found");
+                    var @event = DeserializeEvent(_helper.Events.Get(eventType), resolvedEvent.Event.Data.Span);
+                    var command = idToCommand[@event.Metadata.CommandId];
+                    events.AddList(command, @event);
                 }
-                nextSliceStart = currentSlice.NextEventNumber;
-                foreach (var resolvedEvent in currentSlice.Events)
+                else
                 {
-                    var eventType = resolvedEvent.Event.EventType;
-                    if (_helper.Events.ContainsKey(eventType))
+                    if (_helper.Commands.ContainsKey(eventType))
                     {
-                        var @event = DeserializeEvent(_helper.Events.Get(eventType), resolvedEvent.Event.Data);
-                        var command = idToCommand[@event.Metadata.CommandId];
-                        events.AddList(command, @event);
+                        var command = DeserializeCommand(_helper.Commands.Get(eventType), resolvedEvent.Event.Data.Span);
+                        idToCommand.Add(command.Metadata.Id, command);
+                        events[command] = new List<Event>();
                     }
                     else
                     {
-                        if (_helper.Commands.ContainsKey(eventType))
-                        {
-                            var command = DeserializeCommand(_helper.Commands.Get(eventType), resolvedEvent.Event.Data);
-                            idToCommand.Add(command.Metadata.Id, command);
-                            events[command] = new List<Event>();
-                        }
-                        else
-                        {
-                            throw new Exception("Found unprocessable message");
-                        }
+                        throw new Exception("Found unprocessable message");
                     }
                 }
-            } while (currentSlice.IsEndOfStream == false);
+            }
 
             return events.Select(x => new CommandHandlingResult(x.Key, x.Value.Select(_ => _))).OrderBy(_ => _.Command.Metadata.Time);
         }
-        catch (EventStoreConnectionException ex)
+        catch (EventStoreException ex)
         {
             throw new EventStoreCommunicationException($"Error while reading events for aggregate {id}", ex);
         }
     }
 
-    private static Command DeserializeCommand(Type eventType, byte[] data)
+    private static Command DeserializeCommand(Type eventType, ReadOnlySpan<byte> data)
     {
         var settings = new JsonSerializerSettings { ContractResolver = new PrivateSetterContractResolver() };
         return (Command)JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), eventType, settings);
     }
 
-    private static Event DeserializeEvent(Type eventType, byte[] data)
+    private static Event DeserializeEvent(Type eventType, ReadOnlySpan<byte> data)
     {
         var settings = new JsonSerializerSettings { ContractResolver = new PrivateSetterContractResolver() };
         return (Event)JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), eventType, settings);

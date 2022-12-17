@@ -15,20 +15,22 @@ services:
   eventstore:
     image: eventstore/eventstore:21.10.0-buster-slim
     environment:
+      - EVENTSTORE_CERTIFICATE_FILE=/https/aspnetapp.pfx
+      - EVENTSTORE_CERTIFICATE_PASSWORD=password
       - EVENTSTORE_CLUSTER_SIZE=1
       - EVENTSTORE_RUN_PROJECTIONS=All
       - EVENTSTORE_START_STANDARD_PROJECTIONS=true
-      - EVENTSTORE_EXT_TCP_PORT=1113
       - EVENTSTORE_HTTP_PORT=2113
-      - EVENTSTORE_INSECURE=true
-      - EVENTSTORE_ENABLE_EXTERNAL_TCP=true
       - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+      - EVENTSTORE_INSECURE=true
     ports:
       - "1113:1113"
+      - "1115:1115"
       - "2113:2113"
     volumes:
       - ./persist/es/data:/var/lib/eventstore
       - ./persist/es/eslogs:/var/log/eventstore
+      - ~/.aspnet/https:/
 
   mongo:
     image: mongo:4.4.17

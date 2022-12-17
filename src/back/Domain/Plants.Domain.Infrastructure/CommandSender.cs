@@ -48,7 +48,7 @@ internal class CommandSender : ICommandSender
         if (_cqrs.CommandHandlers.TryGetValue(commandType, out var handlePairs))
         {
             var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate);
-            var commandVersion = aggregate.Version + 1;
+            var commandVersion = aggregate.Version;
             await _eventStore.AppendCommandAsync(command, commandVersion);
             //TODO: Move the rest to sub?
             var checkResults = await PerformChecks(command, handlePairs);

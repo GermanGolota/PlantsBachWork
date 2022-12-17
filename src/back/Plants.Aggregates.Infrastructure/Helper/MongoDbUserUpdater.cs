@@ -4,7 +4,7 @@ using MongoDB.Driver;
 using Plants.Aggregates.Infrastructure.Encryption;
 using Plants.Aggregates.Services;
 using Plants.Core;
-using Plants.Infrastructure.Config;
+using Plants.Domain.Infrastructure.Config;
 
 namespace Plants.Aggregates.Infrastructure.Helper;
 

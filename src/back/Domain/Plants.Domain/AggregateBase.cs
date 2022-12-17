@@ -10,9 +10,9 @@ public abstract class AggregateBase
         Name = this.GetType().Name;
     }
 
-    public const long NewAggregateVersion = -1;
-    public long CommandsProcessed { get; private set; } = 0;
-    public long Version { get; private set; } = NewAggregateVersion;
+    public const ulong NewAggregateVersion = 0;
+    public ulong CommandsProcessed { get; private set; } = 0;
+    public ulong Version { get; private set; } = NewAggregateVersion;
     public Guid Id { get; }
     public string Name { get; }
 

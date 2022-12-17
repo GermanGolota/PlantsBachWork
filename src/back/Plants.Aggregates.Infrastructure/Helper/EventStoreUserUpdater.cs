@@ -1,5 +1,4 @@
-﻿using EventStore.ClientAPI.SystemData;
-using EventStore.ClientAPI.UserManagement;
+﻿using EventStore.Client;
 using Plants.Aggregates.Infrastructure.Encryption;
 using Plants.Aggregates.Services;
 using Plants.Core;
@@ -8,11 +7,11 @@ namespace Plants.Aggregates.Infrastructure.Helper;
 
 internal class EventStoreUserUpdater : IUserUpdater
 {
-    private readonly UsersManager _manager;
+    private readonly EventStoreUserManagementClient _manager;
     private readonly IIdentityProvider _identity;
     private readonly SymmetricEncrypter _encrypter;
 
-    public EventStoreUserUpdater(UsersManager manager, IIdentityProvider identity, SymmetricEncrypter encrypter)
+    public EventStoreUserUpdater(EventStoreUserManagementClient manager, IIdentityProvider identity, SymmetricEncrypter encrypter)
     {
         _manager = manager;
         _identity = identity;
@@ -22,7 +21,7 @@ internal class EventStoreUserUpdater : IUserUpdater
     public Task Create(string username, string password, string fullName, UserRole[] roles)
     {
         var groups = roles.Select(x => x.ToString()).ToArray();
-        return _manager.CreateUserAsync(username, fullName, groups, password, GetCallerCreds());
+        return _manager.CreateUserAsync(username, fullName, groups, password, userCredentials: GetCallerCreds());
     }
 
     public async Task ChangeRole(string username, string fullName, UserRole[] oldRoles, UserRole newRole)
@@ -35,13 +34,18 @@ internal class EventStoreUserUpdater : IUserUpdater
             })
             .Select(_ => _.ToString())
             .ToArray();
-        await _manager.UpdateUserAsync(username, fullName, groups, GetCallerCreds());
+        //TODO: Implement updateing user
+        /*
+        var user = await _manager.GetUserAsync(username);
+        await _manager.DeleteUserAsync(username);
+        var password = GetPassword();
+        await Create(username, password, fullName, groups);*/
     }
 
     public Task UpdatePassword(string username, string oldPassword, string newPassword)
     {
         var creds = GetCallerCreds();
-        return _manager.ChangePasswordAsync(username, oldPassword, newPassword, creds);
+        return _manager.ChangePasswordAsync(username, oldPassword, newPassword, userCredentials: creds);
     }
 
     private UserCredentials GetCallerCreds()

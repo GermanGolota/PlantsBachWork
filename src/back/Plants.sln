@@ -33,7 +33,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Aggregates.Infrastru
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Old", "Old", "{7530FF2D-6392-4F85-A8EB-551A22948B17}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plants.Initializer", "Plants.Initializer\Plants.Initializer.csproj", "{FF8D4914-753E-432D-A46F-EB1BDDB45DFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Initializer", "Plants.Initializer\Plants.Initializer.csproj", "{FF8D4914-753E-432D-A46F-EB1BDDB45DFA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{0E8B5107-96CA-4C9C-8044-50B6416EC31A}"
+	ProjectSection(SolutionItems) = preProject
+		..\docker-compose-env.yml = ..\docker-compose-env.yml
+		..\docker-compose.yml = ..\docker-compose.yml
+		..\..\README.md = ..\..\README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -3,7 +3,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using Plants.Core;
 using Plants.Domain;
-using Plants.Infrastructure.Config;
+using Plants.Domain.Infrastructure.Config;
 using Plants.Initializer;
 
 namespace Plants.Initializer;

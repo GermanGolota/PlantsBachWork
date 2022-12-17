@@ -2,8 +2,8 @@
 using Microsoft.Extensions.Hosting;
 using Plants.Aggregates.Infrastructure;
 using Plants.Domain.Infrastructure;
+using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Services;
-using Plants.Infrastructure.Config;
 using Plants.Initializer;
 using Plants.Shared;
 
