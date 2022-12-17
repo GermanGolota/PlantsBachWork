@@ -30,7 +30,7 @@ services:
     volumes:
       - ./persist/es/data:/var/lib/eventstore
       - ./persist/es/eslogs:/var/log/eventstore
-      - ~/.aspnet/https:/
+      - ~/.aspnet/https:/https
 
   mongo:
     image: mongo:4.4.17
