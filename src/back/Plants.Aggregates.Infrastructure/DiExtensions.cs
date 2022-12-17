@@ -1,5 +1,7 @@
 ﻿using EventStore.Client;
+using Grpc.Core.Interceptors;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Plants.Aggregates.Infrastructure.Encryption;
 using Plants.Aggregates.Infrastructure.Helper;
@@ -25,6 +27,8 @@ public static class DiExtensions
             var symmetric = factory.GetRequiredService<SymmetricEncrypter>();
             settings.DefaultCredentials = new UserCredentials(identity.UserName, symmetric.Decrypt(identity.Hash));
             settings.DefaultDeadline = TimeSpan.FromSeconds(options.EventStoreTimeoutInSeconds);
+            settings.LoggerFactory ??= factory.GetService<ILoggerFactory>();
+            settings.Interceptors ??= factory.GetServices<Interceptor>();
             return settings;
         });
         services.AddScoped(factory => new EventStoreUserManagementClient(factory.GetRequiredService<EventStoreClientSettings>()));
