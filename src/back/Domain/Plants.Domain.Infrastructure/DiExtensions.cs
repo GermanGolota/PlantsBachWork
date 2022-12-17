@@ -37,7 +37,7 @@ public static class DiExtensions
         services.AddScoped<EventMetadataFactory>();
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
         //settings are provided through aggregates project
-        services.AddSingleton(factory =>
+        services.AddScoped(factory =>
         {
             return new EventStoreClient(factory.GetRequiredService<EventStoreClientSettings>());
         });

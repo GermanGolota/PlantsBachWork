@@ -49,6 +49,10 @@ internal class CommandSender : ICommandSender
         {
             var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate);
             var commandVersion = aggregate.Version;
+            if (commandVersion != 0)
+            {
+                commandVersion++;
+            }
             await _eventStore.AppendCommandAsync(command, commandVersion);
             //TODO: Move the rest to sub?
             var checkResults = await PerformChecks(command, handlePairs);

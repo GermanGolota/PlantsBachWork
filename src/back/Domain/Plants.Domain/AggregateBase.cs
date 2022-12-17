@@ -10,15 +10,17 @@ public abstract class AggregateBase
         Name = this.GetType().Name;
     }
 
-    public const ulong NewAggregateVersion = 0;
     public ulong CommandsProcessed { get; private set; } = 0;
-    public ulong Version { get; private set; } = NewAggregateVersion;
+    public ulong Version { get; private set; } = 0;
     public Guid Id { get; }
     public string Name { get; }
 
     public void Record(OneOf<Command, Event> newRecord)
     {
-        Version++;
+        if (CommandsProcessed != 0)
+        {
+            Version++;
+        }
         newRecord.Match(cmd => CommandsProcessed++, _ => { });
     }
 }

@@ -17,7 +17,7 @@ public static class DiExtensions
 
         services.AddTransient<IEmailer, Emailer>();
         services.AddScoped<IIdentityProvider, IdentityProvider>();
-        services.AddTransient(factory =>
+        services.AddScoped(factory =>
         {
             var options = factory.GetRequiredService<IOptions<ConnectionConfig>>().Value;
             var settings = EventStoreClientSettings.Create(options.EventStoreConnection);
@@ -27,7 +27,7 @@ public static class DiExtensions
             settings.DefaultDeadline = TimeSpan.FromSeconds(options.EventStoreTimeoutInSeconds);
             return settings;
         });
-        services.AddTransient(factory => new EventStoreUserManagementClient(factory.GetRequiredService<EventStoreClientSettings>()));
+        services.AddScoped(factory => new EventStoreUserManagementClient(factory.GetRequiredService<EventStoreClientSettings>()));
 
         services.AddScoped<EventStoreUserUpdater>();
         services.AddScoped<MongoDbUserUpdater>();
