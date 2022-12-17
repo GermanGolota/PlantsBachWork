@@ -16,4 +16,11 @@ public class CommandMetadataFactory
         var name = typeof(T).Name.Replace("Command", "");
         return new CommandMetadata(Guid.NewGuid(), aggregate, _dateTime.UtcNow, name, _userName.Identity.UserName);
     }
+
+}
+
+public static class CommandMetadataFactoryExtensions
+{
+    public static CommandMetadata Create<TCommand, TAggregate>(this CommandMetadataFactory factory, Guid aggregateId) where TCommand : Command where TAggregate : AggregateBase =>
+        factory.Create<TCommand>(new(aggregateId, typeof(TAggregate).Name));
 }
