@@ -2,7 +2,7 @@
 
 namespace Plants.Initializer;
 
-public static class Extensions
+public static class StringExtensions
 {
     public static string Delimit(this string str) =>
         $"\"{str}\"";

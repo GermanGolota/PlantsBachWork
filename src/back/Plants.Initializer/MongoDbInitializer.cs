@@ -4,10 +4,11 @@ using MongoDB.Driver;
 using Plants.Core;
 using Plants.Domain;
 using Plants.Infrastructure.Config;
+using Plants.Initializer;
 
 namespace Plants.Initializer;
 
-public class MongoDbInitializer
+internal class MongoDbInitializer
 {
     private readonly MongoClient _client;
     private readonly ConnectionConfig _connection;
@@ -18,29 +19,12 @@ public class MongoDbInitializer
         _connection = connection.Value;
     }
 
-    public async Task CreateRoles(AccessorsDefinition definiton)
+    public async Task Initialize(AccessorsDefinition definiton)
     {
         //TODO: Fix multiple envs not working
         var db = _client.GetDatabase("admin");
         var dbName = _connection.MongoDbDatabaseName;
-        var envDb = _client.GetDatabase(dbName);
-
-        var names = await (await envDb.ListCollectionNamesAsync()).ToListAsync();
-        foreach (var aggregate in definiton.Flat.Select(x => x.Aggregate).Where(agg => names.Contains(agg) is false).Distinct())
-        {
-            await envDb.CreateCollectionAsync(aggregate);
-        }
-
-        var allRoles = Enum.GetValues<UserRole>();
-        var allRoleNames = allRoles
-            .Select(x => x.ToString())
-            .ToArray();
-
-        var getRolesCommand = BsonDocument.Parse($$"""
-        {
-            "rolesInfo": [{{allRoles.DelimitList()}}]
-        }
-        """);
+        await InitializeCollectionsAsync(definiton, dbName);
 
         var accessTypeToPermissions = new Dictionary<AllowType, string[]>
         {
@@ -48,8 +32,7 @@ public class MongoDbInitializer
             {AllowType.Write, new[]{"insert", "update"}}
         };
 
-        var rolesResult = await db.RunCommandAsync<BsonDocument>(getRolesCommand);
-        var existingRoles = rolesResult.GetElement("roles").Value.AsBsonArray.Select(x => x.AsBsonDocument.GetElement("role").Value.ToString());
+        var existingRoles = await db.GetExistingRolesAsync();
 
         foreach (var role in existingRoles)
         {
@@ -60,7 +43,6 @@ public class MongoDbInitializer
             """);
             var dropResult = await db.RunCommandAsync<BsonDocument>(dropRole);
         }
-
 
         Func<UserRole, string, string> buildPrivelege = (role, aggregate) =>
             $$"""
@@ -113,4 +95,31 @@ public class MongoDbInitializer
             var createRoleResult = await db.RunCommandAsync<BsonDocument>(BsonDocument.Parse(definition));
         }
     }
+
+    private async Task InitializeCollectionsAsync(AccessorsDefinition definiton, string dbName)
+    {
+        var envDb = _client.GetDatabase(dbName);
+
+        var names = await (await envDb.ListCollectionNamesAsync()).ToListAsync();
+        foreach (var aggregate in definiton.Flat.Select(x => x.Aggregate).Where(agg => names.Contains(agg) is false).Distinct())
+        {
+            await envDb.CreateCollectionAsync(aggregate);
+        }
+    }
+}
+
+public static class MongoDatabaseExtensions
+{
+    public static async Task<IEnumerable<string>> GetExistingRolesAsync(this IMongoDatabase db)
+    {
+        var allRoles = Enum.GetValues<UserRole>();
+        var getRolesCommand = BsonDocument.Parse($$"""
+        {
+            "rolesInfo": [{{allRoles.DelimitList()}}]
+        }
+        """);
+        var rolesResult = await db.RunCommandAsync<BsonDocument>(getRolesCommand);
+        return rolesResult!.GetElement("roles").Value.AsBsonArray.Select(x => x.AsBsonDocument.GetElement("role").Value.ToString());
+    }
+
 }

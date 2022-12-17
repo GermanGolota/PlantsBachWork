@@ -40,7 +40,7 @@ var def = new AccessorsDefinition(definedAccesses, flatAccesses, roleToAggregate
 
 
 var mongo = provider.GetRequiredService<MongoDbInitializer>();
-await mongo.CreateRoles(def);
+await mongo.Initialize(def);
 /*
 var createUserDoc = BsonDocument.Parse($$"""
     {
