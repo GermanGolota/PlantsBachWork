@@ -112,7 +112,8 @@ internal class CommandSender : ICommandSender
             //external cmd
             if (check.ReturnType.IsAssignableTo(typeof(Task)))
             {
-                var service = _service.GetRequiredService(check.DeclaringType!);
+                var handlerType = typeof(ICommandHandler<>).MakeGenericType(command.GetType());
+                var service = _service.GetRequiredService(handlerType);
                 var task = (Task<CommandForbidden?>)check.Invoke(service, new object[] { command, identity })!;
                 var dependency = new OneOf<AggregateBase, object>(service);
                 checkResults.Add((await task, handle, dependency));
