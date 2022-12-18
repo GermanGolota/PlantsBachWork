@@ -368,4 +368,3 @@ elm-stuff
 .cache
 dist
 #persist
-src/persist
