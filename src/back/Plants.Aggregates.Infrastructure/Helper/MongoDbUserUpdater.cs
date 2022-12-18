@@ -73,7 +73,7 @@ internal class MongoDbUserUpdater : IUserUpdater
         var client = new MongoClient(options.MongoDbConnection);
 
 
-        var db = client.GetDatabase(options.MongoDbDatabaseName);
+        var db = client.GetDatabase("admin");
 
         return await db.RunCommandAsync<BsonDocument>(document);
     }
