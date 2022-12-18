@@ -23,7 +23,6 @@ services:
     container_name: setup
     volumes:
       - ./persist/certs:/certs
-
   eventstore:
     image: eventstore/eventstore:22.10.0-buster-slim
     environment:
