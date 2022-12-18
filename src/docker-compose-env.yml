@@ -11,27 +11,48 @@ services:
       PGDATA: var/lib/postgresql/data
     volumes:
       - ./persist/db:/var/lib/postgresql/data
+  setup:
+    image: eventstore/es-gencert-cli:1.0.2
+    entrypoint: bash
+    user: "1000:1000"
+    command: >
+      -c "mkdir -p ./certs && cd /certs
+      && es-gencert-cli create-ca
+      && es-gencert-cli create-node -out ./node1 -ip-addresses 127.0.0.1,172.30.240.11 -dns-names localhost
+      && find . -type f -print0 | xargs -0 chmod 666"
+    container_name: setup
+    volumes:
+      - ./persist/certs:/certs
 
   eventstore:
-    image: eventstore/eventstore:21.10.0-buster-slim
+    image: eventstore/eventstore:22.10.0-buster-slim
     environment:
-      - EVENTSTORE_CERTIFICATE_FILE=/https/aspnetapp.pfx
-      - EVENTSTORE_CERTIFICATE_PASSWORD=password
       - EVENTSTORE_CLUSTER_SIZE=1
       - EVENTSTORE_RUN_PROJECTIONS=All
-      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
-      - EVENTSTORE_HTTP_PORT=2113
       - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
-      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_HTTP_PORT=2113
+      - EVENTSTORE_TRUSTED_ROOT_CERTIFICATES_PATH=/certs/ca
+      - EVENTSTORE_CERTIFICATE_FILE=/certs/node1/node.crt
+      - EVENTSTORE_CERTIFICATE_PRIVATE_KEY_FILE=/certs/node1/node.key
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --fail --insecure https://node1.eventstore:2113/health/live || exit 1",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 24
     ports:
-      - "1113:1113"
-      - "1115:1115"
-      - "2113:2113"
+      - 1111:1113
+      - 2113:2113
     volumes:
       - ./persist/es/data:/var/lib/eventstore
       - ./persist/es/eslogs:/var/log/eventstore
-      - ~/.aspnet/https:/https
-
+      - ./persist/certs:/certs
+    depends_on:
+      - setup
+    restart: always
   mongo:
     image: mongo:4.4.17
     ports:

@@ -8,12 +8,12 @@ namespace Plants.Initializer;
 
 internal class ConfigIdentityProvider : IIdentityProvider
 {
-    private readonly AdminUserConfig _options;
+    private readonly UserConfig _options;
     private readonly SymmetricEncrypter _encrypter;
 
-    public ConfigIdentityProvider(IOptions<AdminUserConfig> options, SymmetricEncrypter encrypter)
+    public ConfigIdentityProvider(IOptionsSnapshot<UserConfig> options, SymmetricEncrypter encrypter)
     {
-        _options = options.Value;
+        _options = options.Get(UserConstrants.Admin);
         _encrypter = encrypter;
     }
 

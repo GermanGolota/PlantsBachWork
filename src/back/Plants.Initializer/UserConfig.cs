@@ -2,8 +2,9 @@
 
 namespace Plants.Initializer;
 
-[ConfigSection("Admin")]
-internal class AdminUserConfig
+//TODO: Figure out multiple named registrations
+//[ConfigSection("Admin")]
+internal class UserConfig
 {
 	public string Username { get; set; }
 	public string Password { get; set; }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using EventStore.Client;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Plants.Aggregates.Infrastructure;
 using Plants.Domain.Infrastructure;
@@ -12,7 +13,8 @@ var host = Host.CreateDefaultBuilder(args)
         {
             services
                 .Configure<ConnectionConfig>(ctx.Configuration.GetSection("Connection"))
-                .Configure<AdminUserConfig>(ctx.Configuration.GetSection("Admin"))
+                .Configure<UserConfig>(UserConstrants.Admin, ctx.Configuration.GetSection(UserConstrants.Admin))
+                .Configure<UserConfig>(UserConstrants.NewAdmin, ctx.Configuration.GetSection(UserConstrants.NewAdmin))
                 .AddShared()
                 .AddDomainInfrastructure()
                 .AddAggregatesInfrastructure();
@@ -25,4 +27,6 @@ var host = Host.CreateDefaultBuilder(args)
         .Build();
 
 var initer = host.Services.GetRequiredService<Initializer>();
+/*var m = host.Services.GetRequiredService<EventStoreUserManagementClient>();
+var user = await m.GetUserAsync("postgres");*/
 await initer.InitializeAsync();
