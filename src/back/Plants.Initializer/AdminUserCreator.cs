@@ -17,7 +17,7 @@ internal class AdminUserCreator
     {
         _sender = sender;
         _metadataFactory = metadataFactory;
-        _options = options.Get(UserConstrants.);
+        _options = options.Get(UserConstrants.NewAdmin);
     }
     public Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCreateAdminCommandAsync()
     {

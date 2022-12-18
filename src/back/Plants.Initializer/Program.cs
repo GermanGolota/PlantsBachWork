@@ -27,6 +27,4 @@ var host = Host.CreateDefaultBuilder(args)
         .Build();
 
 var initer = host.Services.GetRequiredService<Initializer>();
-/*var m = host.Services.GetRequiredService<EventStoreUserManagementClient>();
-var user = await m.GetUserAsync("postgres");*/
 await initer.InitializeAsync();
