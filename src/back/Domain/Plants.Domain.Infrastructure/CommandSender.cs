@@ -49,10 +49,6 @@ internal class CommandSender : ICommandSender
         {
             var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate);
             var commandVersion = aggregate.Version;
-            if (commandVersion != 0)
-            {
-                commandVersion++;
-            }
             await _eventStore.AppendCommandAsync(command, commandVersion);
             //TODO: Move the rest to sub?
             var checkResults = await PerformChecks(command, handlePairs);
@@ -60,21 +56,26 @@ internal class CommandSender : ICommandSender
             if (checkFailures.Any())
             {
                 var reasons = checkFailures.Select(failure => failure.Reasons).Flatten().ToArray();
-                var metadata = EventFactory.Shared.Create<FailEvent>(command, commandVersion + 1);
-                await _eventStore.AppendEventAsync(new FailEvent(metadata, reasons));
-                result = new CommandForbidden(reasons);
+                result = await CreateFailure(command, commandVersion, reasons);
             }
             else
             {
-                var events = await ExecuteHandlers(command, checkResults);
-                foreach (var @event in events)
+                try
                 {
-                    await _eventStore.AppendEventAsync(@event);
-                }
-                //TODO: Attach subscriber to event store instead of putting it here
-                await HandleEvents(events, command);
+                    var events = await ExecuteHandlers(command, checkResults);
+                    foreach (var @event in events)
+                    {
+                        await _eventStore.AppendEventAsync(@event);
+                    }
+                    //TODO: Attach subscriber to event store instead of putting it here
+                    await HandleEvents(events, command);
 
-                result = new CommandAcceptedResult();
+                    result = new CommandAcceptedResult();
+                }
+                catch (Exception e)
+                {
+                    result = await CreateFailure(command, commandVersion, new[] { e.Message, e.StackTrace! });
+                }
             }
         }
         else
@@ -84,6 +85,13 @@ internal class CommandSender : ICommandSender
         }
 
         return result;
+    }
+
+    private async Task<OneOf<CommandAcceptedResult, CommandForbidden>> CreateFailure(Command command, ulong commandVersion, string[] reasons)
+    {
+        var metadata = EventFactory.Shared.Create<FailEvent>(command, commandVersion + 1);
+        await _eventStore.AppendEventAsync(new FailEvent(metadata, reasons));
+        return new CommandForbidden(reasons);
     }
 
     private static async Task<List<Event>> ExecuteHandlers(Command command, List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object>)> checkResults)

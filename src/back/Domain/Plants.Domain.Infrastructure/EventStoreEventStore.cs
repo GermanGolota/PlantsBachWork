@@ -32,10 +32,9 @@ internal class EventStoreEventStore : IEventStore
                 Serialize(@event),
                 Encoding.UTF8.GetBytes("{}"));
 
-            var eventNumber = metadata.EventNumber - 1;
             var writeResult = await _client.AppendToStreamAsync(
                 metadata.Aggregate.ToTopic(),
-                eventNumber,
+                metadata.EventNumber,
                 new[] { eventData });
 
             return writeResult.NextExpectedStreamRevision.ToUInt64();
