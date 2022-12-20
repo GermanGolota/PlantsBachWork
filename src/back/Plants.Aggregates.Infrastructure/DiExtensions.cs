@@ -25,7 +25,9 @@ public static class DiExtensions
             var settings = EventStoreClientSettings.Create(options.EventStoreConnection);
             var identity = factory.GetRequiredService<IIdentityProvider>().Identity;
             var symmetric = factory.GetRequiredService<SymmetricEncrypter>();
-            settings.DefaultCredentials = new UserCredentials(identity.UserName, symmetric.Decrypt(identity.Hash));
+            //TODO:Remove
+            settings.DefaultCredentials = new UserCredentials("admin", "changeit");
+            //settings.DefaultCredentials = new UserCredentials(identity.UserName, symmetric.Decrypt(identity.Hash));
             settings.DefaultDeadline = TimeSpan.FromSeconds(options.EventStoreTimeoutInSeconds);
             settings.LoggerFactory ??= factory.GetService<ILoggerFactory>();
             settings.Interceptors ??= factory.GetServices<Interceptor>();
