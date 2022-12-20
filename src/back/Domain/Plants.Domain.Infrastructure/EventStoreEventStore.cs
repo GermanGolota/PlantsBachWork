@@ -34,7 +34,7 @@ internal class EventStoreEventStore : IEventStore
 
             var eventNumber = metadata.EventNumber - 1;
             var writeResult = await _client.AppendToStreamAsync(
-                metadata.Aggregate.Id.ToString(),
+                metadata.Aggregate.ToTopic(),
                 eventNumber,
                 new[] { eventData });
 
