@@ -56,7 +56,7 @@ internal class CommandSender : ICommandSender
             if (checkFailures.Any())
             {
                 var reasons = checkFailures.Select(failure => failure.Reasons).Flatten().ToArray();
-                result = await CreateFailure(command, commandVersion, reasons);
+                result = await CreateFailure(command, commandVersion, reasons, false);
             }
             else
             {
@@ -74,7 +74,7 @@ internal class CommandSender : ICommandSender
                 }
                 catch (Exception e)
                 {
-                    result = await CreateFailure(command, commandVersion, new[] { e.Message, e.StackTrace! });
+                    result = await CreateFailure(command, commandVersion, new[] { e.Message, e.StackTrace! }, true);
                 }
             }
         }
@@ -87,10 +87,10 @@ internal class CommandSender : ICommandSender
         return result;
     }
 
-    private async Task<OneOf<CommandAcceptedResult, CommandForbidden>> CreateFailure(Command command, ulong commandVersion, string[] reasons)
+    private async Task<OneOf<CommandAcceptedResult, CommandForbidden>> CreateFailure(Command command, ulong commandVersion, string[] reasons, bool isException)
     {
         var metadata = EventFactory.Shared.Create<FailEvent>(command, commandVersion + 1);
-        await _eventStore.AppendEventAsync(new FailEvent(metadata, reasons));
+        await _eventStore.AppendEventAsync(new FailEvent(metadata, reasons, isException));
         return new CommandForbidden(reasons);
     }
 
