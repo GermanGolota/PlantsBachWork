@@ -1,6 +1,7 @@
 ﻿using EventStore.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Shared;
@@ -59,7 +60,7 @@ internal class EventStoreEventStore : IEventStore
 
             var eventNumber = version == 0 ? StreamRevision.None : new StreamRevision(version);
             var writeResult = await _client.AppendToStreamAsync(
-                metadata.Aggregate.Id.ToString(),
+                metadata.Aggregate.ToTopic(),
                 eventNumber,
                 new[] { eventData });
 
@@ -72,7 +73,7 @@ internal class EventStoreEventStore : IEventStore
     }
 
 
-    public async Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(Guid id)
+    public async Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(AggregateDescription aggregate)
     {
         try
         {
@@ -81,11 +82,10 @@ internal class EventStoreEventStore : IEventStore
 
             var readResult = _client.ReadStreamAsync(
                  Direction.Forwards,
-                 id.ToString(),
+                 aggregate.ToTopic(),
                  StreamPosition.Start
              );
 
-            var result = _client.ReadStreamAsync(Direction.Forwards, id.ToString(), StreamPosition.Start);
             if (await readResult.ReadState == ReadState.StreamNotFound)
             {
                 readResult.ReadState.Dispose();
@@ -122,7 +122,7 @@ internal class EventStoreEventStore : IEventStore
         }
         catch (EventStoreException ex)
         {
-            throw new EventStoreCommunicationException($"Error while reading events for aggregate {id}", ex);
+            throw new EventStoreCommunicationException($"Error while reading events for aggregate {aggregate.Id}", ex);
         }
     }
 

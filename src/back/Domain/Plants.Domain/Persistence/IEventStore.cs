@@ -2,7 +2,7 @@
 
 public interface IEventStore
 {
-    Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(Guid id);
+    Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(AggregateDescription aggregate);
 
     /// <returns>Next expected version</returns>
     Task<ulong> AppendEventAsync(Event @event);
