@@ -11,18 +11,6 @@ services:
       PGDATA: var/lib/postgresql/data
     volumes:
       - ./persist/db:/var/lib/postgresql/data
-  setup:
-    image: eventstore/es-gencert-cli:1.0.2
-    entrypoint: bash
-    user: "1000:1000"
-    command: >
-      -c "mkdir -p ./certs && cd /certs
-      && es-gencert-cli create-ca
-      && es-gencert-cli create-node -out ./node1 -ip-addresses 127.0.0.1,172.30.240.11 -dns-names localhost
-      && find . -type f -print0 | xargs -0 chmod 666"
-    container_name: setup
-    volumes:
-      - ./persist/certs:/certs
   eventstore:
     image: eventstore/eventstore:22.10.0-buster-slim
     environment:
@@ -49,8 +37,6 @@ services:
       - ./persist/es/data:/var/lib/eventstore
       - ./persist/es/eslogs:/var/log/eventstore
       - ./persist/certs:/certs
-    depends_on:
-      - setup
 
   mongo:
     image: mongo:4.4.17
