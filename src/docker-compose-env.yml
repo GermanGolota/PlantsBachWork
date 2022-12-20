@@ -51,7 +51,6 @@ services:
       - ./persist/certs:/certs
     depends_on:
       - setup
-    restart: always
   mongo:
     image: mongo:4.4.17
     ports:
