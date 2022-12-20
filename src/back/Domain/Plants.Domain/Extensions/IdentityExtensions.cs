@@ -12,7 +12,7 @@ public static class IdentityExtensions
         var intersection = identity.Roles.Intersect(roles);
         return type switch
         {
-            UserCheckType.All => intersection.SequenceEqual(roles),
+            UserCheckType.All => intersection.OrderBy(_ => _).SequenceEqual(roles.OrderBy(_ => _)),
             UserCheckType.Any => intersection.Any(),
             _ => throw new NotImplementedException()
         } switch
