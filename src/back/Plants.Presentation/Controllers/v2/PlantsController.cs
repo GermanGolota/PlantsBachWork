@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Plants.Aggregates.Plants;
+using Plants.Aggregates.PlantStocks;
 using Plants.Domain;
 using Plants.Domain.Services;
 using Plants.Presentation.Examples;
@@ -28,8 +28,8 @@ public class PlantsController : ControllerBase
     public async Task<ActionResult<Guid>> Create
         ([FromBody] AddPlantDto2 body, CancellationToken token)
     {
-        var meta = _metadataFactory.Create<CreatePlantCommand>(new(Guid.NewGuid(), nameof(Plant)));
-        var command = new CreatePlantCommand(meta, new PlantCreationDto(body.Name));
+        var meta = _metadataFactory.Create<AddToStockCommand>(new(Guid.NewGuid(), nameof(PlantStock)));
+        var command = new AddToStockCommand(meta, new PlantCreationDto(body.Name));
         var result = await _sender.SendCommandAsync(command);
         return command.Metadata.Aggregate.Id;
     }
