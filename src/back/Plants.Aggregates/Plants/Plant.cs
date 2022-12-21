@@ -18,7 +18,7 @@ public class Plant : AggregateBase, IDomainCommandHandler<CreatePlantCommand>, I
     public IEnumerable<Event> Handle(CreatePlantCommand command) =>
          new[]
         {
-            new PlantCreatedEvent(EventFactory.Shared.Create<PlantCreatedEvent>(command, Version + 1), command.Plant)
+            new PlantCreatedEvent(EventFactory.Shared.Create<PlantCreatedEvent>(command, Version), command.Plant)
         };
 
     public void Handle(PlantCreatedEvent @event)

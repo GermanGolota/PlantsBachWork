@@ -57,10 +57,9 @@ internal class EventStoreEventStore : IEventStore
                 Serialize(command),
                 Encoding.UTF8.GetBytes("{}"));
 
-            var eventNumber = version == 0 ? StreamRevision.None : new StreamRevision(version);
             var writeResult = await _client.AppendToStreamAsync(
                 metadata.Aggregate.ToTopic(),
-                eventNumber,
+                version,
                 new[] { eventData });
 
             return writeResult.NextExpectedStreamRevision.ToUInt64();

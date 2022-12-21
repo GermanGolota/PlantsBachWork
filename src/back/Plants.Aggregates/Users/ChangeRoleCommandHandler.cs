@@ -23,7 +23,7 @@ internal class ChangeRoleCommandHandler : ICommandHandler<ChangeRoleCommand>
         await _updater.ChangeRole(user.Login, $"{user.FirstName} {user.LastName}", user.Roles, command.Role);
         return new[]
         {
-            new RoleChangedEvent(EventFactory.Shared.Create<RoleChangedEvent>(command, user.Version + 1), command.Role)
+            new RoleChangedEvent(EventFactory.Shared.Create<RoleChangedEvent>(command, user.Version), command.Role)
         };
     }
 

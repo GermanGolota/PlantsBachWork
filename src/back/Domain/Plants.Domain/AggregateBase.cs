@@ -11,16 +11,15 @@ public abstract class AggregateBase
     }
 
     public ulong CommandsProcessed { get; private set; } = 0;
-    public ulong Version { get; private set; } = 0;
+    public ulong Version { get; private set; } = UInt64.MaxValue;
     public Guid Id { get; }
     public string Name { get; }
+    public DateTime LastUpdateTime { get; private set; }
 
     public void Record(OneOf<Command, Event> newRecord)
     {
-        if (CommandsProcessed != 0)
-        {
-            Version++;
-        }
+        Version++;
         newRecord.Match(cmd => CommandsProcessed++, _ => { });
+        LastUpdateTime = newRecord.Match(cmd => cmd.Metadata.Time, @event => @event.Metadata.Time);
     }
 }

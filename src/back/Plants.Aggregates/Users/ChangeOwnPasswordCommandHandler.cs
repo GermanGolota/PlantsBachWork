@@ -30,7 +30,7 @@ public class ChangeOwnPasswordCommandHandler : ICommandHandler<ChangeOwnPassword
         var user = await _query.GetByIdAsync(command.Metadata.Aggregate.Id);
         return new[]
         {
-            new PasswordChangedEvent(EventFactory.Shared.Create<PasswordChangedEvent>(command, user.Version + 1))
+            new PasswordChangedEvent(EventFactory.Shared.Create<PasswordChangedEvent>(command, user.Version))
         };
     }
 
