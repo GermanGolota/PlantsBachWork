@@ -1,6 +1,6 @@
 ﻿using Plants.Shared;
 
-namespace Plants.Application.Contracts;
+namespace Plants.Services;
 
 public interface IJWTokenManager
 {

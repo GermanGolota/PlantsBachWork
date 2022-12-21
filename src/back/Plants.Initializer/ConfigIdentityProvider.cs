@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
-using Plants.Aggregates.Infrastructure.Encryption;
 using Plants.Domain;
 using Plants.Domain.Services;
+using Plants.Services.Infrastructure.Encryption;
 using Plants.Shared;
 
 namespace Plants.Initializer;

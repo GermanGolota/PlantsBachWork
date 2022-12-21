@@ -1,13 +1,12 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Plants.Application.Contracts;
-using Plants.Infrastructure.Config;
+using Plants.Services.Infrastructure.Config;
 using Plants.Shared;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Plants.Infrastructure.Helpers;
+namespace Plants.Services.Infrastructure.Encryption;
 
 public class JWTokenManager : IJWTokenManager
 {

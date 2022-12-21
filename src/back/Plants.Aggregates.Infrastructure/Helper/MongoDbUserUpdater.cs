@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Plants.Aggregates.Infrastructure.Encryption;
 using Plants.Aggregates.Services;
 using Plants.Domain.Infrastructure.Config;
+using Plants.Services.Infrastructure.Encryption;
 using Plants.Shared;
 
 namespace Plants.Aggregates.Infrastructure.Helper;

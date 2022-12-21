@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Plants.Application\Plants.Application.csproj" />
     <ProjectReference Include="..\Plants.Core\Plants.Core.csproj" />
+    <ProjectReference Include="..\Plants.Services.Infrastructure\Plants.Services.Infrastructure.csproj" />
     <ProjectReference Include="..\Plants.Shared\Plants.Shared.csproj" />
   </ItemGroup>
 

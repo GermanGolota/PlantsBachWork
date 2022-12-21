@@ -1,9 +1,9 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Plants.Infrastructure.Helpers;
+namespace Plants.Services.Infrastructure.Encryption;
 
-public static class AesOperation
+internal static class AesOperation
 {
     public static string EncryptString(string key, string plainText)
     {
@@ -34,11 +34,6 @@ public static class AesOperation
         return Convert.ToBase64String(array);
     }
 
-    private static byte[] GetKeyBytes(string key)
-    {
-        return Encoding.UTF8.GetBytes(key).Take(128 / 8).ToArray();
-    }
-
     public static string DecryptString(string key, string cipherText)
     {
         byte[] iv = new byte[16];
@@ -61,5 +56,10 @@ public static class AesOperation
                 }
             }
         }
+    }
+
+    private static byte[] GetKeyBytes(string key)
+    {
+        return Encoding.UTF8.GetBytes(key).Take(128 / 8).ToArray();
     }
 }

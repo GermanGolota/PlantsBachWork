@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using Plants.Aggregates.Services;
 
-namespace Plants.Aggregates.Infrastructure.Services;
+namespace Plants.Services.Infrastructure;
 
 internal class Emailer : IEmailer
 {

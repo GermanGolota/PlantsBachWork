@@ -1,6 +1,6 @@
 ﻿using Plants.Shared;
 
-namespace Plants.Infrastructure.Config;
+namespace Plants.Services.Infrastructure.Config;
 
 [ConfigSection(Section)]
 public class AuthConfig

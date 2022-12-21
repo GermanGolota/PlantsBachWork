@@ -1,4 +1,4 @@
-﻿namespace Plants.Aggregates.Services;
+﻿namespace Plants.Services;
 
 public interface IEmailer
 {

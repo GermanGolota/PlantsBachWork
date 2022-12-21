@@ -3,11 +3,11 @@ using Grpc.Core.Interceptors;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Plants.Aggregates.Infrastructure.Encryption;
 using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Aggregates.Infrastructure.Services;
 using Plants.Aggregates.Services;
 using Plants.Domain.Infrastructure.Config;
+using Plants.Services.Infrastructure.Encryption;
 
 namespace Plants.Aggregates.Infrastructure;
 
@@ -15,9 +15,6 @@ public static class DiExtensions
 {
     public static IServiceCollection AddAggregatesInfrastructure(this IServiceCollection services)
     {
-        services.AddTransient<SymmetricEncrypter>();
-
-        services.AddTransient<IEmailer, Emailer>();
         services.AddScoped<IIdentityProvider, IdentityProvider>();
         services.AddScoped(factory =>
         {

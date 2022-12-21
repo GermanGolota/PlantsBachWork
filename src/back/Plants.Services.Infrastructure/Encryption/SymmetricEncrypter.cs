@@ -1,16 +1,17 @@
 ﻿using Microsoft.Extensions.Options;
-using Plants.Infrastructure.Config;
+using Plants.Services.Infrastructure.Config;
 
-namespace Plants.Infrastructure.Helpers;
+namespace Plants.Services.Infrastructure.Encryption;
 
 public class SymmetricEncrypter
 {
-    private readonly AuthConfig _config;
-    private string Key => _config.AuthKey;
+    private readonly IOptions<AuthConfig> _options;
 
-    public SymmetricEncrypter(IOptions<AuthConfig> config)
+    private string Key => _options.Value.AuthKey;
+
+    public SymmetricEncrypter(IOptions<AuthConfig> options)
     {
-        _config = config.Value;
+        _options = options;
     }
 
     public string Encrypt(string str)

@@ -4,6 +4,7 @@ using Plants.Domain.Infrastructure;
 using Plants.Infrastructure;
 using Plants.Presentation.Extensions;
 using Plants.Presentation.Middleware;
+using Plants.Services.Infrastructure;
 using Plants.Shared;
 
 namespace Plants.Presentation;
@@ -26,6 +27,7 @@ public class Startup
         services
             .BindConfigSections(Configuration)
             .AddShared()
+            .AddSharedServices()
             .AddInfrastructure(Configuration)
             .AddDomainInfrastructure()
             .AddAggregatesInfrastructure()
