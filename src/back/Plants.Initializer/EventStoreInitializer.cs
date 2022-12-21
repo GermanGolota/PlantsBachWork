@@ -1,5 +1,5 @@
 ﻿using EventStore.Client;
-using Plants.Core;
+using Plants.Shared;
 
 namespace Plants.Initializer;
 

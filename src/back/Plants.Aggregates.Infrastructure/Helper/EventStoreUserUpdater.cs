@@ -1,7 +1,7 @@
 ﻿using EventStore.Client;
 using Plants.Aggregates.Infrastructure.Encryption;
 using Plants.Aggregates.Services;
-using Plants.Core;
+using Plants.Shared;
 
 namespace Plants.Aggregates.Infrastructure.Helper;
 

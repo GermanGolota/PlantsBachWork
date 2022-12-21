@@ -3,8 +3,8 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using Plants.Aggregates.Infrastructure.Encryption;
 using Plants.Aggregates.Services;
-using Plants.Core;
 using Plants.Domain.Infrastructure.Config;
+using Plants.Shared;
 
 namespace Plants.Aggregates.Infrastructure.Helper;
 

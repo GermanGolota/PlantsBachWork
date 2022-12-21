@@ -1,5 +1,5 @@
-﻿using Plants.Core;
-using Plants.Domain;
+﻿using Plants.Domain;
+using Plants.Shared;
 
 public record AccessorsDefinition(
     Dictionary<string, Dictionary<UserRole, List<AllowType>>> Defined,

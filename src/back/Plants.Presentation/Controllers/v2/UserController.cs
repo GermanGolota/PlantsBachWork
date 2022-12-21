@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Plants.Aggregates.Users;
-using Plants.Core;
 using Plants.Domain;
 using Plants.Domain.Projection;
 using Plants.Domain.Services;

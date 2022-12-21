@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Plants.Core;
 using Plants.Domain;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Initializer;
+using Plants.Shared;
 
 namespace Plants.Initializer;
 

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Plants.Aggregates.Infrastructure.Encryption;
-using Plants.Core;
+using Plants.Shared;
 using System.Security.Claims;
 
 namespace Plants.Aggregates.Infrastructure;

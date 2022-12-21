@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Plants.Application.Commands;
 using Plants.Application.Requests;
-using Plants.Core;
+using Plants.Shared;
 
 namespace Plants.Presentation.Controllers;
 
