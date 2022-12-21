@@ -116,7 +116,7 @@ internal class CommandSender : ICommandSender
 
     private async Task<List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object> Dependency)>> PerformChecks(Command command, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs)
     {
-        var identity = _identityProvider.Identity;
+        var identity = _identityProvider.Identity!;
 
         List<(CommandForbidden? CheckResult, MethodInfo Handle, OneOf<AggregateBase, object>)> checkResults = new();
         foreach (var (check, handle) in handlePairs)

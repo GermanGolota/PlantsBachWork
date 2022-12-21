@@ -16,16 +16,23 @@ internal class IdentityProvider : IIdentityProvider
         _encrypter = encrypter;
     }
 
-    public IUserIdentity Identity
+    public IUserIdentity? Identity
     {
         get
         {
-            var claims = _contextAccessor?.HttpContext?.User?.Claims ?? throw new Exception("User is not authorized");
-            var userName = claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
-            var roleNames = Enum.GetNames<UserRole>();
-            var roles = claims.Select(_ => _.Type).Where(type => roleNames.Contains(type)).Select(Enum.Parse<UserRole>).ToArray();
-            var hash = claims.First(x => x.Type == ClaimTypes.Hash).Value;
-            return new UserIdentity(roles, userName, hash);
+            try
+            {
+                var claims = _contextAccessor.HttpContext.User.Claims;
+                var userName = claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
+                var roleNames = Enum.GetNames<UserRole>();
+                var roles = claims.Select(_ => _.Type).Where(type => roleNames.Contains(type)).Select(Enum.Parse<UserRole>).ToArray();
+                var hash = claims.First(x => x.Type == ClaimTypes.Hash).Value;
+                return new UserIdentity(roles, userName, hash);
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 

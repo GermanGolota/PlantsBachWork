@@ -17,7 +17,7 @@ internal class ConfigIdentityProvider : IIdentityProvider
         _encrypter = encrypter;
     }
 
-    public IUserIdentity Identity => new UserIdentity(Enum.GetValues<UserRole>(), _options.Username, _encrypter.Encrypt(_options.Password));
+    public IUserIdentity? Identity => new UserIdentity(Enum.GetValues<UserRole>(), _options.Username, _encrypter.Encrypt(_options.Password));
 
     private record UserIdentity(UserRole[] Roles, string UserName, string Hash) : IUserIdentity;
 }

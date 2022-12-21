@@ -14,7 +14,7 @@ public class CommandMetadataFactory
     public CommandMetadata Create<T>(AggregateDescription aggregate) where T : Command
     {
         var name = typeof(T).Name.Replace("Command", "");
-        return new CommandMetadata(Guid.NewGuid(), aggregate, _dateTime.UtcNow, name, _userName.Identity.UserName);
+        return new CommandMetadata(Guid.NewGuid(), aggregate, _dateTime.UtcNow, name, _userName.Identity!.UserName);
     }
 
 }

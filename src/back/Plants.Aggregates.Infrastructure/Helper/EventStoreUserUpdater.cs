@@ -50,8 +50,9 @@ internal class EventStoreUserUpdater : IUserUpdater
 
     private UserCredentials GetCallerCreds()
     {
-        var pass = _encrypter.Decrypt(_identity.Identity.Hash);
-        return new UserCredentials(_identity.Identity.UserName, pass);
+        var identity = _identity.Identity!;
+        var pass = _encrypter.Decrypt(identity.Hash);
+        return new UserCredentials(identity.UserName, pass);
     }
 
 }

@@ -15,16 +15,21 @@ public static class DiExtensions
 {
     public static IServiceCollection AddAggregatesInfrastructure(this IServiceCollection services)
     {
+        services.AddScoped<IAuthorizer, Authorizer>();
         services.AddScoped<IIdentityProvider, IdentityProvider>();
         services.AddScoped(factory =>
         {
             var options = factory.GetRequiredService<IOptions<ConnectionConfig>>().Value;
             var settings = EventStoreClientSettings.Create(options.EventStoreConnection);
             var identity = factory.GetRequiredService<IIdentityProvider>().Identity;
-            var symmetric = factory.GetRequiredService<SymmetricEncrypter>();
-            //TODO:Remove
-            settings.DefaultCredentials = new UserCredentials("admin", "changeit");
-            //settings.DefaultCredentials = new UserCredentials(identity.UserName, symmetric.Decrypt(identity.Hash));
+            if (identity is not null)
+            {
+                var symmetric = factory.GetRequiredService<SymmetricEncrypter>();
+                //TODO:Remove
+                settings.DefaultCredentials = new UserCredentials("admin", "changeit");
+                //settings.DefaultCredentials = new UserCredentials(identity.UserName, symmetric.Decrypt(identity.Hash));
+            }
+
             settings.DefaultDeadline = TimeSpan.FromSeconds(options.EventStoreTimeoutInSeconds);
             settings.LoggerFactory ??= factory.GetService<ILoggerFactory>();
             settings.Interceptors ??= factory.GetServices<Interceptor>();

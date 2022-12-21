@@ -5,5 +5,5 @@
 /// </summary>
 public interface IIdentityProvider
 {
-    IUserIdentity Identity { get; }
+    IUserIdentity? Identity { get; }
 }

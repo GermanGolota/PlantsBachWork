@@ -31,7 +31,7 @@ public class UserController : ControllerBase
     public async Task<ActionResult<IEnumerable<UserDto>>> Search(
         [FromQuery] string? name, [FromQuery] string? phone, [FromQuery] UserRole[]? roles)
     {
-        var currentUserRoles = _identity.Identity.Roles;
+        var currentUserRoles = _identity.Identity!.Roles;
         var allRoles = Enum.GetValues<UserRole>();
         var rolesToFetch = currentUserRoles.Intersect(roles ?? allRoles).ToList();
         //TODO: Abstract away
@@ -69,7 +69,7 @@ public class UserController : ControllerBase
     [HttpPost("changePass")]
     public async Task<ActionResult<ResultDto>> ChangePassword([FromBody] PasswordChangeDto password)
     {
-        var identity = _identity.Identity;
+        var identity = _identity.Identity!;
         var meta = _metadataFactory.Create<ChangeOwnPasswordCommand>(new(identity.UserName.ToGuid(), nameof(User)));
         var command = new ChangeOwnPasswordCommand(meta, password.OldPassword, password.NewPassword);
         var result = await _sender.SendCommandAsync(command);
