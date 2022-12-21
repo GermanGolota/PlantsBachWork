@@ -27,6 +27,6 @@ public class PlantStock : AggregateBase, IDomainCommandHandler<AddToStockCommand
     }
 }
 
-public record AddToStockCommand(CommandMetadata Metadata, PlantCreationDto Plant) : Command(Metadata);
-public record StockAddedEvent(EventMetadata Metadata, PlantCreationDto Plant) : Event(Metadata);
-public record PlantCreationDto(string PlantName);
+public record AddToStockCommand(CommandMetadata Metadata, PlantStockDto Plant) : Command(Metadata);
+public record StockAddedEvent(EventMetadata Metadata, PlantStockDto Plant) : Event(Metadata);
+public record PlantStockDto(string PlantName);

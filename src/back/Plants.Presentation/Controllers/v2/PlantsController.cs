@@ -29,7 +29,7 @@ public class PlantsController : ControllerBase
         ([FromBody] AddPlantDto2 body, CancellationToken token)
     {
         var meta = _metadataFactory.Create<AddToStockCommand>(new(Guid.NewGuid(), nameof(PlantStock)));
-        var command = new AddToStockCommand(meta, new PlantCreationDto(body.Name));
+        var command = new AddToStockCommand(meta, new PlantStockDto(body.Name));
         var result = await _sender.SendCommandAsync(command);
         return command.Metadata.Aggregate.Id;
     }
