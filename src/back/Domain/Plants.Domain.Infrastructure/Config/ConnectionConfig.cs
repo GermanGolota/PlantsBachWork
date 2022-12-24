@@ -8,7 +8,6 @@ public class ConnectionConfig
     public const string Section = "Connection";
     public string EventStoreConnection { get; set; }
     public long EventStoreTimeoutInSeconds { get; set; } = 60;
-    //TODO: Change to template
     public string MongoDbConnectionTemplate { get; set; }
     public string MongoDbDatabaseName { get; set; }
 }
