@@ -9,7 +9,7 @@ public static class DiExtensions
     {
         services.AddScoped<SymmetricEncrypter>();
         services.AddScoped<IJWTokenManager, JWTokenManager>();
-        services.AddScoped<IEmailer, Emailer>();
+        services.AddScoped<IEmailer, MockEmailer>();
         return services;
     }
 }
