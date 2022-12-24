@@ -6,9 +6,9 @@ namespace Plants.Aggregates.Users;
 internal class ChangeRoleCommandHandler : ICommandHandler<ChangeRoleCommand>
 {
     private readonly IUserUpdater _updater;
-    private readonly IProjectionQueryService<User> _userRepo;
+    private readonly IRepository<User> _userRepo;
 
-    public ChangeRoleCommandHandler(IUserUpdater updater, IProjectionQueryService<User> userRepo)
+    public ChangeRoleCommandHandler(IUserUpdater updater, IRepository<User> userRepo)
     {
         _updater = updater;
         _userRepo = userRepo;

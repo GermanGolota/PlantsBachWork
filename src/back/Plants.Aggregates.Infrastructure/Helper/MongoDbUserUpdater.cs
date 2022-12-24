@@ -26,24 +26,15 @@ internal class MongoDbUserUpdater : IUserUpdater
 
     public async Task ChangeRole(string username, string fullName, UserRole[] oldRoles, UserRole changedRole)
     {
-        var document = (oldRoles.Contains(changedRole)) switch
-        {
-            true => new BsonDocument
-            {
-                { "revokeRolesFromUser", username },
-                { "roles", new BsonDocument
-                    {
-                        {"role", changedRole.ToString()},
-                        {"db", _options.Value.MongoDbDatabaseName }
-                    }
+        var shouldRemoveRole = oldRoles.Contains(changedRole);
+        var document =
+        BsonDocument.Parse(
+            $$"""
+                {
+                    "{{(shouldRemoveRole ? "revokeRolesFromUser" : "grantRolesToUser")}}": "{{username}}",
+                    "roles": [{"role":"{{changedRole}}", "db": "admin"}]
                 }
-            },
-            false => new BsonDocument
-            {
-                { "grantRolesToUser", username },
-                { "roles", new BsonArray(new []{ changedRole})}
-            }
-        };
+            """);
         await RunDocumentCommand(document);
     }
 
@@ -56,7 +47,7 @@ internal class MongoDbUserUpdater : IUserUpdater
             { "roles", roleArray }
         };
 
-        var result = await RunDocumentCommand(document);
+        await RunDocumentCommand(document); 
     }
 
     public async Task UpdatePassword(string username, string oldPassword, string newPassword)
@@ -67,13 +58,32 @@ internal class MongoDbUserUpdater : IUserUpdater
             { "pwd", newPassword }
         };
 
-        var result = await RunDocumentCommand(document);
+        await RunDocumentCommand(document);
     }
 
-    private async Task<BsonDocument> RunDocumentCommand(BsonDocument document)
+    private async Task RunDocumentCommand(BsonDocument document)
     {
         var db = _factory.GetDatabase("admin");
-        return await db.RunCommandAsync<BsonDocument>(document);
+        var result = await db.RunCommandAsync<BsonDocument>(document);
+        if (HasFailed(result))
+        {
+            throw new Exception(result.ToString());
+        }
+    }
+
+    private bool HasFailed(BsonDocument resultDoc)
+    {
+        bool result;
+        if (resultDoc.TryGetElement("ok", out var okElem))
+        {
+            var okValue = resultDoc.GetElement("ok").Value.AsDouble;
+            result = okValue < 0.95 || okValue > 1.05;
+        }
+        else
+        {
+            result = true;
+        }
+        return result;
     }
 
 }
