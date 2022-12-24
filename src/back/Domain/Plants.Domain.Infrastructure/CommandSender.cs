@@ -49,11 +49,8 @@ internal class CommandSender : ICommandSender
         }
         var identity = _identityProvider.Identity!;
         var commandAggregate = command.Metadata.Aggregate;
-        var userHasAccess = _accesses.AggregateAccesses[commandAggregate.Name]
-            .Where(pair => pair.Value.Contains(AllowType.Write) && identity.Roles.Contains(pair.Key))
-            .Any();
         OneOf<CommandAcceptedResult, CommandForbidden> result;
-        if (userHasAccess)
+        if (UserHasAccess(identity, commandAggregate))
         {
             if (_cqrs.CommandHandlers.TryGetValue(commandType, out var handlePairs))
             {
@@ -72,6 +69,10 @@ internal class CommandSender : ICommandSender
 
         return result;
     }
+
+    private bool UserHasAccess(IUserIdentity identity, AggregateDescription commandAggregate) =>
+        identity.Roles.Contains(UserRole.Manager)
+        || _accesses.AggregateToWriteRoles[commandAggregate.Name].Intersect(identity.Roles).Any();
 
     private async Task<OneOf<CommandAcceptedResult, CommandForbidden>> ExecuteCommand(Command command, AggregateDescription commandAggregate, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs)
     {
