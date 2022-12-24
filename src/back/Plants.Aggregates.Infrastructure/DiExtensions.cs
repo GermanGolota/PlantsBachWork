@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Aggregates.Infrastructure.Services;
 using Plants.Aggregates.Services;
+using Plants.Aggregates.Users;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Services.Infrastructure.Encryption;
 
@@ -15,6 +16,7 @@ public static class DiExtensions
 {
     public static IServiceCollection AddAggregatesInfrastructure(this IServiceCollection services)
     {
+        services.AddScoped<TempPasswordContext>();
         services.AddScoped<IAuthorizer, Authorizer>();
         services.AddScoped<IIdentityProvider, IdentityProvider>();
         services.AddScoped(factory =>
