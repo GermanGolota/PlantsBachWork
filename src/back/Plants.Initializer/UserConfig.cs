@@ -1,4 +1,5 @@
 ﻿using Plants.Shared;
+using System.ComponentModel.DataAnnotations;
 
 namespace Plants.Initializer;
 
@@ -6,7 +7,10 @@ namespace Plants.Initializer;
 //[ConfigSection("Admin")]
 internal class UserConfig
 {
+	[Required]
 	public string Username { get; set; }
-	public string Password { get; set; }
-	public string Name { get; set; }
+    [Required]
+    public string Password { get; set; }
+	public string FirstName { get; set; }
+    public string LastName { get; set; }
 }

@@ -26,8 +26,8 @@ internal class AdminUserCreator
         var meta = _metadataFactory.Create<CreateUserCommand, User>(_options.Username.ToGuid());
         var command = new CreateUserCommand(meta,
             new UserCreationDto(
-                _options.Name,
-                _options.Name,
+                _options.FirstName,
+                _options.LastName,
                 "",
                 _options.Username,
                 "admin@admin.admin",
