@@ -8,10 +8,10 @@ public static class CommandForbiddenExtensions
     public static CommandForbidden? And(this CommandForbidden? forbidden, CommandForbidden? forbiddenSecond) =>
       forbidden ?? forbiddenSecond;
 
-    public static CommandForbidden? ToForbidden(this bool isValid, string forbiddenReason) =>
-        isValid switch
+    public static CommandForbidden? ToForbidden(this bool hasFailed, string forbiddenReason) =>
+        hasFailed switch
         {
-            true => null,
-            false => new CommandForbidden(forbiddenReason)
+            true => new CommandForbidden(forbiddenReason),
+            false => null
         };
 }

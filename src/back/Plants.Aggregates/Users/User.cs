@@ -54,4 +54,5 @@ public record ChangeRoleCommand(CommandMetadata Metadata, UserRole Role) : Comma
 public record RoleChangedEvent(EventMetadata Metadata, UserRole Role) : Event(Metadata);
 
 public record ChangeOwnPasswordCommand(CommandMetadata Metadata, string OldPassword, string NewPassword) : Command(Metadata);
+public record ChangePasswordCommand(CommandMetadata Metadata, string Login, string OldPassword, string NewPassword) : Command(Metadata);
 public record PasswordChangedEvent(EventMetadata Metadata) : Event(Metadata);

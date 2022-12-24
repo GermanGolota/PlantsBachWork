@@ -5,10 +5,10 @@ namespace Plants.Aggregates.Users;
 public class ChangeOwnPasswordCommandHandler : ICommandHandler<ChangeOwnPasswordCommand>
 {
     private readonly IUserUpdater _userUpdater;
-    private readonly IProjectionQueryService<User> _query;
+    private readonly IRepository<User> _query;
     private readonly IIdentityProvider _identity;
 
-    public ChangeOwnPasswordCommandHandler(IUserUpdater userUpdater, IProjectionQueryService<User> query, IIdentityProvider identity)
+    public ChangeOwnPasswordCommandHandler(IUserUpdater userUpdater, IRepository<User> query, IIdentityProvider identity)
     {
         _userUpdater = userUpdater;
         _query = query;
