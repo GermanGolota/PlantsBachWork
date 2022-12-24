@@ -27,11 +27,18 @@ internal class Initializer
 
         await _eventStore.Initialize(accesses);
         await _mongo.Initialize(accesses);
-        var result = await _userCreator.SendCreateAdminCommandAsync();
-        result.Match(
-            _ => _logger.LogInformation("Sucessfully initialized!"),
+        var userCreateResult = await _userCreator.SendCreateAdminCommandAsync();
+        userCreateResult.Match(
+            _ => _logger.LogInformation("Sucessfully create user!"),
             fail => throw new Exception(String.Join(", ", fail.Reasons))
             );
+        var passwordResetResult = await _userCreator.SendResetPasswordCommand();
+        passwordResetResult.Match(
+            _ => _logger.LogInformation("Sucessfully changed password!"),
+            fail => throw new Exception(String.Join(", ", fail.Reasons))
+            );
+
+        _logger.LogInformation("Successfully initialized");
     }
 
     private static AccessorsDefinition GetAccesses()

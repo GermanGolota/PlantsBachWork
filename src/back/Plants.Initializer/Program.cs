@@ -1,21 +1,25 @@
-﻿using EventStore.Client;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Plants.Aggregates.Infrastructure;
 using Plants.Domain.Infrastructure;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Services;
 using Plants.Initializer;
+using Plants.Services.Infrastructure;
+using Plants.Services.Infrastructure.Config;
 using Plants.Shared;
 
 var host = Host.CreateDefaultBuilder(args)
         .ConfigureServices((ctx, services) =>
         {
+            var config = ctx.Configuration;
             services
-                .Configure<ConnectionConfig>(ctx.Configuration.GetSection("Connection"))
-                .Configure<UserConfig>(UserConstrants.Admin, ctx.Configuration.GetSection(UserConstrants.Admin))
-                .Configure<UserConfig>(UserConstrants.NewAdmin, ctx.Configuration.GetSection(UserConstrants.NewAdmin))
+                .Configure<ConnectionConfig>(config.GetSection("Connection"))
+                .Configure<AuthConfig>(config.GetSection(AuthConfig.Section))
+                .Configure<UserConfig>(UserConstrants.Admin, config.GetSection(UserConstrants.Admin))
+                .Configure<UserConfig>(UserConstrants.NewAdmin, config.GetSection(UserConstrants.NewAdmin))
                 .AddShared()
+                .AddSharedServices()
                 .AddDomainInfrastructure()
                 .AddAggregatesInfrastructure();
             services.AddTransient<MongoDbInitializer>()
