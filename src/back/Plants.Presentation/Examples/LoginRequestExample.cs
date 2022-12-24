@@ -14,5 +14,5 @@ internal class LoginRequestExample : IExamplesProvider<LoginCommand>
 internal class LoginRequestExamplev2 : IExamplesProvider<LoginDto>
 {
     public LoginDto GetExamples() =>
-         new("admin", "changeit");
+         new("postgres", "test");
 }

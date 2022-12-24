@@ -42,7 +42,7 @@ public class UserController : ControllerBase
             (var aName, null) => _query.FindAllAsync(user => user.FirstName.Contains(aName) || user.LastName.Contains(aName)),
             (var aName, var number) => _query.FindAllAsync(user => (user.FirstName.Contains(aName) || user.LastName.Contains(aName)) && user.PhoneNumber == number)
         })).ToList();
-        return usersDb.Where(x => x.Roles.All(role => rolesToFetch.Contains(role)))
+        return usersDb.Where(x => x.Roles.Intersect(rolesToFetch).Any())
             .Select(user => new UserDto($"{user.FirstName} {user.LastName}", user.PhoneNumber, user.Roles)).ToList();
     }
 
