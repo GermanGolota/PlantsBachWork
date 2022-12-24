@@ -22,8 +22,7 @@ var host = Host.CreateDefaultBuilder(args)
                 .AddSharedServices()
                 .AddDomainInfrastructure()
                 .AddAggregatesInfrastructure();
-            services.AddTransient<MongoDbInitializer>()
-                    .AddTransient<EventStoreInitializer>()
+            services.AddTransient<MongoRolesDbInitializer>()
                     .AddSingleton<IIdentityProvider, ConfigIdentityProvider>()
                     .AddTransient<AdminUserCreator>()
                     .AddTransient<Initializer>();

@@ -3,28 +3,30 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using Plants.Domain;
 using Plants.Domain.Infrastructure.Config;
-using Plants.Initializer;
+using Plants.Domain.Infrastructure.Helpers;
 using Plants.Shared;
 
 namespace Plants.Initializer;
 
-internal class MongoDbInitializer
+internal class MongoRolesDbInitializer
 {
     private readonly MongoClient _client;
+    private readonly AccessesHelper _accesses;
     private readonly ConnectionConfig _connection;
 
-    public MongoDbInitializer(MongoClient client, IOptions<ConnectionConfig> connection)
+    public MongoRolesDbInitializer(MongoClient client, IOptions<ConnectionConfig> connection, AccessesHelper accesses)
     {
         _client = client;
+        _accesses = accesses;
         _connection = connection.Value;
     }
 
-    public async Task Initialize(AccessorsDefinition definiton)
+    public async Task Initialize()
     {
         //TODO: Fix multiple envs not working
         var db = _client.GetDatabase("admin");
         var dbName = _connection.MongoDbDatabaseName;
-        await InitializeCollectionsAsync(definiton, dbName);
+        await InitializeCollectionsAsync(dbName);
 
         var accessTypeToPermissions = new Dictionary<AllowType, string[]>
         {
@@ -48,7 +50,7 @@ internal class MongoDbInitializer
             $$"""
             {
                 "resource":{ "db":"{{dbName}}", "collection":"{{aggregate}}"},
-                "actions": [{{definiton.Defined[aggregate][role].SelectMany(type => accessTypeToPermissions[type]).DelimitList()}}]
+                "actions": [{{_accesses.Defined[aggregate][role].SelectMany(type => accessTypeToPermissions[type]).DelimitList()}}]
             }
             """;
 
@@ -62,7 +64,7 @@ internal class MongoDbInitializer
                     "resource": { "cluster" : true }, 
                     "actions": ["changeOwnPassword"]
                 },
-                {{String.Join(",\n", definiton.RoleToAggregate[UserRole.Consumer].Select(agg => buildPrivelege(UserRole.Consumer, agg)))}}
+                {{String.Join(",\n", _accesses.RoleToAggregate[UserRole.Consumer].Select(agg => buildPrivelege(UserRole.Consumer, agg)))}}
              ],
              "roles":[]
             }
@@ -75,7 +77,7 @@ internal class MongoDbInitializer
                     "resource": { "cluster" : true }, 
                     "actions": ["changeOwnPassword"]
                 },
-                {{String.Join(",\n", definiton.RoleToAggregate[UserRole.Producer].Select(agg => buildPrivelege(UserRole.Producer, agg)))}}
+                {{String.Join(",\n", _accesses.RoleToAggregate[UserRole.Producer].Select(agg => buildPrivelege(UserRole.Producer, agg)))}}
              ],
              "roles":[]
             }
@@ -96,12 +98,12 @@ internal class MongoDbInitializer
         }
     }
 
-    private async Task InitializeCollectionsAsync(AccessorsDefinition definiton, string dbName)
+    private async Task InitializeCollectionsAsync(string dbName)
     {
         var envDb = _client.GetDatabase(dbName);
 
         var names = await (await envDb.ListCollectionNamesAsync()).ToListAsync();
-        foreach (var aggregate in definiton.Flat.Select(x => x.Aggregate).Where(agg => names.Contains(agg) is false).Distinct())
+        foreach (var aggregate in _accesses.Flat.Select(x => x.Aggregate).Where(agg => names.Contains(agg) is false).Distinct())
         {
             await envDb.CreateCollectionAsync(aggregate);
         }

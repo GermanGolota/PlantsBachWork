@@ -29,6 +29,8 @@ public static class DiExtensions
     private static IServiceCollection AddEventSourcing(this IServiceCollection services)
     {
         services.AddSingleton<CqrsHelper>();
+        services.AddSingleton<AccessesHelper>();
+        services.AddScoped<EventStoreAccessGranter>();
         services.AddTransient<RepositoryCaller>();
         services.AddTransient<EventSubscriber>();
         services.AddTransient<AggregateEventApplyer>();

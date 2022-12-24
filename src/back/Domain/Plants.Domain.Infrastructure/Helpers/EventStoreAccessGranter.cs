@@ -1,29 +1,29 @@
 ﻿using EventStore.Client;
+using Plants.Domain.Infrastructure.Extensions;
 using Plants.Shared;
 
-namespace Plants.Initializer;
+namespace Plants.Domain.Infrastructure.Helpers;
 
-internal class EventStoreInitializer
+public class EventStoreAccessGranter
 {
     private readonly EventStoreClient _client;
+    private readonly AccessesHelper _helper;
 
-    public EventStoreInitializer(EventStoreClient client)
+    public EventStoreAccessGranter(EventStoreClient client, AccessesHelper helper)
     {
         _client = client;
+        _helper = helper;
     }
 
-    public async Task Initialize(AccessorsDefinition definiton)
+    public async Task GrantAccessesFor(AggregateDescription aggregate)
     {
-        foreach (var aggregate in definiton.Flat.Select(_ => _.Aggregate).Distinct())
-        {
-            var meta = BuildFor(aggregate, definiton);
-            await _client.SetStreamMetadataAsync(aggregate, StreamState.Any, meta);
-        }
+        var meta = BuildMetadataFor(aggregate.Name);
+        await _client.SetStreamMetadataAsync(aggregate.ToTopic(), StreamState.NoStream, meta);
     }
 
-    private StreamMetadata BuildFor(string aggregateName, AccessorsDefinition definition)
+    private StreamMetadata BuildMetadataFor(string aggregateName)
     {
-        var roleAccesses = definition.Defined[aggregateName];
+        var roleAccesses = _helper.Defined[aggregateName];
 
         var managerRole = UserRole.Manager.ToString();
         var readRoles = new List<string>() { managerRole };
@@ -34,10 +34,10 @@ internal class EventStoreInitializer
             {
                 switch (access)
                 {
-                    case Domain.AllowType.Read:
+                    case AllowType.Read:
                         readRoles.Add(role.ToString());
                         break;
-                    case Domain.AllowType.Write:
+                    case AllowType.Write:
                         writeRoles.Add(role.ToString());
                         break;
                 }
@@ -46,10 +46,10 @@ internal class EventStoreInitializer
 
         var managerArray = new[] { managerRole };
         var acl = new StreamAcl(
-            readRoles: readRoles.ToArray(), 
-            writeRoles: writeRoles.ToArray(), 
-            deleteRoles: managerArray, 
-            metaReadRoles: managerArray, 
+            readRoles: readRoles.ToArray(),
+            writeRoles: writeRoles.ToArray(),
+            deleteRoles: managerArray,
+            metaReadRoles: managerArray,
             metaWriteRoles: managerArray);
 
         return new StreamMetadata(acl: acl);
