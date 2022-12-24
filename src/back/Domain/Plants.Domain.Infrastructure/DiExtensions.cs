@@ -7,6 +7,7 @@ using MongoDB.Driver.Core.Configuration;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Projection;
+using Plants.Domain.Infrastructure.Services;
 using Plants.Domain.Persistence;
 using Plants.Domain.Projection;
 using Plants.Domain.Services;
@@ -69,16 +70,10 @@ public static class DiExtensions
 
     private static IServiceCollection AddProjection(this IServiceCollection services)
     {
-        services.AddSingleton(factory =>
-        {
-            var connectionString = factory.GetRequiredService<IOptions<ConnectionConfig>>().Value.MongoDbConnection;
-            return new MongoClient(connectionString);
-        });
-        services.AddSingleton(factory =>
+        services.AddScoped(factory =>
         {
             var databaseName = factory.GetRequiredService<IOptions<ConnectionConfig>>().Value.MongoDbDatabaseName;
-            var client = factory.GetRequiredService<MongoClient>();
-            return client.GetDatabase(databaseName);
+            return factory.GetRequiredService<IMongoClientFactory>().GetDatabase(databaseName);
         });
 
         services.AddTransient(typeof(IProjectionRepository<>), typeof(MongoDBRepository<>));

@@ -3,6 +3,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using Plants.Aggregates.Services;
 using Plants.Domain.Infrastructure.Config;
+using Plants.Domain.Infrastructure.Services;
 using Plants.Services.Infrastructure.Encryption;
 using Plants.Shared;
 
@@ -11,14 +12,16 @@ namespace Plants.Aggregates.Infrastructure.Helper;
 internal class MongoDbUserUpdater : IUserUpdater
 {
     private readonly IOptions<ConnectionConfig> _options;
+    private readonly IMongoClientFactory _factory;
     private readonly IIdentityProvider _identity;
     private readonly SymmetricEncrypter _encrypter;
 
-    public MongoDbUserUpdater(IOptions<ConnectionConfig> options, IIdentityProvider identity, SymmetricEncrypter encrypter)
+    public MongoDbUserUpdater(IOptions<ConnectionConfig> options, IIdentityProvider identity, SymmetricEncrypter encrypter, IMongoClientFactory factory)
     {
         _options = options;
         _identity = identity;
         _encrypter = encrypter;
+        _factory = factory;
     }
 
     public async Task ChangeRole(string username, string fullName, UserRole[] oldRoles, UserRole changedRole)
@@ -69,12 +72,7 @@ internal class MongoDbUserUpdater : IUserUpdater
 
     private async Task<BsonDocument> RunDocumentCommand(BsonDocument document)
     {
-        var options = _options.Value;
-        var client = new MongoClient(options.MongoDbConnection);
-
-
-        var db = client.GetDatabase("admin");
-
+        var db = _factory.GetDatabase("admin");
         return await db.RunCommandAsync<BsonDocument>(document);
     }
 

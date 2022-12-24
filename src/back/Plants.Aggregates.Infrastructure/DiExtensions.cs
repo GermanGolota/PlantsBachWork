@@ -8,6 +8,7 @@ using Plants.Aggregates.Infrastructure.Services;
 using Plants.Aggregates.Services;
 using Plants.Aggregates.Users;
 using Plants.Domain.Infrastructure.Config;
+using Plants.Domain.Infrastructure.Services;
 using Plants.Services.Infrastructure.Encryption;
 
 namespace Plants.Aggregates.Infrastructure;
@@ -16,6 +17,7 @@ public static class DiExtensions
 {
     public static IServiceCollection AddAggregatesInfrastructure(this IServiceCollection services)
     {
+        services.AddScoped<IMongoClientFactory, MongoClientFactory>();
         services.AddScoped<TempPasswordContext>();
         services.AddScoped<IAuthorizer, Authorizer>();
         services.AddScoped<IIdentityProvider, IdentityProvider>();

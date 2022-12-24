@@ -4,19 +4,20 @@ using MongoDB.Driver;
 using Plants.Domain;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Helpers;
+using Plants.Domain.Infrastructure.Services;
 using Plants.Shared;
 
 namespace Plants.Initializer;
 
 internal class MongoRolesDbInitializer
 {
-    private readonly MongoClient _client;
+    private readonly IMongoClientFactory _factory;
     private readonly AccessesHelper _accesses;
     private readonly ConnectionConfig _connection;
 
-    public MongoRolesDbInitializer(MongoClient client, IOptions<ConnectionConfig> connection, AccessesHelper accesses)
+    public MongoRolesDbInitializer(IMongoClientFactory factory, IOptions<ConnectionConfig> connection, AccessesHelper accesses)
     {
-        _client = client;
+        _factory = factory;
         _accesses = accesses;
         _connection = connection.Value;
     }
@@ -24,16 +25,28 @@ internal class MongoRolesDbInitializer
     public async Task Initialize()
     {
         //TODO: Fix multiple envs not working
-        var db = _client.GetDatabase("admin");
+        var db = _factory.GetDatabase("admin");
         var dbName = _connection.MongoDbDatabaseName;
         await InitializeCollectionsAsync(dbName);
 
-        var accessTypeToPermissions = new Dictionary<AllowType, string[]>
-        {
-            {AllowType.Read, new[]{"find"} },
-            {AllowType.Write, new[]{"insert", "update"}}
-        };
+        await CleanUpExistingRoles(db);
 
+        await CreateRoles(db, dbName);
+    }
+
+    private async Task InitializeCollectionsAsync(string dbName)
+    {
+        var envDb = _factory.GetDatabase(dbName);
+
+        var names = await (await envDb.ListCollectionNamesAsync()).ToListAsync();
+        foreach (var aggregate in _accesses.Flat.Select(x => x.Aggregate).Where(agg => names.Contains(agg) is false).Distinct())
+        {
+            await envDb.CreateCollectionAsync(aggregate);
+        }
+    }
+
+    private static async Task CleanUpExistingRoles(IMongoDatabase db)
+    {
         var existingRoles = await db.GetExistingRolesAsync();
 
         foreach (var role in existingRoles)
@@ -45,6 +58,15 @@ internal class MongoRolesDbInitializer
             """);
             var dropResult = await db.RunCommandAsync<BsonDocument>(dropRole);
         }
+    }
+
+    private async Task CreateRoles(IMongoDatabase db, string dbName)
+    {
+        var accessTypeToPermissions = new Dictionary<AllowType, string[]>
+        {
+            {AllowType.Read, new[]{"find"} },
+            {AllowType.Write, new[]{"insert", "update"}}
+        };
 
         Func<UserRole, string, string> buildPrivelege = (role, aggregate) =>
             $$"""
@@ -54,58 +76,58 @@ internal class MongoRolesDbInitializer
             }
             """;
 
-        Dictionary<UserRole, string> roleToDefinition = new()
+        List<string> roleDefinitions = new()
         {
-            {UserRole.Consumer,  $$"""
+            $$"""
+            {
+            "createRole": "changeOwnPasswordCustomDataRole",
+            "privileges": [
+               { 
+                 "resource": { "db": "", "collection": ""},
+                 "actions": [ "changeOwnPassword", "changeOwnCustomData" ]
+               }
+            ],
+            "roles": []
+            }
+            """,
+            $$"""
             {
             "createRole": "{{UserRole.Consumer}}",
             "privileges": [
-                {
-                    "resource": { "cluster" : true }, 
-                    "actions": ["changeOwnPassword"]
-                },
                 {{String.Join(",\n", _accesses.RoleToAggregate[UserRole.Consumer].Select(agg => buildPrivelege(UserRole.Consumer, agg)))}}
              ],
-             "roles":[]
+             "roles":[
+                {
+                    "role":"changeOwnPasswordCustomDataRole", "db":"admin" 
+                }
+             ]
             }
-            """},
-            {UserRole.Producer, $$"""
+            """,
+            $$"""
             {
             "createRole": "{{UserRole.Producer}}",
             "privileges": [
-                {
-                    "resource": { "cluster" : true }, 
-                    "actions": ["changeOwnPassword"]
-                },
                 {{String.Join(",\n", _accesses.RoleToAggregate[UserRole.Producer].Select(agg => buildPrivelege(UserRole.Producer, agg)))}}
              ],
-             "roles":[]
+             "roles":[
+                {
+                    "role":"changeOwnPasswordCustomDataRole", "db":"admin" 
+                }]
             }
-            """ },
-            {UserRole.Manager,  $$"""
+            """,
+            $$"""
             {
             "createRole": "{{UserRole.Manager}}",
             "privileges": [
              ],
              "roles":["dbOwner"]
             }
-            """}
+            """
         };
 
-        foreach (var (role, definition) in roleToDefinition)
+        foreach (var definition in roleDefinitions)
         {
             var createRoleResult = await db.RunCommandAsync<BsonDocument>(BsonDocument.Parse(definition));
-        }
-    }
-
-    private async Task InitializeCollectionsAsync(string dbName)
-    {
-        var envDb = _client.GetDatabase(dbName);
-
-        var names = await (await envDb.ListCollectionNamesAsync()).ToListAsync();
-        foreach (var aggregate in _accesses.Flat.Select(x => x.Aggregate).Where(agg => names.Contains(agg) is false).Distinct())
-        {
-            await envDb.CreateCollectionAsync(aggregate);
         }
     }
 }
