@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!--This is needed for updating user, would need to remove this when grpc package has this capability -->
+    <PackageReference Include="EventStore.Client" Version="22.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
   </ItemGroup>
 
