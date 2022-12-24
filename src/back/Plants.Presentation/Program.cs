@@ -1,30 +1,11 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Plants.Presentation;
 
-namespace Plants.Presentation
-{
-    public class Program
-    {
-        public static void Main(string[] args)
+var host = Host.CreateDefaultBuilder(args)
+        .ConfigureWebHostDefaults(webBuilder =>
         {
-            var host = CreateHostBuilder(args).Build();
-            Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-            host.Run();
-        }
+            webBuilder.UseStartup<Startup>();
+        })
+        .Build();
 
-        public static IHostBuilder CreateHostBuilder(string[] args)
-        {
-            return Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
-        }
-    }
-}
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+host.Run();

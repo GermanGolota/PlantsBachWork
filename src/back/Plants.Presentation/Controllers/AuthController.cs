@@ -1,36 +1,38 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Plants.Application.Commands;
-using System.Threading;
-using System.Threading.Tasks;
+using Plants.Presentation.Examples;
+using Swashbuckle.AspNetCore.Filters;
 
-namespace Plants.Presentation.Controllers
+namespace Plants.Presentation.Controllers;
+
+[ApiController]
+[Route("auth")]
+[ApiVersion("1")]
+[ApiExplorerSettings(GroupName = "v1")]
+public class AuthController : ControllerBase
 {
-    [ApiController]
-    [Route("auth")]
-    public class AuthController : ControllerBase
+    private readonly IMediator _mediator;
+
+    public AuthController(IMediator mediator)
     {
-        private readonly IMediator _mediator;
+        _mediator = mediator;
+    }
 
-        public AuthController(IMediator mediator)
+    [HttpPost("login")]
+    [SwaggerRequestExample(typeof(LoginCommand), typeof(LoginRequestExample))]
+    public async Task<ActionResult> Login(LoginCommand command, CancellationToken token)
+    {
+        var res = await _mediator.Send(command, token);
+        ActionResult result;
+        if (res.IsSuccessfull)
         {
-            _mediator = mediator;
+            result = Ok(res);
         }
-
-        [HttpPost("login")]
-        public async Task<ActionResult> Login(LoginCommand command, CancellationToken token)
+        else
         {
-            var res = await _mediator.Send(command, token);
-            ActionResult result;
-            if (res.IsSuccessfull)
-            {
-                result = Ok(res);
-            }
-            else
-            {
-                result = Unauthorized();
-            }
-            return result;
+            result = Unauthorized();
         }
+        return result;
     }
 }

@@ -1,10 +1,9 @@
-﻿using Plants.Core;
+﻿using Plants.Shared;
 
-namespace Plants.Application.Contracts
+namespace Plants.Application.Contracts;
+
+public record CredsResponse(bool IsValid, UserRole[]? Roles)
 {
-    public record CredsResponse(bool IsValid, UserRole[]? Roles)
-    {
-        public CredsResponse() : this(false, null) { }
-        public CredsResponse(UserRole[] roles) : this(true, roles) { }
-    }
+    public CredsResponse() : this(false, null) { }
+    public CredsResponse(UserRole[] roles) : this(true, roles) { }
 }

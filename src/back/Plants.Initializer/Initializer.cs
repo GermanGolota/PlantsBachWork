@@ -1,0 +1,37 @@
+﻿using Microsoft.Extensions.Logging;
+
+namespace Plants.Initializer;
+
+internal class Initializer
+{
+    private readonly MongoRolesDbInitializer _mongo;
+    private readonly AdminUserCreator _userCreator;
+    private readonly ILogger<Initializer> _logger;
+
+    public Initializer(MongoRolesDbInitializer mongo, AdminUserCreator userCreator, ILogger<Initializer> logger)
+    {
+        _mongo = mongo;
+        _userCreator = userCreator;
+        _logger = logger;
+    }
+
+    public async Task InitializeAsync()
+    {
+        _logger.LogInformation("Starting initialization");
+        await _mongo.Initialize();
+        _logger.LogInformation("Created roles in mongo db");
+        var userCreateResult = await _userCreator.SendCreateAdminCommandAsync();
+        userCreateResult.Match(
+            _ => _logger.LogInformation("Sucessfully created user!"),
+            fail => throw new Exception(String.Join(", ", fail.Reasons))
+            );
+        var passwordResetResult = await _userCreator.SendResetPasswordCommand();
+        passwordResetResult.Match(
+            _ => _logger.LogInformation("Sucessfully changed password!"),
+            fail => throw new Exception(String.Join(", ", fail.Reasons))
+            );
+
+        _logger.LogInformation("Successfully initialized");
+    }
+
+}

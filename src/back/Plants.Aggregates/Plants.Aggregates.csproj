@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Domain\Plants.Domain\Plants.Domain.csproj" />
+    <ProjectReference Include="..\Plants.Services\Plants.Services.csproj" />
+  </ItemGroup>
+
+</Project>

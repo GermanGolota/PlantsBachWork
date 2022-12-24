@@ -1,32 +1,32 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Plants.Application.Contracts;
-using System.Threading.Tasks;
 
-namespace Plants.Presentation.Controllers
+namespace Plants.Presentation.Controllers;
+
+[ApiController]
+[Route("file")]
+[ApiVersion("1")]
+[ApiExplorerSettings(GroupName = "v1")]
+public class FileController : ControllerBase
 {
-    [ApiController]
-    [Route("file")]
-    public class FileController : ControllerBase
+    private readonly IFileService _file;
+
+    public FileController(IFileService file)
     {
-        private readonly IFileService _file;
+        _file = file;
+    }
 
-        public FileController(IFileService file)
-        {
-            _file = file;
-        }
+    [HttpGet("plant/{id}")]
+    public async Task<FileResult> Load([FromRoute] int id)
+    {
+        var bytes = await _file.LoadPlantImage(id);
+        return File(bytes, "application/octet-stream");
+    }
 
-        [HttpGet("plant/{id}")]
-        public async Task<FileResult> Load([FromRoute] int id)
-        {
-            var bytes = await _file.LoadPlantImage(id);
-            return File(bytes, "application/octet-stream");
-        }
-
-        [HttpGet("instruction/{id}")]
-        public async Task<FileResult> LoadInstruction([FromRoute] int id)
-        {
-            var bytes = await _file.LoadInstructionCoverImage(id);
-            return File(bytes, "application/octet-stream");
-        }
+    [HttpGet("instruction/{id}")]
+    public async Task<FileResult> LoadInstruction([FromRoute] int id)
+    {
+        var bytes = await _file.LoadInstructionCoverImage(id);
+        return File(bytes, "application/octet-stream");
     }
 }

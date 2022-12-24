@@ -1,14 +1,13 @@
 ﻿using MediatR;
-using Plants.Core;
+using Plants.Shared;
 
-namespace Plants.Application.Commands
+namespace Plants.Application.Commands;
+
+public record LoginCommand(string Login, string Password) : IRequest<LoginResult>;
+
+public record LoginResult(bool IsSuccessfull, string? Token, UserRole[]? Roles, string? Username)
 {
-    public record LoginCommand(string Login, string Password) : IRequest<LoginResult>;
+    public LoginResult() : this(false, null, null, null) { }
 
-    public record LoginResult(bool IsSuccessfull, string? Token, UserRole[]? Roles, string? Username)
-    {
-        public LoginResult() : this(false, null, null, null) { }
-
-        public LoginResult(string token, UserRole[] roles, string username) : this(true, token, roles, username) { }
-    }
+    public LoginResult(string token, UserRole[] roles, string username) : this(true, token, roles, username) { }
 }

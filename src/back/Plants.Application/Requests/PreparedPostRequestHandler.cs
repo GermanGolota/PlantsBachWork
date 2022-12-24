@@ -1,36 +1,29 @@
 ﻿using MediatR;
 using Plants.Application.Contracts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Plants.Application.Requests
+namespace Plants.Application.Requests;
+
+public class PreparedPostRequestHandler : IRequestHandler<PreparedPostRequest, PreparedPostResult>
 {
-    public class PreparedPostRequestHandler : IRequestHandler<PreparedPostRequest, PreparedPostResult>
+    private readonly IPlantsService _plants;
+
+    public PreparedPostRequestHandler(IPlantsService plants)
     {
-        private readonly IPlantsService _plants;
+        _plants = plants;
+    }
 
-        public PreparedPostRequestHandler(IPlantsService plants)
+    public async Task<PreparedPostResult> Handle(PreparedPostRequest request, CancellationToken cancellationToken)
+    {
+        var res = await _plants.GetPrepared(request.PlantId);
+        PreparedPostResult output;
+        if (res is null)
         {
-            _plants = plants;
+            output = new PreparedPostResult();
         }
-
-        public async Task<PreparedPostResult> Handle(PreparedPostRequest request, CancellationToken cancellationToken)
+        else
         {
-            var res = await _plants.GetPrepared(request.PlantId);
-            PreparedPostResult output;
-            if (res is null)
-            {
-                output = new PreparedPostResult();
-            }
-            else
-            {
-                output = new PreparedPostResult(res);
-            }
-            return output;
+            output = new PreparedPostResult(res);
         }
+        return output;
     }
 }
