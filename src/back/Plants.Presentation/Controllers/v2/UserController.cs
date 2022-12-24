@@ -43,7 +43,7 @@ public class UserController : ControllerBase
             (var aName, var number) => _query.FindAllAsync(user => (user.FirstName.Contains(aName) || user.LastName.Contains(aName)) && user.PhoneNumber == number)
         })).ToList();
         return usersDb.Where(x => x.Roles.Intersect(rolesToFetch).Any())
-            .Select(user => new UserDto($"{user.FirstName} {user.LastName}", user.PhoneNumber, user.Roles)).ToList();
+            .Select(user => new UserDto($"{user.FirstName} {user.LastName}", user.PhoneNumber, user.log, user.Roles)).ToList();
     }
 
     [HttpPost("{login}/change/{role}")]
@@ -79,4 +79,4 @@ public class UserController : ControllerBase
 
 public record PasswordChangeDto(string OldPassword, string NewPassword);
 
-public record UserDto(string FullName, string PhoneNumber, UserRole[] Roles);
+public record UserDto(string FullName, string PhoneNumber, string Login, UserRole[] Roles);
