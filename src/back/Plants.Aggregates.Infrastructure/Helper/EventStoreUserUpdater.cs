@@ -18,10 +18,10 @@ internal class EventStoreUserUpdater : IUserUpdater
         _encrypter = encrypter;
     }
 
-    public Task Create(string username, string password, string fullName, UserRole[] roles)
+    public async Task Create(string username, string password, string fullName, UserRole[] roles)
     {
-        var groups = roles.Select(x => x.ToString()).ToArray();
-        return _manager.CreateUserAsync(username, fullName, groups, password, userCredentials: GetCallerCreds());
+        var groups = roles.Select(x => x.ToString()).Append("$admins").ToArray();
+        await _manager.CreateUserAsync(username, fullName, groups, password, userCredentials: GetCallerCreds());
     }
 
     public async Task ChangeRole(string username, string fullName, UserRole[] oldRoles, UserRole newRole)
@@ -42,10 +42,10 @@ internal class EventStoreUserUpdater : IUserUpdater
         await Create(username, password, fullName, groups);*/
     }
 
-    public Task UpdatePassword(string username, string oldPassword, string newPassword)
+    public async Task UpdatePassword(string username, string oldPassword, string newPassword)
     {
         var creds = GetCallerCreds();
-        return _manager.ChangePasswordAsync(username, oldPassword, newPassword, userCredentials: creds);
+        await _manager.ChangePasswordAsync(username, oldPassword, newPassword, userCredentials: creds);
     }
 
     private UserCredentials GetCallerCreds()
