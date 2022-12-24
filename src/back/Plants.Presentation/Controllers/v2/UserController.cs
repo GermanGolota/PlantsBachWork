@@ -33,7 +33,7 @@ public class UserController : ControllerBase
     {
         var currentUserRoles = _identity.Identity!.Roles;
         var allRoles = Enum.GetValues<UserRole>();
-        var rolesToFetch = currentUserRoles.Intersect(roles ?? allRoles).ToList();
+        var rolesToFetch = currentUserRoles.Intersect(roles ?? allRoles).ToArray();
         //TODO: Abstract away
         var usersDb = (await ((name, phone) switch
         {
@@ -42,8 +42,22 @@ public class UserController : ControllerBase
             (var aName, null) => _query.FindAllAsync(user => user.FirstName.Contains(aName) || user.LastName.Contains(aName)),
             (var aName, var number) => _query.FindAllAsync(user => (user.FirstName.Contains(aName) || user.LastName.Contains(aName)) && user.PhoneNumber == number)
         })).ToList();
-        return usersDb.Where(x => x.Roles.Intersect(rolesToFetch).Any())
+        return usersDb.Where(x => CanBeSeen(x.Roles, rolesToFetch))
             .Select(user => new UserDto($"{user.FirstName} {user.LastName}", user.PhoneNumber, user.Login, user.Roles)).ToList();
+    }
+
+    private static bool CanBeSeen(UserRole[] roles, UserRole[] visibleRoles)
+    {
+        var result = true;
+        foreach (var role in roles)
+        {
+            if (visibleRoles.Contains(role) is false && visibleRoles.All(visible => visible < role))
+            {
+                result = false;
+                break;
+            }
+        }
+        return result;
     }
 
     [HttpPost("{login}/change/{role}")]
