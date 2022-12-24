@@ -6,7 +6,7 @@ namespace Plants.Domain;
 /// <typeparam name="TOut">Aggregate from which event has been send</typeparam>
 public interface IAggregateSubscription<TIn, TOut> where TIn : AggregateBase where TOut : AggregateBase
 {
-    static abstract IEnumerable<EventSubscription<TIn, TOut>> Subscriptions { get; }
+    IEnumerable<EventSubscription<TIn, TOut>> Subscriptions { get; }
 }
 
 public record EventSubscription<TIn, TOut>
