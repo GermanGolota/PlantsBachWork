@@ -19,7 +19,7 @@ public class ChangeOwnPasswordCommandHandler : ICommandHandler<ChangeOwnPassword
     {
         var passwordForbid = (command.OldPassword != command.NewPassword).ToForbidden("Can't change password to the same one");
         var user = await _query.GetByIdAsync(command.Metadata.Aggregate.Id);
-        var loginForbid = (user.Login != userIdentity.UserName).ToForbidden("You cannot change someone elses password");
+        var loginForbid = (user.Login.CompareTo(userIdentity.UserName) == 0).ToForbidden("You cannot change someone elses password");
         return passwordForbid.And(loginForbid);
     }
 
