@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Plants.Domain.Infrastructure.Extensions;
+using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Shared;
@@ -14,11 +15,13 @@ internal class EventStoreEventStore : IEventStore
 {
     private readonly EventStoreClient _client;
     private readonly AggregateHelper _helper;
+    private readonly EventStoreAccessGranter _granter;
 
-    public EventStoreEventStore(EventStoreClient client, AggregateHelper helper)
+    public EventStoreEventStore(EventStoreClient client, AggregateHelper helper, EventStoreAccessGranter granter)
     {
         _client = client;
         _helper = helper;
+        _granter = granter;
     }
 
     public async Task<ulong> AppendEventAsync(Event @event)
@@ -48,8 +51,13 @@ internal class EventStoreEventStore : IEventStore
     public async Task<ulong> AppendCommandAsync(Command command, ulong version)
     {
         var metadata = command.Metadata;
+        var aggregate = metadata.Aggregate;
         try
         {
+            if (version == StreamRevision.None)
+            {
+                await _granter.GrantAccessesFor(aggregate);
+            }
 
             var eventData = new EventData(
             Uuid.FromGuid(metadata.Id),
@@ -58,7 +66,7 @@ internal class EventStoreEventStore : IEventStore
                 Encoding.UTF8.GetBytes("{}"));
 
             var writeResult = await _client.AppendToStreamAsync(
-                metadata.Aggregate.ToTopic(),
+                aggregate.ToTopic(),
                 version,
                 new[] { eventData });
 
@@ -69,7 +77,6 @@ internal class EventStoreEventStore : IEventStore
             throw new EventStoreCommunicationException($"Error while appending event {metadata.Id} for aggregate {metadata.Aggregate.Id}", ex);
         }
     }
-
 
     public async Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(AggregateDescription aggregate)
     {

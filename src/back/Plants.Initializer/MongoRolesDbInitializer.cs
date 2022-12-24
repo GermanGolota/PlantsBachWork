@@ -50,7 +50,7 @@ internal class MongoRolesDbInitializer
             $$"""
             {
                 "resource":{ "db":"{{dbName}}", "collection":"{{aggregate}}"},
-                "actions": [{{_accesses.Defined[aggregate][role].SelectMany(type => accessTypeToPermissions[type]).DelimitList()}}]
+                "actions": [{{_accesses.AggregateAccesses[aggregate][role].SelectMany(type => accessTypeToPermissions[type]).DelimitList()}}]
             }
             """;
 

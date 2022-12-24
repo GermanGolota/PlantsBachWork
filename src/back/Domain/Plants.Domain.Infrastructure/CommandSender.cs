@@ -18,6 +18,7 @@ internal class CommandSender : ICommandSender
     private readonly IServiceProvider _service;
     private readonly EventSubscriber _subscriber;
     private readonly IIdentityProvider _identityProvider;
+    private readonly AccessesHelper _accesses;
 
     public CommandSender(CqrsHelper cqrs,
         ILogger<CommandSender> logger,
@@ -25,7 +26,8 @@ internal class CommandSender : ICommandSender
         RepositoryCaller caller,
         IServiceProvider service,
         EventSubscriber subscriber,
-        IIdentityProvider identityProvider)
+        IIdentityProvider identityProvider,
+        AccessesHelper accesses)
     {
         _cqrs = cqrs;
         _logger = logger;
@@ -34,6 +36,7 @@ internal class CommandSender : ICommandSender
         _service = service;
         _subscriber = subscriber;
         _identityProvider = identityProvider;
+        _accesses = accesses;
     }
 
     public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCommandAsync(Command command)
@@ -44,44 +47,64 @@ internal class CommandSender : ICommandSender
             _logger.LogError("Tried to send command with no type");
             throw new Exception("Can't send generic command!");
         }
+        var identity = _identityProvider.Identity!;
+        var commandAggregate = command.Metadata.Aggregate;
+        var userHasAccess = _accesses.AggregateAccesses[commandAggregate.Name]
+            .Where(pair => pair.Value.Contains(AllowType.Write) && identity.Roles.Contains(pair.Key))
+            .Any();
         OneOf<CommandAcceptedResult, CommandForbidden> result;
-        if (_cqrs.CommandHandlers.TryGetValue(commandType, out var handlePairs))
+        if (userHasAccess)
         {
-            var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate);
-            var commandVersion = aggregate.Version;
-            await _eventStore.AppendCommandAsync(command, commandVersion);
-            //TODO: Move the rest to sub?
-            var checkResults = await PerformChecks(command, handlePairs);
-            var checkFailures = checkResults.Where(_ => _.CheckFailure.HasValue).Select(_ => _.CheckFailure!.Value);
-            if (checkFailures.Any())
+            if (_cqrs.CommandHandlers.TryGetValue(commandType, out var handlePairs))
             {
-                var reasons = checkFailures.Select(failure => failure.Reasons).Flatten().ToArray();
-                result = await CreateFailure(command, commandVersion, reasons, false);
+                result = await ExecuteCommand(command, commandAggregate, handlePairs);
             }
             else
             {
-                try
-                {
-                    var events = await ExecuteHandlers(command, checkResults);
-                    foreach (var @event in events)
-                    {
-                        await _eventStore.AppendEventAsync(@event);
-                    }
-                    //TODO: Attach subscriber to event store instead of putting it here
-                    await HandleEvents(events, command);
-
-                    result = new CommandAcceptedResult();
-                }
-                catch (Exception e)
-                {
-                    result = await CreateFailure(command, commandVersion, new[] { e.Message, e.ToString() }, true);
-                }
+                _logger.LogError("Send command with no handlers");
+                result = new CommandForbidden("Failed to find any handler for command");
             }
         }
         else
         {
-            _logger.LogError("Send command with no handlers");
-            result = new CommandForbidden("Failed to find any handler for command");
+            result = new CommandForbidden($"Cannot perform any updates against '{commandAggregate.Name}'");
+        }
+
+        return result;
+    }
+
+    private async Task<OneOf<CommandAcceptedResult, CommandForbidden>> ExecuteCommand(Command command, AggregateDescription commandAggregate, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs)
+    {
+        var aggregate = await _caller.LoadAsync(commandAggregate);
+        var commandVersion = aggregate.Version;
+        await _eventStore.AppendCommandAsync(command, commandVersion);
+        //TODO: Move the rest to sub?
+        var checkResults = await PerformChecks(command, handlePairs);
+        var checkFailures = checkResults.Where(_ => _.CheckFailure.HasValue).Select(_ => _.CheckFailure!.Value);
+        OneOf<CommandAcceptedResult, CommandForbidden> result;
+        if (checkFailures.Any())
+        {
+            var reasons = checkFailures.Select(failure => failure.Reasons).Flatten().ToArray();
+            result = await CreateFailure(command, commandVersion, reasons, false);
+        }
+        else
+        {
+            try
+            {
+                var events = await ExecuteHandlers(command, checkResults);
+                foreach (var @event in events)
+                {
+                    await _eventStore.AppendEventAsync(@event);
+                }
+                //TODO: Attach subscriber to event store instead of putting it here
+                await HandleEvents(events, command);
+
+                result = new CommandAcceptedResult();
+            }
+            catch (Exception e)
+            {
+                result = await CreateFailure(command, commandVersion, new[] { e.Message, e.ToString() }, true);
+            }
         }
 
         return result;

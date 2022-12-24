@@ -4,7 +4,7 @@ using Plants.Shared;
 
 namespace Plants.Domain.Infrastructure.Helpers;
 
-public class EventStoreAccessGranter
+internal class EventStoreAccessGranter
 {
     private readonly EventStoreClient _client;
     private readonly AccessesHelper _helper;
@@ -23,7 +23,7 @@ public class EventStoreAccessGranter
 
     private StreamMetadata BuildMetadataFor(string aggregateName)
     {
-        var roleAccesses = _helper.Defined[aggregateName];
+        var roleAccesses = _helper.AggregateAccesses[aggregateName];
 
         var managerRole = UserRole.Manager.ToString();
         var readRoles = new List<string>() { managerRole };

@@ -27,9 +27,7 @@ public static class DiExtensions
             if (identity is not null)
             {
                 var symmetric = factory.GetRequiredService<SymmetricEncrypter>();
-                //TODO:Remove when access to streams is fixed
-                settings.DefaultCredentials = new UserCredentials("admin", "changeit");
-                //settings.DefaultCredentials = new UserCredentials(identity.UserName, symmetric.Decrypt(identity.Hash));
+                settings.DefaultCredentials = new UserCredentials(identity.UserName, symmetric.Decrypt(identity.Hash));
             }
 
             settings.DefaultDeadline = TimeSpan.FromSeconds(options.EventStoreTimeoutInSeconds);
