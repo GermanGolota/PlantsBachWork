@@ -13,4 +13,13 @@ public static class StringExtensions
             return new(hash);
         }
     }
+
+    public static string QuoteDelimit(this string str) =>
+      $"\"{str}\"";
+
+    public static string QuoteDelimitList(this IEnumerable<string> strings) =>
+        String.Join(", ", strings.Select(x => x.QuoteDelimit()));
+
+    public static string QuoteDelimitList(this IEnumerable<UserRole> roles) =>
+        roles.Select(x => x.ToString()).QuoteDelimitList();
 }

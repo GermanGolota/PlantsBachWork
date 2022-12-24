@@ -15,6 +15,13 @@ public class MongoDBRepository<T> : IProjectionQueryService<T>, IProjectionRepos
 
     private string CollectionName => typeof(T).Name;
 
+    public Task<bool> Exists(Guid id)
+    {
+        return _mongoDatabase.GetCollection<T>(CollectionName)
+            .Find(x => x.Id == id)
+            .AnyAsync();
+    }
+
     public async Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> predicate)
     {
         var cursor = await _mongoDatabase.GetCollection<T>(CollectionName)

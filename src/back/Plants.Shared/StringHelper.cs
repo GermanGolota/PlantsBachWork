@@ -26,11 +26,11 @@ public static class StringHelper
         if (characterArray.Length == 0)
             throw new ArgumentException("characterSet must not be empty", nameof(characterSet));
 
-        var bytes = RandomNumberGenerator.GetBytes(length);
+        var bytes = RandomNumberGenerator.GetBytes(length * 2);
         StringBuilder result = new();
         for (int i = 0; i < length; i++)
         {
-            ulong value = BitConverter.ToUInt64(bytes, i * 8);
+            ulong value = BitConverter.ToUInt64(bytes, i);
             var character = characterArray[value % (uint)characterArray.Length];
             result.Append(character);
         }

@@ -1,4 +1,3 @@
-using EventStore.ClientAPI;
 using Plants.Presentation;
 
 var host = Host.CreateDefaultBuilder(args)

@@ -8,6 +8,8 @@ namespace Plants.Presentation.Controllers;
 
 [ApiController]
 [Route("auth")]
+[ApiVersion("1")]
+[ApiExplorerSettings(GroupName = "v1")]
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -4,7 +4,6 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <EnablePreviewFeatures>true</EnablePreviewFeatures>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Plants.Core\Plants.Core.csproj" />
     <ProjectReference Include="..\Domain\Plants.Domain\Plants.Domain.csproj" />
+    <ProjectReference Include="..\Plants.Services\Plants.Services.csproj" />
   </ItemGroup>
 
 </Project>

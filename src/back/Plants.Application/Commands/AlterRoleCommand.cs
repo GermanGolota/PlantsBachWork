@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using Plants.Core;
+using Plants.Shared;
 
 namespace Plants.Application.Commands;
 

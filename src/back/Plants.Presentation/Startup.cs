@@ -1,9 +1,10 @@
 using MediatR;
-using Plants.Core;
+using Plants.Aggregates.Infrastructure;
 using Plants.Domain.Infrastructure;
 using Plants.Infrastructure;
 using Plants.Presentation.Extensions;
 using Plants.Presentation.Middleware;
+using Plants.Services.Infrastructure;
 using Plants.Shared;
 
 namespace Plants.Presentation;
@@ -26,14 +27,16 @@ public class Startup
         services
             .BindConfigSections(Configuration)
             .AddShared()
+            .AddSharedServices()
             .AddInfrastructure(Configuration)
             .AddDomainInfrastructure()
+            .AddAggregatesInfrastructure()
             .AddControllers()
             .AddJsonOptions(_ =>
             {
                 _.JsonSerializerOptions.Converters.AddOneOfConverter();
             });
-        services.AddSwagger();
+        services.AddPlantsSwagger();
 
         services.AddCors(opt =>
         {
@@ -69,8 +72,7 @@ public class Startup
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
-            app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Plants v1"));
+            app.UsePlantsSwagger();
             app.UseCors(DevPolicyName);
         }
         else

@@ -2,8 +2,13 @@
 
 public interface IEventStore
 {
-    Task<IEnumerable<Event>> ReadEventsAsync(Guid id);
+    Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(AggregateDescription aggregate);
 
     /// <returns>Next expected version</returns>
-    Task<long> AppendEventAsync(Event @event);
+    Task<ulong> AppendEventAsync(Event @event);
+
+    /// <returns>Next expected version</returns>
+    Task<ulong> AppendCommandAsync(Command command, ulong version);
 }
+
+public record CommandHandlingResult(Command Command, IEnumerable<Event> Events);

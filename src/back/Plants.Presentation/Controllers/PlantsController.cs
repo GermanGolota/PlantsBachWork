@@ -2,14 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Plants.Application.Commands;
 using Plants.Application.Requests;
-using Plants.Presentation.Examples;
 using Plants.Presentation.Extensions;
-using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Controllers;
 
 [ApiController]
 [Route("plants")]
+[ApiVersion("1")]
+[ApiExplorerSettings(GroupName = "v1")]
 public class PlantsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -56,17 +56,6 @@ public class PlantsController : ControllerBase
         return await _mediator.Send(request, token);
     }
 
-    [HttpPost("add2")]
-    [SwaggerRequestExample(typeof(AddPlantDto), typeof(AddPlantRequestExample))]
-    public async Task<ActionResult<AddPlantResult>> Create
-        ([FromBody] AddPlantDto2 body, CancellationToken token)
-    {
-        var request = new AddPlantCommand(body.Name, body.Description,
-            body.Regions, body.SoilId, body.GroupId, body.Created, body.Pictures);
-
-        return await _mediator.Send(request, token);
-    }
-
     [HttpPost("{id}/edit")]
     public async Task<ActionResult<EditPlantResult>> Edit
       ([FromRoute] int id, [FromForm] EditPlantDto plant, IEnumerable<IFormFile> files, CancellationToken token)
@@ -85,8 +74,6 @@ public class PlantsController : ControllerBase
 }
 
 public record AddPlantDto(string Name, string Description, int[] Regions, int SoilId, int GroupId, DateTime Created);
-
-public record AddPlantDto2(string Name, string Description, int[] Regions, int SoilId, int GroupId, DateTime Created, byte[][] Pictures);
 
 public record EditPlantDto(string PlantName,
   string PlantDescription, int[] RegionIds, int SoilId, int GroupId, int[] RemovedImages);

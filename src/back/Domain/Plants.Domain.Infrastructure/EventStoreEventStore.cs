@@ -1,101 +1,151 @@
-﻿using EventStore.ClientAPI;
-using EventStore.ClientAPI.Exceptions;
+﻿using EventStore.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Plants.Domain;
+using Plants.Domain.Infrastructure.Extensions;
+using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Shared;
 using System.Reflection;
 using System.Text;
-using StreamPosition = EventStore.ClientAPI.StreamPosition;
 
 namespace Plants.Domain.Infrastructure;
 
 internal class EventStoreEventStore : IEventStore
 {
-    private readonly IEventStoreConnection _connection;
+    private readonly EventStoreClient _client;
     private readonly AggregateHelper _helper;
+    private readonly EventStoreAccessGranter _granter;
 
-    public EventStoreEventStore(IEventStoreConnection connection, AggregateHelper helper)
+    public EventStoreEventStore(EventStoreClient client, AggregateHelper helper, EventStoreAccessGranter granter)
     {
-        _connection = connection;
+        _client = client;
         _helper = helper;
+        _granter = granter;
     }
 
-    public async Task<IEnumerable<Event>> ReadEventsAsync(Guid id)
-    {
-        try
-        {
-            var events = new List<Event>();
-            StreamEventsSlice currentSlice;
-            long nextSliceStart = StreamPosition.Start;
-
-            int slicesCount = 0;
-
-            do
-            {
-                slicesCount++;
-                currentSlice = await _connection.ReadStreamEventsForwardAsync(id.ToString(), nextSliceStart, 200, false);
-                if (currentSlice.Status != SliceReadStatus.Success)
-                {
-                    if (slicesCount == 1)
-                    {
-                        break;
-                    }
-                    throw new EventStoreAggregateNotFoundException($"Aggregate {id} not found");
-                }
-                nextSliceStart = currentSlice.NextEventNumber;
-                foreach (var resolvedEvent in currentSlice.Events)
-                {
-                    events.Add(Deserialize(_helper.Events.Get(resolvedEvent.Event.EventType), resolvedEvent.Event.Data));
-                }
-            } while (currentSlice.IsEndOfStream == false);
-
-            return events;
-        }
-        catch (EventStoreConnectionException ex)
-        {
-            throw new EventStoreCommunicationException($"Error while reading events for aggregate {id}", ex);
-        }
-    }
-
-    public async Task<long> AppendEventAsync(Event @event)
+    public async Task<ulong> AppendEventAsync(Event @event)
     {
         var metadata = @event.Metadata;
         try
         {
-
             var eventData = new EventData(
-                metadata.Id,
+                Uuid.FromGuid(metadata.Id),
                 _helper.Events.Get(@event.GetType()),
-                true,
                 Serialize(@event),
                 Encoding.UTF8.GetBytes("{}"));
 
-            var eventNumber = metadata.EventNumber - 1;
-            var writeResult = await _connection.AppendToStreamAsync(
-                metadata.Aggregate.Id.ToString(),
-                eventNumber,
-                eventData);
+            var writeResult = await _client.AppendToStreamAsync(
+                metadata.Aggregate.ToTopic(),
+                metadata.EventNumber,
+                new[] { eventData });
 
-            return writeResult.NextExpectedVersion;
+            return writeResult.NextExpectedStreamRevision.ToUInt64();
         }
-        catch (EventStoreConnectionException ex)
+        catch (EventStoreException ex)
         {
             throw new EventStoreCommunicationException($"Error while appending event {metadata.Id} for aggregate {metadata.Aggregate.Id}", ex);
         }
     }
 
-    private static Event Deserialize(Type eventType, byte[] data)
+    public async Task<ulong> AppendCommandAsync(Command command, ulong version)
     {
-        JsonSerializerSettings settings = new JsonSerializerSettings { ContractResolver = new PrivateSetterContractResolver() };
+        var metadata = command.Metadata;
+        var aggregate = metadata.Aggregate;
+        try
+        {
+            if (version == StreamRevision.None)
+            {
+                await _granter.GrantAccessesFor(aggregate);
+            }
+
+            var eventData = new EventData(
+            Uuid.FromGuid(metadata.Id),
+                _helper.Commands.Get(command.GetType()),
+                Serialize(command),
+                Encoding.UTF8.GetBytes("{}"));
+
+            var writeResult = await _client.AppendToStreamAsync(
+                aggregate.ToTopic(),
+                version,
+                new[] { eventData });
+
+            return writeResult.NextExpectedStreamRevision.ToUInt64();
+        }
+        catch (EventStoreException ex)
+        {
+            throw new EventStoreCommunicationException($"Error while appending event {metadata.Id} for aggregate {metadata.Aggregate.Id}", ex);
+        }
+    }
+
+    public async Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(AggregateDescription aggregate)
+    {
+        try
+        {
+            var idToCommand = new Dictionary<Guid, Command>();
+            var events = new Dictionary<Command, List<Event>>();
+
+            var readResult = _client.ReadStreamAsync(
+                 Direction.Forwards,
+                 aggregate.ToTopic(),
+                 StreamPosition.Start
+             );
+
+            if (await readResult.ReadState == ReadState.StreamNotFound)
+            {
+                readResult.ReadState.Dispose();
+                return Array.Empty<CommandHandlingResult>();
+            }
+
+            var readEvents = await readResult.ToListAsync();
+            readResult.ReadState.Dispose();
+            foreach (var resolvedEvent in readEvents)
+            {
+                var eventType = resolvedEvent.Event.EventType;
+                if (_helper.Events.ContainsKey(eventType))
+                {
+                    var @event = DeserializeEvent(_helper.Events.Get(eventType), resolvedEvent.Event.Data.Span);
+                    var command = idToCommand[@event.Metadata.CommandId];
+                    events.AddList(command, @event);
+                }
+                else
+                {
+                    if (_helper.Commands.ContainsKey(eventType))
+                    {
+                        var command = DeserializeCommand(_helper.Commands.Get(eventType), resolvedEvent.Event.Data.Span);
+                        idToCommand.Add(command.Metadata.Id, command);
+                        events[command] = new List<Event>();
+                    }
+                    else
+                    {
+                        throw new Exception("Found unprocessable message");
+                    }
+                }
+            }
+
+            return events.Select(x => new CommandHandlingResult(x.Key, x.Value.Select(_ => _))).OrderBy(_ => _.Command.Metadata.Time);
+        }
+        catch (EventStoreException ex)
+        {
+            throw new EventStoreCommunicationException($"Error while reading events for aggregate {aggregate.Id}", ex);
+        }
+    }
+
+    private static Command DeserializeCommand(Type eventType, ReadOnlySpan<byte> data)
+    {
+        var settings = new JsonSerializerSettings { ContractResolver = new PrivateSetterContractResolver() };
+        return (Command)JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), eventType, settings);
+    }
+
+    private static Event DeserializeEvent(Type eventType, ReadOnlySpan<byte> data)
+    {
+        var settings = new JsonSerializerSettings { ContractResolver = new PrivateSetterContractResolver() };
         return (Event)JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), eventType, settings);
     }
 
-    private static byte[] Serialize(Event @event)
+    private static byte[] Serialize(object eventOrCommand)
     {
-        return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event));
+        return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(eventOrCommand));
     }
 
     private class PrivateSetterContractResolver : DefaultContractResolver

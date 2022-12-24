@@ -6,6 +6,8 @@ namespace Plants.Presentation.Controllers;
 
 [ApiController]
 [Route("search")]
+[ApiVersion("1")]
+[ApiExplorerSettings(GroupName = "v1")]
 public class SearchController : ControllerBase
 {
     private readonly IMediator _mediator;

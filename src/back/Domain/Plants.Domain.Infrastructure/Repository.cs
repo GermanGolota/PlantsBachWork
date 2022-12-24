@@ -19,9 +19,9 @@ internal class Repository<TAggregate> : IRepository<TAggregate> where TAggregate
 
     public async Task<TAggregate> GetByIdAsync(Guid id)
     {
-        var events = await _store.ReadEventsAsync(id);
         if (_aggregateHelper.Aggregates.TryGetFor(typeof(TAggregate), out var aggregateName))
         {
+            var events = await _store.ReadEventsAsync(new(id, aggregateName));
             var desc = new AggregateDescription(id, aggregateName);
             return (TAggregate)_applyer.ApplyEvents(desc, events);
         }

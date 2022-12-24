@@ -3,11 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Plants.Application.Contracts;
-using Plants.Domain.Services;
-using Plants.Infrastructure.Config;
-using Plants.Infrastructure.Domain;
 using Plants.Infrastructure.Helpers;
 using Plants.Infrastructure.Services;
+using Plants.Services.Infrastructure.Config;
 using System.Text;
 
 namespace Plants.Infrastructure;
@@ -17,7 +15,6 @@ public static class DIExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         services.AddHttpContextAccessor();
-        services.AddScoped<IUserNameProvider, UserNameProvider>();
         services.AddScoped<PlantsContextFactory>();
         services.AddAuth(config)
             .AddServices();
@@ -27,9 +24,6 @@ public static class DIExtensions
     private static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration config)
     {
         string key = GetAuthKey(config);
-        services.AddScoped<SymmetricEncrypter>();
-        services.AddScoped<IJWTokenManager, JWTokenManager>();
-        services.AddScoped<IEmailer, Emailer>();
         services.AddAuthentication(x =>
         {
             x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

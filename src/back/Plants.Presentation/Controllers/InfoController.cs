@@ -6,6 +6,8 @@ namespace Plants.Presentation.Controllers;
 
 [ApiController]
 [Route("info")]
+[ApiVersion("1")]
+[ApiExplorerSettings(GroupName = "v1")]
 public class InfoController : ControllerBase
 {
     private readonly IMediator _mediator;

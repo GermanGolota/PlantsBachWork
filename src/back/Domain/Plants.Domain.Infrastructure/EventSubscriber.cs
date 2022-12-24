@@ -30,7 +30,7 @@ internal class EventSubscriber
         await _caller.InsertOrUpdateProjectionAsync(aggregate);
     }
 
-    public async Task UpdateSubscribersAsync(AggregateDescription aggregate, List<Event> aggEvents)
+    public async Task UpdateSubscribersAsync(AggregateDescription aggregate, List<Event> aggEvents, Command parentCommand)
     {
         var applyerBaseType = typeof(TransposeApplyer<>);
         if (_cqrs.EventSubscriptions.TryGetValue(aggregate.Name, out var subscriptions))
@@ -46,28 +46,35 @@ internal class EventSubscriber
                   all => aggEvents);
                 if (eventsToHandle.Any())
                 {
-                    var receiverType = subscription.Transpose.GetType().GetGenericArguments()[1].GetGenericArguments()[0];
+                    var receiverType = subscription.Transpose.GetType().GetGenericArguments()[0];
                     var applyerType = applyerBaseType.MakeGenericType(new[] { receiverType });
                     var applyer = _provider.GetRequiredService(applyerType);
                     var method = applyerType.GetMethod(nameof(TransposeApplyer<AggregateBase>.CallTransposeAsync), BindingFlags.Public | BindingFlags.Instance);
-                    foreach (var @event in aggEvents)
+                    var transposedEvents = (IEnumerable<Event>)await (dynamic)method.Invoke(applyer, new[] { subscription.Transpose, eventsToHandle });
+                    var firstEvent = transposedEvents.FirstOrDefault();
+                    if (firstEvent != default)
                     {
-                        var transposedEvent = (Event)await (dynamic)method.Invoke(applyer, new[] { subscription.Transpose, @event });
-                        await _eventStore.AppendEventAsync(transposedEvent);
+                        var commandNumber = firstEvent.Metadata.EventNumber - 1;
+                        var command = parentCommand with { Metadata = parentCommand.Metadata with { Aggregate = firstEvent.Metadata.Aggregate } };
+                        await _eventStore.AppendCommandAsync(command, commandNumber);
+                        foreach (var @event in eventsToHandle)
+                        {
+                            await _eventStore.AppendEventAsync(@event);
+                        }
                         //TODO: Attach subscriber to event store instead of putting it here
-                        await HandleEvents(new List<Event> { transposedEvent });
+                        await HandleEvents(eventsToHandle.ToList(), parentCommand);
                     }
                 }
             }
         }
     }
 
-    private async Task HandleEvents(List<Event> events)
+    private async Task HandleEvents(List<Event> events, Command command)
     {
         foreach (var (aggregate, aggEvents) in events.GroupBy(x => x.Metadata.Aggregate).Select(x => (x.Key, x.ToList())))
         {
             await this.UpdateAggregateAsync(aggregate, aggEvents);
-            await this.UpdateSubscribersAsync(aggregate, aggEvents);
+            await this.UpdateSubscribersAsync(aggregate, aggEvents, command);
         }
     }
 }

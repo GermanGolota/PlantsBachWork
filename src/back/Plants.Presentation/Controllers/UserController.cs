@@ -2,12 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Plants.Application.Commands;
 using Plants.Application.Requests;
-using Plants.Core;
+using Plants.Shared;
 
 namespace Plants.Presentation.Controllers;
 
 [ApiController]
 [Route("users")]
+[ApiVersion("1")]
+[ApiExplorerSettings(GroupName = "v1")]
 public class UserController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -39,7 +41,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("create")]
-    public async Task<ActionResult<CreateUserResult>> RemoveRole(
+    public async Task<ActionResult<CreateUserResult>> CreateUser(
         [FromBody] CreateUserCommand command)
     {
         return await _mediator.Send(command);

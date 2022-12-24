@@ -9,7 +9,7 @@ public sealed class EventMetadataFactory
         _dateTime = dateTime;
     }
 
-    public EventMetadata Create<T>(Command command, long eventNumber) where T : Event
+    public EventMetadata Create<T>(Command command, ulong eventNumber) where T : Event
     {
         var name = typeof(T).Name.Replace("Event", "");
         return new EventMetadata(Guid.NewGuid(), command.Metadata.Aggregate, eventNumber, command.Metadata.Id, _dateTime.UtcNow, name);

@@ -11,8 +11,9 @@ internal class CqrsHelper
     //Aggregate to subscription
     public IReadOnlyDictionary<string, List<(OneOf<FilteredEvents, AllEvents> Filter, object Transpose)>> EventSubscriptions { get; }
 
-    public CqrsHelper(TypeHelper helper)
+    public CqrsHelper(TypeHelper helper, AggregateHelper aggregateHelper)
     {
+        var identityType = typeof(IUserIdentity);
         var commandHandlerType = typeof(ICommandHandler<>);
         var domainHandler = typeof(IDomainCommandHandler<>);
         var eventHandler = typeof(IEventHandler<>);
@@ -32,7 +33,7 @@ internal class CqrsHelper
                 {
                     var commandType = handler.GetGenericArguments()[0];
                     var handleMethod = type.GetMethod(nameof(IDomainCommandHandler<Command>.Handle), new[] { commandType });
-                    var checkMethod = type.GetMethod(nameof(IDomainCommandHandler<Command>.ShouldForbid), new[] { commandType });
+                    var checkMethod = type.GetMethod(nameof(IDomainCommandHandler<Command>.ShouldForbid), new[] { commandType, identityType });
                     commands.AddList(commandType, (checkMethod, handleMethod));
                 }
             }
@@ -44,7 +45,7 @@ internal class CqrsHelper
                 {
                     var commandType = handler.GetGenericArguments()[0];
                     var handleMethod = type.GetMethod(nameof(ICommandHandler<Command>.HandleAsync), new[] { commandType });
-                    var checkMethod = type.GetMethod(nameof(ICommandHandler<Command>.ShouldForbidAsync), new[] { commandType });
+                    var checkMethod = type.GetMethod(nameof(ICommandHandler<Command>.ShouldForbidAsync), new[] { commandType, identityType });
                     commands.AddList(commandType, (checkMethod, handleMethod));
                 }
             }
@@ -63,10 +64,12 @@ internal class CqrsHelper
             if (type.IsStrictlyAssignableToGenericType(subscriptionType))
             {
                 var subscriptionInterface = type.GetImplementations(subscriptionType).Single();
-                if (subscriptionInterface.GetGenericArguments() is [Type receiver, Type transmitter])
+                if (subscriptionInterface.GetGenericArguments() is [Type receiver, Type transmitter]
+                    && type.IsAssignableTo(aggregateType))
                 {
-                    var subscriptionsProp = type.GetProperty(nameof(IAggregateSubscription<AggregateBase, AggregateBase>.Subscriptions), BindingFlags.Static | BindingFlags.Public);
-                    var subscriptions = (IEnumerable<object>)subscriptionsProp.GetValue(null);
+                    var aggregate = aggregateHelper.AggregateCtors[aggregateType].Invoke(new object[] { Guid.NewGuid() });
+                    var subscriptionsProp = type.GetProperty(nameof(IAggregateSubscription<AggregateBase, AggregateBase>.Subscriptions), BindingFlags.Public);
+                    var subscriptions = (IEnumerable<object>)subscriptionsProp.GetValue(aggregate);
                     foreach (var subscription in subscriptions)
                     {
                         var currentSubscriptionType = eventSubscriptionType.MakeGenericType(receiver, transmitter);
@@ -80,7 +83,7 @@ internal class CqrsHelper
                 }
                 else
                 {
-                    throw new Exception("Cannot find type definitions for subscriptions");
+                    throw new Exception("Cannot find type definitions for subscriptions (subscriptions have to be placed on aggregates)");
                 }
             }
         }

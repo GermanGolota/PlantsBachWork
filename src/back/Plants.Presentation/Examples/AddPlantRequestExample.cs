@@ -1,4 +1,4 @@
-﻿using Plants.Presentation.Controllers;
+﻿using Plants.Presentation.Controllers.v2;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Examples;

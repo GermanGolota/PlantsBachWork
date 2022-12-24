@@ -5,6 +5,8 @@ namespace Plants.Presentation.Controllers;
 
 [ApiController]
 [Route("file")]
+[ApiVersion("1")]
+[ApiExplorerSettings(GroupName = "v1")]
 public class FileController : ControllerBase
 {
     private readonly IFileService _file;
