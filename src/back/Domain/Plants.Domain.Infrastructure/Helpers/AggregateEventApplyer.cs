@@ -64,10 +64,11 @@ internal class AggregateEventApplyer
                         foreach (var handler in handlers.Where(x => x.DeclaringType == aggregateType))
                         {
                             handler.Invoke(aggregate, new object[] { @event });
-                            var eventRecord = @event.ToOneOf<Command, Event>();
-                            recordFunc.Invoke(aggregate, new[] { eventRecord });
                         }
                     }
+
+                    var eventRecord = @event.ToOneOf<Command, Event>();
+                    recordFunc.Invoke(aggregate, new[] { eventRecord });
                 }
 
             }
