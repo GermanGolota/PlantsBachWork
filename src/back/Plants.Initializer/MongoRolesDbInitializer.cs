@@ -72,7 +72,7 @@ internal class MongoRolesDbInitializer
             $$"""
             {
                 "resource":{ "db":"{{dbName}}", "collection":"{{aggregate}}"},
-                "actions": [{{_accesses.AggregateAccesses[aggregate][role].SelectMany(type => accessTypeToPermissions[type]).DelimitList()}}]
+                "actions": [{{_accesses.AggregateAccesses[aggregate][role].SelectMany(type => accessTypeToPermissions[type]).QuoteDelimitList()}}]
             }
             """;
 
@@ -139,7 +139,7 @@ public static class MongoDatabaseExtensions
         var allRoles = Enum.GetValues<UserRole>();
         var getRolesCommand = BsonDocument.Parse($$"""
         {
-            "rolesInfo": [{{allRoles.DelimitList()}}]
+            "rolesInfo": [{{allRoles.QuoteDelimitList()}}]
         }
         """);
         var rolesResult = await db.RunCommandAsync<BsonDocument>(getRolesCommand);
