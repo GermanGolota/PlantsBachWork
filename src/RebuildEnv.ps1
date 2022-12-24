@@ -1,5 +1,5 @@
 docker-compose -f docker-compose-env.yml down --remove-orphans
-Remove-Item persist
+Remove-Item persist -Recurse -Confirm:$false
 git restore persist
 docker-compose -f docker-compose-setup.yml up --remove-orphans
 $certs = Get-ChildItem persist/certs -Filter '*.crt' -Recurse | % {$_.FullName}
