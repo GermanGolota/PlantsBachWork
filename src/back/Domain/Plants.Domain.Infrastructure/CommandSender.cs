@@ -74,7 +74,7 @@ internal class CommandSender : ICommandSender
                 }
                 catch (Exception e)
                 {
-                    result = await CreateFailure(command, commandVersion, new[] { e.Message, e.StackTrace! }, true);
+                    result = await CreateFailure(command, commandVersion, new[] { e.Message, e.ToString() }, true);
                 }
             }
         }
