@@ -21,11 +21,17 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
 
     public async Task<CommandForbidden?> ShouldForbidAsync(CreateUserCommand command, IUserIdentity userIdentity) =>
         userIdentity.HasRoles(UserCheckType.All, command.Data.Roles)
-        ?? await _userQuery.Exists(command.Metadata.Id) switch
+        .And(command.Data.Roles.Any().ToForbidden("Has to have some roles"))
+        .And(await UserDontExist(command));
+
+    private async Task<CommandForbidden?> UserDontExist(CreateUserCommand command)
+    {
+        return await _userQuery.Exists(command.Metadata.Id) switch
         {
-            true => new CommandForbidden("Plant already created"),
+            true => new CommandForbidden("User already exists"),
             false => null
         };
+    }
 
     public async Task<IEnumerable<Event>> HandleAsync(CreateUserCommand command)
     {
