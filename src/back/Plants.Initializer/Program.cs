@@ -14,7 +14,7 @@ var host = Host.CreateDefaultBuilder(args)
         {
             var config = ctx.Configuration;
             services
-                .Configure<ConnectionConfig>(config.GetSection("Connection"))
+                .Configure<ConnectionConfig>(config.GetSection(ConnectionConfig.Section))
                 .Configure<AuthConfig>(config.GetSection(AuthConfig.Section))
                 .Configure<UserConfig>(UserConstrants.Admin, config.GetSection(UserConstrants.Admin))
                 .Configure<UserConfig>(UserConstrants.NewAdmin, config.GetSection(UserConstrants.NewAdmin))
