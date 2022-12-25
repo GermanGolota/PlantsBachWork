@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Plants.Presentation.Examples;
-using Plants.Shared;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Extensions;

@@ -1,5 +1,4 @@
 ﻿using Plants.Domain.Infrastructure.Helpers;
-using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
 
 namespace Plants.Domain.Infrastructure;

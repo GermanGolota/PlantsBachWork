@@ -1,5 +1,4 @@
 ﻿using Plants.Aggregates.PlantStocks;
-using Plants.Shared;
 
 namespace Plants.Aggregates.PlantInfos;
 

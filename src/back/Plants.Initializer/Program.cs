@@ -1,11 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Plants.Aggregates.Infrastructure;
-using Plants.Domain.Infrastructure;
-using Plants.Domain.Services;
 using Plants.Initializer;
 using Plants.Services.Infrastructure;
-using Plants.Shared;
 
 var host = Host.CreateDefaultBuilder(args)
         .ConfigureServices((ctx, services) =>

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Plants.Domain.Infrastructure.Projection;
+﻿namespace Plants.Domain.Infrastructure.Projection;
 
 [Serializable]
 public class RepositoryException : Exception

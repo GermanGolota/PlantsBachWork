@@ -1,14 +1,8 @@
 ﻿using EventStore.Client;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Services;
-using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
-using Plants.Shared;
-using System;
-using System.Reflection;
 using System.Text;
 
 namespace Plants.Domain.Infrastructure;

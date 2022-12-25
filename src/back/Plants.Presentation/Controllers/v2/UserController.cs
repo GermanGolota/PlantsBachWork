@@ -1,10 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Plants.Aggregates.Users;
-using Plants.Domain;
-using Plants.Domain.Projection;
-using Plants.Domain.Services;
 using Plants.Presentation.Dtos;
-using Plants.Shared;
 
 namespace Plants.Presentation.Controllers.v2;
 

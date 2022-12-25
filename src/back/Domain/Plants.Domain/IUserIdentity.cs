@@ -1,6 +1,4 @@
-﻿using Plants.Shared;
-
-namespace Plants.Domain;
+﻿namespace Plants.Domain;
 
 public interface IUserIdentity
 {

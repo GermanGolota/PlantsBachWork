@@ -3,10 +3,7 @@ using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Services;
-using Plants.Domain.Services;
 using Plants.Infrastructure.Domain.Helpers;
-using Plants.Shared;
-using System;
 using System.Collections.Concurrent;
 
 namespace Plants.Domain.Infrastructure;

@@ -1,6 +1,4 @@
-﻿using Plants.Shared;
-
-namespace Plants.Aggregates.Services;
+﻿namespace Plants.Aggregates.Services;
 
 public interface IIdentityHelper
 {

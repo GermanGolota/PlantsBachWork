@@ -1,6 +1,4 @@
-﻿using Plants.Shared;
-
-namespace Plants.Aggregates.Users;
+﻿namespace Plants.Aggregates.Users;
 
 [Allow(Consumer, Read)]
 [Allow(Consumer, Write)]
