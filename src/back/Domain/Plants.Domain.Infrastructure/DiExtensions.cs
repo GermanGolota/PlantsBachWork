@@ -103,30 +103,4 @@ public static class DiExtensions
         return services;
     }
 
- /*   private class GuidDictionarySerializer : SerializerBase<Dictionary<Guid, string>>
-    {
-        public GuidDictionarySerializer()
-        {
-        }
-
-        public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, Dictionary<Guid, string> values)
-        {
-            var writer = context.Writer;
-            writer.WriteStartDocument();
-            foreach (var (key, value) in values)
-            {
-                writer.WriteString(key.ToString(), value);
-            }
-            writer.WriteEndDocument();
-        }
-
-        public override Dictionary<Guid, string> Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
-        {
-            var reader = context.Reader;
-            reader.ReadSymbol();
-            reader.ReadStartDocument();
-            var key = reader.ReadName();
-            reader.ReadEndDocument();
-        }
-    }*/
 }
