@@ -13,13 +13,13 @@ namespace Plants.Domain.Infrastructure;
 
 internal class EventStoreEventStore : IEventStore
 {
-    private readonly EventStoreClient _client;
+    private readonly EventStoreClientFactory _clientFactory;
     private readonly AggregateHelper _helper;
     private readonly EventStoreAccessGranter _granter;
 
-    public EventStoreEventStore(EventStoreClient client, AggregateHelper helper, EventStoreAccessGranter granter)
+    public EventStoreEventStore(EventStoreClientFactory client, AggregateHelper helper, EventStoreAccessGranter granter)
     {
-        _client = client;
+        _clientFactory = client;
         _helper = helper;
         _granter = granter;
     }
@@ -35,7 +35,7 @@ internal class EventStoreEventStore : IEventStore
                 Serialize(@event),
                 Encoding.UTF8.GetBytes("{}"));
 
-            var writeResult = await _client.AppendToStreamAsync(
+            var writeResult = await _clientFactory.Create().AppendToStreamAsync(
                 metadata.Aggregate.ToTopic(),
                 metadata.EventNumber,
                 new[] { eventData });
@@ -65,7 +65,7 @@ internal class EventStoreEventStore : IEventStore
                 Serialize(command),
                 Encoding.UTF8.GetBytes("{}"));
 
-            var writeResult = await _client.AppendToStreamAsync(
+            var writeResult = await _clientFactory.Create().AppendToStreamAsync(
                 aggregate.ToTopic(),
                 version,
                 new[] { eventData });
@@ -85,7 +85,7 @@ internal class EventStoreEventStore : IEventStore
             var idToCommand = new Dictionary<Guid, Command>();
             var events = new Dictionary<Command, List<Event>>();
 
-            var readResult = _client.ReadStreamAsync(
+            var readResult = _clientFactory.Create().ReadStreamAsync(
                  Direction.Forwards,
                  aggregate.ToTopic(),
                  StreamPosition.Start

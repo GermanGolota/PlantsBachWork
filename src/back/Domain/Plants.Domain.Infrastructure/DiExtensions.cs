@@ -44,14 +44,8 @@ public static class DiExtensions
         services.AddScoped<CommandMetadataFactory>();
         services.AddScoped<EventMetadataFactory>();
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
-        //settings are provided through aggregates project
-        services.AddScoped(factory =>
-            new EventStoreUserManagementClient(factory.GetRequiredService<IEventStoreClientSettingsFactory>().CreateFor(EventStoreClientSettingsType.User))
-        );
-
-        services.AddScoped(factory =>
-            new EventStoreClient(factory.GetRequiredService<IEventStoreClientSettingsFactory>().CreateFor(EventStoreClientSettingsType.User))
-        );
+        services.AddScoped<EventStoreClientFactory>();
+        services.AddScoped<EventStoreUserManagementClientFactory>();
         services.AddSingleton(_ => InfrastructureHelpers.Aggregate);
         services.AddTransient<ICommandSender, CommandSender>();
         services.AddTransient<IEventStore, EventStoreEventStore>();
@@ -78,12 +72,6 @@ public static class DiExtensions
 
     private static IServiceCollection AddProjection(this IServiceCollection services)
     {
-        services.AddScoped(factory =>
-        {
-            var databaseName = factory.GetRequiredService<IOptions<ConnectionConfig>>().Value.MongoDbDatabaseName;
-            return factory.GetRequiredService<IMongoClientFactory>().GetDatabase(databaseName);
-        });
-
         services.AddTransient(typeof(IProjectionRepository<>), typeof(MongoDBRepository<>));
         services.AddTransient(typeof(IProjectionQueryService<>), typeof(MongoDBRepository<>));
 
