@@ -3,6 +3,7 @@ using Plants.Aggregates.Infrastructure;
 using Plants.Domain.Infrastructure;
 using Plants.Infrastructure;
 using Plants.Presentation.Extensions;
+using Plants.Presentation.HostedServices;
 using Plants.Presentation.Middleware;
 using Plants.Services.Infrastructure;
 using Plants.Shared;
@@ -31,6 +32,7 @@ public class Startup
             .AddInfrastructure(Configuration)
             .AddDomainInfrastructure()
             .AddAggregatesInfrastructure()
+            .AddHostedService<EventStoreHostedService>()
             .AddControllers()
             .AddJsonOptions(_ =>
             {
