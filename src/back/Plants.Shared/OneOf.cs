@@ -19,7 +19,7 @@ public class OneOf<T0, T1>
         _isT0 = true;
     }
 
-    public OneOf(T1 value) 
+    public OneOf(T1 value)
     {
         _t0 = default!;
         _t1 = value;
@@ -45,6 +45,9 @@ public class OneOf<T0, T1>
 
     public static implicit operator OneOf<T0, T1>(T0 first) => new(first);
     public static implicit operator OneOf<T0, T1>(T1 second) => new(second);
+
+    public override string ToString() => 
+        Match(_ => _?.ToString(), _ => _?.ToString()) ?? "";
 }
 
 public static class OneOfExtensions

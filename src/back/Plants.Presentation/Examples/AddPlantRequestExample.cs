@@ -7,11 +7,11 @@ internal class AddPlantRequestExample : IExamplesProvider<AddPlantDto2>
 {
     public AddPlantDto2 GetExamples() =>
         new AddPlantDto2(
-            "Example plant name",
-            "Example plant description",
-            new[] { 1, 2 },
-            1,
-            1,
+            "Nanjing Apple",
+            "Apple from Nanjing",
+            new[] { "Taiga", "Forest" },
+            "Sandy",
+            "Apple",
             new DateTime(2022, 12, 12),
             new byte[][] { }
             );

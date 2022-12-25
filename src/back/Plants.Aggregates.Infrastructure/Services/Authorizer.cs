@@ -1,5 +1,7 @@
 ﻿using EventStore.Client;
 using Plants.Aggregates.Services;
+using Plants.Domain.Infrastructure.Helpers;
+using Plants.Domain.Infrastructure.Services;
 using Plants.Services;
 using Plants.Shared;
 
@@ -8,12 +10,12 @@ namespace Plants.Aggregates.Infrastructure.Services;
 internal class Authorizer : IAuthorizer
 {
     private readonly IJWTokenManager _tokenManager;
-    private readonly EventStoreUserManagementClient _managementClient;
+    private readonly IEventStoreUserManagementClientFactory _factory;
 
-    public Authorizer(IJWTokenManager tokenManager, EventStoreUserManagementClient managementClient)
+    public Authorizer(IJWTokenManager tokenManager, IEventStoreUserManagementClientFactory factory)
     {
         _tokenManager = tokenManager;
-        _managementClient = managementClient;
+        _factory = factory;
     }
 
     //TODO: Integrate into user session aggregate?
@@ -22,7 +24,7 @@ internal class Authorizer : IAuthorizer
         AuthorizeResult? result;
         try
         {
-            var user = await _managementClient.GetCurrentUserAsync(new(username, password));
+            var user = await _factory.Create().GetCurrentUserAsync(new(username, password));
             var roles = user.Groups
                 .Select(group => (valid: Enum.TryParse<UserRole>(group, out var role), role))
                 .Where(x => x.valid)

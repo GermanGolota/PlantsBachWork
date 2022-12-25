@@ -23,7 +23,8 @@ internal class RepositoryCaller
             var repositoryType = typeof(IRepository<>).MakeGenericType(aggregateType);
             var repository = _service.GetRequiredService(repositoryType);
             var method = repository.GetType().GetMethod(nameof(IRepository<AggregateBase>.GetByIdAsync));
-            return (AggregateBase)await (dynamic)method.Invoke(repository, new object[] { aggregate.Id });
+            var aggValue = await (dynamic)method.Invoke(repository, new object[] { aggregate.Id })!;
+            return (AggregateBase) aggValue;
         }
 
         throw new Exception("Aggregate was not found");

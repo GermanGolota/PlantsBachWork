@@ -1,4 +1,7 @@
-﻿using MongoDB.Driver;
+﻿using Microsoft.Extensions.Options;
+using MongoDB.Driver;
+using Plants.Domain.Infrastructure.Config;
+using Plants.Domain.Infrastructure.Services;
 using Plants.Domain.Projection;
 using System.Linq.Expressions;
 
@@ -6,32 +9,35 @@ namespace Plants.Domain.Infrastructure.Projection;
 
 public class MongoDBRepository<T> : IProjectionQueryService<T>, IProjectionRepository<T> where T : AggregateBase
 {
-    private readonly IMongoDatabase _mongoDatabase;
+    private readonly IMongoClientFactory _clientFactory;
+    private readonly ConnectionConfig _options;
 
-    public MongoDBRepository(IMongoDatabase mongoDatabase)
+    public MongoDBRepository(IMongoClientFactory clientFactory, IOptions<ConnectionConfig> options)
     {
-        _mongoDatabase = mongoDatabase;
+        _clientFactory = clientFactory;
+        _options = options.Value;
     }
 
+    private IMongoDatabase Database => _clientFactory.GetDatabase(_options.MongoDbDatabaseName);
     private string CollectionName => typeof(T).Name;
 
     public Task<bool> Exists(Guid id)
     {
-        return _mongoDatabase.GetCollection<T>(CollectionName)
+        return Database.GetCollection<T>(CollectionName)
             .Find(x => x.Id == id)
             .AnyAsync();
     }
 
     public async Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> predicate)
     {
-        var cursor = await _mongoDatabase.GetCollection<T>(CollectionName)
+        var cursor = await Database.GetCollection<T>(CollectionName)
             .FindAsync(predicate);
         return cursor.ToEnumerable();
     }
 
     public Task<T> GetByIdAsync(Guid id)
     {
-        return _mongoDatabase.GetCollection<T>(CollectionName)
+        return Database.GetCollection<T>(CollectionName)
             .Find(x => x.Id == id)
             .SingleAsync();
     }
@@ -40,7 +46,7 @@ public class MongoDBRepository<T> : IProjectionQueryService<T>, IProjectionRepos
     {
         try
         {
-            await _mongoDatabase.GetCollection<T>(CollectionName)
+            await Database.GetCollection<T>(CollectionName)
                 .InsertOneAsync(entity);
         }
         catch (MongoWriteException ex)
@@ -53,7 +59,7 @@ public class MongoDBRepository<T> : IProjectionQueryService<T>, IProjectionRepos
     {
         try
         {
-            var result = await _mongoDatabase.GetCollection<T>(CollectionName)
+            var result = await Database.GetCollection<T>(CollectionName)
                 .ReplaceOneAsync(x => x.Id == entity.Id, entity);
 
             if (result.MatchedCount != 1)

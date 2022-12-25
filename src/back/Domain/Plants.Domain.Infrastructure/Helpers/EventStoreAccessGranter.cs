@@ -1,24 +1,25 @@
 ﻿using EventStore.Client;
 using Plants.Domain.Infrastructure.Extensions;
+using Plants.Domain.Infrastructure.Services;
 using Plants.Shared;
 
 namespace Plants.Domain.Infrastructure.Helpers;
 
 internal class EventStoreAccessGranter
 {
-    private readonly EventStoreClient _client;
+    private readonly IEventStoreClientFactory _clientFactory;
     private readonly AccessesHelper _helper;
 
-    public EventStoreAccessGranter(EventStoreClient client, AccessesHelper helper)
+    public EventStoreAccessGranter(IEventStoreClientFactory clientFactory, AccessesHelper helper)
     {
-        _client = client;
+        _clientFactory = clientFactory;
         _helper = helper;
     }
 
     public async Task GrantAccessesFor(AggregateDescription aggregate)
     {
         var meta = BuildMetadataFor(aggregate.Name);
-        await _client.SetStreamMetadataAsync(aggregate.ToTopic(), StreamState.NoStream, meta);
+        await _clientFactory.Create().SetStreamMetadataAsync(aggregate.ToTopic(), StreamState.NoStream, meta);
     }
 
     private StreamMetadata BuildMetadataFor(string aggregateName)

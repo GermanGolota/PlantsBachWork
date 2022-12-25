@@ -1,26 +1,16 @@
-﻿using Microsoft.Extensions.Options;
-using MongoDB.Bson;
-using MongoDB.Driver;
+﻿using MongoDB.Bson;
 using Plants.Aggregates.Services;
-using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Services;
-using Plants.Services.Infrastructure.Encryption;
 using Plants.Shared;
 
 namespace Plants.Aggregates.Infrastructure.Helper;
 
 internal class MongoDbUserUpdater : IUserUpdater
 {
-    private readonly IOptions<ConnectionConfig> _options;
     private readonly IMongoClientFactory _factory;
-    private readonly IIdentityProvider _identity;
-    private readonly SymmetricEncrypter _encrypter;
 
-    public MongoDbUserUpdater(IOptions<ConnectionConfig> options, IIdentityProvider identity, SymmetricEncrypter encrypter, IMongoClientFactory factory)
+    public MongoDbUserUpdater(IMongoClientFactory factory)
     {
-        _options = options;
-        _identity = identity;
-        _encrypter = encrypter;
         _factory = factory;
     }
 

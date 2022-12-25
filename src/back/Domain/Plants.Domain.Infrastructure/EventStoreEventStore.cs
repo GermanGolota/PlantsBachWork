@@ -3,9 +3,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Infrastructure.Helpers;
+using Plants.Domain.Infrastructure.Services;
 using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Shared;
+using System;
 using System.Reflection;
 using System.Text;
 
@@ -13,15 +15,17 @@ namespace Plants.Domain.Infrastructure;
 
 internal class EventStoreEventStore : IEventStore
 {
-    private readonly EventStoreClient _client;
+    private readonly IEventStoreClientFactory _clientFactory;
     private readonly AggregateHelper _helper;
     private readonly EventStoreAccessGranter _granter;
+    private readonly EventStoreConverter _converter;
 
-    public EventStoreEventStore(EventStoreClient client, AggregateHelper helper, EventStoreAccessGranter granter)
+    public EventStoreEventStore(IEventStoreClientFactory client, AggregateHelper helper, EventStoreAccessGranter granter, EventStoreConverter converter)
     {
-        _client = client;
+        _clientFactory = client;
         _helper = helper;
         _granter = granter;
+        _converter = converter;
     }
 
     public async Task<ulong> AppendEventAsync(Event @event)
@@ -32,10 +36,10 @@ internal class EventStoreEventStore : IEventStore
             var eventData = new EventData(
                 Uuid.FromGuid(metadata.Id),
                 _helper.Events.Get(@event.GetType()),
-                Serialize(@event),
+                _converter.Serialize(@event),
                 Encoding.UTF8.GetBytes("{}"));
 
-            var writeResult = await _client.AppendToStreamAsync(
+            var writeResult = await _clientFactory.Create().AppendToStreamAsync(
                 metadata.Aggregate.ToTopic(),
                 metadata.EventNumber,
                 new[] { eventData });
@@ -62,10 +66,10 @@ internal class EventStoreEventStore : IEventStore
             var eventData = new EventData(
             Uuid.FromGuid(metadata.Id),
                 _helper.Commands.Get(command.GetType()),
-                Serialize(command),
+                _converter.Serialize(command),
                 Encoding.UTF8.GetBytes("{}"));
 
-            var writeResult = await _client.AppendToStreamAsync(
+            var writeResult = await _clientFactory.Create().AppendToStreamAsync(
                 aggregate.ToTopic(),
                 version,
                 new[] { eventData });
@@ -85,7 +89,7 @@ internal class EventStoreEventStore : IEventStore
             var idToCommand = new Dictionary<Guid, Command>();
             var events = new Dictionary<Command, List<Event>>();
 
-            var readResult = _client.ReadStreamAsync(
+            var readResult = _clientFactory.Create().ReadStreamAsync(
                  Direction.Forwards,
                  aggregate.ToTopic(),
                  StreamPosition.Start
@@ -101,26 +105,17 @@ internal class EventStoreEventStore : IEventStore
             readResult.ReadState.Dispose();
             foreach (var resolvedEvent in readEvents)
             {
-                var eventType = resolvedEvent.Event.EventType;
-                if (_helper.Events.ContainsKey(eventType))
-                {
-                    var @event = DeserializeEvent(_helper.Events.Get(eventType), resolvedEvent.Event.Data.Span);
-                    var command = idToCommand[@event.Metadata.CommandId];
-                    events.AddList(command, @event);
-                }
-                else
-                {
-                    if (_helper.Commands.ContainsKey(eventType))
+                _converter.Convert(resolvedEvent).Match(
+                    @event =>
                     {
-                        var command = DeserializeCommand(_helper.Commands.Get(eventType), resolvedEvent.Event.Data.Span);
+                        var command = idToCommand[@event.Metadata.CommandId];
+                        events.AddList(command, @event);
+                    },
+                    command =>
+                    {
                         idToCommand.Add(command.Metadata.Id, command);
                         events[command] = new List<Event>();
-                    }
-                    else
-                    {
-                        throw new Exception("Found unprocessable message");
-                    }
-                }
+                    });
             }
 
             return events.Select(x => new CommandHandlingResult(x.Key, x.Value.Select(_ => _))).OrderBy(_ => _.Command.Metadata.Time);
@@ -131,42 +126,4 @@ internal class EventStoreEventStore : IEventStore
         }
     }
 
-    private static Command DeserializeCommand(Type eventType, ReadOnlySpan<byte> data)
-    {
-        var settings = new JsonSerializerSettings { ContractResolver = new PrivateSetterContractResolver() };
-        return (Command)JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), eventType, settings);
-    }
-
-    private static Event DeserializeEvent(Type eventType, ReadOnlySpan<byte> data)
-    {
-        var settings = new JsonSerializerSettings { ContractResolver = new PrivateSetterContractResolver() };
-        return (Event)JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), eventType, settings);
-    }
-
-    private static byte[] Serialize(object eventOrCommand)
-    {
-        return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(eventOrCommand));
-    }
-
-    private class PrivateSetterContractResolver : DefaultContractResolver
-    {
-        protected override JsonProperty CreateProperty(
-            MemberInfo member,
-            MemberSerialization memberSerialization)
-        {
-            var prop = base.CreateProperty(member, memberSerialization);
-
-            if (!prop.Writable)
-            {
-                var property = member as PropertyInfo;
-                if (property != null)
-                {
-                    var hasPrivateSetter = property.GetSetMethod(true) != null;
-                    prop.Writable = hasPrivateSetter;
-                }
-            }
-
-            return prop;
-        }
-    }
 }

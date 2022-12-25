@@ -1,13 +1,9 @@
-﻿using EventStore.Client;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
-using MongoDB.Driver;
-using MongoDB.Driver.Core.Configuration;
-using Plants.Domain.Infrastructure.Config;
+using MongoDB.Bson.Serialization.Serializers;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Projection;
-using Plants.Domain.Infrastructure.Services;
 using Plants.Domain.Persistence;
 using Plants.Domain.Projection;
 using Plants.Domain.Services;
@@ -36,16 +32,15 @@ public static class DiExtensions
         services.AddTransient<EventSubscriber>();
         services.AddTransient<AggregateEventApplyer>();
         services.AddTransient(typeof(TransposeApplyer<>));
+        services.AddTransient(typeof(TransposeApplyer<,>));
         services.AddScoped<CommandMetadataFactory>();
         services.AddScoped<EventMetadataFactory>();
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
-        //settings are provided through aggregates project
-        services.AddScoped(factory =>
-        {
-            return new EventStoreClient(factory.GetRequiredService<EventStoreClientSettings>());
-        });
         services.AddSingleton(_ => InfrastructureHelpers.Aggregate);
         services.AddTransient<ICommandSender, CommandSender>();
+        services.AddSingleton<EventStoreConverter>();
+        //works with the service scope
+        services.AddScoped<IEventSubscriptionWorker, EventSubscriptionWorker>();
         services.AddTransient<IEventStore, EventStoreEventStore>();
         services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
         services.RegisterExternalServices();
@@ -70,21 +65,24 @@ public static class DiExtensions
 
     private static IServiceCollection AddProjection(this IServiceCollection services)
     {
-        services.AddScoped(factory =>
-        {
-            var databaseName = factory.GetRequiredService<IOptions<ConnectionConfig>>().Value.MongoDbDatabaseName;
-            return factory.GetRequiredService<IMongoClientFactory>().GetDatabase(databaseName);
-        });
-
         services.AddTransient(typeof(IProjectionRepository<>), typeof(MongoDBRepository<>));
         services.AddTransient(typeof(IProjectionQueryService<>), typeof(MongoDBRepository<>));
 
+        AddBsonConversions();
+
+        return services;
+    }
+
+    private static void AddBsonConversions()
+    {
         var baseClassMap = new BsonClassMap(typeof(AggregateBase));
         baseClassMap.MapProperty(nameof(AggregateBase.Version));
         baseClassMap.MapProperty(nameof(AggregateBase.CommandsProcessed));
         baseClassMap.MapProperty(nameof(AggregateBase.Name));
+        baseClassMap.MapProperty(nameof(AggregateBase.LastUpdateTime));
         baseClassMap.MapIdProperty(nameof(AggregateBase.Id));
         var helper = InfrastructureHelpers.Aggregate;
+        BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
         foreach (var (_, type) in helper.Aggregates)
         {
             var map = new BsonClassMap(type, baseClassMap);
@@ -93,7 +91,5 @@ public static class DiExtensions
             map.AutoMap();
             BsonClassMap.RegisterClassMap(map);
         }
-
-        return services;
     }
 }

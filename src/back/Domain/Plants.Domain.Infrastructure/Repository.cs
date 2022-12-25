@@ -23,7 +23,8 @@ internal class Repository<TAggregate> : IRepository<TAggregate> where TAggregate
         {
             var events = await _store.ReadEventsAsync(new(id, aggregateName));
             var desc = new AggregateDescription(id, aggregateName);
-            return (TAggregate)_applyer.ApplyEvents(desc, events);
+            var aggregate = _applyer.ApplyEvents(desc, events);
+            return (TAggregate)aggregate;
         }
         else
         {

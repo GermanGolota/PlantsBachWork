@@ -6,4 +6,5 @@
 public interface IIdentityProvider
 {
     IUserIdentity? Identity { get; }
+    void UpdateIdentity(IUserIdentity newIdentity);
 }

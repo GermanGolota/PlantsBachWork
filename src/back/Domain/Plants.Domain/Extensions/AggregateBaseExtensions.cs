@@ -8,4 +8,7 @@ public static class AggregateBaseExtensions
             true => null,
             false => new CommandForbidden($"This '{aggregate.Name}' already exists")
         };
+
+    public static AggregateDescription GetDescription(this AggregateBase aggregate) =>
+        new(aggregate.Id, aggregate.Name);
 }

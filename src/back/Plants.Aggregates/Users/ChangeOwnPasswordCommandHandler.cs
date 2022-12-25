@@ -7,12 +7,14 @@ public class ChangeOwnPasswordCommandHandler : ICommandHandler<ChangeOwnPassword
     private readonly IUserUpdater _userUpdater;
     private readonly IRepository<User> _query;
     private readonly IIdentityProvider _identity;
+    private readonly IIdentityHelper _identityHelper;
 
-    public ChangeOwnPasswordCommandHandler(IUserUpdater userUpdater, IRepository<User> query, IIdentityProvider identity)
+    public ChangeOwnPasswordCommandHandler(IUserUpdater userUpdater, IRepository<User> query, IIdentityProvider identity, IIdentityHelper identityHelper)
     {
         _userUpdater = userUpdater;
         _query = query;
         _identity = identity;
+        _identityHelper = identityHelper;
     }
 
     public async Task<CommandForbidden?> ShouldForbidAsync(ChangeOwnPasswordCommand command, IUserIdentity userIdentity)
@@ -27,10 +29,12 @@ public class ChangeOwnPasswordCommandHandler : ICommandHandler<ChangeOwnPassword
     {
         var identity = _identity.Identity!;
         await _userUpdater.UpdatePassword(identity.UserName, command.OldPassword, command.NewPassword);
+        var newIdentity = _identityHelper.Build(command.NewPassword, identity.UserName, identity.Roles);
+        _identity.UpdateIdentity(newIdentity);
         var user = await _query.GetByIdAsync(command.Metadata.Aggregate.Id);
         return new[]
         {
-            new PasswordChangedEvent(EventFactory.Shared.Create<PasswordChangedEvent>(command, user.Version))
+            new PasswordChangedEvent(EventFactory.Shared.Create<PasswordChangedEvent>(command))
         };
     }
 

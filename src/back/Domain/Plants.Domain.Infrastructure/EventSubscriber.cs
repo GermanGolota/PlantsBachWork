@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Plants.Domain.Extensions;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
@@ -22,7 +23,13 @@ internal class EventSubscriber
         _provider = provider;
     }
 
-    public async Task UpdateAggregateAsync(AggregateDescription desc, IEnumerable<Event> newEvents)
+    public async Task ProcessCommand(Command command, List<Event> aggEvents)
+    {
+        await UpdateAggregateAsync(command.Metadata.Aggregate, aggEvents);
+        await UpdateSubscribersAsync(command, aggEvents);
+    }
+
+    private async Task UpdateAggregateAsync(AggregateDescription desc, IEnumerable<Event> newEvents)
     {
         var aggregate = await _caller.LoadAsync(desc);
         //would make sense for times in which we would load projection and apply events to it
@@ -30,9 +37,9 @@ internal class EventSubscriber
         await _caller.InsertOrUpdateProjectionAsync(aggregate);
     }
 
-    public async Task UpdateSubscribersAsync(AggregateDescription aggregate, List<Event> aggEvents, Command parentCommand)
+    private async Task UpdateSubscribersAsync(Command parentCommand, List<Event> aggEvents)
     {
-        var applyerBaseType = typeof(TransposeApplyer<>);
+        var aggregate = parentCommand.Metadata.Aggregate;
         if (_cqrs.EventSubscriptions.TryGetValue(aggregate.Name, out var subscriptions))
         {
             foreach (var subscription in subscriptions)
@@ -46,35 +53,46 @@ internal class EventSubscriber
                   all => aggEvents);
                 if (eventsToHandle.Any())
                 {
-                    var receiverType = subscription.Transpose.GetType().GetGenericArguments()[0];
-                    var applyerType = applyerBaseType.MakeGenericType(new[] { receiverType });
+                    var applyerType = GetApplyerTypeFor(subscription);
                     var applyer = _provider.GetRequiredService(applyerType);
                     var method = applyerType.GetMethod(nameof(TransposeApplyer<AggregateBase>.CallTransposeAsync), BindingFlags.Public | BindingFlags.Instance);
-                    var transposedEvents = (IEnumerable<Event>)await (dynamic)method.Invoke(applyer, new[] { subscription.Transpose, eventsToHandle });
+                    var transposedEvents = (IEnumerable<Event>)await (dynamic)method.Invoke(applyer, new[] { subscription.Transpose, eventsToHandle })!;
                     var firstEvent = transposedEvents.FirstOrDefault();
                     if (firstEvent != default)
                     {
                         var commandNumber = firstEvent.Metadata.EventNumber - 1;
-                        var command = parentCommand with { Metadata = parentCommand.Metadata with { Aggregate = firstEvent.Metadata.Aggregate } };
-                        await _eventStore.AppendCommandAsync(command, commandNumber);
-                        foreach (var @event in eventsToHandle)
-                        {
-                            await _eventStore.AppendEventAsync(@event);
-                        }
-                        //TODO: Attach subscriber to event store instead of putting it here
-                        await HandleEvents(eventsToHandle.ToList(), parentCommand);
+                        var command = parentCommand.ChangeTargetAggregate(firstEvent.Metadata.Aggregate);
+                        commandNumber = await _eventStore.AppendCommandAsync(command, commandNumber);
+                        await _eventStore.AppendEventsAsync(transposedEvents, commandNumber, command);
                     }
                 }
             }
         }
     }
 
-    private async Task HandleEvents(List<Event> events, Command command)
+    private static Type GetApplyerTypeFor((OneOf<FilteredEvents, AllEvents> Filter, object Transpose) subscription)
     {
-        foreach (var (aggregate, aggEvents) in events.GroupBy(x => x.Metadata.Aggregate).Select(x => (x.Key, x.ToList())))
+        var transposeType = subscription.Transpose.GetType();
+        var receiverType = transposeType.GetGenericArguments()[0];
+        Type applyerType;
+        if (transposeType.IsAssignableToGenericType(typeof(AggregateLoadingTranspose<>)))
         {
-            await this.UpdateAggregateAsync(aggregate, aggEvents);
-            await this.UpdateSubscribersAsync(aggregate, aggEvents, command);
+            applyerType = typeof(TransposeApplyer<>).MakeGenericType(new[] { receiverType });
         }
+        else
+        {
+            if (transposeType.IsAssignableToGenericType(typeof(AggregateLoadingTranspose<,>)))
+            {
+                var eventType = transposeType.GetGenericArguments()[1];
+                applyerType = typeof(TransposeApplyer<,>).MakeGenericType(new[] { receiverType, eventType });
+            }
+            else
+            {
+                throw new Exception($"Unsupported transpose type - '{transposeType.FullName}'");
+            }
+        }
+
+        return applyerType;
     }
+
 }
