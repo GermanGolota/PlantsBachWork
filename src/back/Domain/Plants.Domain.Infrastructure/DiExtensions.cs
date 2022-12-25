@@ -79,6 +79,7 @@ public static class DiExtensions
         baseClassMap.MapProperty(nameof(AggregateBase.Version));
         baseClassMap.MapProperty(nameof(AggregateBase.CommandsProcessed));
         baseClassMap.MapProperty(nameof(AggregateBase.Name));
+        baseClassMap.MapProperty(nameof(AggregateBase.LastUpdateTime));
         baseClassMap.MapIdProperty(nameof(AggregateBase.Id));
         var helper = InfrastructureHelpers.Aggregate;
         BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
