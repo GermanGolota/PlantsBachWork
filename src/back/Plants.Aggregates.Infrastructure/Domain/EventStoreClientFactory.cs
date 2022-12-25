@@ -1,5 +1,4 @@
 ﻿using EventStore.Client;
-using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Domain.Infrastructure.Services;
 
 namespace Plants.Aggregates.Infrastructure.Domain;
