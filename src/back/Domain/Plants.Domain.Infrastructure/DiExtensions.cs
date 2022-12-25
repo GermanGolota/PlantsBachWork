@@ -46,9 +46,12 @@ public static class DiExtensions
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
         //settings are provided through aggregates project
         services.AddScoped(factory =>
-        {
-            return new EventStoreClient(factory.GetRequiredService<EventStoreClientSettings>());
-        });
+            new EventStoreUserManagementClient(factory.GetRequiredService<IEventStoreClientSettingsFactory>().CreateFor(EventStoreClientSettingsType.User))
+        );
+
+        services.AddScoped(factory =>
+            new EventStoreClient(factory.GetRequiredService<IEventStoreClientSettingsFactory>().CreateFor(EventStoreClientSettingsType.User))
+        );
         services.AddSingleton(_ => InfrastructureHelpers.Aggregate);
         services.AddTransient<ICommandSender, CommandSender>();
         services.AddTransient<IEventStore, EventStoreEventStore>();
@@ -84,6 +87,13 @@ public static class DiExtensions
         services.AddTransient(typeof(IProjectionRepository<>), typeof(MongoDBRepository<>));
         services.AddTransient(typeof(IProjectionQueryService<>), typeof(MongoDBRepository<>));
 
+        AddBsonConversions();
+
+        return services;
+    }
+
+    private static void AddBsonConversions()
+    {
         var baseClassMap = new BsonClassMap(typeof(AggregateBase));
         baseClassMap.MapProperty(nameof(AggregateBase.Version));
         baseClassMap.MapProperty(nameof(AggregateBase.CommandsProcessed));
@@ -99,8 +109,5 @@ public static class DiExtensions
             map.AutoMap();
             BsonClassMap.RegisterClassMap(map);
         }
-
-        return services;
     }
-
 }

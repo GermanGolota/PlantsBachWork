@@ -1,4 +1,5 @@
 ﻿using Plants.Shared;
+using System.ComponentModel.DataAnnotations;
 
 namespace Plants.Domain.Infrastructure.Config;
 
@@ -6,8 +7,15 @@ namespace Plants.Domain.Infrastructure.Config;
 public class ConnectionConfig
 {
     public const string Section = "Connection";
-    public string EventStoreConnection { get; set; }
+    [Required]
+    public string EventStoreConnection { get; set; } = null!;
+    [Required]
+    public string EventStoreServiceUsername { get; set; } = null!;
+    [Required]
+    public string EventStoreServicePassword { get; set; } = null!;
     public long EventStoreTimeoutInSeconds { get; set; } = 60;
-    public string MongoDbConnectionTemplate { get; set; }
-    public string MongoDbDatabaseName { get; set; }
+    [Required]
+    public string MongoDbConnectionTemplate { get; set; } = null!;
+    [Required]
+    public string MongoDbDatabaseName { get; set; } = null!;
 }
