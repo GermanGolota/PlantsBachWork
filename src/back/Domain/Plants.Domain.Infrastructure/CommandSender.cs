@@ -90,21 +90,34 @@ internal class CommandSender : ICommandSender
         }
         else
         {
+            List<Event>? events = null;
             try
             {
-                var events = await ExecuteHandlers(command, checkResults);
+                events = await ExecuteHandlers(command, checkResults);
                 foreach (var @event in events)
                 {
                     await _eventStore.AppendEventAsync(@event);
                 }
-                //TODO: Attach subscriber to event store instead of putting it here
-                await HandleEvents(events, command);
-
                 result = new CommandAcceptedResult();
             }
             catch (Exception e)
             {
+                _logger.LogError(e, "Failed to append events for command");
                 result = await CreateFailure(command, commandVersion, new[] { e.Message, e.ToString() }, true);
+            }
+
+            if(events is not null)
+            {
+                try
+                {
+                    //TODO: Attach subscriber to event store instead of putting it here
+                    await HandleEvents(events, command);
+                }
+                catch(Exception e)
+                {
+                    _logger.LogError(e, "Failed to execute subscription");
+                    //TODO: Add deadletterqueue here
+                }
             }
         }
 

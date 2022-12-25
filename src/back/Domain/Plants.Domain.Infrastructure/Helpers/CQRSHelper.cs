@@ -67,16 +67,18 @@ internal class CqrsHelper
                 if (subscriptionInterface.GetGenericArguments() is [Type receiver, Type transmitter]
                     && type.IsAssignableTo(aggregateType))
                 {
-                    var aggregate = aggregateHelper.AggregateCtors[aggregateType].Invoke(new object[] { Guid.NewGuid() });
-                    var subscriptionsProp = type.GetProperty(nameof(IAggregateSubscription<AggregateBase, AggregateBase>.Subscriptions), BindingFlags.Public);
-                    var subscriptions = (IEnumerable<object>)subscriptionsProp.GetValue(aggregate);
+                    var aggregate = aggregateHelper.AggregateCtors[receiver].Invoke(new object[] { Guid.Empty });
+                    var subscriptionsProp = type.GetProperty(nameof(IAggregateSubscription<AggregateBase, AggregateBase>.Subscriptions))!;
+                    var subscriptions = (IEnumerable<object>)subscriptionsProp.GetValue(aggregate)!;
                     foreach (var subscription in subscriptions)
                     {
-                        var currentSubscriptionType = eventSubscriptionType.MakeGenericType(receiver, transmitter);
-                        var filterProp = currentSubscriptionType.GetProperty(nameof(EventSubscription<AggregateBase, AggregateBase>.EventFilter));
-                        var transposeProp = currentSubscriptionType.GetProperty(nameof(EventSubscription<AggregateBase, AggregateBase>.TransposeEvent));
-                        var filter = (OneOf<FilteredEvents, AllEvents>)filterProp.GetValue(subscription);
-                        var transpose = transposeProp.GetValue(subscription);
+                        var subType = subscription.GetType();
+                        var filter = (OneOf<FilteredEvents, AllEvents>)subType
+                            .GetProperty(nameof(EventSubscription<AggregateBase, AggregateBase>.EventFilter))
+                            !.GetValue(subscription)!;
+                        var transpose = subType
+                            .GetProperty(nameof(EventSubscription<AggregateBase, AggregateBase>.TransposeEvent))
+                            !.GetValue(subscription);
 
                         subs.AddList(transmitter.Name, (filter, transpose));
                     }

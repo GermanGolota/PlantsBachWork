@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Plants.Domain.Extensions;
 using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Shared;
@@ -48,7 +49,11 @@ internal class AggregateEventApplyer
                 //command
                 if (_cqrs.CommandHandlers.TryGetValue(command.GetType(), out var cmdHandlers))
                 {
-                    foreach (var handler in cmdHandlers.Select(_ => _.Handler).Where(_ => _.ReturnType.IsAssignableToGenericType(typeof(Task<>)) is false))
+                    foreach (var handler in cmdHandlers
+                        .Select(_ => _.Handler)
+                        .Where(_ => _.ReturnType.IsAssignableToGenericType(typeof(Task<>)) is false)
+                        .Where(_ => _.DeclaringType == aggregateType)
+                        )
                     {
                         handler.Invoke(aggregate, new[] { command });
                     }

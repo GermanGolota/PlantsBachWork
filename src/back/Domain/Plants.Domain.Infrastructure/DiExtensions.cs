@@ -1,7 +1,10 @@
 ﻿using EventStore.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Configuration;
 using Plants.Domain.Infrastructure.Config;
@@ -13,6 +16,7 @@ using Plants.Domain.Projection;
 using Plants.Domain.Services;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Shared;
+using System.Security.Cryptography;
 
 namespace Plants.Domain.Infrastructure;
 
@@ -36,6 +40,7 @@ public static class DiExtensions
         services.AddTransient<EventSubscriber>();
         services.AddTransient<AggregateEventApplyer>();
         services.AddTransient(typeof(TransposeApplyer<>));
+        services.AddTransient(typeof(TransposeApplyer<,>));
         services.AddScoped<CommandMetadataFactory>();
         services.AddScoped<EventMetadataFactory>();
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
@@ -85,6 +90,7 @@ public static class DiExtensions
         baseClassMap.MapProperty(nameof(AggregateBase.Name));
         baseClassMap.MapIdProperty(nameof(AggregateBase.Id));
         var helper = InfrastructureHelpers.Aggregate;
+        BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
         foreach (var (_, type) in helper.Aggregates)
         {
             var map = new BsonClassMap(type, baseClassMap);
@@ -96,4 +102,31 @@ public static class DiExtensions
 
         return services;
     }
+
+ /*   private class GuidDictionarySerializer : SerializerBase<Dictionary<Guid, string>>
+    {
+        public GuidDictionarySerializer()
+        {
+        }
+
+        public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, Dictionary<Guid, string> values)
+        {
+            var writer = context.Writer;
+            writer.WriteStartDocument();
+            foreach (var (key, value) in values)
+            {
+                writer.WriteString(key.ToString(), value);
+            }
+            writer.WriteEndDocument();
+        }
+
+        public override Dictionary<Guid, string> Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+        {
+            var reader = context.Reader;
+            reader.ReadSymbol();
+            reader.ReadStartDocument();
+            var key = reader.ReadName();
+            reader.ReadEndDocument();
+        }
+    }*/
 }

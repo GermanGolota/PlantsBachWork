@@ -18,3 +18,21 @@ internal class TransposeApplyer<TIn> where TIn : AggregateBase
         return transpose.Transpose(events, aggregate);
     }
 }
+
+internal class TransposeApplyer<TIn, TEvent> where TIn : AggregateBase where TEvent : Event
+{
+    private readonly IRepository<TIn> _repo;
+
+    public TransposeApplyer(IRepository<TIn> repo)
+    {
+        _repo = repo;
+    }
+
+    public async Task<IEnumerable<Event>> CallTransposeAsync(AggregateLoadingTranspose<TIn, TEvent> transpose, IEnumerable<Event> events)
+    {
+        var filteredEvents = events.OfType<TEvent>();
+        var id = transpose.ExtractId(filteredEvents.First());
+        var aggregate = await _repo.GetByIdAsync(id);
+        return transpose.Transpose(filteredEvents, aggregate);
+    }
+}
