@@ -13,5 +13,5 @@ internal class EventStoreUserManagementClientFactory : IEventStoreUserManagement
     }
 
     public EventStoreUserManagementClient Create() =>
-        new EventStoreUserManagementClient(_settingsFactory.CreateFor(EventStoreClientSettingsType.User));
+        new(_settingsFactory.CreateFor(EventStoreClientSettingsType.User));
 }
