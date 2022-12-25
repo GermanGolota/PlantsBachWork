@@ -16,7 +16,6 @@ internal class CommandSender : ICommandSender
     private readonly IEventStore _eventStore;
     private readonly RepositoryCaller _caller;
     private readonly IServiceProvider _service;
-    private readonly EventSubscriber _subscriber;
     private readonly IIdentityProvider _identityProvider;
     private readonly AccessesHelper _accesses;
 
@@ -25,7 +24,6 @@ internal class CommandSender : ICommandSender
         IEventStore eventStore,
         RepositoryCaller caller,
         IServiceProvider service,
-        EventSubscriber subscriber,
         IIdentityProvider identityProvider,
         AccessesHelper accesses)
     {
@@ -34,7 +32,6 @@ internal class CommandSender : ICommandSender
         _eventStore = eventStore;
         _caller = caller;
         _service = service;
-        _subscriber = subscriber;
         _identityProvider = identityProvider;
         _accesses = accesses;
     }
@@ -77,15 +74,15 @@ internal class CommandSender : ICommandSender
     {
         var aggregate = await _caller.LoadAsync(commandAggregate);
         var commandVersion = aggregate.Version;
-        await _eventStore.AppendCommandAsync(command, commandVersion);
-        //TODO: Move the rest to sub?
+        commandVersion = await _eventStore.AppendCommandAsync(command, commandVersion);
+
         var checkResults = await PerformChecks(command, handlePairs);
         var checkFailures = checkResults.Where(_ => _.CheckFailure.HasValue).Select(_ => _.CheckFailure!.Value);
         OneOf<CommandAcceptedResult, CommandForbidden> result;
         if (checkFailures.Any())
         {
             var reasons = checkFailures.Select(failure => failure.Reasons).Flatten().ToArray();
-            result = await CreateFailure(command, commandVersion, reasons, false);
+            result = await AppendFailureAsync(command, commandVersion, reasons, false);
         }
         else
         {
@@ -93,40 +90,24 @@ internal class CommandSender : ICommandSender
             try
             {
                 events = await ExecuteHandlers(command, checkResults);
-                foreach (var @event in events)
-                {
-                    await _eventStore.AppendEventAsync(@event);
-                }
+                await _eventStore.AppendEventsAsync(events, commandVersion, command);
                 result = new CommandAcceptedResult();
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to append events for command");
-                result = await CreateFailure(command, commandVersion, new[] { e.Message, e.ToString() }, true);
+                _logger.LogError(e, "Failed to process events for command");
+                var reasons = new[] { e.Message, e.ToString() };
+                result = await AppendFailureAsync(command, commandVersion, reasons, true);
             }
 
-            if(events is not null)
-            {
-                try
-                {
-                    //TODO: Attach subscriber to event store instead of putting it here
-                    await HandleEvents(events, command);
-                }
-                catch(Exception e)
-                {
-                    _logger.LogError(e, "Failed to execute subscription");
-                    //TODO: Add deadletterqueue here
-                }
-            }
         }
 
         return result;
     }
 
-    private async Task<OneOf<CommandAcceptedResult, CommandForbidden>> CreateFailure(Command command, ulong commandVersion, string[] reasons, bool isException)
+    private async Task<OneOf<CommandAcceptedResult, CommandForbidden>> AppendFailureAsync(Command command, ulong commandVersion, string[] reasons, bool isException)
     {
-        var metadata = EventFactory.Shared.Create<FailEvent>(command, commandVersion + 1);
-        await _eventStore.AppendEventAsync(new FailEvent(metadata, reasons, isException));
+        await _eventStore.AppendEventsAsync(new[] { new FailEvent(EventFactory.Shared.Create<FailEvent>(command), reasons, isException) }, commandVersion, command);
         return new CommandForbidden(reasons);
     }
 
@@ -179,12 +160,4 @@ internal class CommandSender : ICommandSender
         return checkResults;
     }
 
-    private async Task HandleEvents(List<Event> events, Command command)
-    {
-        foreach (var (aggregate, aggEvents) in events.GroupBy(x => x.Metadata.Aggregate).Select(x => (x.Key, x.ToList())))
-        {
-            await _subscriber.UpdateAggregateAsync(aggregate, aggEvents);
-            await _subscriber.UpdateSubscribersAsync(aggregate, aggEvents, command);
-        }
-    }
 }

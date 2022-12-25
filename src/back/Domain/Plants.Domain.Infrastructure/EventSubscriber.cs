@@ -23,7 +23,13 @@ internal class EventSubscriber
         _provider = provider;
     }
 
-    public async Task UpdateAggregateAsync(AggregateDescription desc, IEnumerable<Event> newEvents)
+    public async Task ProcessCommand(Command command, List<Event> aggEvents)
+    {
+        await UpdateAggregateAsync(command.Metadata.Aggregate, aggEvents);
+        await UpdateSubscribersAsync(command, aggEvents);
+    }
+
+    private async Task UpdateAggregateAsync(AggregateDescription desc, IEnumerable<Event> newEvents)
     {
         var aggregate = await _caller.LoadAsync(desc);
         //would make sense for times in which we would load projection and apply events to it
@@ -31,8 +37,9 @@ internal class EventSubscriber
         await _caller.InsertOrUpdateProjectionAsync(aggregate);
     }
 
-    public async Task UpdateSubscribersAsync(AggregateDescription aggregate, List<Event> aggEvents, Command parentCommand)
+    private async Task UpdateSubscribersAsync(Command parentCommand, List<Event> aggEvents)
     {
+        var aggregate = parentCommand.Metadata.Aggregate;
         if (_cqrs.EventSubscriptions.TryGetValue(aggregate.Name, out var subscriptions))
         {
             foreach (var subscription in subscriptions)
@@ -55,13 +62,8 @@ internal class EventSubscriber
                     {
                         var commandNumber = firstEvent.Metadata.EventNumber - 1;
                         var command = parentCommand.ChangeTargetAggregate(firstEvent.Metadata.Aggregate);
-                        await _eventStore.AppendCommandAsync(command, commandNumber);
-                        foreach (var @event in transposedEvents)
-                        {
-                            await _eventStore.AppendEventAsync(@event);
-                        }
-                        //TODO: Attach subscriber to event store instead of putting it here
-                        await HandleEvents(transposedEvents.ToList(), parentCommand);
+                        commandNumber = await _eventStore.AppendCommandAsync(command, commandNumber);
+                        await _eventStore.AppendEventsAsync(transposedEvents, commandNumber, command);
                     }
                 }
             }
@@ -93,12 +95,4 @@ internal class EventSubscriber
         return applyerType;
     }
 
-    private async Task HandleEvents(List<Event> events, Command command)
-    {
-        foreach (var (aggregate, aggEvents) in events.GroupBy(x => x.Metadata.Aggregate).Select(x => (x.Key, x.ToList())))
-        {
-            await this.UpdateAggregateAsync(aggregate, aggEvents);
-            await this.UpdateSubscribersAsync(aggregate, aggEvents, command);
-        }
-    }
 }

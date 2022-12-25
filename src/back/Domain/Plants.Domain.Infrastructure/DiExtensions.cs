@@ -38,6 +38,9 @@ public static class DiExtensions
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton(_ => InfrastructureHelpers.Aggregate);
         services.AddTransient<ICommandSender, CommandSender>();
+        services.AddSingleton<EventStoreConverter>();
+        //works with the service scope
+        services.AddScoped<IEventSubscriptionWorker, EventSubscriptionWorker>();
         services.AddTransient<IEventStore, EventStoreEventStore>();
         services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
         services.RegisterExternalServices();
