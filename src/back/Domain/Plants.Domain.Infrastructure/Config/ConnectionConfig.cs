@@ -1,5 +1,4 @@
-﻿using Plants.Shared;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Plants.Domain.Infrastructure.Config;
 

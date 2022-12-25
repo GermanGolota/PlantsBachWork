@@ -1,9 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Plants.Domain.Extensions;
 using Plants.Domain.Infrastructure.Helpers;
-using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
-using Plants.Shared;
 using System.Reflection;
 
 namespace Plants.Domain.Infrastructure;

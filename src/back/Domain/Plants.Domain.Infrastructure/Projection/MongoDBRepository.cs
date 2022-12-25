@@ -2,7 +2,6 @@
 using MongoDB.Driver;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Services;
-using Plants.Domain.Projection;
 using System.Linq.Expressions;
 
 namespace Plants.Domain.Infrastructure.Projection;

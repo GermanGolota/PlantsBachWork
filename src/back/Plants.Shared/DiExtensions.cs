@@ -16,7 +16,6 @@ public static class DiExtensions
     public static IServiceCollection BindConfigSections(this IServiceCollection services, IConfiguration config, Type? binderType = null)
     {
         var attributeType = typeof(ConfigSectionAttribute);
-        var types = Helpers.Type.Types.Where(type => Attribute.IsDefined(type, attributeType));
 
         var baseBinderType = typeof(GenericConfigBinder<>);
         binderType ??= baseBinderType;
@@ -26,6 +25,7 @@ public static class DiExtensions
             throw new InvalidOperationException($"Improper binder type - '{binderType.FullName}' was provided");
         }
 
+        var types = Helpers.Type.Types.Where(type => Attribute.IsDefined(type, attributeType));
         foreach (var type in types)
         {
             var attributes = Attribute.GetCustomAttributes(type, attributeType);

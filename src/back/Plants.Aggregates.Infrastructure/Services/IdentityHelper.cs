@@ -1,6 +1,5 @@
 ﻿using Plants.Aggregates.Services;
 using Plants.Services.Infrastructure.Encryption;
-using Plants.Shared;
 
 namespace Plants.Aggregates.Infrastructure.Services;
 

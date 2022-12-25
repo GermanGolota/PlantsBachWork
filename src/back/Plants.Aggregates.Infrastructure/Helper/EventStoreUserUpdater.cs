@@ -6,7 +6,6 @@ using Plants.Aggregates.Services;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Services;
 using Plants.Services.Infrastructure.Encryption;
-using Plants.Shared;
 using System.Net;
 
 namespace Plants.Aggregates.Infrastructure.Helper;

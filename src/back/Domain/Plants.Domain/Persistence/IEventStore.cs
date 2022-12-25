@@ -1,7 +1,4 @@
-﻿using Plants.Domain.Extensions;
-using Plants.Domain.Services;
-
-namespace Plants.Domain.Persistence;
+﻿namespace Plants.Domain.Persistence;
 
 public interface IEventStore
 {

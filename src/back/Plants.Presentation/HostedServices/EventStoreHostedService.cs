@@ -1,6 +1,4 @@
-﻿using Plants.Domain.Infrastructure;
-
-namespace Plants.Presentation.HostedServices;
+﻿namespace Plants.Presentation.HostedServices;
 
 public class EventStoreHostedService : IHostedService
 {

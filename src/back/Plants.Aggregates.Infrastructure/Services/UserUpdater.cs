@@ -1,6 +1,5 @@
 ﻿using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Aggregates.Services;
-using Plants.Shared;
 
 namespace Plants.Aggregates.Infrastructure.Services;
 

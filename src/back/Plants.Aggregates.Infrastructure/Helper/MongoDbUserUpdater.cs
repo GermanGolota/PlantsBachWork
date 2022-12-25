@@ -1,7 +1,6 @@
 ﻿using MongoDB.Bson;
 using Plants.Aggregates.Services;
 using Plants.Domain.Infrastructure.Services;
-using Plants.Shared;
 
 namespace Plants.Aggregates.Infrastructure.Helper;
 

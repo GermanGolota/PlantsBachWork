@@ -1,9 +1,7 @@
 ﻿using EventStore.Client;
 using Plants.Aggregates.Services;
-using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Services;
 using Plants.Services;
-using Plants.Shared;
 
 namespace Plants.Aggregates.Infrastructure.Services;
 

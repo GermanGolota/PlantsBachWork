@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Plants.Domain.Persistence;
-using Plants.Domain.Projection;
 using Plants.Infrastructure.Domain.Helpers;
 
 namespace Plants.Domain.Infrastructure.Helpers;

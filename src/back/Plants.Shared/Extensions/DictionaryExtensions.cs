@@ -1,4 +1,4 @@
-﻿namespace Plants.Shared;
+﻿namespace Plants.Shared.Extensions;
 
 public static class DictionaryExtensions
 {
@@ -29,7 +29,7 @@ public static class DictionaryExtensions
     public static void CacheTransformation<TKey, TValue>(this IDictionary<TKey, TValue> dict, TValue value, Func<TValue, TKey> transformation)
     {
         var key = transformation(value);
-        if(dict.ContainsKey(key) is false)
+        if (dict.ContainsKey(key) is false)
         {
             dict[key] = value;
         }

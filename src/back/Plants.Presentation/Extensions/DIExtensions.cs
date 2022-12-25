@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Plants.Presentation.Examples;
-using Plants.Shared;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Extensions;
@@ -113,8 +112,8 @@ public static class DIExtensions
         app.UseSwagger();
         app.UseSwaggerUI(c =>
         {
-            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Plants v1");
             c.SwaggerEndpoint("/swagger/v2/swagger.json", "Plants v2");
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Plants v1");
         });
 
         return app;

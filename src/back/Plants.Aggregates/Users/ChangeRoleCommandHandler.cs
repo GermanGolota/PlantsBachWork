@@ -1,5 +1,4 @@
 ﻿using Plants.Aggregates.Services;
-using Plants.Shared;
 
 namespace Plants.Aggregates.Users;
 

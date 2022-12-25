@@ -2,7 +2,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Plants.Infrastructure.Domain.Helpers;
-using Plants.Shared;
 using System.Reflection;
 using System.Text;
 

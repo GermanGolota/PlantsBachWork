@@ -1,10 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Plants.Domain.Infrastructure.Helpers;
-using Plants.Domain.Persistence;
-using Plants.Domain.Services;
 using Plants.Infrastructure.Domain.Helpers;
-using Plants.Shared;
 using System.Reflection;
 
 namespace Plants.Domain.Infrastructure;

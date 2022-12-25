@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Plants.Shared;
 using System.Security.Claims;
 
 namespace Plants.Aggregates.Infrastructure;

@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Plants.Aggregates.PlantStocks;
-using Plants.Domain;
-using Plants.Domain.Services;
 using Plants.Presentation.Examples;
 using Swashbuckle.AspNetCore.Filters;
 

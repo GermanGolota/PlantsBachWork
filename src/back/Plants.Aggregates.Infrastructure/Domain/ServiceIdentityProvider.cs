@@ -2,7 +2,6 @@
 using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Services;
 using Plants.Services.Infrastructure.Encryption;
-using Plants.Shared;
 
 namespace Plants.Aggregates.Infrastructure.Domain;
 

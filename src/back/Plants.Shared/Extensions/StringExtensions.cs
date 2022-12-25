@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Plants.Shared;
+namespace Plants.Shared.Extensions;
 
 public static class StringExtensions
 {
@@ -18,7 +18,7 @@ public static class StringExtensions
       $"\"{str}\"";
 
     public static string QuoteDelimitList(this IEnumerable<string> strings) =>
-        String.Join(", ", strings.Select(x => x.QuoteDelimit()));
+        string.Join(", ", strings.Select(x => x.QuoteDelimit()));
 
     public static string QuoteDelimitList(this IEnumerable<UserRole> roles) =>
         roles.Select(x => x.ToString()).QuoteDelimitList();

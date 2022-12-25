@@ -1,4 +1,4 @@
-﻿namespace Plants.Shared;
+﻿namespace Plants.Shared.Extensions;
 
 public static class EnumerableExtensions
 {

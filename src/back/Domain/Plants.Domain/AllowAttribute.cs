@@ -1,6 +1,4 @@
-﻿using Plants.Shared;
-
-namespace Plants.Domain;
+﻿namespace Plants.Domain;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
 /// <summary>
@@ -8,7 +6,6 @@ namespace Plants.Domain;
 /// </summary>
 public sealed class AllowAttribute : Attribute
 {
-
     public AllowAttribute(UserRole role, AllowType type)
     {
         Type = type;

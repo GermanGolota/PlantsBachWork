@@ -1,6 +1,4 @@
-﻿using Plants.Shared;
-
-namespace Plants.Domain.Extensions;
+﻿namespace Plants.Domain.Extensions;
 
 public static class IdentityExtensions
 {
