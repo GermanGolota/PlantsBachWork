@@ -16,6 +16,7 @@ public static class DiExtensions
         services.AddScoped<TempPasswordContext>();
         services.AddScoped<IAuthorizer, Authorizer>();
         services.AddScoped<IIdentityProvider, IdentityProvider>();
+        services.AddScoped<IIdentityHelper, IdentityHelper>();
         services.AddScoped<EventStoreUserUpdater>();
         services.AddScoped<MongoDbUserUpdater>();
         services.AddScoped<IUserUpdater, UserUpdater>();

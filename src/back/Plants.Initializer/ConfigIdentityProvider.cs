@@ -8,17 +8,35 @@ namespace Plants.Initializer;
 
 internal class ConfigIdentityProvider : IIdentityProvider
 {
-    private readonly UserConfig _options;
-    private readonly SymmetricEncrypter _encrypter;
-
     public ConfigIdentityProvider(IOptionsSnapshot<UserConfig> options, SymmetricEncrypter encrypter)
     {
-        _options = options.Get(UserConstrants.Admin);
-        _encrypter = encrypter;
+        var adminOptions = options.Get(UserConstrants.Admin);
+        _identity = new UserIdentity
+        {
+            Roles = Enum.GetValues<UserRole>(),
+            Hash = encrypter.Encrypt(adminOptions.Password),
+            UserName = adminOptions.Username
+        };
     }
 
-    public IUserIdentity? Identity => new UserIdentity(Enum.GetValues<UserRole>(), _options.Username, _encrypter.Encrypt(_options.Password));
+    private readonly UserIdentity _identity;
+    public IUserIdentity? Identity => _identity;
 
-    private record UserIdentity(UserRole[] Roles, string UserName, string Hash) : IUserIdentity;
+    public void UpdateIdentity(IUserIdentity newIdentity)
+    {
+        _identity.Roles = newIdentity.Roles;
+        _identity.Hash = newIdentity.Hash;
+        _identity.UserName = newIdentity.UserName;
+    }
+
+    private class UserIdentity : IUserIdentity
+    {
+        public UserRole[] Roles { get; set; }
+
+        public string UserName { get; set; }
+
+        public string Hash { get; set; }
+    }
+
 }
 
