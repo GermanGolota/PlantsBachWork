@@ -23,5 +23,8 @@ var host = Host.CreateDefaultBuilder(args)
         })
         .Build();
 
+var sub = host.Services.GetRequiredService<IEventSubscriptionWorker>();
+await sub.StartAsync(CancellationToken.None);
 var initer = host.Services.GetRequiredService<Initializer>();
 await initer.InitializeAsync();
+sub.Stop(CancellationToken.None);
