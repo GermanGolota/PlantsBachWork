@@ -25,4 +25,13 @@ public static class DictionaryExtensions
             dict[key] = values.ToList();
         }
     }
+
+    public static void CacheTransformation<TKey, TValue>(this IDictionary<TKey, TValue> dict, TValue value, Func<TValue, TKey> transformation)
+    {
+        var key = transformation(value);
+        if(dict.ContainsKey(key) is false)
+        {
+            dict[key] = value;
+        }
+    }
 }

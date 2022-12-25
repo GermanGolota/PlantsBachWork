@@ -25,15 +25,15 @@ public class PlantsController : ControllerBase
     [HttpPost("add")]
     [SwaggerRequestExample(typeof(AddPlantDto), typeof(AddPlantRequestExample))]
     [ApiVersion("2")]
-    public async Task<ActionResult<Guid>> Create
+    public async Task<IActionResult> Create
         ([FromBody] AddPlantDto2 body, CancellationToken token)
     {
         var meta = _metadataFactory.Create<AddToStockCommand>(new(Guid.NewGuid(), nameof(PlantStock)));
-        var command = new AddToStockCommand(meta, new PlantStockDto(body.Name));
+        var command = new AddToStockCommand(meta, new PlantStockDto(body.Name, body.Description, body.Regions, body.SoilName, body.GroupName, body.Created, body.Pictures));
         var result = await _sender.SendCommandAsync(command);
-        return command.Metadata.Aggregate.Id;
+        return result.Match<IActionResult>(success => Ok(command.Metadata.Aggregate.Id), failure => BadRequest(failure.Reasons));
     }
 
 }
 
-public record AddPlantDto2(string Name, string Description, int[] Regions, int SoilId, int GroupId, DateTime Created, byte[][] Pictures);
+public record AddPlantDto2(string Name, string Description, string[] Regions, string SoilName, string GroupName, DateTime Created, byte[][] Pictures);
