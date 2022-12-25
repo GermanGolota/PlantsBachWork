@@ -47,10 +47,9 @@ internal class CommandSender : ICommandSender
             _logger.LogError("Tried to send command with no type");
             throw new Exception("Can't send generic command!");
         }
-        var identity = _identityProvider.Identity!;
         var commandAggregate = command.Metadata.Aggregate;
         OneOf<CommandAcceptedResult, CommandForbidden> result;
-        if (UserHasAccess(identity, commandAggregate))
+        if (UserHasAccess(_identityProvider.Identity!, commandAggregate))
         {
             if (_cqrs.CommandHandlers.TryGetValue(commandType, out var handlePairs))
             {
