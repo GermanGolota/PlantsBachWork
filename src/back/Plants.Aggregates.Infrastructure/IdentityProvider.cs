@@ -32,9 +32,21 @@ internal class IdentityProvider : IIdentityProvider
 
     public void UpdateIdentity(IUserIdentity newIdentity)
     {
-        _identity.Hash = newIdentity.Hash;
-        _identity.UserName = newIdentity.UserName;
-        _identity.Roles = newIdentity.Roles;
+        if (_identity is not null)
+        {
+            _identity.Hash = newIdentity.Hash;
+            _identity.UserName = newIdentity.UserName;
+            _identity.Roles = newIdentity.Roles;
+        }
+        else
+        {
+            _identity = new UserIdentity
+            {
+                Hash = newIdentity.Hash,
+                Roles = newIdentity.Roles,
+                UserName = newIdentity.UserName
+            };
+        }
     }
 }
 

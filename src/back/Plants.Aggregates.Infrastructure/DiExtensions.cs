@@ -30,6 +30,8 @@ public static class DiExtensions
         services.AddScoped<IMongoClientFactory, MongoClientFactory>();
         services.AddScoped<IEventStoreClientFactory, EventStoreClientFactory>();
         services.AddScoped<IEventStoreUserManagementClientFactory, EventStoreUserManagementClientFactory>();
+        services.AddScoped<IEventStorePersistentSubscriptionsClientFactory, EventStorePersistentSubscriptionsClientFactory>();
+        services.AddScoped<IServiceIdentityProvider, ServiceIdentityProvider>();
 
         return services;
     }
