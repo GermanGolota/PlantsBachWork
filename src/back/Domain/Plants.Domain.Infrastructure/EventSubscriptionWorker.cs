@@ -92,7 +92,7 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
                     catch (Exception e)
                     {
                         logger.LogError(e, "Failed to process command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
-                        //todo: add dead letter queue here
+                        //TODO: add dead letter queue here
                     }
                     await subscription.Ack(subscriptionState.EventIds);
                     if (aggregateStates.TryRemove(aggregateId, out var _) is false)
