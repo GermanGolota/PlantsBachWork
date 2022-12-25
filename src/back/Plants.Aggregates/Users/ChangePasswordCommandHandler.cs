@@ -23,7 +23,7 @@ internal class ChangePasswordCommandHandler : ICommandHandler<ChangePasswordComm
         var user = await _repo.GetByIdAsync(command.Metadata.Aggregate.Id);
         return new[]
         {
-            new PasswordChangedEvent(EventFactory.Shared.Create<PasswordChangedEvent>(command, user.Version))
+            new PasswordChangedEvent(EventFactory.Shared.Create<PasswordChangedEvent>(command))
         };
     }
 

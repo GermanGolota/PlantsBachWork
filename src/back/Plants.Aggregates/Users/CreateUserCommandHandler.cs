@@ -42,7 +42,7 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
         var lang = user.Language ?? "English";
         await _emailer.SendInvitationEmail(user.Email, user.Login, tempPassword, lang);
         await _changer.Create(user.Login, tempPassword, $"{user.FirstName} {user.LastName}", user.Roles);
-        var metadata = EventFactory.Shared.Create<UserCreatedEvent>(command, 0) with { Id = user.Login.ToGuid() };
+        var metadata = EventFactory.Shared.Create<UserCreatedEvent>(command) with { Id = user.Login.ToGuid() };
         return new[]
         {
             new UserCreatedEvent(metadata, user)

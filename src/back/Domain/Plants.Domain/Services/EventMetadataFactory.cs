@@ -9,16 +9,16 @@ public sealed class EventMetadataFactory
         _dateTime = dateTime;
     }
 
-    public EventMetadata Create<T>(Command command, ulong eventNumber) where T : Event
+    public EventMetadata Create<T>(Command command) where T : Event
     {
         var name = typeof(T).Name.Replace("Event", "");
-        return new EventMetadata(Guid.NewGuid(), command.Metadata.Aggregate, eventNumber, command.Metadata.Id, _dateTime.UtcNow, name);
+        return new EventMetadata(Guid.NewGuid(), command.Metadata.Aggregate, command.Metadata.Id, _dateTime.UtcNow, name);
     }
 
     public EventMetadata CreateForSubscription<T>(AggregateBase subscribingAggregate, Event initialEvent) where T : Event
     {
         var name = typeof(T).Name.Replace("Event", "");
-        return new EventMetadata(Guid.NewGuid(), new(subscribingAggregate.Id, subscribingAggregate.Name), subscribingAggregate.Version + 1, initialEvent.Metadata.CommandId, _dateTime.UtcNow, name);
+        return new EventMetadata(Guid.NewGuid(), new(subscribingAggregate.Id, subscribingAggregate.Name), initialEvent.Metadata.CommandId, _dateTime.UtcNow, name);
     }
 }
 

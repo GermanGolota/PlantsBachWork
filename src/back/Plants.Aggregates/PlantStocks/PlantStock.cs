@@ -25,7 +25,7 @@ public class PlantStock : AggregateBase, IDomainCommandHandler<AddToStockCommand
     public IEnumerable<Event> Handle(AddToStockCommand command) =>
          new[]
         {
-            new StockAddedEvent(EventFactory.Shared.Create<StockAddedEvent>(command, Version), command.Plant)
+            new StockAddedEvent(EventFactory.Shared.Create<StockAddedEvent>(command), command.Plant)
         };
 
     public void Handle(StockAddedEvent @event)
