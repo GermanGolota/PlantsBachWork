@@ -25,7 +25,7 @@ public class Startup
     {
         services.AddMediatR(typeof(Plants.Application.AssemblyTag).Assembly);
         services
-            .BindConfigSections(Configuration)
+            .AddPlantsConfiguration(Configuration)
             .AddShared()
             .AddSharedServices()
             .AddInfrastructure(Configuration)

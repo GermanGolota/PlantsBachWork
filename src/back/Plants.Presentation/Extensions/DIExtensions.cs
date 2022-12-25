@@ -1,14 +1,35 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Plants.Presentation.Examples;
+using Plants.Shared;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Extensions;
 
 public static class DIExtensions
 {
+    public static IServiceCollection AddPlantsConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.BindConfigSections(configuration, typeof(StartupCheckingConfigBinder<>));
+        return services;
+    }
+
+    private class StartupCheckingConfigBinder<T> : GenericConfigBinder<T> where T : class
+    {
+        public StartupCheckingConfigBinder(IServiceCollection services, IConfiguration configSection, string optionName)
+            : base(services, configSection, optionName)
+        {
+        }
+
+        public override void AdditionalBinding(OptionsBuilder<T> builder)
+        {
+            builder.ValidateOnStart();
+        }
+    }
+
     public static IServiceCollection AddPlantsSwagger(this IServiceCollection services)
     {
         services.AddSwaggerGen(c =>
@@ -98,4 +119,5 @@ public static class DIExtensions
 
         return app;
     }
+
 }

@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Plants.Initializer;
 
-//TODO: Figure out multiple named registrations
-//[ConfigSection("Admin")]
+[ConfigSection(UserConstrants.Admin, UserConstrants.Admin)]
+[ConfigSection(UserConstrants.NewAdmin, UserConstrants.NewAdmin)]
 internal class UserConfig
 {
 	[Required]
