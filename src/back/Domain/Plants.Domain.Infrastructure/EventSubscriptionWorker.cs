@@ -61,7 +61,7 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
                 }
             }
             var subscription = await client.SubscribeToAllAsync(aggregate,
-                Process(_subscriber),
+                Process(_subscriber, _logger),
                 HandleStop);
             subscriptions.Add(subscription);
         }
@@ -69,7 +69,7 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
         _subscriptions = subscriptions;
     }
 
-    private Func<PersistentSubscription, ResolvedEvent, int?, CancellationToken, Task> Process(EventSubscriber subscriber)
+    private Func<PersistentSubscription, ResolvedEvent, int?, CancellationToken, Task> Process(EventSubscriber subscriber, ILogger logger)
     {
         ConcurrentDictionary<Guid, AggregateSubscriptionState> aggregateStates = new();
         return async (subscription, resolved, retryCount, cancellationToken) =>
@@ -83,11 +83,23 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
                 subscriptionState.Events.Add(@event);
                 if (@event is CommandProcessedEvent)
                 {
-                    await subscriber.ProcessCommand(subscriptionState.Command!, subscriptionState.Events);
-                    await subscription.Ack(subscriptionState.EventIds);
-                    if(aggregateStates.TryRemove(aggregateId, out var _) is false)
+                    var command = subscriptionState.Command!;
+                    logger.LogInformation("Processing subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
+                    try
                     {
+                        await subscriber.ProcessCommand(command, subscriptionState.Events);
                     }
+                    catch (Exception e)
+                    {
+                        logger.LogError(e, "Failed to process command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
+                        //todo: add dead letter queue here
+                    }
+                    await subscription.Ack(subscriptionState.EventIds);
+                    if (aggregateStates.TryRemove(aggregateId, out var _) is false)
+                    {
+                        logger.LogWarning("Failed to remove aggregate events from subscriber cache for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}''", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
+                    }
+                    logger.LogInformation("Processed command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
                 }
             },
             command =>
