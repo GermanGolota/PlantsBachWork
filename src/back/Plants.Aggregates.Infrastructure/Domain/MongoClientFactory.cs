@@ -4,7 +4,7 @@ using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Services;
 using Plants.Services.Infrastructure.Encryption;
 
-namespace Plants.Aggregates.Infrastructure.Helper;
+namespace Plants.Aggregates.Infrastructure.Domain;
 
 internal class MongoClientFactory : IMongoClientFactory
 {

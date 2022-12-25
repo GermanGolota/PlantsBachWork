@@ -1,15 +1,16 @@
 ﻿using EventStore.Client;
 using Plants.Domain.Infrastructure.Extensions;
+using Plants.Domain.Infrastructure.Services;
 using Plants.Shared;
 
 namespace Plants.Domain.Infrastructure.Helpers;
 
 internal class EventStoreAccessGranter
 {
-    private readonly EventStoreClientFactory _clientFactory;
+    private readonly IEventStoreClientFactory _clientFactory;
     private readonly AccessesHelper _helper;
 
-    public EventStoreAccessGranter(EventStoreClientFactory clientFactory, AccessesHelper helper)
+    public EventStoreAccessGranter(IEventStoreClientFactory clientFactory, AccessesHelper helper)
     {
         _clientFactory = clientFactory;
         _helper = helper;

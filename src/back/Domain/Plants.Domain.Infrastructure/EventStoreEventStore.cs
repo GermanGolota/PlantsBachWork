@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Infrastructure.Helpers;
+using Plants.Domain.Infrastructure.Services;
 using Plants.Domain.Persistence;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Shared;
@@ -13,11 +14,11 @@ namespace Plants.Domain.Infrastructure;
 
 internal class EventStoreEventStore : IEventStore
 {
-    private readonly EventStoreClientFactory _clientFactory;
+    private readonly IEventStoreClientFactory _clientFactory;
     private readonly AggregateHelper _helper;
     private readonly EventStoreAccessGranter _granter;
 
-    public EventStoreEventStore(EventStoreClientFactory client, AggregateHelper helper, EventStoreAccessGranter granter)
+    public EventStoreEventStore(IEventStoreClientFactory client, AggregateHelper helper, EventStoreAccessGranter granter)
     {
         _clientFactory = client;
         _helper = helper;

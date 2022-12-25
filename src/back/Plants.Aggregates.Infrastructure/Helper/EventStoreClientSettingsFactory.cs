@@ -3,12 +3,11 @@ using Grpc.Core.Interceptors;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Plants.Domain.Infrastructure.Config;
-using Plants.Domain.Infrastructure.Services;
 using Plants.Services.Infrastructure.Encryption;
 
 namespace Plants.Aggregates.Infrastructure.Helper;
 
-internal class EventStoreClientSettingsFactory : IEventStoreClientSettingsFactory
+internal class EventStoreClientSettingsFactory
 {
     private readonly IOptions<ConnectionConfig> _options;
     private readonly ILoggerFactory _factory;
@@ -51,3 +50,11 @@ internal class EventStoreClientSettingsFactory : IEventStoreClientSettingsFactor
         return settings;
     }
 }
+
+internal enum EventStoreClientSettingsType
+{
+    User,
+    Service
+}
+
+

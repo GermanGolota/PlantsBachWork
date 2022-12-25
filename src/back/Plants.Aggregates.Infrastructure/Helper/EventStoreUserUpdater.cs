@@ -4,7 +4,7 @@ using EventStore.ClientAPI.UserManagement;
 using Microsoft.Extensions.Options;
 using Plants.Aggregates.Services;
 using Plants.Domain.Infrastructure.Config;
-using Plants.Domain.Infrastructure.Helpers;
+using Plants.Domain.Infrastructure.Services;
 using Plants.Services.Infrastructure.Encryption;
 using Plants.Shared;
 using System.Net;
@@ -13,12 +13,12 @@ namespace Plants.Aggregates.Infrastructure.Helper;
 
 internal class EventStoreUserUpdater : IUserUpdater
 {
-    private readonly EventStoreUserManagementClientFactory _factory;
+    private readonly IEventStoreUserManagementClientFactory _factory;
     private readonly IIdentityProvider _identity;
     private readonly SymmetricEncrypter _encrypter;
     private readonly ConnectionConfig _config;
 
-    public EventStoreUserUpdater(EventStoreUserManagementClientFactory factory, IIdentityProvider identity, SymmetricEncrypter encrypter, IOptions<ConnectionConfig> options)
+    public EventStoreUserUpdater(IEventStoreUserManagementClientFactory factory, IIdentityProvider identity, SymmetricEncrypter encrypter, IOptions<ConnectionConfig> options)
     {
         _factory = factory;
         _identity = identity;

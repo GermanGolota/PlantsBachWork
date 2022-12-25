@@ -1,22 +1,14 @@
-﻿using EventStore.Client;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
-using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
-using MongoDB.Driver;
-using MongoDB.Driver.Core.Configuration;
-using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Projection;
-using Plants.Domain.Infrastructure.Services;
 using Plants.Domain.Persistence;
 using Plants.Domain.Projection;
 using Plants.Domain.Services;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Shared;
-using System.Security.Cryptography;
 
 namespace Plants.Domain.Infrastructure;
 
@@ -44,8 +36,6 @@ public static class DiExtensions
         services.AddScoped<CommandMetadataFactory>();
         services.AddScoped<EventMetadataFactory>();
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
-        services.AddScoped<EventStoreClientFactory>();
-        services.AddScoped<EventStoreUserManagementClientFactory>();
         services.AddSingleton(_ => InfrastructureHelpers.Aggregate);
         services.AddTransient<ICommandSender, CommandSender>();
         services.AddTransient<IEventStore, EventStoreEventStore>();

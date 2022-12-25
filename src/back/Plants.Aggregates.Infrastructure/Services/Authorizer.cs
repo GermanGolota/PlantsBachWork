@@ -1,6 +1,7 @@
 ﻿using EventStore.Client;
 using Plants.Aggregates.Services;
 using Plants.Domain.Infrastructure.Helpers;
+using Plants.Domain.Infrastructure.Services;
 using Plants.Services;
 using Plants.Shared;
 
@@ -9,9 +10,9 @@ namespace Plants.Aggregates.Infrastructure.Services;
 internal class Authorizer : IAuthorizer
 {
     private readonly IJWTokenManager _tokenManager;
-    private readonly EventStoreUserManagementClientFactory _factory;
+    private readonly IEventStoreUserManagementClientFactory _factory;
 
-    public Authorizer(IJWTokenManager tokenManager, EventStoreUserManagementClientFactory factory)
+    public Authorizer(IJWTokenManager tokenManager, IEventStoreUserManagementClientFactory factory)
     {
         _tokenManager = tokenManager;
         _factory = factory;
