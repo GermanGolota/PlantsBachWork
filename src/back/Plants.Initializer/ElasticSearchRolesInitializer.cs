@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
 using Plants.Aggregates.Services;
+using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Services.Infrastructure.Encryption;
 using System.Data;
@@ -99,7 +100,7 @@ internal class ElasticSearchRolesInitializer
                 .ToList();
             indices.Add(new()
             {
-                Names = new() { aggregate },
+                Names = new() { aggregate.ToIndexName() },
                 Privileges = priveleges
             });
         }
