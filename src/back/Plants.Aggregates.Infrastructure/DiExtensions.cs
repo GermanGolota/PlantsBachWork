@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Plants.Aggregates.Infrastructure.Domain;
 using Plants.Aggregates.Infrastructure.Helper;
+using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
 using Plants.Aggregates.Infrastructure.Services;
 using Plants.Aggregates.Services;
 using Plants.Aggregates.Users;
@@ -17,6 +18,10 @@ public static class DiExtensions
         services.AddScoped<IAuthorizer, Authorizer>();
         services.AddScoped<IIdentityProvider, IdentityProvider>();
         services.AddScoped<IIdentityHelper, IdentityHelper>();
+
+        services.AddHttpClient();
+        services.AddScoped<ElasticSearchHelper>();
+        services.AddScoped<ElasticSearchUserUpdater>();
         services.AddScoped<EventStoreUserUpdater>();
         services.AddScoped<MongoDbUserUpdater>();
         services.AddScoped<IUserUpdater, UserUpdater>();

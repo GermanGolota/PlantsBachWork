@@ -17,4 +17,6 @@ public class ConnectionConfig
     public string MongoDbConnectionTemplate { get; set; } = null!;
     [Required]
     public string MongoDbDatabaseName { get; set; } = null!;
+    [Required]
+    public string ElasticSearchConnectionTemplate { get; set; } = null!;
 }
