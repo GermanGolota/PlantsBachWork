@@ -4,11 +4,13 @@ using MongoDB.Driver;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Services;
+using System.Linq;
 
 namespace Plants.Initializer;
 
 internal class MongoRolesDbInitializer
 {
+    private const string _commonRoleName = "changeOwnPasswordCustomDataRole";
     private readonly IMongoClientFactory _factory;
     private readonly AccessesHelper _accesses;
     private readonly ConnectionConfig _connection;
@@ -45,7 +47,7 @@ internal class MongoRolesDbInitializer
 
     private static async Task CleanUpExistingRoles(IMongoDatabase db)
     {
-        var existingRoles = await db.GetExistingRolesAsync();
+        var existingRoles = await GetExistingRolesAsync(db);
 
         foreach (var role in existingRoles)
         {
@@ -78,7 +80,7 @@ internal class MongoRolesDbInitializer
         {
             $$"""
             {
-            "createRole": "changeOwnPasswordCustomDataRole",
+            "createRole": "{{_commonRoleName}}",
             "privileges": [
                { 
                  "resource": { "db": "", "collection": ""},
@@ -128,13 +130,10 @@ internal class MongoRolesDbInitializer
             var createRoleResult = await db.RunCommandAsync<BsonDocument>(BsonDocument.Parse(definition));
         }
     }
-}
 
-public static class MongoDatabaseExtensions
-{
-    public static async Task<IEnumerable<string>> GetExistingRolesAsync(this IMongoDatabase db)
+    private static async Task<IEnumerable<string>> GetExistingRolesAsync(IMongoDatabase db)
     {
-        var allRoles = Enum.GetValues<UserRole>();
+        IEnumerable<string> allRoles = Enum.GetValues<UserRole>().Select(x=>x.ToString()).Append(_commonRoleName);
         var getRolesCommand = BsonDocument.Parse($$"""
         {
             "rolesInfo": [{{allRoles.QuoteDelimitList()}}]
@@ -143,5 +142,4 @@ public static class MongoDatabaseExtensions
         var rolesResult = await db.RunCommandAsync<BsonDocument>(getRolesCommand);
         return rolesResult!.GetElement("roles").Value.AsBsonArray.Select(x => x.AsBsonDocument.GetElement("role").Value.ToString());
     }
-
 }
