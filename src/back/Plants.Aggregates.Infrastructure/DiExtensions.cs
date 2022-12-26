@@ -32,6 +32,7 @@ public static class DiExtensions
     private static IServiceCollection AddDomainDependencies(this IServiceCollection services)
     {
         services.AddScoped<EventStoreClientSettingsFactory>();
+        services.AddScoped<IElasticSearchClientFactory, ElasticSearchClientFactory>();
         services.AddScoped<IMongoClientFactory, MongoClientFactory>();
         services.AddScoped<IEventStoreClientFactory, EventStoreClientFactory>();
         services.AddScoped<IEventStoreUserManagementClientFactory, EventStoreUserManagementClientFactory>();
