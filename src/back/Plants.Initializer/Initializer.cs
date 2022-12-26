@@ -5,12 +5,14 @@ namespace Plants.Initializer;
 internal class Initializer
 {
     private readonly MongoRolesDbInitializer _mongo;
+    private readonly ElasticSearchRolesInitializer _elasticSearch;
     private readonly AdminUserCreator _userCreator;
     private readonly ILogger<Initializer> _logger;
 
-    public Initializer(MongoRolesDbInitializer mongo, AdminUserCreator userCreator, ILogger<Initializer> logger)
+    public Initializer(MongoRolesDbInitializer mongo, ElasticSearchRolesInitializer elasticSearch, AdminUserCreator userCreator, ILogger<Initializer> logger)
     {
         _mongo = mongo;
+        _elasticSearch = elasticSearch;
         _userCreator = userCreator;
         _logger = logger;
     }
@@ -20,6 +22,8 @@ internal class Initializer
         _logger.LogInformation("Starting initialization");
         await _mongo.Initialize();
         _logger.LogInformation("Created roles in mongo db");
+        await _elasticSearch.Initialize();
+        _logger.LogInformation("Created roles in elastic search");
         var userCreateResult = await _userCreator.SendCreateAdminCommandAsync();
         userCreateResult.Match(
             _ => _logger.LogInformation("Sucessfully created user!"),
