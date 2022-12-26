@@ -1,10 +1,8 @@
-﻿using Elastic.Clients.Elasticsearch;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
 using Plants.Aggregates.Services;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Services.Infrastructure.Encryption;
-using System;
 using System.Data;
 using System.Net.Http.Json;
 
