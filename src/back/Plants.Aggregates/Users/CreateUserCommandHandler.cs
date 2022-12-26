@@ -34,10 +34,8 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
 
     public async Task<IEnumerable<Event>> HandleAsync(CreateUserCommand command)
     {
-        const int TempPasswordLength = 8;
+        var tempPassword = GetTempPassword();
         var user = command.Data;
-        var tempPassword = StringHelper.GetRandomAlphanumericString(TempPasswordLength);
-        _context.TempPassword = tempPassword;
         var lang = user.Language ?? "English";
         await _emailer.SendInvitationEmail(user.Email, user.Login, tempPassword, lang);
         await _changer.Create(user.Login, tempPassword, $"{user.FirstName} {user.LastName}", user.Roles);
@@ -46,6 +44,24 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
         {
             new UserCreatedEvent(metadata, user)
         };
+    }
+
+    private string GetTempPassword()
+    {
+        const int TempPasswordLength = 12;
+        var tempPassword = StringHelper.GetRandomAlphanumericString(TempPasswordLength);
+        var iterationCount = 0;
+        while (UserPasswordValidator.Validate(tempPassword) is not null && iterationCount < 100)
+        {
+            tempPassword = StringHelper.GetRandomAlphanumericString(TempPasswordLength);
+        }
+        _context.TempPassword = tempPassword;
+        if (UserPasswordValidator.Validate(tempPassword) is not null)
+        {
+            throw new Exception("Cannot create user, please try again later");
+        }
+
+        return tempPassword;
     }
 }
 
