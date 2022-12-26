@@ -36,11 +36,7 @@ internal class EventStoreUserUpdater : IUserUpdater
     public async Task ChangeRole(string username, string fullName, UserRole[] oldRoles, UserRole newRole)
     {
         var groups =
-            (oldRoles.Contains(newRole) switch
-            {
-                true => oldRoles.Except(new[] { newRole }),
-                false => oldRoles.Append(newRole)
-            })
+            newRole.ApplyChangeInto(oldRoles)
             .Select(_ => _.ToString())
             .ToArray();
 
