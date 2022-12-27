@@ -1,8 +1,14 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Elasticsearch.Net;
+using Microsoft.Extensions.Options;
 using Nest;
+using Nest.JsonNetSerializer;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Plants.Domain.Infrastructure.Config;
+using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Services;
 using Plants.Services.Infrastructure.Encryption;
+using System.Reflection;
 
 namespace Plants.Aggregates.Infrastructure.Services;
 
@@ -23,8 +29,55 @@ internal class ElasticSearchClientFactory : IElasticSearchClientFactory
     {
         var identity = _identity.Identity!;
         var uri = new Uri(String.Format(_connection.ElasticSearchConnectionTemplate, identity.UserName, _encrypter.Decrypt(identity.Hash)));
-        var settings = new ConnectionSettings(uri);
+        var pool = new SingleNodeConnectionPool(uri);
+        var settings =
+            new ConnectionSettings(pool,
+                 sourceSerializer: (builtin, settings) => new CustomJsonSerializer(builtin, settings));
+
+
         settings.DisableDirectStreaming();
         return new ElasticClient(settings);
     }
+
+    private class PrivateSetterContractResolver : ConnectionSettingsAwareContractResolver
+    {
+        public PrivateSetterContractResolver(IConnectionSettingsValues connectionSettings)
+            : base(connectionSettings) { }
+
+        protected override JsonProperty CreateProperty(
+                 MemberInfo member,
+                 MemberSerialization memberSerialization)
+        {
+            var prop = base.CreateProperty(member, memberSerialization);
+
+            if (!prop.Writable)
+            {
+                var property = member as PropertyInfo;
+                if (property != null)
+                {
+                    var hasPrivateSetter = property.GetSetMethod(true) != null;
+                    prop.Writable = hasPrivateSetter;
+                }
+            }
+
+            return prop;
+        }
+
+    }
+
+    private class CustomJsonSerializer : ConnectionSettingsAwareSerializerBase
+    {
+        public CustomJsonSerializer(IElasticsearchSerializer builtinSerializer, IConnectionSettingsValues connectionSettings)
+            : base(builtinSerializer, connectionSettings) { }
+
+        protected override JsonSerializerSettings CreateJsonSerializerSettings() =>
+            JsonSerializerSettingsContext.Settings;
+
+        protected override ConnectionSettingsAwareContractResolver CreateContractResolver() =>
+            new PrivateSetterContractResolver(ConnectionSettings);
+    }
 }
+
+
+
+
