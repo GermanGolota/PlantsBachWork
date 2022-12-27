@@ -1,5 +1,5 @@
-﻿using Elastic.Clients.Elasticsearch;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
+using Nest;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Services;
 using Plants.Services.Infrastructure.Encryption;
@@ -19,12 +19,12 @@ internal class ElasticSearchClientFactory : IElasticSearchClientFactory
         _encrypter = encrypter;
     }
 
-    public ElasticsearchClient Create()
+    public ElasticClient Create()
     {
         var identity = _identity.Identity!;
         var uri = new Uri(String.Format(_connection.ElasticSearchConnectionTemplate, identity.UserName, _encrypter.Decrypt(identity.Hash)));
-        var settings = new ElasticsearchClientSettings(uri);
+        var settings = new ConnectionSettings(uri);
         settings.DisableDirectStreaming();
-        return new ElasticsearchClient(settings);
+        return new ElasticClient(settings);
     }
 }

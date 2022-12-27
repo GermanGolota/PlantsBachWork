@@ -1,8 +1,8 @@
-﻿using Elastic.Clients.Elasticsearch;
+﻿using Nest;
 
 namespace Plants.Domain.Infrastructure.Services;
 
 public interface IElasticSearchClientFactory
 {
-    ElasticsearchClient Create();
+    ElasticClient Create();
 }

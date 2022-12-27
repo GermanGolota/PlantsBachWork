@@ -5,7 +5,7 @@ using Plants.Infrastructure.Domain.Helpers;
 
 namespace Plants.Domain.Infrastructure.Projection;
 
-internal class ElasticSearchProjectionRepository<T> : ISearchProjectionRepository<T>
+internal class ElasticSearchProjectionRepository<T> : ISearchProjectionRepository<T> where T : AggregateBase
 {
     private readonly IElasticSearchClientFactory _factory;
     private readonly AggregateHelper _helper;
