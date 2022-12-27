@@ -14,8 +14,9 @@ var host = Host.CreateDefaultBuilder(args)
                 .AddDomainInfrastructure()
                 .AddAggregatesInfrastructure();
             services.AddTransient<MongoRolesDbInitializer>()
+                    .AddTransient<ElasticSearchRolesInitializer>()
                     .AddSingleton<IIdentityProvider, ConfigIdentityProvider>()
-                    .AddTransient<AdminUserCreator>()
+                    .AddTransient<AdminUserCreator>()   
                     .AddTransient<Initializer>();
         })
         .Build();

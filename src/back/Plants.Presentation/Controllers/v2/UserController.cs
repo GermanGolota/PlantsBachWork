@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Plants.Aggregates.Search;
 using Plants.Aggregates.Users;
+using Plants.Domain.Projection;
 using Plants.Presentation.Dtos;
 
 namespace Plants.Presentation.Controllers.v2;
@@ -11,16 +13,16 @@ namespace Plants.Presentation.Controllers.v2;
 public class UserController : ControllerBase
 {
     private readonly ICommandSender _sender;
-    private readonly IProjectionQueryService<User> _query;
     private readonly IIdentityProvider _identity;
     private readonly CommandMetadataFactory _metadataFactory;
+    private readonly ISearchQueryService<User, UserSearchParams> _search;
 
-    public UserController(ICommandSender sender, IProjectionQueryService<User> query, IIdentityProvider identity, CommandMetadataFactory metadataFactory)
+    public UserController(ICommandSender sender,  IIdentityProvider identity, CommandMetadataFactory metadataFactory, ISearchQueryService<User, UserSearchParams> search)
     {
         _sender = sender;
-        _query = query;
         _identity = identity;
         _metadataFactory = metadataFactory;
+        _search = search;
     }
 
     [HttpGet("")]
@@ -30,16 +32,8 @@ public class UserController : ControllerBase
         var currentUserRoles = _identity.Identity!.Roles;
         var allRoles = Enum.GetValues<UserRole>();
         var rolesToFetch = currentUserRoles.Intersect(roles ?? allRoles).ToArray();
-        //TODO: Abstract away
-        var usersDb = (await ((name, phone) switch
-        {
-            (null, null) => _query.FindAllAsync(_ => true),
-            (null, var number) => _query.FindAllAsync(user => user.PhoneNumber == number),
-            (var aName, null) => _query.FindAllAsync(user => user.FirstName.Contains(aName) || user.LastName.Contains(aName)),
-            (var aName, var number) => _query.FindAllAsync(user => (user.FirstName.Contains(aName) || user.LastName.Contains(aName)) && user.PhoneNumber == number)
-        })).ToList();
-        return usersDb.Where(x => CanBeSeen(x.Roles, rolesToFetch))
-            .Select(user => new UserDto($"{user.FirstName} {user.LastName}", user.PhoneNumber, user.Login, user.Roles)).ToList();
+        var results = await _search.Search(new(name, phone, roles), new SearchAll());
+        return results.Select(user => new UserDto($"{user.FirstName} {user.LastName}", user.PhoneNumber, user.Login, user.Roles)).ToList();
     }
 
     private static bool CanBeSeen(UserRole[] roles, UserRole[] visibleRoles)

@@ -14,7 +14,7 @@ internal class ChangePasswordCommandHandler : ICommandHandler<ChangePasswordComm
     }
 
     public Task<CommandForbidden?> ShouldForbidAsync(ChangePasswordCommand command, IUserIdentity userIdentity) =>
-        userIdentity.HasRole(UserRole.Manager).ToResultTask();
+        userIdentity.HasRole(UserRole.Manager).And(UserPasswordValidator.Validate(command.NewPassword)).ToResultTask();
 
     public async Task<IEnumerable<Event>> HandleAsync(ChangePasswordCommand command)
     {

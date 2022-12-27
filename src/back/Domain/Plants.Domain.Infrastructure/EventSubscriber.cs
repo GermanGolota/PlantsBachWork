@@ -7,12 +7,12 @@ namespace Plants.Domain.Infrastructure;
 
 internal class EventSubscriber
 {
-    private readonly RepositoryCaller _caller;
+    private readonly RepositoriesCaller _caller;
     private readonly CqrsHelper _cqrs;
     private readonly IEventStore _eventStore;
     private readonly IServiceProvider _provider;
 
-    public EventSubscriber(RepositoryCaller caller, CqrsHelper cqrs, IEventStore eventStore, IServiceProvider provider)
+    public EventSubscriber(RepositoriesCaller caller, CqrsHelper cqrs, IEventStore eventStore, IServiceProvider provider)
     {
         _caller = caller;
         _cqrs = cqrs;
@@ -32,6 +32,7 @@ internal class EventSubscriber
         //would make sense for times in which we would load projection and apply events to it
         //var newAggregate = _eventApplyer.ApplyEventsTo(aggregate, newEvents);
         await _caller.InsertOrUpdateProjectionAsync(aggregate);
+        await _caller.IndexProjectionAsync(aggregate);
     }
 
     private async Task UpdateSubscribersAsync(Command parentCommand, List<Event> aggEvents)

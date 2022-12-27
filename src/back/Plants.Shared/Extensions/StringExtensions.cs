@@ -20,6 +20,4 @@ public static class StringExtensions
     public static string QuoteDelimitList(this IEnumerable<string> strings) =>
         string.Join(", ", strings.Select(x => x.QuoteDelimit()));
 
-    public static string QuoteDelimitList(this IEnumerable<UserRole> roles) =>
-        roles.Select(x => x.ToString()).QuoteDelimitList();
 }

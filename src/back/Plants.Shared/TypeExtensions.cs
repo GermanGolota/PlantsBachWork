@@ -59,4 +59,7 @@ public static class TypeExtensions
     public static IEnumerable<Type> GetImplementations(this Type type, Type genericType) =>
         type.GetInterfaces().Where(x => x.IsAssignableToGenericType(genericType));
 
+    public static bool IsConcrete(this Type type) =>
+        type.IsClass && type.IsAbstract is false && type.IsInterface is false;
+
 }

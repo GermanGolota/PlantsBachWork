@@ -21,7 +21,8 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
 
     public EventSubscriptionWorker(IEventStorePersistentSubscriptionsClientFactory clientFactory,
         AggregateHelper aggregate, ILogger<EventSubscriptionWorker> logger, IDateTimeProvider dateTime,
-        EventSubscriber subscriber, EventStoreConverter converter, IIdentityProvider identityProvider, IServiceIdentityProvider serviceIdentity)
+        EventSubscriber subscriber, EventStoreConverter converter, IIdentityProvider identityProvider, 
+        IServiceIdentityProvider serviceIdentity)
     {
         _clientFactory = clientFactory;
         _aggregate = aggregate;

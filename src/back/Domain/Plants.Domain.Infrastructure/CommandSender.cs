@@ -11,7 +11,7 @@ internal class CommandSender : ICommandSender
     private readonly CqrsHelper _cqrs;
     private readonly ILogger<CommandSender> _logger;
     private readonly IEventStore _eventStore;
-    private readonly RepositoryCaller _caller;
+    private readonly RepositoriesCaller _caller;
     private readonly IServiceProvider _service;
     private readonly IIdentityProvider _identityProvider;
     private readonly AccessesHelper _accesses;
@@ -19,7 +19,7 @@ internal class CommandSender : ICommandSender
     public CommandSender(CqrsHelper cqrs,
         ILogger<CommandSender> logger,
         IEventStore eventStore,
-        RepositoryCaller caller,
+        RepositoriesCaller caller,
         IServiceProvider service,
         IIdentityProvider identityProvider,
         AccessesHelper accesses)

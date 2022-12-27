@@ -12,7 +12,9 @@ public static class DiExtensions
     public static IServiceCollection AddDomainInfrastructure(this IServiceCollection services)
     {
         services.AddEventSourcing()
-            .AddProjection();
+            .AddProjection()
+            .AddSearchProjection()
+            .AddImplementations();
 
         return services;
     }
@@ -23,7 +25,7 @@ public static class DiExtensions
         services.AddSingleton<CqrsHelper>();
         services.AddSingleton<AccessesHelper>();
         services.AddScoped<EventStoreAccessGranter>();
-        services.AddTransient<RepositoryCaller>();
+        services.AddTransient<RepositoriesCaller>();
         services.AddTransient<EventSubscriber>();
         services.AddTransient<AggregateEventApplyer>();
         services.AddTransient(typeof(TransposeApplyer<>));
@@ -38,23 +40,6 @@ public static class DiExtensions
         services.AddScoped<IEventSubscriptionWorker, EventSubscriptionWorker>();
         services.AddTransient<IEventStore, EventStoreEventStore>();
         services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
-        services.RegisterExternalServices();
-        return services;
-    }
-
-    private static IServiceCollection RegisterExternalServices(this IServiceCollection services)
-    {
-        var baseHandlerType = typeof(ICommandHandler<>);
-        foreach (var type in Shared.Helpers.Type.Types)
-        {
-            if (type.IsAssignableToGenericType(baseHandlerType) && type != baseHandlerType)
-            {
-                foreach (var @interface in type.GetInterfaces().Where(x => x.IsAssignableToGenericType(baseHandlerType)))
-                {
-                    services.AddTransient(@interface, type);
-                }
-            }
-        }
         return services;
     }
 
@@ -86,5 +71,38 @@ public static class DiExtensions
             map.AutoMap();
             BsonClassMap.RegisterClassMap(map);
         }
+    }
+
+
+    private static IServiceCollection AddSearchProjection(this IServiceCollection services)
+    {
+        services.AddTransient(typeof(ISearchProjectionRepository<>), typeof(ElasticSearchProjectionRepository<>));
+        services.AddTransient(typeof(ISearchQueryService<,>), typeof(ElasticSearchQueryService<,>));
+
+        return services;
+    }
+
+    private static IServiceCollection AddImplementations(this IServiceCollection services)
+    {
+        foreach (var type in Shared.Helpers.Type.Types)
+        {
+            services
+                .AddImplementationsOf(typeof(ICommandHandler<>), type)
+                .AddImplementationsOf(typeof(ISearchParamsProjector<,>), type);
+        }
+        return services;
+    }
+
+    private static IServiceCollection AddImplementationsOf(this IServiceCollection services, Type interfaceType, Type type)
+    {
+        if (type.IsStrictlyAssignableToGenericType(interfaceType) && type.IsConcrete())
+        {
+            foreach (var @interface in type.GetInterfaces().Where(x => x.IsAssignableToGenericType(interfaceType)))
+            {
+                services.AddTransient(@interface, type);
+            }
+        }
+
+        return services;
     }
 }
