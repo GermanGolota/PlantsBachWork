@@ -2,7 +2,7 @@
 
 public interface ISearchQueryService<TAggregate, TParams> where TAggregate : AggregateBase
 {
-    Task<IEnumerable<TAggregate>> Search(TParams parameters, OneOf<SearchPager, SearchAll> searchOption);
+    Task<IEnumerable<TAggregate>> SearchAsync(TParams parameters, OneOf<SearchPager, SearchAll> searchOption);
 }
 
 public record SearchAll();

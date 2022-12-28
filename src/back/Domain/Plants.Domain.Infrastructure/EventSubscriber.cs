@@ -20,7 +20,7 @@ internal class EventSubscriber
         _provider = provider;
     }
 
-    public async Task ProcessCommand(Command command, List<Event> aggEvents)
+    public async Task ProcessCommandAsync(Command command, List<Event> aggEvents)
     {
         await UpdateAggregateAsync(command.Metadata.Aggregate, aggEvents);
         await UpdateSubscribersAsync(command, aggEvents);

@@ -43,7 +43,7 @@ public class ElasticSearchHelper
         return builder.Uri;
     }
 
-    public async Task HandleCreation<T>(string objectType, string objectName, HttpResponseMessage result, Func<T, bool> isValid)
+    public async Task HandleCreationAsync<T>(string objectType, string objectName, HttpResponseMessage result, Func<T, bool> isValid)
     {
         if (result.IsSuccessStatusCode)
         {

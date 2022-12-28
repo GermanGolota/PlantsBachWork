@@ -28,7 +28,7 @@ public class ChangeOwnPasswordCommandHandler : ICommandHandler<ChangeOwnPassword
     public async Task<IEnumerable<Event>> HandleAsync(ChangeOwnPasswordCommand command)
     {
         var identity = _identity.Identity!;
-        await _userUpdater.UpdatePassword(identity.UserName, command.OldPassword, command.NewPassword);
+        await _userUpdater.UpdatePasswordAsync(identity.UserName, command.OldPassword, command.NewPassword);
         var newIdentity = _identityHelper.Build(command.NewPassword, identity.UserName, identity.Roles);
         _identity.UpdateIdentity(newIdentity);
         var user = await _query.GetByIdAsync(command.Metadata.Aggregate.Id);

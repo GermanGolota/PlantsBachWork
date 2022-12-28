@@ -33,7 +33,7 @@ internal class AdminUserCreator
         return await _sender.SendCommandAsync(command);
     }
 
-    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendResetPasswordCommand()
+    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendResetPasswordCommandAsync()
     {
         var meta = _metadataFactory.Create<ChangePasswordCommand, User>(_options.Username.ToGuid());
         var command = new ChangePasswordCommand(meta, _options.Username, _context.TempPassword, _options.Password);

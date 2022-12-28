@@ -20,16 +20,16 @@ internal class Initializer
     public async Task InitializeAsync()
     {
         _logger.LogInformation("Starting initialization");
-        await _mongo.Initialize();
+        await _mongo.InitializeAsync();
         _logger.LogInformation("Created roles in mongo db");
-        await _elasticSearch.Initialize();
+        await _elasticSearch.InitializeAsync();
         _logger.LogInformation("Created roles in elastic search");
         var userCreateResult = await _userCreator.SendCreateAdminCommandAsync();
         userCreateResult.Match(
             _ => _logger.LogInformation("Sucessfully created user!"),
             fail => throw new Exception(String.Join(", ", fail.Reasons))
             );
-        var passwordResetResult = await _userCreator.SendResetPasswordCommand();
+        var passwordResetResult = await _userCreator.SendResetPasswordCommandAsync();
         passwordResetResult.Match(
             _ => _logger.LogInformation("Sucessfully changed password!"),
             fail => throw new Exception(String.Join(", ", fail.Reasons))

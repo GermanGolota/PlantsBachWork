@@ -20,7 +20,7 @@ public class MongoDBRepository<T> : IProjectionQueryService<T>, IProjectionRepos
     private IMongoDatabase Database => _clientFactory.GetDatabase(_options.MongoDbDatabaseName);
     private string CollectionName => typeof(T).Name;
 
-    public Task<bool> Exists(Guid id)
+    public Task<bool> ExistsAsync(Guid id)
     {
         return Database.GetCollection<T>(CollectionName)
             .Find(x => x.Id == id)

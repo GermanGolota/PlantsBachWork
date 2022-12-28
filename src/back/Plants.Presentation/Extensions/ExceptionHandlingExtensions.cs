@@ -37,7 +37,7 @@ public static class ExceptionHandlingExtensions
         {
             if (exc is UnauthorizedAccessException)
             {
-                await ProcessException(httpContext, exc, includeDetails, 401, exc.Message);
+                await ProcessExceptionAsync(httpContext, exc, includeDetails, 401, exc.Message);
             }
             else
             {
@@ -45,19 +45,17 @@ public static class ExceptionHandlingExtensions
             }
         }
     }
-    private static Task ProcessExpectedException(HttpContext httpContext, Exception exc, bool includeDetails)
-    {
-        return ProcessException(httpContext, exc, includeDetails, 400, exc.Message);
-    }
-    private static Task ProcessUnexpectedException(HttpContext httpContext, Exception exc, bool includeDetails)
-    {
-        return ProcessException(httpContext, exc, includeDetails, 500, "An error has occured");
-    }
 
-    private static Task ProcessException(HttpContext httpContext, Exception exc, bool includeDetails, int statusCode,
+    private static Task ProcessExpectedException(HttpContext httpContext, Exception exc, bool includeDetails) =>
+        ProcessExceptionAsync(httpContext, exc, includeDetails, 400, exc.Message);
+
+    private static Task ProcessUnexpectedException(HttpContext httpContext, Exception exc, bool includeDetails) =>
+        ProcessExceptionAsync(httpContext, exc, includeDetails, 500, "An error has occured");
+
+    private static Task ProcessExceptionAsync(HttpContext httpContext, Exception exc, bool includeDetails, int statusCode,
         string title)
     {
-        string details = null;
+        string? details = null;
         if (includeDetails)
         {
             title += $" {exc.Message}";

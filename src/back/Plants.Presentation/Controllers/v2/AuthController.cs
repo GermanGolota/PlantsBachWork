@@ -22,7 +22,7 @@ public class AuthController : ControllerBase
     [SwaggerRequestExample(typeof(LoginDto), typeof(LoginRequestExamplev2))]
     public async Task<ActionResult> Login(LoginDto dto, CancellationToken token)
     {
-        var authorization = await _authorizer.Authorize(dto.Username, dto.Password);
+        var authorization = await _authorizer.AuthorizeAsync(dto.Username, dto.Password);
         ActionResult result;
         if (authorization is not null)
         {

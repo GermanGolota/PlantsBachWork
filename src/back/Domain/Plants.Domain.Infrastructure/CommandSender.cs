@@ -73,7 +73,7 @@ internal class CommandSender : ICommandSender
         var commandVersion = aggregate.Version;
         commandVersion = await _eventStore.AppendCommandAsync(command, commandVersion);
 
-        var checkResults = await PerformChecks(command, handlePairs);
+        var checkResults = await PerformChecksAsync(command, handlePairs);
         var checkFailures = checkResults.Where(_ => _.CheckFailure.HasValue).Select(_ => _.CheckFailure!.Value);
         OneOf<CommandAcceptedResult, CommandForbidden> result;
         if (checkFailures.Any())
@@ -86,7 +86,7 @@ internal class CommandSender : ICommandSender
             List<Event>? events = null;
             try
             {
-                events = await ExecuteHandlers(command, checkResults);
+                events = await ExecuteHandlersAsync(command, checkResults);
                 await _eventStore.AppendEventsAsync(events, commandVersion, command);
                 result = new CommandAcceptedResult();
             }
@@ -108,7 +108,7 @@ internal class CommandSender : ICommandSender
         return new CommandForbidden(reasons);
     }
 
-    private static async Task<List<Event>> ExecuteHandlers(Command command, List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object>)> checkResults)
+    private static async Task<List<Event>> ExecuteHandlersAsync(Command command, List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object>)> checkResults)
     {
         List<Event> events = new();
         foreach (var (_, handle, dependency) in checkResults)
@@ -128,7 +128,7 @@ internal class CommandSender : ICommandSender
         return events;
     }
 
-    private async Task<List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object> Dependency)>> PerformChecks(Command command, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs)
+    private async Task<List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object> Dependency)>> PerformChecksAsync(Command command, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs)
     {
         var identity = _identityProvider.Identity!;
 

@@ -21,11 +21,11 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
     public async Task<CommandForbidden?> ShouldForbidAsync(CreateUserCommand command, IUserIdentity userIdentity) =>
         userIdentity.HasRoles(UserCheckType.All, command.Data.Roles)
         .And(command.Data.Roles.Any().ToForbidden("Has to have some roles"))
-        .And(await UserDontExist(command));
+        .And(await UserDontExistAsync(command));
 
-    private async Task<CommandForbidden?> UserDontExist(CreateUserCommand command)
+    private async Task<CommandForbidden?> UserDontExistAsync(CreateUserCommand command)
     {
-        return await _userQuery.Exists(command.Metadata.Id) switch
+        return await _userQuery.ExistsAsync(command.Metadata.Id) switch
         {
             true => new CommandForbidden("User already exists"),
             false => null
@@ -37,8 +37,8 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
         var tempPassword = GetTempPassword();
         var user = command.Data;
         var lang = user.Language ?? "English";
-        await _emailer.SendInvitationEmail(user.Email, user.Login, tempPassword, lang);
-        await _changer.Create(user.Login, tempPassword, $"{user.FirstName} {user.LastName}", user.Roles);
+        await _emailer.SendInvitationEmailAsync(user.Email, user.Login, tempPassword, lang);
+        await _changer.CreateAsync(user.Login, tempPassword, $"{user.FirstName} {user.LastName}", user.Roles);
         var metadata = EventFactory.Shared.Create<UserCreatedEvent>(command) with { Id = user.Login.ToGuid() };
         return new[]
         {

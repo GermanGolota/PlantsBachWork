@@ -21,7 +21,7 @@ public class ElasticSearchQueryService<TAggregate, TParams> : ISearchQueryServic
         _loggerFactory = loggerFactory;
     }
 
-    public async Task<IEnumerable<TAggregate>> Search(TParams parameters, OneOf<SearchPager, SearchAll> searchOption)
+    public async Task<IEnumerable<TAggregate>> SearchAsync(TParams parameters, OneOf<SearchPager, SearchAll> searchOption)
     {
         var aggregateName = _helper.Aggregates.Get(typeof(TAggregate));
         var client = _clientFactory.Create();
