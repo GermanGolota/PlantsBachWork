@@ -9,14 +9,22 @@ internal class IdentityProvider : IIdentityProvider
     {
         try
         {
-            var claims = contextAccessor.HttpContext.User.Claims;
-            var roleNames = Enum.GetNames<UserRole>();
-            _identity = new UserIdentity
+            var user = contextAccessor.HttpContext?.User;
+            if (user is not null)
             {
-                Hash = claims.First(x => x.Type == ClaimTypes.Hash).Value,
-                Roles = claims.Select(_ => _.Type).Where(type => roleNames.Contains(type)).Select(Enum.Parse<UserRole>).ToArray(),
-                UserName = claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value
-            };
+                var claims = user.Claims;
+                var roleNames = Enum.GetNames<UserRole>();
+                _identity = new UserIdentity
+                {
+                    Hash = claims.First(x => x.Type == ClaimTypes.Hash).Value,
+                    Roles = claims.Select(_ => _.Type).Where(type => roleNames.Contains(type)).Select(Enum.Parse<UserRole>).ToArray(),
+                    UserName = claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value
+                };
+            }
+            else
+            {
+                _identity = null;
+            }
         }
         catch
         {
