@@ -26,3 +26,4 @@ await sub.StartAsync(CancellationToken.None);
 var initer = host.Services.GetRequiredService<Initializer>();
 await initer.InitializeAsync();
 sub.Stop(CancellationToken.None);
+await host.StopAsync(CancellationToken.None);
