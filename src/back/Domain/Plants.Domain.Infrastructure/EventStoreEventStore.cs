@@ -54,7 +54,7 @@ internal class EventStoreEventStore : IEventStore
         {
             if (version == StreamRevision.None)
             {
-                await _granter.GrantAccessesFor(aggregate);
+                await _granter.GrantAccessesAsync(aggregate);
             }
 
             var eventData = new EventData(

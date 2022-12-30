@@ -25,7 +25,7 @@ internal class EventStoreUserUpdater : IUserUpdater
         _config = options.Value;
     }
 
-    public async Task Create(string username, string password, string fullName, UserRole[] roles)
+    public async Task CreateAsync(string username, string password, string fullName, UserRole[] roles)
     {
         var groups = roles.Select(x => x.ToString()).Append("$admins").ToArray();
         await _factory.Create().CreateUserAsync(username, fullName, groups, password, userCredentials: GetCallerCreds());
@@ -33,7 +33,7 @@ internal class EventStoreUserUpdater : IUserUpdater
 
     private static bool _attachedCallback = false;
 
-    public async Task ChangeRole(string username, string fullName, UserRole[] oldRoles, UserRole newRole)
+    public async Task ChangeRoleAsync(string username, string fullName, UserRole[] oldRoles, UserRole newRole)
     {
         var groups =
             newRole.ApplyChangeInto(oldRoles)
@@ -68,7 +68,7 @@ internal class EventStoreUserUpdater : IUserUpdater
         }
     }
 
-    public async Task UpdatePassword(string username, string oldPassword, string newPassword)
+    public async Task UpdatePasswordAsync(string username, string oldPassword, string newPassword)
     {
         var creds = GetCallerCreds();
         await _factory.Create().ChangePasswordAsync(username, oldPassword, newPassword, userCredentials: creds);

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using Nest;
+using System.Reflection;
 
 namespace Plants.Infrastructure.Domain.Helpers;
 
@@ -62,12 +63,13 @@ internal class CqrsHelper
             if (type.IsStrictlyAssignableToGenericType(subscriptionType))
             {
                 var subscriptionInterface = type.GetImplementations(subscriptionType).Single();
-                if (subscriptionInterface.GetGenericArguments() is [Type receiver, Type transmitter]
-                    && type.IsAssignableTo(aggregateType))
+                if (subscriptionInterface.GetGenericArguments() is [Type receiver, Type transmitter])
                 {
-                    var aggregate = aggregateHelper.AggregateCtors[receiver].Invoke(new object[] { Guid.Empty });
                     var subscriptionsProp = type.GetProperty(nameof(IAggregateSubscription<AggregateBase, AggregateBase>.Subscriptions))!;
-                    var subscriptions = (IEnumerable<object>)subscriptionsProp.GetValue(aggregate)!;
+                    var value = type.IsAssignableTo(aggregateType) 
+                        ? aggregateHelper.AggregateCtors[receiver].Invoke(new object[] { Guid.Empty })
+                        : Activator.CreateInstance(type);
+                    var subscriptions = (IEnumerable<object>)subscriptionsProp.GetValue(value)!;
                     foreach (var subscription in subscriptions)
                     {
                         var subType = subscription.GetType();

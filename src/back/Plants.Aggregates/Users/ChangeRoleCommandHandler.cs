@@ -24,7 +24,7 @@ internal class ChangeRoleCommandHandler : ICommandHandler<ChangeRoleCommand>
     public async Task<IEnumerable<Event>> HandleAsync(ChangeRoleCommand command)
     {
         _user ??= await _userRepo.GetByIdAsync(command.Metadata.Aggregate.Id);
-        await _updater.ChangeRole(_user.Login, $"{_user.FirstName} {_user.LastName}", _user.Roles, command.Role);
+        await _updater.ChangeRoleAsync(_user.Login, $"{_user.FirstName} {_user.LastName}", _user.Roles, command.Role);
         return new[]
         {
             new RoleChangedEvent(EventFactory.Shared.Create<RoleChangedEvent>(command), command.Role)

@@ -22,16 +22,16 @@ internal class MongoRolesDbInitializer
         _connection = connection.Value;
     }
 
-    public async Task Initialize()
+    public async Task InitializeAsync()
     {
         //TODO: Fix multiple envs not working
         var db = _factory.GetDatabase("admin");
         var dbName = _connection.MongoDbDatabaseName;
         await InitializeCollectionsAsync(dbName);
 
-        await CleanUpExistingRoles(db);
+        await CleanUpExistingRolesAsync(db);
 
-        await CreateRoles(db, dbName);
+        await CreateRolesAsync(db, dbName);
     }
 
     private async Task InitializeCollectionsAsync(string dbName)
@@ -45,7 +45,7 @@ internal class MongoRolesDbInitializer
         }
     }
 
-    private static async Task CleanUpExistingRoles(IMongoDatabase db)
+    private static async Task CleanUpExistingRolesAsync(IMongoDatabase db)
     {
         var existingRoles = await GetExistingRolesAsync(db);
 
@@ -60,7 +60,7 @@ internal class MongoRolesDbInitializer
         }
     }
 
-    private async Task CreateRoles(IMongoDatabase db, string dbName)
+    private async Task CreateRolesAsync(IMongoDatabase db, string dbName)
     {
         var accessTypeToPermissions = new Dictionary<AllowType, string[]>
         {

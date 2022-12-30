@@ -32,7 +32,7 @@ public class UserController : ControllerBase
         var currentUserRoles = _identity.Identity!.Roles;
         var allRoles = Enum.GetValues<UserRole>();
         var rolesToFetch = currentUserRoles.Intersect(roles ?? allRoles).ToArray();
-        var results = await _search.Search(new(name, phone, roles), new SearchAll());
+        var results = await _search.SearchAsync(new(name, phone, roles), new SearchAll());
         return results.Select(user => new UserDto($"{user.FirstName} {user.LastName}", user.PhoneNumber, user.Login, user.Roles)).ToList();
     }
 

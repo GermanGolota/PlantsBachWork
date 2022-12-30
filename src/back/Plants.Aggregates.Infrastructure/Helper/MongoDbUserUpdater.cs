@@ -13,7 +13,7 @@ internal class MongoDbUserUpdater : IUserUpdater
         _factory = factory;
     }
 
-    public async Task ChangeRole(string username, string fullName, UserRole[] oldRoles, UserRole changedRole)
+    public async Task ChangeRoleAsync(string username, string fullName, UserRole[] oldRoles, UserRole changedRole)
     {
         var shouldRemoveRole = oldRoles.Contains(changedRole);
         var document =
@@ -24,10 +24,10 @@ internal class MongoDbUserUpdater : IUserUpdater
                     "roles": [{"role":"{{changedRole}}", "db": "admin"}]
                 }
             """);
-        await RunDocumentCommand(document);
+        await RunDocumentCommandAsync(document);
     }
 
-    public async Task Create(string username, string password, string fullName, UserRole[] roles)
+    public async Task CreateAsync(string username, string password, string fullName, UserRole[] roles)
     {
         var roleArray = new BsonArray(roles.Select(x => x.ToString()));
         var document = new BsonDocument {
@@ -36,10 +36,10 @@ internal class MongoDbUserUpdater : IUserUpdater
             { "roles", roleArray }
         };
 
-        await RunDocumentCommand(document); 
+        await RunDocumentCommandAsync(document); 
     }
 
-    public async Task UpdatePassword(string username, string oldPassword, string newPassword)
+    public async Task UpdatePasswordAsync(string username, string oldPassword, string newPassword)
     {
         var document = new BsonDocument
         {
@@ -47,10 +47,10 @@ internal class MongoDbUserUpdater : IUserUpdater
             { "pwd", newPassword }
         };
 
-        await RunDocumentCommand(document);
+        await RunDocumentCommandAsync(document);
     }
 
-    private async Task RunDocumentCommand(BsonDocument document)
+    private async Task RunDocumentCommandAsync(BsonDocument document)
     {
         var db = _factory.GetDatabase("admin");
         var result = await db.RunCommandAsync<BsonDocument>(document);

@@ -48,10 +48,10 @@ public class PlantsController : ControllerBase
     public async Task<ActionResult<AddPlantResult>> Create
         ([FromForm] AddPlantDto body, IEnumerable<IFormFile> files, CancellationToken token)
     {
-        List<byte[]> totalBytes = ReadFiles(files);
+        var totalBytes = await ReadFilesAsync(files);
 
         var request = new AddPlantCommand(body.Name, body.Description,
-            body.Regions, body.SoilId, body.GroupId, body.Created, totalBytes.ToArray());
+            body.Regions, body.SoilId, body.GroupId, body.Created, totalBytes);
 
         return await _mediator.Send(request, token);
     }
@@ -60,17 +60,16 @@ public class PlantsController : ControllerBase
     public async Task<ActionResult<EditPlantResult>> Edit
       ([FromRoute] int id, [FromForm] EditPlantDto plant, IEnumerable<IFormFile> files, CancellationToken token)
     {
-        List<byte[]> totalBytes = ReadFiles(files);
+        var totalBytes = await ReadFilesAsync(files);
 
         var request = new EditPlantCommand(id, plant.PlantName, plant.PlantDescription,
-            plant.RegionIds, plant.SoilId, plant.GroupId, plant.RemovedImages, totalBytes.ToArray());
+            plant.RegionIds, plant.SoilId, plant.GroupId, plant.RemovedImages, totalBytes);
         return await _mediator.Send(request, token);
     }
 
-    private static List<byte[]> ReadFiles(IEnumerable<IFormFile> files)
-    {
-        return files.Select(file => file.ReadBytes()).ToList();
-    }
+    private static async Task<byte[][]> ReadFilesAsync(IEnumerable<IFormFile> files) =>
+        await Task.WhenAll(files.Select(file => file.ReadBytesAsync()));
+
 }
 
 public record AddPlantDto(string Name, string Description, int[] Regions, int SoilId, int GroupId, DateTime Created);

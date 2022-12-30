@@ -2,5 +2,5 @@
 
 public interface IEmailer
 {
-    Task SendInvitationEmail(string email, string login, string tempPassword, string lang);
+    Task SendInvitationEmailAsync(string email, string login, string tempPassword, string lang);
 }

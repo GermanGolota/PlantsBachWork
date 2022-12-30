@@ -29,7 +29,7 @@ internal class ElasticSearchRolesInitializer
         _options = options.Get(UserConstrants.Admin);
     }
 
-    public async Task Initialize()
+    public async Task InitializeAsync()
     {
         var currentIdentity = _identity.Identity!;
         var oldUsername = currentIdentity.UserName;
@@ -85,7 +85,7 @@ internal class ElasticSearchRolesInitializer
         {
             var uri = _helper.GetUrl($"_security/role/{roleName}");
             var result = await client.PostAsJsonAsync(uri, role);
-            await _helper.HandleCreation<RoleDefinitionResult>("role", roleName, result, _ => _.Role.Created);
+            await _helper.HandleCreationAsync<RoleDefinitionResult>("role", roleName, result, _ => _.Role.Created);
         }
     }
 
@@ -120,7 +120,7 @@ internal class ElasticSearchRolesInitializer
         };
         var result = await client.PostAsJsonAsync(url, user);
 
-        await _helper.HandleCreation<CreationStatus>("user", _options.Username, result, _ => _.Created);
+        await _helper.HandleCreationAsync<CreationStatus>("user", _options.Username, result, _ => _.Created);
     }
 
 }

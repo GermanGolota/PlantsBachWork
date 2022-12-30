@@ -21,9 +21,10 @@ internal class UserSearchParamsProjector : ISearchParamsProjector<User, UserSear
                     b.Must(
                         u =>
                     {
-                        if (String.IsNullOrEmpty(parameters.Name) is false)
+                        var name = parameters.Name;
+                        if (String.IsNullOrEmpty(name) is false)
                         {
-                            AddNameFilter(parameters, u);
+                            AddNameFilter(name, u);
                         }
                         else
                         {
@@ -60,12 +61,12 @@ internal class UserSearchParamsProjector : ISearchParamsProjector<User, UserSear
                 }
                 ));
 
-    private static void AddNameFilter(UserSearchParams parameters, QueryContainerDescriptor<User> query)
+    private static void AddNameFilter(string name, QueryContainerDescriptor<User> query)
     {
         query.Bool(
             b => b.Should(
-                u => u.Fuzzy(f => f.Field(_ => _.FirstName).Value(parameters.Name)),
-                u => u.Fuzzy(f => f.Field(_ => _.LastName).Value(parameters.Name))
+                u => u.Fuzzy(f => f.Field(_ => _.FirstName).Value(name)),
+                u => u.Fuzzy(f => f.Field(_ => _.LastName).Value(name))
                 )
             );
     }

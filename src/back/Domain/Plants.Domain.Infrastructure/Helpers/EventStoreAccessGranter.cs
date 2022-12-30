@@ -15,7 +15,7 @@ internal class EventStoreAccessGranter
         _helper = helper;
     }
 
-    public async Task GrantAccessesFor(AggregateDescription aggregate)
+    public async Task GrantAccessesAsync(AggregateDescription aggregate)
     {
         var meta = BuildMetadataFor(aggregate.Name);
         await _clientFactory.Create().SetStreamMetadataAsync(aggregate.ToTopic(), StreamState.NoStream, meta);

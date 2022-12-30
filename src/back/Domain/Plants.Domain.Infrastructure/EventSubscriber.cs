@@ -20,13 +20,13 @@ internal class EventSubscriber
         _provider = provider;
     }
 
-    public async Task ProcessCommand(Command command, List<Event> aggEvents)
+    public async Task ProcessCommandAsync(Command command, List<Event> aggEvents)
     {
-        await UpdateAggregateAsync(command.Metadata.Aggregate, aggEvents);
+        await UpdateProjectionAsync(command.Metadata.Aggregate, aggEvents);
         await UpdateSubscribersAsync(command, aggEvents);
     }
 
-    private async Task UpdateAggregateAsync(AggregateDescription desc, IEnumerable<Event> newEvents)
+    private async Task UpdateProjectionAsync(AggregateDescription desc, IEnumerable<Event> newEvents)
     {
         var aggregate = await _caller.LoadAsync(desc);
         //would make sense for times in which we would load projection and apply events to it

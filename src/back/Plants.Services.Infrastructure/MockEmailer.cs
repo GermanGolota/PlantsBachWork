@@ -11,7 +11,7 @@ internal class MockEmailer : IEmailer
         _logger = logger;
     }
 
-    public Task SendInvitationEmail(string email, string login, string tempPassword, string lang)
+    public Task SendInvitationEmailAsync(string email, string login, string tempPassword, string lang)
     {
         _logger.LogWarning("Emailing not implemented, creating user with password - '{pass}'", tempPassword);
 

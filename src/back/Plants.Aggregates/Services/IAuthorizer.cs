@@ -2,7 +2,7 @@
 
 public interface IAuthorizer
 {
-    Task<AuthorizeResult?> Authorize(string username, string password);
+    Task<AuthorizeResult?> AuthorizeAsync(string username, string password);
 }
 
 public record AuthorizeResult(string Username, UserRole[] Roles, string Token);

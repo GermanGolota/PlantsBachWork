@@ -3,13 +3,23 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using Plants.Aggregates.Infrastructure.Abstractions;
 using Plants.Presentation.Examples;
+using Plants.Presentation.Services;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Extensions;
 
 public static class DIExtensions
 {
+    public static IServiceCollection AddWebRootFileProvider(this IServiceCollection services)
+    {
+        services.AddSingleton<IHostingContext, HostingContext>();
+        services.AddSingleton(factory => factory.GetRequiredService<IWebHostEnvironment>().WebRootFileProvider);
+
+        return services;
+    }
+
     public static IServiceCollection AddPlantsConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
         services.BindConfigSections(configuration, typeof(StartupCheckingConfigBinder<>));
@@ -31,6 +41,7 @@ public static class DIExtensions
 
     public static IServiceCollection AddPlantsSwagger(this IServiceCollection services)
     {
+        services.AddSwaggerExamplesFromAssemblyOf<LoginRequestExample>();
         services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "Plants", Version = "1" });
@@ -59,7 +70,6 @@ public static class DIExtensions
             c.ResolveConflictingActions(action => action.First());
         });
 
-        services.AddSwaggerExamplesFromAssemblyOf<LoginRequestExample>();
         services.AddApiVersioning(opt =>
         {
             opt.AssumeDefaultVersionWhenUnspecified = true;

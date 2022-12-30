@@ -1,8 +1,13 @@
 ﻿namespace Plants.Domain.Projection;
 
-public interface ISearchQueryService<TAggregate, TParams> where TAggregate : AggregateBase
+public interface ISearchQueryService<TAggregate, TParams> where TAggregate : AggregateBase where TParams : ISearchParams
 {
-    Task<IEnumerable<TAggregate>> Search(TParams parameters, OneOf<SearchPager, SearchAll> searchOption);
+    Task<IEnumerable<TAggregate>> SearchAsync(TParams parameters, OneOf<SearchPager, SearchAll> searchOption);
+}
+
+public interface ISearchParams
+{
+
 }
 
 public record SearchAll();

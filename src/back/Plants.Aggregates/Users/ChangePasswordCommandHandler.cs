@@ -18,7 +18,7 @@ internal class ChangePasswordCommandHandler : ICommandHandler<ChangePasswordComm
 
     public async Task<IEnumerable<Event>> HandleAsync(ChangePasswordCommand command)
     {
-        await _userUpdater.UpdatePassword(command.Login, command.OldPassword, command.NewPassword);
+        await _userUpdater.UpdatePasswordAsync(command.Login, command.OldPassword, command.NewPassword);
         var user = await _repo.GetByIdAsync(command.Metadata.Aggregate.Id);
         return new[]
         {

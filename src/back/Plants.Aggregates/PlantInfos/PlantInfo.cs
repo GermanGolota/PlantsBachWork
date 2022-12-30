@@ -5,7 +5,7 @@ namespace Plants.Aggregates.PlantInfos;
 [Allow(Consumer, Read)]
 [Allow(Producer, Read)]
 [Allow(Producer, Write)]
-public class PlantInfo : AggregateBase, IAggregateSubscription<PlantInfo, PlantStock>, IEventHandler<StockAddedEvent>
+public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
 {
     //Id that is being used by plant info singleton
     public static Guid InfoId { get; } = Guid.Parse("1eebef8d-ba56-406f-a9f5-bc21c1a9ca96");
@@ -32,15 +32,18 @@ public class PlantInfo : AggregateBase, IAggregateSubscription<PlantInfo, PlantS
         }
     }
 
-    public IEnumerable<EventSubscriptionBase<PlantInfo, PlantStock>> Subscriptions => new[]
+    private class PlantInfoStockSubscription : IAggregateSubscription<PlantInfo, PlantStock>
     {
-        new EventSubscription<PlantInfo, PlantStock, StockAddedEvent>(
-            new AllEvents(),
-            new AggregateLoadingTranspose<PlantInfo, StockAddedEvent>(
-                _ => InfoId,
-                (oldEvents, info) =>
-                    oldEvents.Select(added => info.TransposeSubscribedEvent(added)))
-            )
-    };
+        public IEnumerable<EventSubscriptionBase<PlantInfo, PlantStock>> Subscriptions => new[]
+        {
+            new EventSubscription<PlantInfo, PlantStock, StockAddedEvent>(
+                new AllEvents(),
+                new AggregateLoadingTranspose<PlantInfo, StockAddedEvent>(
+                    _ => InfoId,
+                    (oldEvents, info) =>
+                        oldEvents.Select(added => info.TransposeSubscribedEvent(added)))
+                )
+        };
+    }
 
 }

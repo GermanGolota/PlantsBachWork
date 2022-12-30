@@ -16,7 +16,7 @@ public class ElasticSearchUserUpdater : IUserUpdater
         _identity = identity;
     }
 
-    public async Task Create(string username, string password, string fullName, UserRole[] roles)
+    public async Task CreateAsync(string username, string password, string fullName, UserRole[] roles)
     {
         var client = _helper.GetClient();
         var url = _helper.GetUrl($"_security/user/{username}");
@@ -28,10 +28,10 @@ public class ElasticSearchUserUpdater : IUserUpdater
         };
         var result = await client.PostAsJsonAsync(url, user);
 
-        await _helper.HandleCreation<CreationStatus>("user", username, result, _ => _.Created);
+        await _helper.HandleCreationAsync<CreationStatus>("user", username, result, _ => _.Created);
     }
 
-    public async Task ChangeRole(string username, string fullName, UserRole[] oldRoles, UserRole changedRole)
+    public async Task ChangeRoleAsync(string username, string fullName, UserRole[] oldRoles, UserRole changedRole)
     {
         var client = _helper.GetClient();
         var url = _helper.GetUrl($"_security/user/{username}");
@@ -46,10 +46,10 @@ public class ElasticSearchUserUpdater : IUserUpdater
         };
         var result = await client.PutAsJsonAsync(url, user);
 
-        await _helper.HandleCreation<CreationStatus>("user", username, result, _ => _.Created is false);
+        await _helper.HandleCreationAsync<CreationStatus>("user", username, result, _ => _.Created is false);
     }
 
-    public async Task UpdatePassword(string username, string oldPassword, string newPassword)
+    public async Task UpdatePasswordAsync(string username, string oldPassword, string newPassword)
     {
         var client = _helper.GetClient();
         var url = _identity.Identity!.UserName == username 
@@ -59,7 +59,7 @@ public class ElasticSearchUserUpdater : IUserUpdater
         {
             password = newPassword
         });
-        await _helper.HandleCreation<object>("password change", username, result, _ => _ is not null);
+        await _helper.HandleCreationAsync<object>("password change", username, result, _ => _ is not null);
     }
 
 }

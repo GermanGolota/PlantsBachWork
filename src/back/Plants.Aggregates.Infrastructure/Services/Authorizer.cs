@@ -17,7 +17,7 @@ internal class Authorizer : IAuthorizer
     }
 
     //TODO: Integrate into user session aggregate?
-    public async Task<AuthorizeResult?> Authorize(string username, string password)
+    public async Task<AuthorizeResult?> AuthorizeAsync(string username, string password)
     {
         AuthorizeResult? result;
         try
