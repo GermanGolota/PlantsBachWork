@@ -16,7 +16,7 @@ public class PlantStock : AggregateBase, IEventHandler<StockAddedEvent>
     public string Soil { get; private set; }
     public DateTime Created { get; private set; }
     public string[] PictureUrls { get; private set; }
-
+    public string CaretakerUsername { get; private set; }
 
     public void Handle(StockAddedEvent @event)
     {
@@ -28,11 +28,12 @@ public class PlantStock : AggregateBase, IEventHandler<StockAddedEvent>
         Soil = plant.SoilName;
         Created = plant.Created;
         PictureUrls = @event.PictureUrls;
+        CaretakerUsername = @event.CaretakerUsername;
     }
 }
 
 public record AddToStockCommand(CommandMetadata Metadata, PlantStockDto Plant, byte[][] Pictures) : Command(Metadata);
-public record StockAddedEvent(EventMetadata Metadata, PlantStockDto Plant, string[] PictureUrls) : Event(Metadata);
+public record StockAddedEvent(EventMetadata Metadata, PlantStockDto Plant, string[] PictureUrls, string CaretakerUsername) : Event(Metadata);
 public record PlantStockDto(
     string PlantName, string Description, string[] RegionNames,
     string SoilName, string GroupName, DateTime Created
