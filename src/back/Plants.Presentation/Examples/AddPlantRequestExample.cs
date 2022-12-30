@@ -1,18 +1,23 @@
-﻿using Plants.Presentation.Controllers.v2;
+﻿using Plants.Aggregates.PlantStocks;
+using Plants.Presentation.Controllers.v2;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Examples;
 
-internal class AddPlantRequestExample : IExamplesProvider<AddPlantDto2>
+internal class AddPlantRequestExample : IMultipleExamplesProvider<PlantStockDto>
 {
-    public AddPlantDto2 GetExamples() =>
-        new AddPlantDto2(
+    public IEnumerable<SwaggerExample<PlantStockDto>> GetExamples()
+    {
+        yield return new()
+        {
+            Name = "Nanjing apple",
+            Value = new(
             "Nanjing Apple",
             "Apple from Nanjing",
             new[] { "Taiga", "Forest" },
             "Sandy",
             "Apple",
-            new DateTime(2022, 12, 12),
-            new byte[][] { }
-            );
+            new DateTime(2022, 12, 12))
+        };
+    }
 }

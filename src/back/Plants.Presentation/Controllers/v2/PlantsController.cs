@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Plants.Aggregates.PlantStocks;
 using Plants.Presentation.Examples;
+using Plants.Presentation.Extensions;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Controllers.v2;
@@ -21,17 +22,20 @@ public class PlantsController : ControllerBase
     }
 
     [HttpPost("add")]
-    [SwaggerRequestExample(typeof(AddPlantDto), typeof(AddPlantRequestExample))]
+    [SwaggerRequestExample(typeof(PlantStockDto), typeof(AddPlantRequestExample))]
     [ApiVersion("2")]
-    public async Task<IActionResult> Create
-        ([FromBody] AddPlantDto2 body, CancellationToken token)
+    public async Task<IActionResult> Create([FromForm]AddPlantDto2 request, CancellationToken token)
     {
+        var pictures = await Task.WhenAll(request.Files.Select(file => file.ReadBytesAsync()));
         var meta = _metadataFactory.Create<AddToStockCommand>(new(Guid.NewGuid(), nameof(PlantStock)));
-        var command = new AddToStockCommand(meta, new PlantStockDto(body.Name, body.Description, body.Regions, body.SoilName, body.GroupName, body.Created, body.Pictures));
+        var command = new AddToStockCommand(meta, request.Plant, pictures);
         var result = await _sender.SendCommandAsync(command);
-        return result.Match<IActionResult>(success => Ok(command.Metadata.Aggregate.Id), failure => BadRequest(failure.Reasons));
+        return result.Match<IActionResult>(
+            success => Ok(command.Metadata.Aggregate.Id),
+            failure => BadRequest(failure.Reasons)
+            );
     }
 
 }
 
-public record AddPlantDto2(string Name, string Description, string[] Regions, string SoilName, string GroupName, DateTime Created, byte[][] Pictures);
+public record AddPlantDto2(PlantStockDto Plant, List<IFormFile> Files);

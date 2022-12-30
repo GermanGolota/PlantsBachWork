@@ -2,12 +2,12 @@
 
 public static class FormFileExtensions
 {
-    public static byte[] ReadBytes(this IFormFile file)
+    public static async Task<byte[]> ReadBytesAsync(this IFormFile file)
     {
         using (var fileStream = file.OpenReadStream())
         {
             byte[] bytes = new byte[file.Length];
-            fileStream.Read(bytes, 0, (int)file.Length);
+            await fileStream.ReadAsync(bytes, 0, (int)file.Length);
             return bytes;
         }
     }

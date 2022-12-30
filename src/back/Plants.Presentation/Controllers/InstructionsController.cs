@@ -34,7 +34,7 @@ public class InstructionsController : ControllerBase
     [HttpPost("create")]
     public async Task<ActionResult<CreateInstructionResult>> Create([FromForm] CreateInstructionCommandDto cmd, IFormFile file)
     {
-        var bytes = file?.ReadBytes();
+        var bytes = await file?.ReadBytesAsync();
         var req = new CreateInstructionCommand(cmd.GroupId, cmd.Text, cmd.Title, cmd.Description, bytes);
         return await _mediator.Send(req);
     }
@@ -44,7 +44,7 @@ public class InstructionsController : ControllerBase
         [FromRoute] int id, [FromForm] CreateInstructionCommandDto cmd, IFormFile file
         )
     {
-        var bytes = file?.ReadBytes();
+        var bytes = await file?.ReadBytesAsync();
         var req = new EditInstructionCommand(id, cmd.GroupId, cmd.Text, cmd.Title, cmd.Description, bytes);
         return await _mediator.Send(req);
     }
