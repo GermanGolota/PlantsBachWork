@@ -20,7 +20,7 @@ public class PlantStats : AggregateBase, IEventHandler<StockAddedEvent>
         PlantsCount++;
     }
 
-    private class PlantStatsSubscription : IAggregateSubscription<PlantStats, PlantStock>
+    private class PlantStatsStockSubscription : IAggregateSubscription<PlantStats, PlantStock>
     {
         public IEnumerable<EventSubscriptionBase<PlantStats, PlantStock>> Subscriptions => new[]
         {

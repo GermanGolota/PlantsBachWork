@@ -32,7 +32,7 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
         }
     }
 
-    private class PlantInfoSubscriptions : IAggregateSubscription<PlantInfo, PlantStock>
+    private class PlantInfoStockSubscription : IAggregateSubscription<PlantInfo, PlantStock>
     {
         public IEnumerable<EventSubscriptionBase<PlantInfo, PlantStock>> Subscriptions => new[]
         {
