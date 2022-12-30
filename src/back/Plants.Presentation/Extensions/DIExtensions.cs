@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Plants.Aggregates.Infrastructure.Abstractions;
 using Plants.Presentation.Examples;
+using Plants.Presentation.Services;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Extensions;
