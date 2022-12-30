@@ -10,7 +10,7 @@ using Plants.Domain.Infrastructure.Services;
 using Plants.Services.Infrastructure.Encryption;
 using System.Reflection;
 
-namespace Plants.Aggregates.Infrastructure.Services;
+namespace Plants.Aggregates.Infrastructure.Domain;
 
 internal class ElasticSearchClientFactory : IElasticSearchClientFactory
 {
@@ -28,7 +28,7 @@ internal class ElasticSearchClientFactory : IElasticSearchClientFactory
     public ElasticClient Create()
     {
         var identity = _identity.Identity!;
-        var uri = new Uri(String.Format(_connection.ElasticSearchConnectionTemplate, identity.UserName, _encrypter.Decrypt(identity.Hash)));
+        var uri = new Uri(string.Format(_connection.ElasticSearchConnectionTemplate, identity.UserName, _encrypter.Decrypt(identity.Hash)));
         var pool = new SingleNodeConnectionPool(uri);
         var settings =
             new ConnectionSettings(pool,
