@@ -36,4 +36,8 @@
     <None Remove="..\.dockerignore" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\UserInfo\" />
+  </ItemGroup>
+
 </Project>

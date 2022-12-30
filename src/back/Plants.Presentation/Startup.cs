@@ -1,9 +1,11 @@
 using MediatR;
 using Plants.Aggregates.Infrastructure;
+using Plants.Aggregates.Infrastructure.Abstractions;
 using Plants.Infrastructure;
 using Plants.Presentation.Extensions;
 using Plants.Presentation.HostedServices;
 using Plants.Presentation.Middleware;
+using Plants.Presentation.Services;
 using Plants.Services.Infrastructure;
 
 namespace Plants.Presentation;
@@ -24,6 +26,7 @@ public class Startup
     {
         services.AddMediatR(typeof(Plants.Application.AssemblyTag).Assembly);
         services
+            .AddSingleton<IHostingContext, HostingContext>()
             .AddPlantsConfiguration(Configuration)
             .AddShared()
             .AddSharedServices()
@@ -31,12 +34,13 @@ public class Startup
             .AddDomainInfrastructure()
             .AddAggregatesInfrastructure()
             .AddHostedService<EventStoreHostedService>()
+            .AddWebRootFileProvider()
+            .AddPlantsSwagger()
             .AddControllers()
             .AddJsonOptions(_ =>
             {
                 _.JsonSerializerOptions.Converters.AddOneOfConverter();
             });
-        services.AddPlantsSwagger();
 
         services.AddCors(opt =>
         {

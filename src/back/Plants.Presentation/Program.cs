@@ -1,3 +1,4 @@
+using Plants.Aggregates.Infrastructure.Abstractions;
 using Plants.Presentation;
 
 var host = Host.CreateDefaultBuilder(args)
@@ -8,4 +9,5 @@ var host = Host.CreateDefaultBuilder(args)
         .Build();
 
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+var context = host.Services.GetRequiredService<IHostingContext>();
 host.Run();
