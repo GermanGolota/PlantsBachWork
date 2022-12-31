@@ -22,9 +22,9 @@ public class InfoService : IInfoService
         {
             string sql = "SELECT * FROM dicts_v";
             var items = await ctx.DictsVs.FromSqlRaw(sql).ToListAsync();
-            Dictionary<int, string> soils = null;
-            Dictionary<int, string> regions = null;
-            Dictionary<int, string> groups = null;
+            Dictionary<long, string> soils = null;
+            Dictionary<long, string> regions = null;
+            Dictionary<long, string> groups = null;
             foreach (var item in items)
             {
                 switch (item.Type)
@@ -46,11 +46,11 @@ public class InfoService : IInfoService
         }
     }
 
-    private static Dictionary<int, string> Convert(DictsV dict)
+    private static Dictionary<long, string> Convert(DictsV dict)
     {
         return dict.Ids
             .Zip(dict.Values)
-            .ToDictionary(x => x.First, x => x.Second);
+            .ToDictionary(x => (long)x.First, x => x.Second);
     }
 
 

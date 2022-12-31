@@ -18,22 +18,22 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
         }
     }
 
-    public Dictionary<Guid, string> GroupNames { get; set; } = new();
-    public Dictionary<Guid, string> RegionNames { get; set; } = new();
-    public Dictionary<Guid, string> SoilNames { get; set; } = new();
+    public Dictionary<long, string> GroupNames { get; set; } = new();
+    public Dictionary<long, string> RegionNames { get; set; } = new();
+    public Dictionary<long, string> SoilNames { get; set; } = new();
 
     public void Handle(StockAddedEvent @event)
     {
         var plant = @event.Plant;
-        GroupNames.CacheTransformation(plant.GroupName, ToSafeGuid);
-        SoilNames.CacheTransformation(plant.SoilName, ToSafeGuid);
+        GroupNames.CacheTransformation(plant.GroupName, ToLong);
+        SoilNames.CacheTransformation(plant.SoilName, ToLong);
         foreach (var regionName in plant.RegionNames)
         {
-            RegionNames.CacheTransformation(regionName, ToSafeGuid);
+            RegionNames.CacheTransformation(regionName, ToLong);
         }
     }
 
-    private Guid ToSafeGuid(string str)
+    private long ToLong(string str)
     {
         var initialBytes = Encoding.UTF8.GetBytes(str);
         var bytes = initialBytes.Take(8).ToArray();
@@ -47,8 +47,7 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
             }
             bytes = newBytes;
         }
-        var id = BitConverter.ToInt64(bytes);
-        return id.ToGuid();
+        return BitConverter.ToInt64(bytes);
     }
 
     private class PlantInfoStockSubscription : IAggregateSubscription<PlantInfo, PlantStock>

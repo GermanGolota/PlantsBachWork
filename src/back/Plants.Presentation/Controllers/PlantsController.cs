@@ -142,9 +142,9 @@ public class PlantsControllerV2 : ControllerBase
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync()));
         var stockId = new Random().NextInt64().ToGuid();
         var info = await _infoProjector.GetByIdAsync(PlantInfo.InfoId);
-        var regions = body.Regions.Select(_ => info.RegionNames[_.ToGuid()]).ToArray();
-        var soil = info.SoilNames[body.SoilId.ToGuid()];
-        var group = info.GroupNames[body.GroupId.ToGuid()];
+        var regions = body.Regions.Select(regionId => info.RegionNames[regionId]).ToArray();
+        var soil = info.SoilNames[body.SoilId];
+        var group = info.GroupNames[body.GroupId];
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
             meta => new AddToStockCommand(meta, new(body.Name, body.Description, regions, soil, group, body.Created), pictures)
