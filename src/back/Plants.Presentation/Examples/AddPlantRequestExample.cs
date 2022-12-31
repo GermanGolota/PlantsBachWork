@@ -4,9 +4,9 @@ using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Examples;
 
-internal class AddPlantRequestExample : IMultipleExamplesProvider<PlantStockDto>
+internal class AddPlantRequestExample : IMultipleExamplesProvider<PlantInformation>
 {
-    public IEnumerable<SwaggerExample<PlantStockDto>> GetExamples()
+    public IEnumerable<SwaggerExample<PlantInformation>> GetExamples()
     {
         yield return new()
         {

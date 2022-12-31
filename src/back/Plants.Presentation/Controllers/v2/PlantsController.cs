@@ -27,7 +27,7 @@ public class PlantsController : ControllerBase
     }
 
     [HttpPost("add")]
-    [SwaggerRequestExample(typeof(PlantStockDto), typeof(AddPlantRequestExample))]
+    [SwaggerRequestExample(typeof(PlantInformation), typeof(AddPlantRequestExample))]
     [ApiVersion("2")]
     public async Task<IActionResult> Create([FromForm] AddPlantDto2 request, CancellationToken token)
     {
@@ -55,10 +55,10 @@ public class PlantsController : ControllerBase
     }
 
     private static PlantResultItemDto MapPlant(PlantStock stock, string username) =>
-        new(stock.Id, stock.PlantName, stock.Description, stock.CaretakerUsername == username);
+        new(stock.Id, stock.Information.PlantName, stock.Information.Description, stock.CaretakerUsername == username);
 
 }
 
-public record AddPlantDto2(PlantStockDto Plant, List<IFormFile> Files);
+public record AddPlantDto2(PlantInformation Plant, List<IFormFile> Files);
 public record PlantsResultDto(List<PlantResultItemDto> Items);
 public record PlantResultItemDto(Guid Id, string PlantName, string Description, bool IsMine);
