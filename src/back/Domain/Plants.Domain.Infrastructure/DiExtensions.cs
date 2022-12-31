@@ -32,6 +32,7 @@ public static class DiExtensions
         services.AddTransient(typeof(TransposeApplyer<,>));
         services.AddScoped<CommandMetadataFactory>();
         services.AddScoped<EventMetadataFactory>();
+        services.AddScoped<CommandHelper>();
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton(_ => InfrastructureHelpers.Aggregate);
         services.AddTransient<ICommandSender, CommandSender>();

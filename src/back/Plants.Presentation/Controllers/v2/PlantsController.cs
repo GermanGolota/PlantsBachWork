@@ -13,16 +13,12 @@ namespace Plants.Presentation.Controllers.v2;
 [ApiExplorerSettings(GroupName = "v2")]
 public class PlantsController : ControllerBase
 {
-    private readonly CommandMetadataFactory _metadataFactory;
-    private readonly ICommandSender _sender;
-    private readonly IIdentityProvider _identity;
+    private readonly CommandHelper _command;
     private readonly ISearchQueryService<PlantStock, PlantStockParams> _search;
 
-    public PlantsController(CommandMetadataFactory metadataFactory, ICommandSender sender, IIdentityProvider identity, ISearchQueryService<PlantStock, PlantStockParams> search)
+    public PlantsController(CommandHelper command, ISearchQueryService<PlantStock, PlantStockParams> search)
     {
-        _metadataFactory = metadataFactory;
-        _sender = sender;
-        _identity = identity;
+        _command = command;
         _search = search;
     }
 
@@ -32,11 +28,14 @@ public class PlantsController : ControllerBase
     public async Task<IActionResult> Create([FromForm] AddPlantDto2 request, CancellationToken token)
     {
         var pictures = await Task.WhenAll(request.Files.Select(file => file.ReadBytesAsync()));
-        var meta = _metadataFactory.Create<AddToStockCommand>(new(Guid.NewGuid(), nameof(PlantStock)));
-        var command = new AddToStockCommand(meta, request.Plant, pictures);
-        var result = await _sender.SendCommandAsync(command);
+        var stockId = Guid.NewGuid();
+        var result = await _command.CreateAndSendAsync(
+            factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
+            meta => new AddToStockCommand(meta, request.Plant, pictures)
+            );
+
         return result.Match<IActionResult>(
-            success => Ok(command.Metadata.Aggregate.Id),
+            success => Ok(stockId),
             failure => BadRequest(failure.Reasons)
             );
     }
@@ -46,7 +45,7 @@ public class PlantsController : ControllerBase
     public async Task<ActionResult<PlantsResultDto>> GetNotPosted(CancellationToken token)
     {
         //todo: add filtering
-        var username = _identity.Identity!.UserName;
+        var username = _command.IdentityProvider.Identity!.UserName;
         var result = await _search.SearchAsync(new PlantStockParams(false), new SearchAll());
         return new PlantsResultDto(
                 result
