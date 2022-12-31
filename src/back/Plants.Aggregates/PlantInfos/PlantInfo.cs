@@ -1,4 +1,5 @@
 ﻿using Plants.Aggregates.PlantStocks;
+using System.Text;
 
 namespace Plants.Aggregates.PlantInfos;
 
@@ -24,12 +25,30 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
     public void Handle(StockAddedEvent @event)
     {
         var plant = @event.Plant;
-        GroupNames.CacheTransformation(plant.GroupName, StringExtensions.ToGuid);
-        SoilNames.CacheTransformation(plant.SoilName, StringExtensions.ToGuid);
+        GroupNames.CacheTransformation(plant.GroupName, ToSafeGuid);
+        SoilNames.CacheTransformation(plant.SoilName, ToSafeGuid);
         foreach (var regionName in plant.RegionNames)
         {
-            RegionNames.CacheTransformation(regionName, StringExtensions.ToGuid);
+            RegionNames.CacheTransformation(regionName, ToSafeGuid);
         }
+    }
+
+    private Guid ToSafeGuid(string str)
+    {
+        var initialBytes = Encoding.UTF8.GetBytes(str);
+        var bytes = initialBytes.Take(8).ToArray();
+        if(bytes.Length < 8)
+        {
+            var newBytes = new byte[8];
+            bytes.CopyTo(newBytes, 0);
+            for (int i = bytes.Length; i < 8; i++)
+            {
+                newBytes[i] = 0;
+            }
+            bytes = newBytes;
+        }
+        var id = BitConverter.ToInt64(bytes);
+        return id.ToGuid();
     }
 
     private class PlantInfoStockSubscription : IAggregateSubscription<PlantInfo, PlantStock>

@@ -2,6 +2,6 @@
 
 namespace Plants.Application.Commands;
 
-public record AddPlantCommand(string Name, string Description, int[] Regions, 
-    int SoilId, int GroupId, DateTime Created, byte[][] Pictures) : IRequest<AddPlantResult>;
-public record AddPlantResult(int Id);
+public record AddPlantCommand(string Name, string Description, long[] Regions,
+    long SoilId, long GroupId, DateTime Created, byte[][] Pictures) : IRequest<AddPlantResult>;
+public record AddPlantResult(long Id);

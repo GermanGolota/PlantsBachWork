@@ -1,5 +1,4 @@
 ﻿using Plants.Application.Commands;
-using Plants.Presentation.Controllers.v2;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Examples;
@@ -11,8 +10,8 @@ internal class LoginRequestExample : IExamplesProvider<LoginCommand>
 
 }
 
-internal class LoginRequestExamplev2 : IExamplesProvider<LoginDto>
+internal class LoginRequestExampleV2 : IExamplesProvider<LoginCommand>
 {
-    public LoginDto GetExamples() =>
+    public LoginCommand GetExamples() =>
          new("postgres", "testPassword");
 }

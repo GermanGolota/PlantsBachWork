@@ -112,8 +112,8 @@ public class PlantsService : IPlantsService
         }
     }
 
-    public async Task<AddPlantResult> Create(string Name, string Description, int[] Regions,
-        int SoilId, int GroupId, DateTime Created, byte[][] Pictures)
+    public async Task<AddPlantResult> Create(string Name, string Description, long[] Regions,
+        long SoilId, long GroupId, DateTime Created, byte[][] Pictures)
     {
         var ctx = _ctxFactory.CreateDbContext();
         await using (ctx)
@@ -132,15 +132,15 @@ public class PlantsService : IPlantsService
                     Created,
                     Pictures
                 };
-                var res = await connection.QueryAsync<int>(sql, p);
+                var res = await connection.QueryAsync<long>(sql, p);
                 var first = res.FirstOrDefault();
                 return new AddPlantResult(first);
             }
         }
     }
 
-    public async Task Edit(int PlantId, string Name, string Description,
-        int[] Regions, int SoilId, int GroupId, int[] RemovedImages, byte[][] NewImages)
+    public async Task Edit(long PlantId, string Name, string Description,
+        long[] Regions, long SoilId, long GroupId, long[] RemovedImages, byte[][] NewImages)
     {
         var ctx = _ctxFactory.CreateDbContext();
         await using (ctx)
