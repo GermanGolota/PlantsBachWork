@@ -109,7 +109,6 @@ public class PlantsControllerV2 : ControllerBase
     [HttpGet("notposted")]
     public async Task<ActionResult<PlantsResult>> GetNotPosted(CancellationToken token)
     {
-        //todo: add filtering
         var username = _command.IdentityProvider.Identity!.UserName;
         var result = await _search.SearchAsync(new PlantStockParams(false), new SearchAll());
         return new PlantsResult(
@@ -155,7 +154,7 @@ public class PlantsControllerV2 : ControllerBase
             var images = (await _infoProjector.GetByIdAsync(PlantInfo.InfoId)).ImagePaths.ToInverse();
             var caretaker = stock.Caretaker;
             var plant = stock.Information;
-            //TODO: Add sold and instauctions
+            //TODO: Add sold and instructions
             result = new PreparedPostResult(new(stock.Id.ToLong(),
                 plant.PlantName, plant.Description,
                 plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
