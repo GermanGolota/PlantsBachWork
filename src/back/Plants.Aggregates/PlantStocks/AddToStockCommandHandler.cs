@@ -23,7 +23,7 @@ internal class AddToStockCommandHandler : ICommandHandler<AddToStockCommand>
         var urls = files.Select(_file.GetUrl).ToArray();
         return new[]
         {
-            new StockAddedEvent(EventFactory.Shared.Create<StockAddedEvent>(command), command.Plant, urls, command.Metadata.UserName)
+            new StockAddedEvent(EventFactory.Shared.Create<StockAddedEvent>(command), command.Plant, command.CreatedTime, urls, command.Metadata.UserName)
         };
     }
 

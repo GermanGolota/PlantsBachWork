@@ -168,7 +168,7 @@ public class PlantsControllerV2 : ControllerBase
         var group = info.GroupNames[body.GroupId];
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
-            meta => new AddToStockCommand(meta, new(body.Name, body.Description, regions, soil, group, body.Created), pictures)
+            meta => new AddToStockCommand(meta, new(body.Name, body.Description, regions, soil, group), body.Created, pictures)
             );
 
         return result.Match<ActionResult<AddPlantResult>>(
@@ -180,13 +180,13 @@ public class PlantsControllerV2 : ControllerBase
     [HttpPost("add2")]
     [ApiVersion("2")]
     public async Task<ActionResult<AddPlantResult>> Create2
-        ([FromForm] PlantInformation body, IEnumerable<IFormFile> files, CancellationToken token)
+        ([FromForm] PlantInformation body, DateTime created, IEnumerable<IFormFile> files, CancellationToken token)
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync()));
         var stockId = new Random().GetRandomConvertableGuid();
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
-            meta => new AddToStockCommand(meta, body, pictures)
+            meta => new AddToStockCommand(meta, body, created, pictures)
             );
 
         var resultId = stockId.ToLong();
