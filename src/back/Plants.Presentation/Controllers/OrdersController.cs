@@ -1,6 +1,8 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Plants.Aggregates.PlantInfos;
 using Plants.Aggregates.PlantOrders;
+using Plants.Aggregates.Search;
 using Plants.Application.Commands;
 using Plants.Application.Requests;
 
@@ -46,7 +48,6 @@ public class OrdersController : ControllerBase
 
 }
 
-
 [ApiController]
 [Route("v2/orders")]
 [ApiVersion("2")]
@@ -54,16 +55,33 @@ public class OrdersController : ControllerBase
 public class OrdersControllerV2 : ControllerBase
 {
     private readonly CommandHelper _command;
+    private readonly ISearchQueryService<PlantOrder, PlantOrderParams> _orderQuery;
+    private readonly IProjectionQueryService<PlantInfo> _infoQuery;
 
-    public OrdersControllerV2(CommandHelper command)
+    public OrdersControllerV2(CommandHelper command,
+        ISearchQueryService<PlantOrder, PlantOrderParams> orderQuery,
+        IProjectionQueryService<PlantInfo> infoQuery)
     {
         _command = command;
+        _orderQuery = orderQuery;
+        _infoQuery = infoQuery;
     }
 
     [HttpGet()]
     public async Task<ActionResult<OrdersResult>> GetAll([FromQuery] bool onlyMine, CancellationToken token)
     {
-        throw new NotImplementedException();
+        var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId)).ImagePaths.ToInverse();
+
+        var items = await _orderQuery.SearchAsync(new(onlyMine), new SearchAll());
+        return new OrdersResult(new(items.Select(item =>
+        {
+            var seller = item.Post.Seller;
+            var stock = item.Post.Stock;
+            return new OrdersResultItem((int)item.Status, item.Post.Id.ToLong(),
+                item.Address.City, item.Address.MailNumber, seller.FullName,
+                seller.PhoneNumber, item.Post.Price, item.TrackingNumber, stock.PictureUrls.Select(url => images[url]).ToArray());
+        }
+        )));
     }
 
     [HttpPost("{id}/deliver")]
