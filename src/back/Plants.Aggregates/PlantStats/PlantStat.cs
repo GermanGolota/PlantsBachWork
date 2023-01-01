@@ -25,7 +25,6 @@ public class PlantStat : AggregateBase, IEventHandler<StockAddedEvent>
         public IEnumerable<EventSubscriptionBase<PlantStat, PlantStock>> Subscriptions => new[]
         {
             new EventSubscription<PlantStat, PlantStock, StockAddedEvent>(
-                new AllEvents(),
                 new AggregateLoadingTranspose<PlantStat, StockAddedEvent>(
                     @event => @event.Plant.GroupName.ToGuid(),
                     (events, stats) =>

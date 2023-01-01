@@ -61,7 +61,6 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
         public IEnumerable<EventSubscriptionBase<PlantInfo, PlantStock>> Subscriptions => new[]
         {
             new EventSubscription<PlantInfo, PlantStock, StockAddedEvent>(
-                new AllEvents(),
                 new AggregateLoadingTranspose<PlantInfo, StockAddedEvent>(
                     _ => InfoId,
                     (oldEvents, info) =>
