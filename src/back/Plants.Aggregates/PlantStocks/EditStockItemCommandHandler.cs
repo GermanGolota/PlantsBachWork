@@ -28,7 +28,7 @@ internal class EditStockItemCommandHandler : ICommandHandler<EditStockItemComman
     public async Task<IEnumerable<Event>> HandleAsync(EditStockItemCommand command)
     {
         _stock ??= await _stockRepository.GetByIdAsync(command.Metadata.Aggregate.Id);
-        var newUrls = await _uploader.UploadAsync(_stock.Id, command.NewPictures);
+        var newUrls = await _uploader.UploadPlantAsync(_stock.Id, command.NewPictures);
         return new[]
         {
             new StockEdditedEvent(EventFactory.Shared.Create<StockEdditedEvent>(command), command.Plant, newUrls, command.RemovedPictureUrls)

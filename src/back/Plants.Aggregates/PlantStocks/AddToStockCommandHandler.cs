@@ -19,7 +19,7 @@ internal class AddToStockCommandHandler : ICommandHandler<AddToStockCommand>
     public async Task<IEnumerable<Event>> HandleAsync(AddToStockCommand command)
     {
         _stock ??= await _repo.GetByIdAsync(command.Metadata.Aggregate.Id);
-        var urls = await _uploader.UploadAsync(_stock.Id, command.Pictures);
+        var urls = await _uploader.UploadPlantAsync(_stock.Id, command.Pictures);
         return new[]
         {
             new StockAddedEvent(EventFactory.Shared.Create<StockAddedEvent>(command), command.Plant, command.CreatedTime, urls, command.Metadata.UserName)
