@@ -8,7 +8,7 @@ public interface ISearchService
     decimal? LowerPrice,
     decimal? TopPrice,
     DateTime? LastDate,
-    int[] GroupIds,
-    int[] RegionIds,
-    int[] SoilIds);
+    long[] GroupIds,
+    long[] RegionIds,
+    long[] SoilIds);
 }

@@ -1,5 +1,8 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Plants.Aggregates.PlantInfos;
+using Plants.Aggregates.PlantPosts;
+using Plants.Aggregates.Search;
 using Plants.Application.Requests;
 
 namespace Plants.Presentation.Controllers;
@@ -23,5 +26,45 @@ public class SearchController : ControllerBase
     {
         var res = await _mediator.Send(request, token);
         return Ok(res);
+    }
+}
+
+[ApiController]
+[Route("v2/search")]
+[ApiVersion("2")]
+[ApiExplorerSettings(GroupName = "v2")]
+public class SearchControllerV2 : ControllerBase
+{
+    private readonly ISearchQueryService<PlantPost, PlantPostParams> _search;
+    private readonly IProjectionQueryService<PlantInfo> _infoQuery;
+
+    public SearchControllerV2(
+        ISearchQueryService<PlantPost, PlantPostParams> search,
+        IProjectionQueryService<PlantInfo> infoQuery)
+    {
+        _search = search;
+        _infoQuery = infoQuery;
+    }
+
+    [HttpGet("")]
+    public async Task<ActionResult<SearchResult>> Stats
+        ([FromQuery] SearchRequest request, CancellationToken token)
+    {
+        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId);
+        var groups = request.GroupIds?.Select(id => info.GroupNames[id])?.ToArray();
+        var regions = request.RegionIds?.Select(id => info.RegionNames[id])?.ToArray();
+        var soils = request.SoilIds?.Select(id => info.SoilNames[id])?.ToArray();
+        var images = info.ImagePaths.ToInverse();
+        var param = new PlantPostParams(request.PlantName, request.LowerPrice, request.TopPrice, request.LastDate, groups, regions, soils);
+        var result = await _search.SearchAsync(param, new SearchAll());
+
+        return new SearchResult(result.Select(item => 
+            new SearchResultItem(
+                item.Id.ToLong(), 
+                item.Stock.Information.PlantName, 
+                item.Stock.Information.Description, 
+                item.Stock.PictureUrls.Select(url => images[url]).ToArray(), 
+                (double)item.Price)).ToList()
+                );
     }
 }
