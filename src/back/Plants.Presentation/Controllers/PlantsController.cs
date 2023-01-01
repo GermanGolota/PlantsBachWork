@@ -145,7 +145,30 @@ public class PlantsControllerV2 : ControllerBase
     [HttpGet("prepared/{id}")]
     public async Task<ActionResult<PreparedPostResult>> GetPrepared(long id, CancellationToken token)
     {
-        throw new NotImplementedException();
+        var guid = id.ToGuid();
+        var userId = _command.IdentityProvider.Identity!.UserName.ToGuid();
+        PreparedPostResult result;
+        if (await _stockProjector.ExistsAsync(guid) && await _userProjector.ExistsAsync(userId))
+        {
+            var stock = await _stockProjector.GetByIdAsync(guid);
+            var seller = await _userProjector.GetByIdAsync(userId);
+            var images = (await _infoProjector.GetByIdAsync(PlantInfo.InfoId)).ImagePaths.ToInverse();
+            var caretaker = stock.Caretaker;
+            var plant = stock.Information;
+            //TODO: Add sold and instauctions
+            result = new PreparedPostResult(new(stock.Id.ToLong(),
+                plant.PlantName, plant.Description,
+                plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
+                seller.FullName, seller.PhoneNumber, seller.PlantsCared, 0, 0,
+                caretaker.PlantsCared, 0, 0, stock.PictureUrls.Select(url => images[url]).ToArray()
+                ));
+        }
+        else
+        {
+            result = new();
+        }
+
+        return result;
     }
 
     [HttpPost("{id}/post")]

@@ -47,7 +47,7 @@ public class PreparedPostResultItem
     public long CareTakerCared { get; set; }
     public long CareTakerSold { get; set; }
     public long CareTakerInstructions { get; set; }
-    public int[] Images { get; set; }
+    public long[] Images { get; set; }
     public PreparedPostResultItem()
     {
 
@@ -56,7 +56,7 @@ public class PreparedPostResultItem
     public PreparedPostResultItem(long id, string plantName, string description,
         string soilName, string[] regions, string groupName, DateTime created, string sellerName,
         string sellerPhone, long sellerCared, long sellerSold, long sellerInstructions,
-        long careTakerCared, long careTakerSold, long careTakerInstructions, int[] images)
+        long careTakerCared, long careTakerSold, long careTakerInstructions, long[] images)
     {
         Id = id;
         PlantName = plantName;

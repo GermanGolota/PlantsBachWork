@@ -14,6 +14,7 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandle
 
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
+    public string FullName { get; private set; }
     public string PhoneNumber { get; private set; }
     public string Login { get; private set; }
     public UserRole[] Roles { get; private set; }
@@ -24,6 +25,7 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandle
         var user = @event.Data;
         FirstName = user.FirstName;
         LastName = user.LastName;
+        FullName = user.FirstName + " " + user.LastName;
         PhoneNumber = user.PhoneNumber;
         Login = user.Login;
         Roles = user.Roles;
