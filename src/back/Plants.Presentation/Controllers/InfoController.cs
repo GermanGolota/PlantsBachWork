@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Plants.Aggregates.PlantInfos;
+using Plants.Aggregates.Users;
 using Plants.Application.Requests;
 
 namespace Plants.Presentation.Controllers;
@@ -42,10 +43,14 @@ public class InfoController : ControllerBase
 public class InfoControllerV2 : ControllerBase
 {
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
+    private readonly IProjectionQueryService<User> _userQuery;
+    private readonly IIdentityProvider _identity;
 
-    public InfoControllerV2(IProjectionQueryService<PlantInfo> infoQuery)
+    public InfoControllerV2(IProjectionQueryService<PlantInfo> infoQuery, IProjectionQueryService<User> userQuery, IIdentityProvider identity)
     {
         _infoQuery = infoQuery;
+        _userQuery = userQuery;
+        _identity = identity;
     }
     
     [HttpGet("dicts")]
@@ -58,6 +63,8 @@ public class InfoControllerV2 : ControllerBase
     [HttpGet("addresses")]
     public async Task<ActionResult<AddressResult>> Addresses(CancellationToken token)
     {
-        throw new NotImplementedException();
+        var id = _identity.Identity!.UserName.ToGuid();
+        var user = await _userQuery.GetByIdAsync(id);
+        return new AddressResult(user.UsedAdresses.Select(address => new PersonAddress(address.City, address.MailNumber)).ToList());
     }
 }
