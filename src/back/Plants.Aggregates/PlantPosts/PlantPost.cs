@@ -9,7 +9,7 @@ namespace Plants.Aggregates.PlantPosts;
 [Allow(Consumer, Write)]
 public class PlantPost : AggregateBase, IEventHandler<StockItemPostedEvent>,
     IDomainCommandHandler<RemovePostCommand>, IEventHandler<PostRemovedEvent>,
-    IDomainCommandHandler<OrderPostCommand>
+    IDomainCommandHandler<OrderPostCommand>, IEventHandler<PostOrderedEvent>
 {
     public PlantPost(Guid id) : base(id)
     {
@@ -63,6 +63,11 @@ public class PlantPost : AggregateBase, IEventHandler<StockItemPostedEvent>,
         {
             new PostOrderedEvent(EventFactory.Shared.Create<PostOrderedEvent>(command), command.Address, command.Metadata.UserName)
         };
+
+    public void Handle(PostOrderedEvent @event)
+    {
+        IsOrdered = true;
+    }
 
     private class PlantStockSubscription : IAggregateSubscription<PlantPost, PlantStock>
     {

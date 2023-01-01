@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson;
 using Plants.Aggregates.Infrastructure.Domain;
 using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
@@ -7,6 +9,8 @@ using Plants.Aggregates.PlantStocks;
 using Plants.Aggregates.Services;
 using Plants.Aggregates.Users;
 using Plants.Domain.Infrastructure.Services;
+using MongoDB.Bson.Serialization.Serializers;
+using Plants.Aggregates.PlantOrders;
 
 namespace Plants.Aggregates.Infrastructure;
 

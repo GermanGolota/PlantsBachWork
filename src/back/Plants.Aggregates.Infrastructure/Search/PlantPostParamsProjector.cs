@@ -9,6 +9,7 @@ internal class PlantPostParamsProjector : ISearchParamsProjector<PlantPost, Plan
     public SearchDescriptor<PlantPost> ProjectParams(PlantPostParams parameters, SearchDescriptor<PlantPost> desc) =>
         desc.Query(q => q.Bool(b => b.Must(
             u => u.Term(m => m.Field(_ => _.IsRemoved).Value(false)),
+            u => u.Term(m => m.Field(_ => _.IsOrdered).Value(false)),
             u => u.FilterOrAll(parameters.PlantName, (c, filter) =>
                 c.Fuzzy(f => f.Field(_ => _.Stock.Information.PlantName).Value(filter))),
             u => u.FilterOrAll(parameters.Regions, (c, filter) =>
