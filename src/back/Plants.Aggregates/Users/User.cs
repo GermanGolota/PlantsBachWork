@@ -1,10 +1,12 @@
-﻿namespace Plants.Aggregates.Users;
+﻿using Plants.Aggregates.PlantStocks;
+
+namespace Plants.Aggregates.Users;
 
 [Allow(Consumer, Read)]
 [Allow(Consumer, Write)]
 [Allow(Producer, Read)]
 [Allow(Producer, Write)]
-public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandler<RoleChangedEvent>, IEventHandler<PasswordChangedEvent>
+public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandler<RoleChangedEvent>, IEventHandler<StockAddedEvent>
 {
     public User(Guid id) : base(id)
     {
@@ -15,6 +17,7 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandle
     public string PhoneNumber { get; private set; }
     public string Login { get; private set; }
     public UserRole[] Roles { get; private set; }
+    public long PlantsCared { get; private set; } = 0;
 
     public void Handle(UserCreatedEvent @event)
     {
@@ -38,9 +41,19 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandle
         }
     }
 
-    public void Handle(PasswordChangedEvent @event)
+    public void Handle(StockAddedEvent @event)
     {
+        PlantsCared++;
+    }
 
+    private class PlantStockSubscription : IAggregateSubscription<User, PlantStock>
+    {
+        public IEnumerable<EventSubscriptionBase<User, PlantStock>> Subscriptions => new[]
+        {
+            new EventSubscription<User, PlantStock, StockAddedEvent>(new(
+                @event => @event.CaretakerUsername.ToGuid(),
+                (events, user) => events.Select(_=>user.TransposeSubscribedEvent(_))))
+        };
     }
 }
 
