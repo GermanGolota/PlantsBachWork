@@ -40,7 +40,7 @@ public class PlantStock : AggregateBase, IEventHandler<StockAddedEvent>, IEventH
         BeenPosted = true;
         return new[]
         {
-            new StockItemPostedEvent(EventFactory.Shared.Create<StockItemPostedEvent>(command), command.Price)
+            new StockItemPostedEvent(EventFactory.Shared.Create<StockItemPostedEvent>(command), command.Metadata.UserName, command.Price)
         };
     }
 
@@ -53,7 +53,7 @@ public record EditStockItemCommand(CommandMetadata Metadata, PlantInformation Pl
 public record StockEdditedEvent(EventMetadata Metadata, PlantInformation Plant, string[] NewPictureUrls, string[] RemovedPictureUrls) : Event(Metadata);
 
 public record PostStockItemCommand(CommandMetadata Metadata, decimal Price) : Command(Metadata);
-public record StockItemPostedEvent(EventMetadata Metadata, decimal Price) : Event(Metadata);
+public record StockItemPostedEvent(EventMetadata Metadata, string SellerUsername, decimal Price) : Event(Metadata);
 
 public record PlantInformation(
     string PlantName, string Description, string[] RegionNames,

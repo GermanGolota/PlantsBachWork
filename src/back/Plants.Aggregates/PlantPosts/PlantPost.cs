@@ -1,4 +1,5 @@
 ﻿using Plants.Aggregates.PlantStocks;
+using Plants.Aggregates.Users;
 
 namespace Plants.Aggregates.PlantPosts;
 
@@ -13,10 +14,12 @@ public class PlantPost : AggregateBase, IEventHandler<StockItemPostedEvent>
 
     public decimal Price { get; private set; }
     public PlantStock Stock { get; private set; }
+    public User Seller { get; private set; }
 
     public void Handle(StockItemPostedEvent @event)
     {
         Referenced.Add(new(@event.Metadata.Aggregate.Id, nameof(PlantStock)));
+        Referenced.Add(new(@event.SellerUsername.ToGuid(), nameof(User)));
         Price = @event.Price;
     }
 
