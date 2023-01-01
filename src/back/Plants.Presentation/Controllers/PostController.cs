@@ -49,11 +49,16 @@ public class PostControllerV2 : ControllerBase
 {
     private readonly IProjectionQueryService<PlantPost> _postQuery;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
+    private readonly CommandHelper _command;
 
-    public PostControllerV2(IProjectionQueryService<PlantPost> postQuery, IProjectionQueryService<PlantInfo> infoQuery)
+    public PostControllerV2(
+        IProjectionQueryService<PlantPost> postQuery,
+        IProjectionQueryService<PlantInfo> infoQuery,
+        CommandHelper command)
     {
         _postQuery = postQuery;
         _infoQuery = infoQuery;
+        _command = command;
     }
 
     [HttpGet("{id}")]
@@ -64,16 +69,23 @@ public class PostControllerV2 : ControllerBase
         if (await _postQuery.ExistsAsync(guid))
         {
             var post = await _postQuery.GetByIdAsync(guid);
-            var seller = post.Seller;
-            var stock = post.Stock;
-            var caretaker = stock.Caretaker;
-            var plant = stock.Information;
-            var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId)).ImagePaths.ToInverse();
-            //TODO: Add sold and instructions
-            result = new(new(post.Id.ToLong(), plant.PlantName, plant.Description, post.Price, 
-                plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
-                seller.FullName, seller.PhoneNumber, seller.PlantsCared, 0, 0,
-                caretaker.PlantsCared, 0, 0, stock.PictureUrls.Select(url => images[url]).ToArray()));
+            if (post.IsRemoved)
+            {
+                result = new();
+            }
+            else
+            {
+                var seller = post.Seller;
+                var stock = post.Stock;
+                var caretaker = stock.Caretaker;
+                var plant = stock.Information;
+                var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId)).ImagePaths.ToInverse();
+                //TODO: Add sold and instructions
+                result = new(new(post.Id.ToLong(), plant.PlantName, plant.Description, post.Price,
+                    plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
+                    seller.FullName, seller.PhoneNumber, seller.PlantsCared, 0, 0,
+                    caretaker.PlantsCared, 0, 0, stock.PictureUrls.Select(url => images[url]).ToArray()));
+            }
         }
         else
         {
@@ -91,6 +103,11 @@ public class PostControllerV2 : ControllerBase
     [HttpPost("{id}/delete")]
     public async Task<ActionResult<DeletePostResult>> Delete([FromRoute] long id)
     {
-        throw new NotImplementedException();
+        var guid = id.ToGuid();
+        var result = await _command.CreateAndSendAsync(
+            factory => factory.Create<RemovePostCommand>(new(guid, nameof(PlantPost))),
+            meta => new RemovePostCommand(meta)
+            );
+        return result.Match<DeletePostResult>(succ => new(true), fail => new(false));
     }
 }

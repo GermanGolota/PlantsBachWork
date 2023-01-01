@@ -8,6 +8,7 @@ internal class PlantPostParamsProjector : ISearchParamsProjector<PlantPost, Plan
 {
     public SearchDescriptor<PlantPost> ProjectParams(PlantPostParams parameters, SearchDescriptor<PlantPost> desc) =>
         desc.Query(q => q.Bool(b => b.Must(
+            u => u.Term(m => m.Field(_ => _.IsRemoved).Value(false)),
             u => u.FilterOrAll(parameters.PlantName, (c, filter) =>
                 c.Fuzzy(f => f.Field(_ => _.Stock.Information.PlantName).Value(filter))),
             u => u.FilterOrAll(parameters.Regions, (c, filter) =>
@@ -17,7 +18,7 @@ internal class PlantPostParamsProjector : ISearchParamsProjector<PlantPost, Plan
             u => u.FilterOrAll(parameters.Soils, (c, filter) =>
                 c.Terms(f => f.Field(_ => _.Stock.Information.SoilName).Terms(filter))),
             u => u.FilterOrAll(parameters.LastDate, (c, filter) =>
-                c.Range(r => r.Field(_ => _.Stock.CreatedTime).LessThan(new DateTimeOffset(filter.Value).ToUnixTimeMilliseconds()))),
+                c.Range(r => r.Field(_ => _.Stock.CreatedTime).LessThan(new DateTimeOffset(filter!.Value).ToUnixTimeMilliseconds()))),
             u =>
             {
                 return (parameters.LowerPrice is null, parameters.TopPrice is null) switch
