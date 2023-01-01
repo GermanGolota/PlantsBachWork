@@ -20,17 +20,17 @@ public class PlantStat : AggregateBase, IEventHandler<StockAddedEvent>
         PlantsCount++;
     }
 
-    private class PlantStatsStockSubscription : IAggregateSubscription<PlantStat, PlantStock>
+    private class PlantStockSubscription : IAggregateSubscription<PlantStat, PlantStock>
     {
         public IEnumerable<EventSubscriptionBase<PlantStat, PlantStock>> Subscriptions => new[]
         {
             new EventSubscription<PlantStat, PlantStock, StockAddedEvent>(
-                new AllEvents(),
                 new AggregateLoadingTranspose<PlantStat, StockAddedEvent>(
                     @event => @event.Plant.GroupName.ToGuid(),
-                    (events, stats) =>
-                        events.Select(@event => stats.TransposeSubscribedEvent(@event)))
+                    (@event, stats) =>
+                        stats.TransposeSubscribedEvent(@event)
                 )
+            )
         };
 
     }

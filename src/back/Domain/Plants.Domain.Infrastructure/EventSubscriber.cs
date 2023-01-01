@@ -49,6 +49,7 @@ internal class EventSubscriber
                       return aggEvents.Where(x => eventNames.Contains(x.Metadata.Name));
                   },
                   all => aggEvents);
+                
                 if (eventsToHandle.Any())
                 {
                     var applyerType = GetApplyerTypeFor(subscription);
