@@ -18,22 +18,6 @@ internal class FileRepository : IFileRepository
         _context = context;
     }
 
-    public async Task<FileDto> GetAsync(FileLocation location)
-    {
-        var info = _fileProvider.GetFileInfo(GetLocation(location));
-        if (info.Exists)
-        {
-            var streamFunc = info.CreateReadStream;
-            var bytes = await streamFunc.ReadAllBytesAsync();
-            return new(location, bytes);
-        }
-        else
-        {
-            //TODO: should be a 404(not found) exception
-            throw new Exception($"Can't find file at '{location}'");
-        }
-    }
-
     public async Task<FileLocation> SaveAsync(FileDto file)
     {
         var location = GetLocation(file.Location);

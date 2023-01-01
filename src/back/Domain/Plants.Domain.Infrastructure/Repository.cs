@@ -20,14 +20,27 @@ internal class Repository<TAggregate> : IRepository<TAggregate> where TAggregate
     {
         if (_aggregateHelper.Aggregates.TryGetFor(typeof(TAggregate), out var aggregateName))
         {
-            var events = await _store.ReadEventsAsync(new(id, aggregateName));
             var desc = new AggregateDescription(id, aggregateName);
-            var aggregate = _applyer.ApplyEvents(desc, events);
+            var aggregate = await LoadAggregate(desc);
             return (TAggregate)aggregate;
         }
         else
         {
             throw new Exception($"Cannot find aggregate '{typeof(TAggregate)}'");
         }
+    }
+
+    private async Task<AggregateBase> LoadAggregate(AggregateDescription desc)
+    {
+        var events = await _store.ReadEventsAsync(desc);
+        var aggregate = _applyer.ApplyEvents(desc, events);
+        var referencedFields = _aggregateHelper.ReferencedAggregates[desc.Name];
+        foreach (var reference in aggregate.Referenced)
+        {
+            var field = referencedFields[reference.Name];
+            var value = await LoadAggregate(reference);
+            field.SetValue(aggregate, value);
+        }
+        return aggregate;
     }
 }

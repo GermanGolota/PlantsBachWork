@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Serializers;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Infrastructure.Domain.Helpers;
@@ -32,6 +33,7 @@ public static class DiExtensions
         services.AddTransient(typeof(TransposeApplyer<,>));
         services.AddScoped<CommandMetadataFactory>();
         services.AddScoped<EventMetadataFactory>();
+        services.AddScoped<CommandHelper>();
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton(_ => InfrastructureHelpers.Aggregate);
         services.AddTransient<ICommandSender, CommandSender>();
@@ -63,6 +65,7 @@ public static class DiExtensions
         baseClassMap.MapIdProperty(nameof(AggregateBase.Id));
         var helper = InfrastructureHelpers.Aggregate;
         BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
+        BsonSerializer.RegisterSerializer(typeof(Dictionary<long, string>), new PairDictionarySerializer<Dictionary<long, string>>());
         foreach (var (_, type) in helper.Aggregates)
         {
             var map = new BsonClassMap(type, baseClassMap);
@@ -73,6 +76,19 @@ public static class DiExtensions
         }
     }
 
+    public class PairDictionarySerializer<TDictionary>
+        : DictionarySerializerBase<TDictionary, long, string> where TDictionary : class, IEnumerable<KeyValuePair<long, string>>
+    {
+        public PairDictionarySerializer() : base(DictionaryRepresentation.Document, new Int64Serializer(BsonType.String), new StringSerializer())
+        {
+
+        }
+
+        protected override ICollection<KeyValuePair<long, string>> CreateAccumulator()
+        {
+            return new Dictionary<long, string>();
+        }
+    }
 
     private static IServiceCollection AddSearchProjection(this IServiceCollection services)
     {

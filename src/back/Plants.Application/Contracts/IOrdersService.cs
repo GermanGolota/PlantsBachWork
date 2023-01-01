@@ -6,7 +6,7 @@ namespace Plants.Application.Contracts;
 public interface IOrdersService
 {
     Task<IEnumerable<OrdersResultItem>> GetOrders(bool onlyMine);
-    Task ConfirmStarted(int orderId, string trackingNumber);
-    Task ConfirmReceived(int deliveryId);
-    Task<RejectOrderResult> Reject(int orderId);
+    Task ConfirmStarted(long orderId, string trackingNumber);
+    Task ConfirmReceived(long deliveryId);
+    Task<RejectOrderResult> Reject(long orderId);
 }

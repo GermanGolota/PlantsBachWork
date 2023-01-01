@@ -20,9 +20,9 @@ public class SearchService : ISearchService
         decimal? lowerPrice,
         decimal? topPrice,
         DateTime? lastDate,
-        int[] groupIds,
-        int[] regionIds,
-        int[] soilIds)
+        long[] groupIds,
+        long[] regionIds,
+        long[] soilIds)
     {
         var ctx = _contextFactory.CreateDbContext();
         await using (ctx)

@@ -66,7 +66,7 @@ internal class CqrsHelper
                 if (subscriptionInterface.GetGenericArguments() is [Type receiver, Type transmitter])
                 {
                     var subscriptionsProp = type.GetProperty(nameof(IAggregateSubscription<AggregateBase, AggregateBase>.Subscriptions))!;
-                    var value = type.IsAssignableTo(aggregateType) 
+                    var value = type.IsAssignableTo(aggregateType)
                         ? aggregateHelper.AggregateCtors[receiver].Invoke(new object[] { Guid.Empty })
                         : Activator.CreateInstance(type);
                     var subscriptions = (IEnumerable<object>)subscriptionsProp.GetValue(value)!;

@@ -2,6 +2,6 @@
 
 namespace Plants.Application.Commands;
 
-public record CreateInstructionCommand(int GroupId, string Text,
+public record CreateInstructionCommand(long GroupId, string Text,
     string Title, string Description, byte[]? CoverImage) : IRequest<CreateInstructionResult>;
-public record CreateInstructionResult(int Id);
+public record CreateInstructionResult(long Id);

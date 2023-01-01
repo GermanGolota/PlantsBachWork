@@ -1,13 +1,13 @@
 ﻿using Plants.Aggregates.PlantStocks;
 
-namespace Plants.Aggregates.Stats;
+namespace Plants.Aggregates.PlantStats;
 
 [Allow(Consumer, Read)]
 [Allow(Producer, Read)]
 [Allow(Producer, Write)]
-public class PlantStats : AggregateBase, IEventHandler<StockAddedEvent>
+public class PlantStat : AggregateBase, IEventHandler<StockAddedEvent>
 {
-    public PlantStats(Guid id) : base(id)
+    public PlantStat(Guid id) : base(id)
     {
     }
 
@@ -20,13 +20,12 @@ public class PlantStats : AggregateBase, IEventHandler<StockAddedEvent>
         PlantsCount++;
     }
 
-    private class PlantStatsStockSubscription : IAggregateSubscription<PlantStats, PlantStock>
+    private class PlantStatsStockSubscription : IAggregateSubscription<PlantStat, PlantStock>
     {
-        public IEnumerable<EventSubscriptionBase<PlantStats, PlantStock>> Subscriptions => new[]
+        public IEnumerable<EventSubscriptionBase<PlantStat, PlantStock>> Subscriptions => new[]
         {
-            new EventSubscription<PlantStats, PlantStock, StockAddedEvent>(
-                new AllEvents(),
-                new AggregateLoadingTranspose<PlantStats, StockAddedEvent>(
+            new EventSubscription<PlantStat, PlantStock, StockAddedEvent>(
+                new AggregateLoadingTranspose<PlantStat, StockAddedEvent>(
                     @event => @event.Plant.GroupName.ToGuid(),
                     (events, stats) =>
                         events.Select(@event => stats.TransposeSubscribedEvent(@event)))

@@ -2,6 +2,6 @@
 
 public interface IFileService
 {
-    Task<byte[]> LoadPlantImage(int plantImageId);
-    Task<byte[]> LoadInstructionCoverImage(int instructionId);
+    Task<byte[]> LoadPlantImage(long plantImageId);
+    Task<byte[]> LoadInstructionCoverImage(long instructionId);
 }

@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Plants.Application.Requests;
 
-public record PlantRequest(int Id) : IRequest<PlantResult>;
+public record PlantRequest(long Id) : IRequest<PlantResult>;
 
 public record PlantResult(bool Exists, PlantResultDto? Item)
 {
@@ -18,12 +18,12 @@ public record PlantResult(bool Exists, PlantResultDto? Item)
     }
 }
 
-public record PlantResultDto(string PlantName, string Description, int GroupId,
-    int SoilId, int[] Images, int[] Regions)
+public record PlantResultDto(string PlantName, string Description, long GroupId,
+    long SoilId, long[] Images, long[] Regions)
 {
     //for decoder
     public PlantResultDto() : this("", "",
-        -1, -1, Array.Empty<int>(), Array.Empty<int>())
+        -1, -1, Array.Empty<long>(), Array.Empty<long>())
     {
 
     }

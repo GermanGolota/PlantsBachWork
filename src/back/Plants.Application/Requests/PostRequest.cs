@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Plants.Application.Requests;
 
-public record PostRequest(int PostId) : IRequest<PostResult>;
+public record PostRequest(long PostId) : IRequest<PostResult>;
 
 public record PostResult(bool Exists, PostResultItem Item)
 {
@@ -48,7 +48,7 @@ public class PostResultItem
     public long CareTakerCared { get; set; }
     public long CareTakerSold { get; set; }
     public long CareTakerInstructions { get; set; }
-    public int[] Images { get; set; }
+    public long[] Images { get; set; }
     public PostResultItem()
     {
 
@@ -57,7 +57,7 @@ public class PostResultItem
     public PostResultItem(long id, string plantName, string description, decimal price,
         string soilName, string[] regions, string groupName, DateTime created, string sellerName,
         string sellerPhone, long sellerCared, long sellerSold, long sellerInstructions,
-        long careTakerCared, long careTakerSold, long careTakerInstructions, int[] images)
+        long careTakerCared, long careTakerSold, long careTakerInstructions, long[] images)
     {
         Id = id;
         PlantName = plantName;

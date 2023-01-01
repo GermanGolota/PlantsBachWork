@@ -7,13 +7,13 @@ public record OrdersRequest(bool OnlyMine) : IRequest<OrdersResult>;
 public record OrdersResult(List<OrdersResultItem> Items);
 
 public record OrdersResultItem(
-    int Status, int PostId, string City,
-    int MailNumber, string SellerName, string SellerContact,
-    decimal Price, string? DeliveryTrackingNumber, int[] Images)
+    int Status, long PostId, string City,
+    long MailNumber, string SellerName, string SellerContact,
+    decimal Price, string? DeliveryTrackingNumber, long[] Images)
 {
     //decoder
     public OrdersResultItem() : this(0, 0, "", 
-        0, "", "", 0, null, Array.Empty<int>())
+        0, "", "", 0, null, Array.Empty<long>())
     {
 
     }

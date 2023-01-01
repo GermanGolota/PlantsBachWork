@@ -14,6 +14,8 @@ public abstract class AggregateBase
     public string Name { get; }
     public DateTime LastUpdateTime { get; private set; }
 
+    public List<AggregateDescription> Referenced { get; } = new();
+
     public void Record(OneOf<Command, Event> newRecord)
     {
         Version++;

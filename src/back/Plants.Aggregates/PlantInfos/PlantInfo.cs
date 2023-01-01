@@ -1,4 +1,5 @@
 ﻿using Plants.Aggregates.PlantStocks;
+using System.Text;
 
 namespace Plants.Aggregates.PlantInfos;
 
@@ -17,19 +18,42 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
         }
     }
 
-    public Dictionary<Guid, string> GroupNames { get; set; } = new();
-    public Dictionary<Guid, string> RegionNames { get; set; } = new();
-    public Dictionary<Guid, string> SoilNames { get; set; } = new();
+    public Dictionary<long, string> GroupNames { get; private set; } = new();
+    public Dictionary<long, string> RegionNames { get; private set; } = new();
+    public Dictionary<long, string> SoilNames { get; private set; } = new();
+    public Dictionary<long, string> ImagePaths { get; private set; } = new();
 
     public void Handle(StockAddedEvent @event)
     {
         var plant = @event.Plant;
-        GroupNames.CacheTransformation(plant.GroupName, StringExtensions.ToGuid);
-        SoilNames.CacheTransformation(plant.SoilName, StringExtensions.ToGuid);
+        GroupNames.CacheTransformation(plant.GroupName, ToLong);
+        SoilNames.CacheTransformation(plant.SoilName, ToLong);
         foreach (var regionName in plant.RegionNames)
         {
-            RegionNames.CacheTransformation(regionName, StringExtensions.ToGuid);
+            RegionNames.CacheTransformation(regionName, ToLong);
         }
+
+        foreach (var path in @event.PictureUrls)
+        {
+            ImagePaths.CacheTransformation(path, ToLong);
+        }
+    }
+
+    private long ToLong(string str)
+    {
+        var initialBytes = Encoding.UTF8.GetBytes(str);
+        var bytes = initialBytes.Reverse().Take(8).ToArray();
+        if(bytes.Length < 8)
+        {
+            var newBytes = new byte[8];
+            bytes.CopyTo(newBytes, 0);
+            for (int i = bytes.Length; i < 8; i++)
+            {
+                newBytes[i] = 0;
+            }
+            bytes = newBytes;
+        }
+        return BitConverter.ToInt64(bytes);
     }
 
     private class PlantInfoStockSubscription : IAggregateSubscription<PlantInfo, PlantStock>
@@ -37,7 +61,6 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
         public IEnumerable<EventSubscriptionBase<PlantInfo, PlantStock>> Subscriptions => new[]
         {
             new EventSubscription<PlantInfo, PlantStock, StockAddedEvent>(
-                new AllEvents(),
                 new AggregateLoadingTranspose<PlantInfo, StockAddedEvent>(
                     _ => InfoId,
                     (oldEvents, info) =>

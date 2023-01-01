@@ -18,9 +18,8 @@ public record EventSubscription<TIn, TOut>
 
 public record EventSubscription<TIn, TOut, TEvent>
     (
-        OneOf<FilteredEvents, AllEvents> EventFilter,
         AggregateLoadingTranspose<TIn, TEvent> TransposeEvent
-    ) : EventSubscriptionBase<TIn, TOut>(EventFilter)
+    ) : EventSubscriptionBase<TIn, TOut>(new FilteredEvents(new[] { typeof(TEvent).Name }))
     where TIn : AggregateBase where TOut : AggregateBase where TEvent : Event;
 
 

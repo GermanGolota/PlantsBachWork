@@ -14,7 +14,7 @@ public class FileService : IFileService
         _ctx = ctx;
     }
 
-    public async Task<byte[]> LoadInstructionCoverImage(int instructionId)
+    public async Task<byte[]> LoadInstructionCoverImage(long instructionId)
     {
         var ctx = _ctx.CreateDbContext();
         await using (ctx)
@@ -32,7 +32,7 @@ public class FileService : IFileService
         }
     }
 
-    public async Task<byte[]> LoadPlantImage(int plantImageId)
+    public async Task<byte[]> LoadPlantImage(long plantImageId)
     {
         var ctx = _ctx.CreateDbContext();
         await using (ctx)
