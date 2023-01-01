@@ -41,16 +41,20 @@ internal class AggregateEventApplyer
             var recordFunc = aggregateType.GetMethod(nameof(AggregateBase.Record))!;
             foreach (var (command, events) in results)
             {
-                //command
                 if (_cqrs.CommandHandlers.TryGetValue(command.GetType(), out var cmdHandlers))
                 {
-                    foreach (var handler in cmdHandlers
+                    //do not trigger command handler when command was not yet processed
+                    //this would skip the ckeck
+                    if (events.Any())
+                    {
+                        foreach (var handler in cmdHandlers
                         .Select(_ => _.Handler)
                         .Where(_ => _.ReturnType.IsAssignableToGenericType(typeof(Task<>)) is false)
                         .Where(_ => _.DeclaringType == aggregateType)
                         )
-                    {
-                        handler.Invoke(aggregate, new[] { command });
+                        {
+                            handler.Invoke(aggregate, new[] { command });
+                        }
                     }
                 }
                 var commandRecord = command.ToOneOf<Command, Event>();
