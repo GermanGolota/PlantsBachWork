@@ -66,29 +66,20 @@ internal class CqrsHelper
                 if (subscriptionInterface.GetGenericArguments() is [Type receiver, Type transmitter])
                 {
                     var subscriptionsProp = type.GetProperty(nameof(IAggregateSubscription<AggregateBase, AggregateBase>.Subscriptions))!;
-                    var value = type.IsAssignableTo(aggregateType)
+                    var value = type.IsAssignableTo(aggregateType) 
                         ? aggregateHelper.AggregateCtors[receiver].Invoke(new object[] { Guid.Empty })
                         : Activator.CreateInstance(type);
                     var subscriptions = (IEnumerable<object>)subscriptionsProp.GetValue(value)!;
                     foreach (var subscription in subscriptions)
                     {
                         var subType = subscription.GetType();
-
+                        var filter = (OneOf<FilteredEvents, AllEvents>)subType
+                            .GetProperty(nameof(EventSubscription<AggregateBase, AggregateBase>.EventFilter))
+                            !.GetValue(subscription)!;
                         var transpose = subType
                             .GetProperty(nameof(EventSubscription<AggregateBase, AggregateBase>.TransposeEvent))
-                            !.GetValue(subscription)!;
-                        var specifiedFilter = (OneOf<FilteredEvents, AllEvents>?)subType
-                           .GetProperty(nameof(EventSubscription<AggregateBase, AggregateBase>.EventFilter))
-                           ?.GetValue(subscription);
+                            !.GetValue(subscription);
 
-                        var filter = specifiedFilter ?? new FilteredEvents(new[] {
-                              transpose
-                                .GetType()
-                                .GetGenericArguments()
-                                .Where(_ => _.IsAssignableTo(typeof(Event)))
-                                .Single()
-                                .Name
-                        });
                         subs.AddList(transmitter.Name, (filter, transpose));
                     }
                 }

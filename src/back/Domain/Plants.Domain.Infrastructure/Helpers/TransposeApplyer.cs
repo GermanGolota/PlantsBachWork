@@ -13,7 +13,7 @@ internal class TransposeApplyer<TIn> where TIn : AggregateBase
     {
         var id = transpose.ExtractId(events.First());
         var aggregate = await _repo.GetByIdAsync(id);
-        return events.Select(@event => transpose.Transpose(@event, aggregate));
+        return transpose.Transpose(events, aggregate);
     }
 }
 
@@ -31,6 +31,6 @@ internal class TransposeApplyer<TIn, TEvent> where TIn : AggregateBase where TEv
         var filteredEvents = events.OfType<TEvent>();
         var id = transpose.ExtractId(filteredEvents.First());
         var aggregate = await _repo.GetByIdAsync(id);
-        return filteredEvents.Select(@event => transpose.Transpose(@event, aggregate));
+        return transpose.Transpose(filteredEvents, aggregate);
     }
 }

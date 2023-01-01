@@ -43,7 +43,7 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
     {
         var initialBytes = Encoding.UTF8.GetBytes(str);
         var bytes = initialBytes.Reverse().Take(8).ToArray();
-        if (bytes.Length < 8)
+        if(bytes.Length < 8)
         {
             var newBytes = new byte[8];
             bytes.CopyTo(newBytes, 0);
@@ -56,15 +56,16 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
         return BitConverter.ToInt64(bytes);
     }
 
-    private class PlantStockSubscription : IAggregateSubscription<PlantInfo, PlantStock>
+    private class PlantInfoStockSubscription : IAggregateSubscription<PlantInfo, PlantStock>
     {
         public IEnumerable<EventSubscriptionBase<PlantInfo, PlantStock>> Subscriptions => new[]
         {
             new EventSubscription<PlantInfo, PlantStock, StockAddedEvent>(
+                new AllEvents(),
                 new AggregateLoadingTranspose<PlantInfo, StockAddedEvent>(
                     _ => InfoId,
-                    (added, info) =>
-                        info.TransposeSubscribedEvent(added))
+                    (oldEvents, info) =>
+                        oldEvents.Select(added => info.TransposeSubscribedEvent(added)))
                 )
         };
     }
