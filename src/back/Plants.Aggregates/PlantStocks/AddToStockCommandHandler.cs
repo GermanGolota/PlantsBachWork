@@ -4,23 +4,22 @@ namespace Plants.Aggregates.PlantStocks;
 
 internal class AddToStockCommandHandler : ICommandHandler<AddToStockCommand>
 {
-    private readonly IFileRepository _file;
+    private readonly FileUploader _uploader;
     private readonly IRepository<PlantStock> _repo;
     private PlantStock _stock = null;
 
     private const string _plantImageDirectory = "PlantImages";
 
-    public AddToStockCommandHandler(IFileRepository file, IRepository<PlantStock> repo)
+    public AddToStockCommandHandler(FileUploader uploader, IRepository<PlantStock> repo)
     {
-        _file = file;
+        _uploader = uploader;
         _repo = repo;
     }
 
     public async Task<IEnumerable<Event>> HandleAsync(AddToStockCommand command)
     {
         _stock ??= await _repo.GetByIdAsync(command.Metadata.Aggregate.Id);
-        var files = await Task.WhenAll(command.Pictures.Select(picture => _file.SaveAsync(new(GetNewFileLocation(), picture))));
-        var urls = files.Select(_file.GetUrl).ToArray();
+        var urls = await _uploader.UploadAsync(_stock.Id, command.Pictures);
         return new[]
         {
             new StockAddedEvent(EventFactory.Shared.Create<StockAddedEvent>(command), command.Plant, command.CreatedTime, urls, command.Metadata.UserName)

@@ -3,6 +3,7 @@ using Plants.Aggregates.Infrastructure.Domain;
 using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
 using Plants.Aggregates.Infrastructure.Services;
+using Plants.Aggregates.PlantStocks;
 using Plants.Aggregates.Services;
 using Plants.Aggregates.Users;
 using Plants.Domain.Infrastructure.Services;
@@ -13,6 +14,8 @@ public static class DiExtensions
 {
     public static IServiceCollection AddAggregatesInfrastructure(this IServiceCollection services)
     {
+        services.AddScoped<FileUploader>();
+
         services.AddDomainDependencies();
         services.AddScoped<TempPasswordContext>();
         services.AddScoped<IAuthorizer, Authorizer>();

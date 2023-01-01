@@ -166,9 +166,10 @@ public class PlantsControllerV2 : ControllerBase
         var regions = body.Regions.Select(regionId => info.RegionNames[regionId]).ToArray();
         var soil = info.SoilNames[body.SoilId];
         var group = info.GroupNames[body.GroupId];
+        var plantInfo = new PlantInformation(body.Name, body.Description, regions, soil, group);
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
-            meta => new AddToStockCommand(meta, new(body.Name, body.Description, regions, soil, group), body.Created, pictures)
+            meta => new AddToStockCommand(meta, plantInfo, body.Created, pictures)
             );
 
         return result.Match<ActionResult<AddPlantResult>>(
@@ -198,9 +199,20 @@ public class PlantsControllerV2 : ControllerBase
 
     [HttpPost("{id}/edit")]
     public async Task<ActionResult<EditPlantResult>> Edit
-      ([FromRoute] int id, [FromForm] EditPlantDto plant, IEnumerable<IFormFile> files, CancellationToken token)
+      ([FromRoute] long id, [FromForm] EditPlantDto plant, IEnumerable<IFormFile> files, CancellationToken token)
     {
-        throw new NotImplementedException();
+        var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync()));
+        var stockId = id.ToGuid();
+        var info = await _infoProjector.GetByIdAsync(PlantInfo.InfoId);
+        var regions = plant.RegionIds.Select(regionId => info.RegionNames[regionId]).ToArray();
+        var soil = info.SoilNames[plant.SoilId];
+        var group = info.GroupNames[plant.GroupId];
+        var plantInfo = new PlantInformation(plant.PlantName, plant.PlantDescription, regions, soil, group);
+        var removed = plant.RemovedImages.Select(image => info.ImagePaths[image]).ToArray();
+        var result = await _command.CreateAndSendAsync(
+            factory => factory.Create<EditStockItemCommand>(new(stockId, nameof(PlantStock))),
+            meta => new EditStockItemCommand(meta, plantInfo, pictures, removed));
+        return new EditPlantResult();
     }
 
     private static PlantResultItem MapPlant(PlantStock stock, string username) =>
