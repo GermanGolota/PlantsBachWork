@@ -1,4 +1,5 @@
-﻿using Plants.Aggregates.PlantStocks;
+﻿using Plants.Aggregates.PlantOrders;
+using Plants.Aggregates.PlantStocks;
 using Plants.Aggregates.Users;
 
 namespace Plants.Aggregates.PlantPosts;
@@ -9,7 +10,8 @@ namespace Plants.Aggregates.PlantPosts;
 [Allow(Consumer, Write)]
 public class PlantPost : AggregateBase, IEventHandler<StockItemPostedEvent>,
     IDomainCommandHandler<RemovePostCommand>, IEventHandler<PostRemovedEvent>,
-    IDomainCommandHandler<OrderPostCommand>, IEventHandler<PostOrderedEvent>
+    IDomainCommandHandler<OrderPostCommand>, IEventHandler<PostOrderedEvent>,
+    IEventHandler<RejectedOrderEvent>
 {
     public PlantPost(Guid id) : base(id)
     {
@@ -69,11 +71,26 @@ public class PlantPost : AggregateBase, IEventHandler<StockItemPostedEvent>,
         IsOrdered = true;
     }
 
+    public void Handle(RejectedOrderEvent @event)
+    {
+        IsOrdered = false;
+    }
+
     private class PlantStockSubscription : IAggregateSubscription<PlantPost, PlantStock>
     {
         public IEnumerable<EventSubscriptionBase<PlantPost, PlantStock>> Subscriptions => new[]
         {
             new EventSubscription<PlantPost, PlantStock, StockItemPostedEvent>(
+                new(@event => @event.Metadata.Aggregate.Id,
+                    (events, post) => events.Select(@event => post.TransposeSubscribedEvent(@event))))
+        };
+    }
+
+    private class PlantOrderSubscription : IAggregateSubscription<PlantPost, PlantOrder>
+    {
+        public IEnumerable<EventSubscriptionBase<PlantPost, PlantOrder>> Subscriptions => new[]
+        {
+            new EventSubscription<PlantPost, PlantOrder, RejectedOrderEvent>(
                 new(@event => @event.Metadata.Aggregate.Id,
                     (events, post) => events.Select(@event => post.TransposeSubscribedEvent(@event))))
         };
