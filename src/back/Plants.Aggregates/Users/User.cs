@@ -1,4 +1,5 @@
-﻿using Plants.Aggregates.PlantStocks;
+﻿using Plants.Aggregates.PlantPosts;
+using Plants.Aggregates.PlantStocks;
 
 namespace Plants.Aggregates.Users;
 
@@ -6,7 +7,11 @@ namespace Plants.Aggregates.Users;
 [Allow(Consumer, Write)]
 [Allow(Producer, Read)]
 [Allow(Producer, Write)]
-public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandler<RoleChangedEvent>, IEventHandler<StockAddedEvent>
+public class User : AggregateBase, 
+    IEventHandler<UserCreatedEvent>, 
+    IEventHandler<RoleChangedEvent>, 
+    IEventHandler<StockAddedEvent>,
+    IEventHandler<PostOrderedEvent>
 {
     public User(Guid id) : base(id)
     {
@@ -19,6 +24,7 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandle
     public string Login { get; private set; }
     public UserRole[] Roles { get; private set; }
     public long PlantsCared { get; private set; } = 0;
+    public HashSet<DeliveryAddress> UsedAdresses { get; private set; }
 
     public void Handle(UserCreatedEvent @event)
     {
@@ -29,6 +35,7 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandle
         PhoneNumber = user.PhoneNumber;
         Login = user.Login;
         Roles = user.Roles;
+        UsedAdresses = new();
     }
 
     public void Handle(RoleChangedEvent @event)
@@ -48,12 +55,27 @@ public class User : AggregateBase, IEventHandler<UserCreatedEvent>, IEventHandle
         PlantsCared++;
     }
 
+    public void Handle(PostOrderedEvent @event)
+    {
+        UsedAdresses.Add(@event.Address);
+    }
+
     private class PlantStockSubscription : IAggregateSubscription<User, PlantStock>
     {
         public IEnumerable<EventSubscriptionBase<User, PlantStock>> Subscriptions => new[]
         {
             new EventSubscription<User, PlantStock, StockAddedEvent>(new(
                 @event => @event.CaretakerUsername.ToGuid(),
+                (events, user) => events.Select(_=>user.TransposeSubscribedEvent(_))))
+        };
+    }
+
+    private class PlantPostSubscription : IAggregateSubscription<User, PlantPost>
+    {
+        public IEnumerable<EventSubscriptionBase<User, PlantPost>> Subscriptions => new[]
+        {
+            new EventSubscription<User, PlantPost, PostOrderedEvent>(new(
+                @event => @event.BuyerUsername.ToGuid(),
                 (events, user) => events.Select(_=>user.TransposeSubscribedEvent(_))))
         };
     }

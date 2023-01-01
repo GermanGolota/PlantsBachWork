@@ -95,9 +95,16 @@ public class PostControllerV2 : ControllerBase
     }
 
     [HttpPost("{id}/order")]
-    public async Task<ActionResult<PlaceOrderResult>> Order([FromRoute] long id, [FromQuery] string city, [FromQuery] int mailNumber)
+    public async Task<ActionResult<PlaceOrderResult>> Order([FromRoute] long id, [FromQuery] string city, [FromQuery] long mailNumber)
     {
-        throw new NotImplementedException();
+        var guid = id.ToGuid();
+        var result = await _command.CreateAndSendAsync(
+            factory => factory.Create<OrderPostCommand>(new(guid, nameof(PlantPost))),
+            meta => new OrderPostCommand(meta, new(city, mailNumber))
+            );
+        return result.Match<PlaceOrderResult>(
+            succ => new(true, "Success"),
+            fail => new(false, String.Join('\n', fail.Reasons)));
     }
 
     [HttpPost("{id}/delete")]
