@@ -154,7 +154,13 @@ public class PlantsControllerV2 : ControllerBase
     public async Task<ActionResult<CreatePostResult>> Post([FromRoute] long id,
         [FromQuery] decimal price, CancellationToken token)
     {
-        throw new NotImplementedException();
+        var guid = id.ToGuid();
+        var result = await _command.CreateAndSendAsync(
+            factory => factory.Create<PostStockItemCommand, PlantStock>(guid),
+            meta => new PostStockItemCommand(meta, price));
+        return result.Match(
+            succ => new CreatePostResult(true, "Success"),
+            fail => new CreatePostResult(false, String.Join('\n', fail.Reasons)));
     }
 
     [HttpPost("add")]

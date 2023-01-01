@@ -16,10 +16,10 @@ internal class EditStockItemCommandHandler : ICommandHandler<EditStockItemComman
     public async Task<CommandForbidden?> ShouldForbidAsync(EditStockItemCommand command, IUserIdentity user)
     {
         _stock ??= await _stockRepository.GetByIdAsync(command.Metadata.Aggregate.Id);
-        var validIdentity = user.HasRole(Manager)
-            .Or(user.HasRole(Producer).And(IsCaretaker(user, _stock)));
+        var validIdentity = user.HasRole(Manager).Or(user.HasRole(Producer).And(IsCaretaker(user, _stock)));
+        var notPosted = _stock.BeenPosted.ToForbidden("Cannot edit stock after it was posted");
         //TODO: Should validate data here
-        return validIdentity;
+        return validIdentity.And(notPosted);
     }
 
     private CommandForbidden? IsCaretaker(IUserIdentity user, PlantStock plant) =>
