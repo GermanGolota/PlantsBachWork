@@ -40,7 +40,7 @@ public class InstructionsController : ControllerBase
     }
 
     [HttpPost("{id}/edit")]
-    public async Task<ActionResult<EditInstructionResult>> Create(
+    public async Task<ActionResult<EditInstructionResult>> Edit(
         [FromRoute] int id, [FromForm] CreateInstructionCommandDto cmd, IFormFile file
         )
     {
