@@ -19,7 +19,7 @@ public class PostService : IPostService
         _logger = logger;
     }
 
-    public async Task<PostResultItem> GetBy(int postId)
+    public async Task<PostResultItem> GetBy(long postId)
     {
         var ctx = _ctx.CreateDbContext();
         await using (ctx)
@@ -47,7 +47,7 @@ public class PostService : IPostService
         }
     }
 
-    public async Task<PlaceOrderResult> Order(int postId, string city, int postNumber)
+    public async Task<PlaceOrderResult> Order(long postId, string city, int postNumber)
     {
         var ctx = _ctx.CreateDbContext();
         await using (ctx)
@@ -74,7 +74,7 @@ public class PostService : IPostService
         }
     }
 
-    public async Task<DeletePostResult> Delete(int postId)
+    public async Task<DeletePostResult> Delete(long postId)
     {
         var ctx = _ctx.CreateDbContext();
         await using (ctx)

@@ -19,19 +19,19 @@ public class PostController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult> GetPost([FromRoute] int id)
+    public async Task<ActionResult<PostResult>> GetPost([FromRoute] long id)
     {
         return Ok(await _mediator.Send(new PostRequest(id)));
     }
 
     [HttpPost("{id}/order")]
-    public async Task<ActionResult<PlaceOrderResult>> Order([FromRoute] int id, [FromQuery] string city, [FromQuery] int mailNumber)
+    public async Task<ActionResult<PlaceOrderResult>> Order([FromRoute] long id, [FromQuery] string city, [FromQuery] int mailNumber)
     {
         return Ok(await _mediator.Send(new PlaceOrderCommand(id, city, mailNumber)));
     }
 
     [HttpPost("{id}/delete")]
-    public async Task<ActionResult<DeletePostResult>> Delete([FromRoute] int id)
+    public async Task<ActionResult<DeletePostResult>> Delete([FromRoute] long id)
     {
         return await _mediator.Send(new DeletePostCommand(id));
     }
