@@ -93,14 +93,17 @@ public class PlantsControllerV2 : ControllerBase
     private readonly CommandHelper _command;
     private readonly ISearchQueryService<PlantStock, PlantStockParams> _search;
     private readonly IProjectionQueryService<PlantInfo> _infoProjector;
+    private readonly IProjectionQueryService<PlantStock> _stockProjector;
 
     public PlantsControllerV2(CommandHelper command,
         ISearchQueryService<PlantStock, PlantStockParams> search,
-        IProjectionQueryService<PlantInfo> infoProjector)
+        IProjectionQueryService<PlantInfo> infoProjector,
+        IProjectionQueryService<PlantStock> stockProjector)
     {
         _command = command;
         _search = search;
         _infoProjector = infoProjector;
+        _stockProjector = stockProjector;
     }
 
     [HttpGet("notposted")]
@@ -116,9 +119,27 @@ public class PlantsControllerV2 : ControllerBase
     }
 
     [HttpGet("notposted/{id}")]
-    public async Task<ActionResult<PlantResult>> GetNotPosted([FromRoute] int id, CancellationToken token)
+    public async Task<ActionResult<PlantResult>> GetNotPosted([FromRoute] long id, CancellationToken token)
     {
-        throw new NotImplementedException();
+        var guid = id.ToGuid();
+        PlantResult result;
+        if (await _stockProjector.ExistsAsync(guid))
+        {
+            var plant = await _stockProjector.GetByIdAsync(guid);
+            var images = (await _infoProjector.GetByIdAsync(PlantInfo.InfoId)).ImagePaths.ToInverse();
+            var info = plant.Information;
+            var dict = await _infoProjector.GetByIdAsync(PlantInfo.InfoId);
+            var groups = dict.GroupNames.ToInverse();
+            var soils = dict.SoilNames.ToInverse();
+            var regions = dict.RegionNames.ToInverse();
+            result = new PlantResult(new PlantResultDto(info.PlantName, info.Description,
+                groups[info.GroupName], soils[info.SoilName], plant.PictureUrls.Select(url => images[url]).ToArray(), info.RegionNames.Select(_ => regions[_]).ToArray()));
+        }
+        else
+        {
+            result = new PlantResult();
+        }
+        return result;
     }
 
     [HttpGet("prepared/{id}")]
@@ -140,7 +161,7 @@ public class PlantsControllerV2 : ControllerBase
         ([FromForm] AddPlantDto body, IEnumerable<IFormFile> files, CancellationToken token)
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync()));
-        var stockId = new Random().NextInt64().ToGuid();
+        var stockId = new Random().GetRandomConvertableGuid();
         var info = await _infoProjector.GetByIdAsync(PlantInfo.InfoId);
         var regions = body.Regions.Select(regionId => info.RegionNames[regionId]).ToArray();
         var soil = info.SoilNames[body.SoilId];
@@ -162,14 +183,15 @@ public class PlantsControllerV2 : ControllerBase
         ([FromForm] PlantInformation body, IEnumerable<IFormFile> files, CancellationToken token)
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync()));
-        var stockId = new Random().NextInt64().ToGuid();
+        var stockId = new Random().GetRandomConvertableGuid();
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
             meta => new AddToStockCommand(meta, body, pictures)
             );
 
+        var resultId = stockId.ToLong();
         return result.Match<ActionResult<AddPlantResult>>(
-            success => Ok(new AddPlantResult(stockId.ToLong())),
+            success => Ok(new AddPlantResult(resultId)),
             failure => BadRequest(failure.Reasons)
             );
     }

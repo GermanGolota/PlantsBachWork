@@ -18,9 +18,10 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
         }
     }
 
-    public Dictionary<long, string> GroupNames { get; set; } = new();
-    public Dictionary<long, string> RegionNames { get; set; } = new();
-    public Dictionary<long, string> SoilNames { get; set; } = new();
+    public Dictionary<long, string> GroupNames { get; private set; } = new();
+    public Dictionary<long, string> RegionNames { get; private set; } = new();
+    public Dictionary<long, string> SoilNames { get; private set; } = new();
+    public Dictionary<long, string> ImagePaths { get; private set; } = new();
 
     public void Handle(StockAddedEvent @event)
     {
@@ -31,12 +32,17 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
         {
             RegionNames.CacheTransformation(regionName, ToLong);
         }
+
+        foreach (var path in @event.PictureUrls)
+        {
+            ImagePaths.CacheTransformation(path, ToLong);
+        }
     }
 
     private long ToLong(string str)
     {
         var initialBytes = Encoding.UTF8.GetBytes(str);
-        var bytes = initialBytes.Take(8).ToArray();
+        var bytes = initialBytes.Reverse().Take(8).ToArray();
         if(bytes.Length < 8)
         {
             var newBytes = new byte[8];

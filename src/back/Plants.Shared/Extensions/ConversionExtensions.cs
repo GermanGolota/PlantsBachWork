@@ -12,8 +12,9 @@ public static class ConversionExtensions
     public static long ToLong(this Guid value)
     {
         byte[] b = value.ToByteArray();
-        int bint = BitConverter.ToInt32(b, 0);
-        return bint;
+        return BitConverter.ToInt64(b, 0);
     }
 
+    public static Guid GetRandomConvertableGuid(this Random rng) =>
+        rng.NextInt64().ToGuid();
 }

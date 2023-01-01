@@ -34,4 +34,7 @@ public static class DictionaryExtensions
             dict[key] = value;
         }
     }
+
+    public static IDictionary<TValue, TKey> ToInverse<TKey, TValue>(this IDictionary<TKey, TValue> dict) =>
+        dict.ToDictionary(_ => _.Value, _ => _.Key);
 }
