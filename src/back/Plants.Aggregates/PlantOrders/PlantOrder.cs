@@ -23,10 +23,14 @@ public class PlantOrder : AggregateBase, IEventHandler<PostOrderedEvent>,
     public string TrackingNumber { get; private set; }
 
     public OrderStatus Status { get; private set; }
+    public DateTime OrderTime { get; private set; }
+    public DateTime? DeliveryStartedTime { get; set; }
+    public DateTime? DeliveredTime { get; set; }
 
     public void Handle(PostOrderedEvent @event)
     {
         Address = @event.Address;
+        OrderTime = @event.Metadata.Time;
         Status = OrderStatus.Created;
         Referenced.Add(new(@event.Metadata.Aggregate.Id, nameof(PlantPost)));
         Referenced.Add(new(@event.BuyerUsername.ToGuid(), nameof(User)));
@@ -58,6 +62,7 @@ public class PlantOrder : AggregateBase, IEventHandler<PostOrderedEvent>,
     public void Handle(OrderDeliveryStartedEvent @event)
     {
         Status = OrderStatus.Delivering;
+        DeliveryStartedTime = @event.Metadata.Time;
     }
 
     public void Handle(RejectedOrderEvent @event)
@@ -86,6 +91,7 @@ public class PlantOrder : AggregateBase, IEventHandler<PostOrderedEvent>,
     public void Handle(DeliveryConfirmedEvent @event)
     {
         Status = OrderStatus.Delivered;
+        DeliveredTime = @event.Metadata.Time;
     }
 
     private class PlantPostSubscription : IAggregateSubscription<PlantOrder, PlantPost>

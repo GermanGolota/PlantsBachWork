@@ -79,7 +79,12 @@ public class OrdersControllerV2 : ControllerBase
             var stock = item.Post.Stock;
             return new OrdersResultItem((int)item.Status, item.Post.Id.ToLong(),
                 item.Address.City, item.Address.MailNumber, seller.FullName,
-                seller.PhoneNumber, item.Post.Price, item.TrackingNumber, stock.PictureUrls.Select(url => images[url]).ToArray());
+                seller.PhoneNumber, item.Post.Price, item.TrackingNumber, stock.PictureUrls.Select(url => images[url]).ToArray())
+            {
+                DeliveryStarted = item.DeliveryStartedTime,
+                Ordered = item.OrderTime,
+                Shipped = item.DeliveredTime
+            };
         }
         )));
     }
