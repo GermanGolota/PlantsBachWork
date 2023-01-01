@@ -26,7 +26,7 @@ public class InstructionsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<GetInstructionResult>> Get([FromRoute] int id)
+    public async Task<ActionResult<GetInstructionResult>> Get([FromRoute] long id)
     {
         return await _mediator.Send(new GetInstructionRequest(id));
     }
@@ -50,5 +50,5 @@ public class InstructionsController : ControllerBase
     }
 }
 
-public record CreateInstructionCommandDto(int GroupId, string Text,
+public record CreateInstructionCommandDto(long GroupId, string Text,
   string Title, string Description);

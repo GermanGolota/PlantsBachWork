@@ -2,5 +2,5 @@
 
 namespace Plants.Application.Commands;
 
-public record RejectOrderCommand(int OrderId) : IRequest<RejectOrderResult>;
+public record RejectOrderCommand(long OrderId) : IRequest<RejectOrderResult>;
 public record RejectOrderResult(bool Success);

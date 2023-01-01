@@ -25,20 +25,20 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost("{id}/deliver")]
-    public async Task<ActionResult<StartDeliveryResult>> StartDelivery([FromRoute] int id,
+    public async Task<ActionResult<StartDeliveryResult>> StartDelivery([FromRoute] long id,
         [FromQuery] string trackingNumber, CancellationToken token)
     {
         return await _mediator.Send(new StartDeliveryCommand(id, trackingNumber), token);
     }
 
     [HttpPost("{id}/delivered")]
-    public async Task<ActionResult<ConfirmDeliveryResult>> MarkAsDelivered([FromRoute] int id, CancellationToken token)
+    public async Task<ActionResult<ConfirmDeliveryResult>> MarkAsDelivered([FromRoute] long id, CancellationToken token)
     {
         return await _mediator.Send(new ConfirmDeliveryCommand(id), token);
     }
 
     [HttpPost("{id}/reject")]
-    public async Task<ActionResult<RejectOrderResult>> RejectOrder([FromRoute] int id, CancellationToken token)
+    public async Task<ActionResult<RejectOrderResult>> RejectOrder([FromRoute] long id, CancellationToken token)
     {
         return await _mediator.Send(new RejectOrderCommand(id), token);
     }

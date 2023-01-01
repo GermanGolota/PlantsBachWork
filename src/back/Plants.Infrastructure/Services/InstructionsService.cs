@@ -15,7 +15,7 @@ public class InstructionsService : IInstructionsService
         _ctx = ctxFactory;
     }
 
-    public async Task<int> Create(int GroupId, string Text, string Title, string Description, byte[] CoverImage)
+    public async Task<int> Create(long GroupId, string Text, string Title, string Description, byte[] CoverImage)
     {
         var ctx = _ctx.CreateDbContext();
         await using (ctx)
@@ -37,7 +37,7 @@ public class InstructionsService : IInstructionsService
         }
     }
 
-    public async Task Edit(int InstructionId, int GroupId, string Text, string Title, string Description, byte[] CoverImage)
+    public async Task Edit(long InstructionId, long GroupId, string Text, string Title, string Description, byte[] CoverImage)
     {
         var ctx = _ctx.CreateDbContext();
         await using (ctx)
@@ -59,7 +59,7 @@ public class InstructionsService : IInstructionsService
         }
     }
 
-    public async Task<GetInstructionResultItem> GetBy(int Id)
+    public async Task<GetInstructionResultItem> GetBy(long Id)
     {
         var ctx = _ctx.CreateDbContext();
         await using (ctx)
@@ -87,7 +87,7 @@ public class InstructionsService : IInstructionsService
         }
     }
 
-    public async Task<IEnumerable<FindInstructionsResultItem>> GetFor(int GroupId, string Title, string Description)
+    public async Task<IEnumerable<FindInstructionsResultItem>> GetFor(long GroupId, string Title, string Description)
     {
         var ctx = _ctx.CreateDbContext();
         await using (ctx)

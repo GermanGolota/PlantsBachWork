@@ -37,7 +37,7 @@ internal class OrdersService : IOrdersService
         }
     }
 
-    public async Task ConfirmStarted(int orderId, string trackingNumber)
+    public async Task ConfirmStarted(long orderId, string trackingNumber)
     {
         var ctx = _ctx.CreateDbContext();
         await using (ctx)
@@ -56,7 +56,7 @@ internal class OrdersService : IOrdersService
         }
     }
 
-    public async Task ConfirmReceived(int deliveryId)
+    public async Task ConfirmReceived(long deliveryId)
     {
         var ctx = _ctx.CreateDbContext();
         await using (ctx)
@@ -73,7 +73,7 @@ internal class OrdersService : IOrdersService
         }
     }
 
-    public async Task<RejectOrderResult> Reject(int orderId)
+    public async Task<RejectOrderResult> Reject(long orderId)
     {
         var ctx = _ctx.CreateDbContext();
         await using (ctx)

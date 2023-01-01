@@ -19,14 +19,14 @@ public class FileController : ControllerBase
     }
 
     [HttpGet("plant/{id}")]
-    public async Task<FileResult> Load([FromRoute] int id)
+    public async Task<FileResult> Load([FromRoute] long id)
     {
         var bytes = await _file.LoadPlantImage(id);
         return File(bytes, "application/octet-stream");
     }
 
     [HttpGet("instruction/{id}")]
-    public async Task<FileResult> LoadInstruction([FromRoute] int id)
+    public async Task<FileResult> LoadInstruction([FromRoute] long id)
     {
         var bytes = await _file.LoadInstructionCoverImage(id);
         return File(bytes, "application/octet-stream");
@@ -67,7 +67,7 @@ public class FileControllerV2 : ControllerBase
     }
 
     [HttpGet("instruction/{id}")]
-    public async Task<FileResult> LoadInstruction([FromRoute] int id)
+    public async Task<FileResult> LoadInstruction([FromRoute] long id)
     {
         throw new NotImplementedException();
     }

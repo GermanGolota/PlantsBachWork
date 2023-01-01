@@ -4,8 +4,8 @@ namespace Plants.Application.Contracts;
 
 public interface IInstructionsService
 {
-    Task<IEnumerable<FindInstructionsResultItem>> GetFor(int GroupId, string? Title, string? Description);
-    Task<GetInstructionResultItem?> GetBy(int Id);
-    Task<int> Create(int GroupId, string Text, string Title, string Description, byte[]? CoverImage);
-    Task Edit(int InstructionId, int GroupId, string Text, string Title, string Description, byte[]? CoverImage);
+    Task<IEnumerable<FindInstructionsResultItem>> GetFor(long GroupId, string? Title, string? Description);
+    Task<GetInstructionResultItem?> GetBy(long Id);
+    Task<int> Create(long GroupId, string Text, string Title, string Description, byte[]? CoverImage);
+    Task Edit(long InstructionId, long GroupId, string Text, string Title, string Description, byte[]? CoverImage);
 }
