@@ -3,7 +3,6 @@
 public interface IFileRepository
 {
     Task<FileLocation> SaveAsync(FileDto file);
-    Task<FileDto> GetAsync(FileLocation location);
     string GetUrl(FileLocation location);
 }
 
