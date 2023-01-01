@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Plants.Application.Requests;
 
-public record PlantRequest(int Id) : IRequest<PlantResult>;
+public record PlantRequest(long Id) : IRequest<PlantResult>;
 
 public record PlantResult(bool Exists, PlantResultDto? Item)
 {

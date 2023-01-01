@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Plants.Application.Requests;
 
-public record PreparedPostRequest(int PlantId) : IRequest<PreparedPostResult>;
+public record PreparedPostRequest(long PlantId) : IRequest<PreparedPostResult>;
 
 public record PreparedPostResult(bool Exists, PreparedPostResultItem Item)
 {

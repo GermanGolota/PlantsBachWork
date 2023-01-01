@@ -2,5 +2,5 @@
 
 namespace Plants.Application.Commands;
 
-public record CreatePostCommand(int PlantId, decimal Price) : IRequest<CreatePostResult>;
+public record CreatePostCommand(long PlantId, decimal Price) : IRequest<CreatePostResult>;
 public record CreatePostResult(bool Successfull, string Message);

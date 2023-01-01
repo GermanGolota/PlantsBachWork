@@ -3,11 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Plants.Aggregates.PlantInfos;
 using Plants.Aggregates.PlantStocks;
 using Plants.Aggregates.Search;
+using Plants.Aggregates.Users;
 using Plants.Application.Commands;
 using Plants.Application.Requests;
-using Plants.Presentation.Examples;
 using Plants.Presentation.Extensions;
-using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation.Controllers;
 
@@ -31,7 +30,7 @@ public class PlantsController : ControllerBase
     }
 
     [HttpGet("notposted/{id}")]
-    public async Task<ActionResult<PlantResult>> GetNotPosted([FromRoute] int id, CancellationToken token)
+    public async Task<ActionResult<PlantResult>> GetNotPosted([FromRoute] long id, CancellationToken token)
     {
         return await _mediator.Send(new PlantRequest(id), token);
     }
@@ -43,7 +42,7 @@ public class PlantsController : ControllerBase
     }
 
     [HttpPost("{id}/post")]
-    public async Task<ActionResult<CreatePostResult>> GetPrepared([FromRoute] int id,
+    public async Task<ActionResult<CreatePostResult>> GetPrepared([FromRoute] long id,
         [FromQuery] decimal price, CancellationToken token)
     {
         return await _mediator.Send(new CreatePostCommand(id, price), token);
@@ -94,16 +93,19 @@ public class PlantsControllerV2 : ControllerBase
     private readonly ISearchQueryService<PlantStock, PlantStockParams> _search;
     private readonly IProjectionQueryService<PlantInfo> _infoProjector;
     private readonly IProjectionQueryService<PlantStock> _stockProjector;
+    private readonly IProjectionQueryService<User> _userProjector;
 
     public PlantsControllerV2(CommandHelper command,
         ISearchQueryService<PlantStock, PlantStockParams> search,
         IProjectionQueryService<PlantInfo> infoProjector,
-        IProjectionQueryService<PlantStock> stockProjector)
+        IProjectionQueryService<PlantStock> stockProjector,
+        IProjectionQueryService<User> userProjector)
     {
         _command = command;
         _search = search;
         _infoProjector = infoProjector;
         _stockProjector = stockProjector;
+        _userProjector = userProjector;
     }
 
     [HttpGet("notposted")]
@@ -143,13 +145,13 @@ public class PlantsControllerV2 : ControllerBase
     }
 
     [HttpGet("prepared/{id}")]
-    public async Task<ActionResult<PreparedPostResult>> GetPrepared(int id, CancellationToken token)
+    public async Task<ActionResult<PreparedPostResult>> GetPrepared(long id, CancellationToken token)
     {
         throw new NotImplementedException();
     }
 
     [HttpPost("{id}/post")]
-    public async Task<ActionResult<CreatePostResult>> GetPrepared([FromRoute] int id,
+    public async Task<ActionResult<CreatePostResult>> Post([FromRoute] long id,
         [FromQuery] decimal price, CancellationToken token)
     {
         throw new NotImplementedException();

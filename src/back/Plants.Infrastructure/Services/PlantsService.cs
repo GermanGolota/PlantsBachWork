@@ -16,7 +16,7 @@ public class PlantsService : IPlantsService
         _ctxFactory = ctxFactory;
     }
 
-    public async Task<PlantResultDto> GetBy(int id)
+    public async Task<PlantResultDto> GetBy(long id)
     {
         var ctx = _ctxFactory.CreateDbContext();
         await using (ctx)
@@ -56,7 +56,7 @@ public class PlantsService : IPlantsService
             }
         }
     }
-    public async Task<PreparedPostResultItem> GetPrepared(int plantId)
+    public async Task<PreparedPostResultItem> GetPrepared(long plantId)
     {
         var ctx = _ctxFactory.CreateDbContext();
         await using (ctx)
@@ -84,7 +84,7 @@ public class PlantsService : IPlantsService
         }
     }
 
-    public async Task<CreatePostResult> Post(int plantId, decimal price)
+    public async Task<CreatePostResult> Post(long plantId, decimal price)
     {
         var ctx = _ctxFactory.CreateDbContext();
         await using (ctx)
