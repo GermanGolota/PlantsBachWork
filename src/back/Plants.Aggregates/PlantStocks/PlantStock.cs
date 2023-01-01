@@ -1,4 +1,6 @@
-﻿namespace Plants.Aggregates.PlantStocks;
+﻿using Plants.Aggregates.Users;
+
+namespace Plants.Aggregates.PlantStocks;
 
 [Allow(Consumer, Read)]
 [Allow(Producer, Read)]
@@ -11,7 +13,7 @@ public class PlantStock : AggregateBase, IEventHandler<StockAddedEvent>, IEventH
 
     public PlantInformation Information { get; private set; }
     public string[] PictureUrls { get; private set; }
-    public string CaretakerUsername { get; private set; }
+    public User Caretaker { get; set; }
     public DateTime CreatedTime { get; private set; }
     public bool BeenPosted { get; private set; } = false;
 
@@ -19,7 +21,7 @@ public class PlantStock : AggregateBase, IEventHandler<StockAddedEvent>, IEventH
     {
         Information = @event.Plant;
         PictureUrls = @event.PictureUrls;
-        CaretakerUsername = @event.CaretakerUsername;
+        Referenced.Add(new(@event.CaretakerUsername.ToGuid(), nameof(User)));
         CreatedTime = @event.CreatedTime;
     }
 

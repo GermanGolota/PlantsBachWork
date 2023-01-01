@@ -17,7 +17,7 @@ internal class PlantStockParamsProjector : ISearchParamsProjector<PlantStock, Pl
     {
         var username = _identityProvider.Identity!.UserName;
         return desc.Query(q => parameters.IsMine 
-            ? q.Term(t => t.Field(f => f.CaretakerUsername).Value(username))
+            ? q.Term(t => t.Field(f => f.Caretaker.Login).Value(username))
             : q.MatchAll());
     }
 } 

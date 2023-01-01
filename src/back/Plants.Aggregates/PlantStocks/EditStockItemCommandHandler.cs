@@ -23,7 +23,7 @@ internal class EditStockItemCommandHandler : ICommandHandler<EditStockItemComman
     }
 
     private CommandForbidden? IsCaretaker(IUserIdentity user, PlantStock plant) =>
-        (user.UserName == plant.CaretakerUsername).ToForbidden("Cannot eddit somebody elses stock item");
+        (user.UserName == plant.Caretaker.Login).ToForbidden("Cannot eddit somebody elses stock item");
 
     public async Task<IEnumerable<Event>> HandleAsync(EditStockItemCommand command)
     {

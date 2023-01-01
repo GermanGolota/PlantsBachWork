@@ -81,8 +81,6 @@ public record AddPlantDto(string Name, string Description, long[] Regions, long 
 public record EditPlantDto(string PlantName,
   string PlantDescription, long[] RegionIds, long SoilId, long GroupId, long[] RemovedImages);
 
-
-
 [ApiController]
 [Route("v2/plants")]
 [ApiVersion("2")]
@@ -224,7 +222,7 @@ public class PlantsControllerV2 : ControllerBase
     }
 
     private static PlantResultItem MapPlant(PlantStock stock, string username) =>
-        new(stock.Id.ToLong(), stock.Information.PlantName, stock.Information.Description, stock.CaretakerUsername == username);
+        new(stock.Id.ToLong(), stock.Information.PlantName, stock.Information.Description, stock.Caretaker.Login == username);
 
     private static async Task<byte[][]> ReadFilesAsync(IEnumerable<IFormFile> files) =>
         await Task.WhenAll(files.Select(file => file.ReadBytesAsync()));
