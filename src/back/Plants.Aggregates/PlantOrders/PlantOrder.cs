@@ -85,7 +85,7 @@ public class PlantOrder : AggregateBase, IEventHandler<PostOrderedEvent>,
 
     public IEnumerable<Event> Handle(ConfirmDeliveryCommand command) => new[]
     {
-        new DeliveryConfirmedEvent(EventFactory.Shared.Create<DeliveryConfirmedEvent>(command))
+        new DeliveryConfirmedEvent(EventFactory.Shared.Create<DeliveryConfirmedEvent>(command), Post.Seller.Login)
     };
 
     public void Handle(DeliveryConfirmedEvent @event)
@@ -117,4 +117,4 @@ public record RejectOrderCommand(CommandMetadata Metadata) : Command(Metadata);
 public record RejectedOrderEvent(EventMetadata Metadata) : Event(Metadata);
 
 public record ConfirmDeliveryCommand(CommandMetadata Metadata) : Command(Metadata);
-public record DeliveryConfirmedEvent(EventMetadata Metadata) : Event(Metadata);
+public record DeliveryConfirmedEvent(EventMetadata Metadata, string SellerUsername) : Event(Metadata);

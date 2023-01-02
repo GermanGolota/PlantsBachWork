@@ -80,11 +80,10 @@ public class PostControllerV2 : ControllerBase
                 var caretaker = stock.Caretaker;
                 var plant = stock.Information;
                 var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId)).ImagePaths.ToInverse();
-                //TODO: Add sold and instructions
                 result = new(new(post.Id.ToLong(), plant.PlantName, plant.Description, post.Price,
                     plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
-                    seller.FullName, seller.PhoneNumber, seller.PlantsCared, 0, 0,
-                    caretaker.PlantsCared, 0, 0, stock.PictureUrls.Select(url => images[url]).ToArray()));
+                    seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
+                    caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated, stock.PictureUrls.Select(url => images[url]).ToArray()));
             }
         }
         else

@@ -111,7 +111,7 @@ public class InstructionsControllerV2 : ControllerBase
     }
 
     [HttpPost("create")]
-    public async Task<ActionResult<CreateInstructionResult>> Create([FromForm] CreateInstructionCommandDto cmd, IFormFile file)
+    public async Task<ActionResult<CreateInstructionResult>> Create([FromForm] CreateInstructionCommandDto cmd, IFormFile? file)
     {
         var bytes = await file.ReadBytesAsync();
         var guid = new Random().GetRandomConvertableGuid();
@@ -124,7 +124,7 @@ public class InstructionsControllerV2 : ControllerBase
 
     [HttpPost("{id}/edit")]
     public async Task<ActionResult<EditInstructionResult>> Edit(
-        [FromRoute] long id, [FromForm] CreateInstructionCommandDto cmd, IFormFile file
+        [FromRoute] long id, [FromForm] CreateInstructionCommandDto cmd, IFormFile? file
         )
     {
         var bytes = await file.ReadBytesAsync();
