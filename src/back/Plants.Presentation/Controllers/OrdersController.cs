@@ -70,7 +70,7 @@ public class OrdersControllerV2 : ControllerBase
     [HttpGet()]
     public async Task<ActionResult<OrdersResult>> GetAll([FromQuery] bool onlyMine, CancellationToken token)
     {
-        var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId)).ImagePaths.ToInverse();
+        var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId)).PlantImagePaths.ToInverse();
 
         var items = await _orderQuery.SearchAsync(new(onlyMine), new SearchAll());
         return new OrdersResult(new(items.Select(item =>

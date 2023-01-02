@@ -10,7 +10,7 @@ namespace Plants.Aggregates.PlantOrders;
 public class PlantOrder : AggregateBase, IEventHandler<PostOrderedEvent>,
     IDomainCommandHandler<StartOrderDeliveryCommand>, IEventHandler<OrderDeliveryStartedEvent>,
     IDomainCommandHandler<RejectOrderCommand>, IEventHandler<RejectedOrderEvent>,
-    IDomainCommandHandler<ConfirmDeliveryCommand>, IEventHandler<DeliveryConfirmedEvent>
+    IEventHandler<DeliveryConfirmedEvent>
 {
     public PlantOrder(Guid id) : base(id)
     {
@@ -39,7 +39,7 @@ public class PlantOrder : AggregateBase, IEventHandler<PostOrderedEvent>,
     public CommandForbidden? ShouldForbid(StartOrderDeliveryCommand command, IUserIdentity user) =>
         IsSellerOrManager(user).And(StatusIs(OrderStatus.Created));
 
-    private CommandForbidden? StatusIs(OrderStatus expectedStatus)
+    public CommandForbidden? StatusIs(OrderStatus expectedStatus)
     {
         return (Status == expectedStatus).ToForbidden($"The order is already in status '{Status}'");
     }
@@ -50,7 +50,7 @@ public class PlantOrder : AggregateBase, IEventHandler<PostOrderedEvent>,
     private CommandForbidden? IsSeller(IUserIdentity user) =>
         (Post.Seller.Login == user.UserName).ToForbidden("Cannot confirm an order of some other seller");
 
-    private CommandForbidden? IsBuyer(IUserIdentity user) =>
+    public CommandForbidden? IsBuyer(IUserIdentity user) =>
         (Buyer.Login == user.UserName).ToForbidden("Cannot confirm an order of some other buyer");
 
     public IEnumerable<Event> Handle(StartOrderDeliveryCommand command) =>
@@ -78,15 +78,6 @@ public class PlantOrder : AggregateBase, IEventHandler<PostOrderedEvent>,
         {
             new RejectedOrderEvent(EventFactory.Shared.Create<RejectedOrderEvent>(command))
         };
-
-    public CommandForbidden? ShouldForbid(ConfirmDeliveryCommand command, IUserIdentity user) =>
-        user.HasRole(Manager).Or(user.HasRole(Producer).And(IsBuyer(user)))
-        .And(StatusIs(OrderStatus.Delivering));
-
-    public IEnumerable<Event> Handle(ConfirmDeliveryCommand command) => new[]
-    {
-        new DeliveryConfirmedEvent(EventFactory.Shared.Create<DeliveryConfirmedEvent>(command))
-    };
 
     public void Handle(DeliveryConfirmedEvent @event)
     {
@@ -117,4 +108,4 @@ public record RejectOrderCommand(CommandMetadata Metadata) : Command(Metadata);
 public record RejectedOrderEvent(EventMetadata Metadata) : Event(Metadata);
 
 public record ConfirmDeliveryCommand(CommandMetadata Metadata) : Command(Metadata);
-public record DeliveryConfirmedEvent(EventMetadata Metadata) : Event(Metadata);
+public record DeliveryConfirmedEvent(EventMetadata Metadata, string SellerUsername, string GroupName, decimal Price) : Event(Metadata);

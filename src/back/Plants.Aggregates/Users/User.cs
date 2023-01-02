@@ -1,4 +1,6 @@
-﻿using Plants.Aggregates.PlantPosts;
+﻿using Plants.Aggregates.PlantInstructions;
+using Plants.Aggregates.PlantOrders;
+using Plants.Aggregates.PlantPosts;
 using Plants.Aggregates.PlantStocks;
 
 namespace Plants.Aggregates.Users;
@@ -11,7 +13,9 @@ public class User : AggregateBase,
     IEventHandler<UserCreatedEvent>, 
     IEventHandler<RoleChangedEvent>, 
     IEventHandler<StockAddedEvent>,
-    IEventHandler<PostOrderedEvent>
+    IEventHandler<PostOrderedEvent>,
+    IEventHandler<DeliveryConfirmedEvent>,
+    IEventHandler<InstructionCreatedEvent>
 {
     public User(Guid id) : base(id)
     {
@@ -23,7 +27,11 @@ public class User : AggregateBase,
     public string PhoneNumber { get; private set; }
     public string Login { get; private set; }
     public UserRole[] Roles { get; private set; }
+
     public long PlantsCared { get; private set; } = 0;
+    public long PlantsSold { get; private set; } = 0;
+    public long InstructionCreated { get; private set; } = 0;
+
     public HashSet<DeliveryAddress> UsedAdresses { get; private set; }
 
     public void Handle(UserCreatedEvent @event)
@@ -50,14 +58,24 @@ public class User : AggregateBase,
         }
     }
 
+    public void Handle(PostOrderedEvent @event)
+    {
+        UsedAdresses.Add(@event.Address);
+    }
+
     public void Handle(StockAddedEvent @event)
     {
         PlantsCared++;
     }
 
-    public void Handle(PostOrderedEvent @event)
+    public void Handle(DeliveryConfirmedEvent @event)
     {
-        UsedAdresses.Add(@event.Address);
+        PlantsSold++;
+    }
+
+    public void Handle(InstructionCreatedEvent @event)
+    {
+        InstructionCreated++;
     }
 
     private class PlantStockSubscription : IAggregateSubscription<User, PlantStock>
@@ -77,6 +95,22 @@ public class User : AggregateBase,
             new EventSubscription<User, PlantPost, PostOrderedEvent>(new(
                 @event => @event.BuyerUsername.ToGuid(),
                 (events, user) => events.Select(_=>user.TransposeSubscribedEvent(_))))
+        };
+    }
+
+    private class PlantOrderSubscription : IAggregateSubscription<User, PlantOrder>
+    {
+        public IEnumerable<EventSubscriptionBase<User, PlantOrder>> Subscriptions => new[]
+        {
+            EventSubscriptionFactory.CreateForwarded<User, PlantOrder, DeliveryConfirmedEvent>(@event => @event.SellerUsername.ToGuid())
+        };
+    }
+
+    private class PlantInstructionSubscription : IAggregateSubscription<User, PlantInstruction>
+    {
+        public IEnumerable<EventSubscriptionBase<User, PlantInstruction>> Subscriptions => new[]
+        {
+            EventSubscriptionFactory.CreateForwarded<User, PlantInstruction, InstructionCreatedEvent>(@event => @event.WriterUsername.ToGuid())
         };
     }
 }
