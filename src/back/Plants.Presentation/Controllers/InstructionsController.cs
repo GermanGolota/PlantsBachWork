@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Plants.Aggregates.PlantInfos;
 using Plants.Aggregates.PlantInstructions;
+using Plants.Aggregates.Search;
 using Plants.Application.Commands;
 using Plants.Application.Requests;
 using Plants.Presentation.Extensions;
@@ -63,23 +64,50 @@ public class InstructionsControllerV2 : ControllerBase
 {
     private readonly CommandHelper _command;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
+    private readonly IProjectionQueryService<PlantInstruction> _instructionQuery;
+    private readonly ISearchQueryService<PlantInstruction, PlantInstructionParams> _instructionSearch;
 
-    public InstructionsControllerV2(CommandHelper command, IProjectionQueryService<PlantInfo> infoQuery)
+    public InstructionsControllerV2(CommandHelper command,
+        IProjectionQueryService<PlantInfo> infoQuery,
+        IProjectionQueryService<PlantInstruction> instructionQuery,
+        ISearchQueryService<PlantInstruction, PlantInstructionParams> instructionSearch)
     {
         _command = command;
         _infoQuery = infoQuery;
+        _instructionQuery = instructionQuery;
+        _instructionSearch = instructionSearch;
     }
 
     [HttpGet("find")]
     public async Task<ActionResult<FindInstructionsResult>> Find([FromQuery] FindInstructionsRequest request)
     {
-        throw new NotImplementedException();
+        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId);
+        var param = new PlantInstructionParams(info.GroupNames[request.GroupId], request.Title, request.Description);
+        var results = await _instructionSearch.SearchAsync(param, new SearchAll());
+        return new FindInstructionsResult(
+            results.Select(result => 
+                new FindInstructionsResultItem(result.Id.ToLong(), result.Information.Title, result.Information.Description, result.CoverUrl is not null))
+            .ToList());
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<GetInstructionResult>> Get([FromRoute] long id)
     {
-        throw new NotImplementedException();
+        var guid = id.ToGuid();
+        GetInstructionResult result;
+        if (await _instructionQuery.ExistsAsync(guid))
+        {
+            var instruction = await _instructionQuery.GetByIdAsync(guid);
+            var groups = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId)).GroupNames.ToInverse();
+
+            var information = instruction.Information;
+            result = new(true, new(instruction.Id.ToLong(), information.Title, information.Description, information.Text, instruction.CoverUrl is not null, groups[information.GroupName]));
+        }
+        else
+        {
+            result = new(false, new());
+        }
+        return result;
     }
 
     [HttpPost("create")]
