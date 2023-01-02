@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Plants.Aggregates.PlantStats;
 using Plants.Application.Requests;
 
 namespace Plants.Presentation.Controllers;
@@ -31,5 +32,33 @@ public class StatsController : ControllerBase
         var req = new TotalStatsRequest();
         var res = await _mediator.Send(req, token);
         return Ok(res);
+    }
+}
+
+
+[ApiController]
+[Route("v2/stats")]
+[ApiVersion("2")]
+[ApiExplorerSettings(GroupName = "v2")]
+public class StatsControllerV2 : ControllerBase
+{
+    private readonly IProjectionQueryService<PlantStat> _statQuery;
+
+    public StatsControllerV2(IProjectionQueryService<PlantStat> statQuery)
+    {
+        _statQuery = statQuery;
+    }
+
+    [HttpGet("financial")]
+    public async Task<ActionResult<FinancialStatsResult>> Financial([FromQuery] DateTime from, [FromQuery] DateTime to, CancellationToken token)
+    {
+
+        throw new NotImplementedException();
+    }
+
+    [HttpGet("total")]
+    public async Task<ActionResult<TotalStatsResult>> Total(CancellationToken token)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -18,27 +18,37 @@ public class PlantStat : AggregateBase,
 
     public string GroupName { get; private set; } = null;
     public long PlantsCount { get; private set; } = 0;
+    public List<DateTime> PlantsCountUpdated { get; private set; } = new();
     public long InstructionsCount { get; private set; } = 0;
+    public List<DateTime> InstructionsCountUpdated { get; private set; } = new();
     public long PostedCount { get; private set; } = 0;
+    public List<DateTime> PostedCountUpdated { get; private set; } = new();
     public long SoldCount { get; private set; } = 0;
+    public List<DateTime> SoldCountUpdated { get; private set; } = new();
     public decimal Income { get; private set; } = 0;
+    public List<IncomeUpdate> IncomeUpdated { get; private set; } = new();
+
+    public record IncomeUpdate(DateTime Time, decimal Value);
 
     public void Handle(StockAddedEvent @event)
     {
         GroupName = @event.Plant.GroupName;
         PlantsCount++;
+        PlantsCountUpdated.Add(@event.Metadata.Time);
     }
 
     public void Handle(InstructionCreatedEvent @event)
     {
         GroupName = @event.Instruction.GroupName;
         InstructionsCount++;
+        InstructionsCountUpdated.Add(@event.Metadata.Time);
     }
 
     public void Handle(StockItemPostedEvent @event)
     {
         GroupName = @event.GroupName;
         PostedCount++;
+        PostedCountUpdated.Add(@event.Metadata.Time);
     }
 
     public void Handle(DeliveryConfirmedEvent @event)
@@ -46,6 +56,7 @@ public class PlantStat : AggregateBase,
         GroupName = @event.GroupName;
         SoldCount++;
         Income += @event.Price;
+        IncomeUpdated.Add(new(@event.Metadata.Time, @event.Price));
     }
 
     private class PlantStockSubscription : IAggregateSubscription<PlantStat, PlantStock>
