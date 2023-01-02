@@ -52,7 +52,7 @@ public class FileControllerV2 : ControllerBase
     public async Task<ActionResult> Load([FromRoute] long id)
     {
         var plantInfo = await _queryService.GetByIdAsync(PlantInfo.InfoId);
-        var path = plantInfo.ImagePaths[id];
+        var path = plantInfo.PlantImagePaths[id];
         var info = _provider.GetFileInfo(path);
         if (info.Exists)
         {
@@ -67,8 +67,20 @@ public class FileControllerV2 : ControllerBase
     }
 
     [HttpGet("instruction/{id}")]
-    public async Task<FileResult> LoadInstruction([FromRoute] long id)
+    public async Task<ActionResult> LoadInstruction([FromRoute] long id)
     {
-        throw new NotImplementedException();
+        var plantInfo = await _queryService.GetByIdAsync(PlantInfo.InfoId);
+        var path = plantInfo.InstructionCoverImagePaths[id];
+        var info = _provider.GetFileInfo(path);
+        if (info.Exists)
+        {
+            var streamFunc = info.CreateReadStream;
+            var bytes = await streamFunc.ReadAllBytesAsync();
+            return File(bytes, "application/octet-stream");
+        }
+        else
+        {
+            return NotFound();
+        }
     }
 }

@@ -19,7 +19,7 @@ internal class CreateEditInstructionCommandHandler : ICommandHandler<CreateInstr
         var url = await Upload(command.Metadata.Aggregate.Id, command.CoverImage);
         return new[]
         {
-            new InstructionCreatedEvent(EventFactory.Shared.Create<InstructionCreatedEvent>(command), command.Instruction, url, command.Metadata.UserName)
+            new InstructionCreatedEvent(EventFactory.Shared.Create<InstructionCreatedEvent>(command), command.Instruction, url, command.Metadata.UserName, command.Metadata.Aggregate.Id)
         };
     }
 

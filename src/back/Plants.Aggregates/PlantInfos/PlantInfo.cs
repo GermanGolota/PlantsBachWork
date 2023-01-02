@@ -1,4 +1,6 @@
-﻿using Plants.Aggregates.PlantStocks;
+﻿using Plants.Aggregates.PlantInstructions;
+using Plants.Aggregates.PlantStocks;
+using Plants.Shared.Extensions;
 using System.Text;
 
 namespace Plants.Aggregates.PlantInfos;
@@ -6,7 +8,7 @@ namespace Plants.Aggregates.PlantInfos;
 [Allow(Consumer, Read)]
 [Allow(Producer, Read)]
 [Allow(Producer, Write)]
-public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
+public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>, IEventHandler<InstructionCreatedEvent>
 {
     //Id that is being used by plant info singleton
     public static Guid InfoId { get; } = Guid.Parse("1eebef8d-ba56-406f-a9f5-bc21c1a9ca96");
@@ -21,7 +23,8 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
     public Dictionary<long, string> GroupNames { get; private set; } = new();
     public Dictionary<long, string> RegionNames { get; private set; } = new();
     public Dictionary<long, string> SoilNames { get; private set; } = new();
-    public Dictionary<long, string> ImagePaths { get; private set; } = new();
+    public Dictionary<long, string> PlantImagePaths { get; private set; } = new();
+    public Dictionary<long, string> InstructionCoverImagePaths { get; private set; } = new();
 
     public void Handle(StockAddedEvent @event)
     {
@@ -35,8 +38,13 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
 
         foreach (var path in @event.PictureUrls)
         {
-            ImagePaths.CacheTransformation(path, ToLong);
+            PlantImagePaths.CacheTransformation(path, ToLong);
         }
+    }
+
+    public void Handle(InstructionCreatedEvent @event)
+    {
+        InstructionCoverImagePaths.CacheTransformation(@event.CoverUrl, str => @event.InstructionId.ToLong());
     }
 
     private long ToLong(string str)
@@ -56,7 +64,7 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
         return BitConverter.ToInt64(bytes);
     }
 
-    private class PlantInfoStockSubscription : IAggregateSubscription<PlantInfo, PlantStock>
+    private class PlantStockSubscription : IAggregateSubscription<PlantInfo, PlantStock>
     {
         public IEnumerable<EventSubscriptionBase<PlantInfo, PlantStock>> Subscriptions => new[]
         {
@@ -66,6 +74,14 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
                     (oldEvents, info) =>
                         oldEvents.Select(added => info.TransposeSubscribedEvent(added)))
                 )
+        };
+    }
+
+    private class PlantInstructionSubscription : IAggregateSubscription<PlantInfo, PlantInstruction>
+    {
+        public IEnumerable<EventSubscriptionBase<PlantInfo, PlantInstruction>> Subscriptions => new[]
+        {
+            EventSubscriptionFactory.CreateForwarded<PlantInfo, PlantInstruction, InstructionCreatedEvent>(_ => InfoId)
         };
     }
 
