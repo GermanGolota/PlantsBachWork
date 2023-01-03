@@ -9,12 +9,33 @@ public interface IProjectionRepository<T>
 
 public static class ProjectionRepositoryExtensions
 {
-    public static Task InsertOrUpdateAsync<TAggregate>(this IProjectionRepository<TAggregate> repository, TAggregate aggregate) where TAggregate : AggregateBase
+    public static async Task InsertOrUpdateAsync<TAggregate>(this IProjectionRepository<TAggregate> repository, TAggregate aggregate) where TAggregate : AggregateBase
     {
-        return aggregate.RequireNew() switch
+        var exists = aggregate.RequireNew() is null;
+        try
         {
-            null => repository.InsertAsync(aggregate),
-            CommandForbidden _ => repository.UpdateAsync(aggregate)
-        };
+            if (exists)
+            {
+                await repository.InsertAsync(aggregate);
+            }
+            else
+            {
+                await repository.UpdateAsync(aggregate);
+            }
+        }
+        catch (RepositoryException exc)
+        {
+            if (exists && exc.ErrorCode == RepositoryErrorCode.NotFound)
+            {
+                await repository.InsertAsync(aggregate);
+            }
+            else
+            {
+                if(exc.ErrorCode == RepositoryErrorCode.AlreadyExists)
+                {
+                    await repository.UpdateAsync(aggregate);
+                }
+            }
+        }
     }
 }

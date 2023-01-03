@@ -65,7 +65,7 @@ internal class AggregateEventApplyer
                     var handlerType = handlerBase.MakeGenericType(eventType);
                     if (_cqrs.EventHandlers.TryGetValue(eventType, out var handlers))
                     {
-                        foreach (var handler in handlers.Where(x => x.DeclaringType == aggregateType))
+                        foreach (var handler in handlers.Where(x => x.DeclaringType == aggregateType || aggregateType.IsAssignableTo(x.DeclaringType)))
                         {
                             handler.Invoke(aggregate, new object[] { @event });
                         }

@@ -1,6 +1,5 @@
 ﻿using Plants.Aggregates.PlantInstructions;
 using Plants.Aggregates.PlantStocks;
-using Plants.Shared.Extensions;
 using System.Text;
 
 namespace Plants.Aggregates.PlantInfos;
@@ -8,6 +7,8 @@ namespace Plants.Aggregates.PlantInfos;
 [Allow(Consumer, Read)]
 [Allow(Producer, Read)]
 [Allow(Producer, Write)]
+[Allow(Manager, Read)]
+[Allow(Manager, Write)]
 public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>, IEventHandler<InstructionCreatedEvent>
 {
     //Id that is being used by plant info singleton

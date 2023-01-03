@@ -76,6 +76,8 @@ internal class MongoRolesDbInitializer
             }
             """;
 
+        Func<UserRole, string> buildPrivelegesString = role => String.Join(",\n", _accesses.RoleToAggregate[role].Select(agg => buildPrivelege(role, agg)));
+
         List<string> roleDefinitions = new()
         {
             $$"""
@@ -94,7 +96,7 @@ internal class MongoRolesDbInitializer
             {
             "createRole": "{{UserRole.Consumer}}",
             "privileges": [
-                {{String.Join(",\n", _accesses.RoleToAggregate[UserRole.Consumer].Select(agg => buildPrivelege(UserRole.Consumer, agg)))}}
+                {{buildPrivelegesString(UserRole.Consumer)}}
              ],
              "roles":[
                 {
@@ -107,7 +109,7 @@ internal class MongoRolesDbInitializer
             {
             "createRole": "{{UserRole.Producer}}",
             "privileges": [
-                {{String.Join(",\n", _accesses.RoleToAggregate[UserRole.Producer].Select(agg => buildPrivelege(UserRole.Producer, agg)))}}
+                {{buildPrivelegesString(UserRole.Producer)}}
              ],
              "roles":[
                 {
@@ -119,6 +121,7 @@ internal class MongoRolesDbInitializer
             {
             "createRole": "{{UserRole.Manager}}",
             "privileges": [
+                {{buildPrivelegesString(UserRole.Manager)}}
              ],
              "roles":["dbOwner"]
             }
@@ -133,7 +136,7 @@ internal class MongoRolesDbInitializer
 
     private static async Task<IEnumerable<string>> GetExistingRolesAsync(IMongoDatabase db)
     {
-        IEnumerable<string> allRoles = Enum.GetValues<UserRole>().Select(x=>x.ToString()).Append(_commonRoleName);
+        var allRoles = Enum.GetValues<UserRole>().Select(x => x.ToString()).Append(_commonRoleName);
         var getRolesCommand = BsonDocument.Parse($$"""
         {
             "rolesInfo": [{{allRoles.QuoteDelimitList()}}]

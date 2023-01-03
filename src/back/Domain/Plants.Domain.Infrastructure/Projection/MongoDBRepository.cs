@@ -50,7 +50,7 @@ public class MongoDBRepository<T> : IProjectionQueryService<T>, IProjectionRepos
         }
         catch (MongoWriteException ex)
         {
-            throw new RepositoryException($"Error inserting entity {entity.Id}", ex);
+            throw new RepositoryException($"Error inserting entity {entity.Id}", ex, ex.WriteError.Category == ServerErrorCategory.DuplicateKey ?  RepositoryErrorCode.AlreadyExists : RepositoryErrorCode.Other);
         }
     }
 
@@ -63,12 +63,12 @@ public class MongoDBRepository<T> : IProjectionQueryService<T>, IProjectionRepos
 
             if (result.MatchedCount != 1)
             {
-                throw new RepositoryException($"Missing entity {entity.Id}");
+                throw new RepositoryException($"Missing entity {entity.Id}", RepositoryErrorCode.NotFound);
             }
         }
         catch (MongoWriteException ex)
         {
-            throw new RepositoryException($"Error updating entity {entity.Id}", ex);
+            throw new RepositoryException($"Error updating entity {entity.Id}", ex, RepositoryErrorCode.Other);
         }
     }
 }

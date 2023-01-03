@@ -4,10 +4,12 @@ using Plants.Aggregates.Users;
 
 namespace Plants.Aggregates.PlantPosts;
 
-[Allow(Producer, Read)]
-[Allow(Producer, Write)]
 [Allow(Consumer, Read)]
 [Allow(Consumer, Write)]
+[Allow(Producer, Read)]
+[Allow(Producer, Write)]
+[Allow(Manager, Read)]
+[Allow(Manager, Write)]
 public class PlantPost : AggregateBase, IEventHandler<StockItemPostedEvent>,
     IDomainCommandHandler<RemovePostCommand>, IEventHandler<PostRemovedEvent>,
     IDomainCommandHandler<OrderPostCommand>, IEventHandler<PostOrderedEvent>,
@@ -96,11 +98,3 @@ public class PlantPost : AggregateBase, IEventHandler<StockItemPostedEvent>,
         };
     }
 }
-
-public record RemovePostCommand(CommandMetadata Metadata) : Command(Metadata);
-public record PostRemovedEvent(EventMetadata Metadata) : Event(Metadata);
-
-public record OrderPostCommand(CommandMetadata Metadata, DeliveryAddress Address) : Command(Metadata);
-public record PostOrderedEvent(EventMetadata Metadata, DeliveryAddress Address, string BuyerUsername) : Event(Metadata);
-
-public record DeliveryAddress(string City, long MailNumber);

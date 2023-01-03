@@ -3,10 +3,12 @@ using Plants.Aggregates.Users;
 
 namespace Plants.Aggregates.PlantOrders;
 
+[Allow(Consumer, Read)]
+[Allow(Consumer, Write)]
 [Allow(Producer, Read)]
 [Allow(Producer, Write)]
-[Allow(Producer, Read)]
-[Allow(Producer, Write)]
+[Allow(Manager, Read)]
+[Allow(Manager, Write)]
 public class PlantOrder : AggregateBase, IEventHandler<PostOrderedEvent>,
     IDomainCommandHandler<StartOrderDeliveryCommand>, IEventHandler<OrderDeliveryStartedEvent>,
     IDomainCommandHandler<RejectOrderCommand>, IEventHandler<RejectedOrderEvent>,
@@ -100,12 +102,3 @@ public enum OrderStatus
 {
     Created = 0, Delivering = 1, Delivered = 2, Rejected = 3
 }
-
-public record StartOrderDeliveryCommand(CommandMetadata Metadata, string TrackingNumber) : Command(Metadata);
-public record OrderDeliveryStartedEvent(EventMetadata Metadata, string TrackingNumber) : Event(Metadata);
-
-public record RejectOrderCommand(CommandMetadata Metadata) : Command(Metadata);
-public record RejectedOrderEvent(EventMetadata Metadata) : Event(Metadata);
-
-public record ConfirmDeliveryCommand(CommandMetadata Metadata) : Command(Metadata);
-public record DeliveryConfirmedEvent(EventMetadata Metadata, string SellerUsername, string GroupName, decimal Price) : Event(Metadata);

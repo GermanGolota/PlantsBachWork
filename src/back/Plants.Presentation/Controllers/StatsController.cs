@@ -43,33 +43,40 @@ public class StatsController : ControllerBase
 [ApiExplorerSettings(GroupName = "v2")]
 public class StatsControllerV2 : ControllerBase
 {
-    private readonly IProjectionQueryService<PlantStat> _statQuery;
+    private readonly IProjectionQueryService<PlantTotalStat> _statQuery;
+    private readonly IProjectionQueryService<PlantTimedStat> _timedStatQuery;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
 
-    public StatsControllerV2(IProjectionQueryService<PlantStat> statQuery, IProjectionQueryService<PlantInfo> infoQuery)
+    public StatsControllerV2(IProjectionQueryService<PlantTotalStat> totalStatQuery,
+        IProjectionQueryService<PlantTimedStat> timedStatQuery,
+        IProjectionQueryService<PlantInfo> infoQuery)
     {
-        _statQuery = statQuery;
+        _statQuery = totalStatQuery;
+        _timedStatQuery = timedStatQuery;
         _infoQuery = infoQuery;
     }
 
     [HttpGet("financial")]
     public async Task<ActionResult<FinancialStatsResult>> Financial([FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken token)
     {
-        var stats = await _statQuery.FindAllAsync(_ => true);
+        var stats = await _timedStatQuery.FindAllAsync(_ => true);
         var groups = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId)).GroupNames.ToInverse();
         List<GroupFinancialStats> results = new();
-        foreach (var stat in stats)
-        {
-            results.Add(new()
+        return new FinancialStatsResult(stats.Where(_ => IsInRange(_.Date.ToDateTime(TimeOnly.MinValue), from, to)).GroupBy(stat => stat.GroupName)
+            .Select(pair =>
             {
-                GroupId = groups[stat.GroupName],
-                GroupName = stat.GroupName,
-                Income = stat.IncomeUpdated.Where(_ => IsInRange(_.Time, from, to)).Sum(_ => _.Value),
-                SoldCount = stat.SoldCountUpdated.Where(_ => IsInRange(_, from, to)).Count(),
-                PercentSold = stat.SoldCountUpdated.Where(_ => IsInRange(_, from, to)).Count() / stat.PostedCountUpdated.Where(_ => _ > from && _ < to).Count()
-            });
-        }
-        return new FinancialStatsResult(results);
+                var sold = pair.Sum(_ => _.SoldCount);
+                var plants = pair.Sum(_ => _.PlantsCount);
+                return new GroupFinancialStats
+                {
+                    GroupId = groups[pair.Key],
+                    GroupName = pair.Key,
+                    Income = pair.Sum(_ => _.Income),
+                    SoldCount = sold,
+                    PercentSold = plants is 0 ? 0 : sold / plants
+                };
+            })
+            .ToList());
     }
 
     private bool IsInRange(DateTime time, DateTime? from, DateTime? to) =>
