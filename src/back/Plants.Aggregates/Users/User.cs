@@ -9,9 +9,11 @@ namespace Plants.Aggregates.Users;
 [Allow(Consumer, Write)]
 [Allow(Producer, Read)]
 [Allow(Producer, Write)]
-public class User : AggregateBase, 
-    IEventHandler<UserCreatedEvent>, 
-    IEventHandler<RoleChangedEvent>, 
+[Allow(Manager, Read)]
+[Allow(Manager, Write)]
+public class User : AggregateBase,
+    IEventHandler<UserCreatedEvent>,
+    IEventHandler<RoleChangedEvent>,
     IEventHandler<StockAddedEvent>,
     IEventHandler<PostOrderedEvent>,
     IEventHandler<DeliveryConfirmedEvent>,

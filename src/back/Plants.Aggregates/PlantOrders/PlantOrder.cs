@@ -3,10 +3,12 @@ using Plants.Aggregates.Users;
 
 namespace Plants.Aggregates.PlantOrders;
 
+[Allow(Consumer, Read)]
+[Allow(Consumer, Write)]
 [Allow(Producer, Read)]
 [Allow(Producer, Write)]
-[Allow(Producer, Read)]
-[Allow(Producer, Write)]
+[Allow(Manager, Read)]
+[Allow(Manager, Write)]
 public class PlantOrder : AggregateBase, IEventHandler<PostOrderedEvent>,
     IDomainCommandHandler<StartOrderDeliveryCommand>, IEventHandler<OrderDeliveryStartedEvent>,
     IDomainCommandHandler<RejectOrderCommand>, IEventHandler<RejectedOrderEvent>,

@@ -3,6 +3,8 @@
 [Allow(Consumer, Read)]
 [Allow(Producer, Read)]
 [Allow(Producer, Write)]
+[Allow(Manager, Read)]
+[Allow(Manager, Write)]
 public class PlantInstruction : AggregateBase,
     IEventHandler<InstructionCreatedEvent>, IEventHandler<InstructionEditedEvent>
 {
