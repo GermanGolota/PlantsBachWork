@@ -1,5 +1,4 @@
-﻿using Nest;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace Plants.Infrastructure.Domain.Helpers;
 
@@ -31,9 +30,12 @@ internal class CqrsHelper
                 foreach (var handler in handlers)
                 {
                     var commandType = handler.GetGenericArguments()[0];
-                    var handleMethod = type.GetMethod(nameof(IDomainCommandHandler<Command>.Handle), new[] { commandType });
-                    var checkMethod = type.GetMethod(nameof(IDomainCommandHandler<Command>.ShouldForbid), new[] { commandType, identityType });
-                    commands.AddList(commandType, (checkMethod, handleMethod));
+                    var handleMethod = type.GetMethod(nameof(IDomainCommandHandler<Command>.Handle), new[] { commandType })!;
+                    var checkMethod = type.GetMethod(nameof(IDomainCommandHandler<Command>.ShouldForbid), new[] { commandType, identityType })!;
+                    if (handleMethod.DeclaringType == type)
+                    {
+                        commands.AddList(commandType, (checkMethod, handleMethod));
+                    }
                 }
             }
 
@@ -43,9 +45,12 @@ internal class CqrsHelper
                 foreach (var handler in handlers)
                 {
                     var commandType = handler.GetGenericArguments()[0];
-                    var handleMethod = type.GetMethod(nameof(ICommandHandler<Command>.HandleAsync), new[] { commandType });
-                    var checkMethod = type.GetMethod(nameof(ICommandHandler<Command>.ShouldForbidAsync), new[] { commandType, identityType });
-                    commands.AddList(commandType, (checkMethod, handleMethod));
+                    var handleMethod = type.GetMethod(nameof(ICommandHandler<Command>.HandleAsync), new[] { commandType })!;
+                    var checkMethod = type.GetMethod(nameof(ICommandHandler<Command>.ShouldForbidAsync), new[] { commandType, identityType })!;
+                    if (handleMethod.DeclaringType == type)
+                    {
+                        commands.AddList(commandType, (checkMethod, handleMethod));
+                    }
                 }
             }
 
@@ -55,8 +60,11 @@ internal class CqrsHelper
                 foreach (var handler in handlers)
                 {
                     var eventType = handler.GetGenericArguments()[0];
-                    var method = type.GetMethod(nameof(IEventHandler<Event>.Handle), new[] { eventType });
-                    events.AddList(eventType, method!);
+                    var method = type.GetMethod(nameof(IEventHandler<Event>.Handle), new[] { eventType })!;
+                    if (method.DeclaringType == type)
+                    {
+                        events.AddList(eventType, method);
+                    }
                 }
             }
 
@@ -78,7 +86,7 @@ internal class CqrsHelper
                             !.GetValue(subscription)!;
                         var transpose = subType
                             .GetProperty(nameof(EventSubscription<AggregateBase, AggregateBase>.TransposeEvent))
-                            !.GetValue(subscription);
+                            !.GetValue(subscription)!;
 
                         subs.AddList(transmitter.Name, (filter, transpose));
                     }

@@ -1,8 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.Options;
-using MongoDB.Bson.Serialization.Serializers;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Infrastructure.Domain.Helpers;
 
@@ -50,44 +46,9 @@ public static class DiExtensions
         services.AddTransient(typeof(IProjectionRepository<>), typeof(MongoDBRepository<>));
         services.AddTransient(typeof(IProjectionQueryService<>), typeof(MongoDBRepository<>));
 
-        AddBsonConversions();
+        BsonConfigurator.Configure();
 
         return services;
-    }
-
-    private static void AddBsonConversions()
-    {
-        var baseClassMap = new BsonClassMap(typeof(AggregateBase));
-        baseClassMap.MapProperty(nameof(AggregateBase.Version));
-        baseClassMap.MapProperty(nameof(AggregateBase.CommandsProcessed));
-        baseClassMap.MapProperty(nameof(AggregateBase.Name));
-        baseClassMap.MapProperty(nameof(AggregateBase.LastUpdateTime));
-        baseClassMap.MapIdProperty(nameof(AggregateBase.Id));
-        var helper = InfrastructureHelpers.Aggregate;
-        BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
-        BsonSerializer.RegisterSerializer(typeof(Dictionary<long, string>), new PairDictionarySerializer<Dictionary<long, string>>());
-        foreach (var (_, type) in helper.Aggregates)
-        {
-            var map = new BsonClassMap(type, baseClassMap);
-            var ctor = helper.AggregateCtors[type];
-            map.MapConstructor(ctor, nameof(AggregateBase.Id));
-            map.AutoMap();
-            BsonClassMap.RegisterClassMap(map);
-        }
-    }
-
-    public class PairDictionarySerializer<TDictionary>
-        : DictionarySerializerBase<TDictionary, long, string> where TDictionary : class, IEnumerable<KeyValuePair<long, string>>
-    {
-        public PairDictionarySerializer() : base(DictionaryRepresentation.Document, new Int64Serializer(BsonType.String), new StringSerializer())
-        {
-
-        }
-
-        protected override ICollection<KeyValuePair<long, string>> CreateAccumulator()
-        {
-            return new Dictionary<long, string>();
-        }
     }
 
     private static IServiceCollection AddSearchProjection(this IServiceCollection services)

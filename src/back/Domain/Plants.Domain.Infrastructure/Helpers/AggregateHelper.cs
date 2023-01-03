@@ -20,7 +20,7 @@ public class AggregateHelper
         List<Exception> exceptions = new List<Exception>();
         foreach (var type in helper.Types)
         {
-            if (type.IsStrictlyAssignableTo(typeof(AggregateBase)))
+            if (type.IsStrictlyAssignableTo(typeof(AggregateBase)) && type.IsConcrete())
             {
                 var ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
                     null, new Type[1] { typeof(Guid) }, new[] { new ParameterModifier(1) });

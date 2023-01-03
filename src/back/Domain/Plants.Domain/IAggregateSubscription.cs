@@ -41,5 +41,8 @@ public record AllEvents();
 public static class EventSubscriptionFactory
 {
     public static EventSubscription<TIn, TOut, TEvent> CreateForwarded<TIn, TOut, TEvent>(Func<TEvent, Guid> extractId) where TEvent : Event where TIn : AggregateBase where TOut : AggregateBase =>
-        new EventSubscription<TIn, TOut, TEvent>(new(extractId, (events, agg) => events.Select(@event => agg.TransposeSubscribedEvent(@event))));
+        CreateForwarded<TIn, TOut, TEvent>(extractId, (_, _) => Array.Empty<Event>());
+
+    public static EventSubscription<TIn, TOut, TEvent> CreateForwarded<TIn, TOut, TEvent>(Func<TEvent, Guid> extractId, Func<TIn, IEnumerable<TEvent>, IEnumerable<Event>> additionalEvents) where TEvent : Event where TIn : AggregateBase where TOut : AggregateBase =>
+       new EventSubscription<TIn, TOut, TEvent>(new(extractId, (events, agg) => events.Select(@event => agg.TransposeSubscribedEvent(@event)).Union(additionalEvents(agg, events))));
 }
