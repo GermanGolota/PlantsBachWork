@@ -1,6 +1,5 @@
 ﻿using Plants.Aggregates.PlantInstructions;
 using Plants.Aggregates.PlantStocks;
-using Plants.Shared.Extensions;
 using System.Text;
 
 namespace Plants.Aggregates.PlantInfos;
