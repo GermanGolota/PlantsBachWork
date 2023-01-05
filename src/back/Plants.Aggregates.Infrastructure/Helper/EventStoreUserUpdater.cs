@@ -63,7 +63,6 @@ internal class EventStoreUserUpdater : IUserUpdater
                 true,
                 httpClientHandler
             );
-            var user = await manager.GetCurrentUserAsync(new(creds.Username, creds.Password));
             await manager.UpdateUserAsync(username, fullName, groups, new(creds.Username, creds.Password));
         }
     }

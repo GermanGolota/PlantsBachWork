@@ -60,7 +60,8 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
             }
             var subscription = await client.SubscribeToAllAsync(aggregate,
                 Process(_subscriber, _logger),
-                HandleStop);
+                HandleStop,
+                cancellationToken: token);
             subscriptions.Add(subscription);
         }
 
@@ -104,7 +105,8 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
             {
                 subscriptionState.Command = command;
                 return Task.CompletedTask;
-            });
+            }
+            );
         };
     }
 
