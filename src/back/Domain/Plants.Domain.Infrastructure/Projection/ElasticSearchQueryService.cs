@@ -21,7 +21,7 @@ public class ElasticSearchQueryService<TAggregate, TParams> : ISearchQueryServic
         _loggerFactory = loggerFactory;
     }
 
-    public async Task<IEnumerable<TAggregate>> SearchAsync(TParams parameters, OneOf<SearchPager, SearchAll> searchOption)
+    public async Task<IEnumerable<TAggregate>> SearchAsync(TParams parameters, OneOf<SearchPager, SearchAll> searchOption, CancellationToken token = default)
     {
         var aggregateName = _helper.Aggregates.Get(typeof(TAggregate));
         var client = _clientFactory.Create();
@@ -37,7 +37,7 @@ public class ElasticSearchQueryService<TAggregate, TParams> : ISearchQueryServic
             searchOption.Match(page => { s.From(page.StartFrom).Size(page.Size); }, all => { });
             projector.ProjectParams(parameters, s);
             return s;
-        });
+        }, ct: token);
 
         result.Process(_loggerFactory.CreateLogger(GetType()), aggregateName, "Search");
         return result.Documents;

@@ -15,13 +15,13 @@ public class FileUploader
     }
 
     /// <returns>Urls for uploaded items</returns>
-    public async Task<string[]> UploadPlantAsync(Guid stockId, byte[][] images)
+    public async Task<string[]> UploadPlantAsync(Guid stockId, byte[][] images, CancellationToken token = default)
     {
         var files = await Task.WhenAll(images.Select(picture => _file.SaveAsync(new(GetNewFileLocation(stockId, _plantImageDirectory), picture))));
         return files.Select(_file.GetUrl).ToArray();
     }
 
-    public async Task<string> UploadIntructionCover(Guid instructionId, byte[] image)
+    public async Task<string> UploadIntructionCover(Guid instructionId, byte[] image, CancellationToken token = default)
     {
         var location = await _file.SaveAsync(new(GetNewFileLocation(instructionId, _coverImageDirectory), image));
         return _file.GetUrl(location);

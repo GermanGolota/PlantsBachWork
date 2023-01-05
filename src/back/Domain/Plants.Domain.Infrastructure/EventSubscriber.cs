@@ -20,22 +20,22 @@ internal class EventSubscriber
         _provider = provider;
     }
 
-    public async Task ProcessCommandAsync(Command command, List<Event> aggEvents)
+    public async Task ProcessCommandAsync(Command command, List<Event> aggEvents, CancellationToken token = default)
     {
-        await UpdateProjectionAsync(command.Metadata.Aggregate, aggEvents);
-        await UpdateSubscribersAsync(command, aggEvents);
+        await UpdateProjectionAsync(command.Metadata.Aggregate, aggEvents, token);
+        await UpdateSubscribersAsync(command, aggEvents, token);
     }
 
-    private async Task UpdateProjectionAsync(AggregateDescription desc, IEnumerable<Event> newEvents)
+    private async Task UpdateProjectionAsync(AggregateDescription desc, IEnumerable<Event> newEvents, CancellationToken token = default)
     {
-        var aggregate = await _caller.LoadAsync(desc);
+        var aggregate = await _caller.LoadAsync(desc, token);
         //would make sense for times in which we would load projection and apply events to it
         //var newAggregate = _eventApplyer.ApplyEventsTo(aggregate, newEvents);
-        await _caller.InsertOrUpdateProjectionAsync(aggregate);
-        await _caller.IndexProjectionAsync(aggregate);
+        await _caller.InsertOrUpdateProjectionAsync(aggregate, token);
+        await _caller.IndexProjectionAsync(aggregate, token);
     }
 
-    private async Task UpdateSubscribersAsync(Command parentCommand, List<Event> aggEvents)
+    private async Task UpdateSubscribersAsync(Command parentCommand, List<Event> aggEvents, CancellationToken token = default)
     {
         var aggregate = parentCommand.Metadata.Aggregate;
         if (_cqrs.EventSubscriptions.TryGetValue(aggregate.Name, out var subscriptions))
@@ -54,14 +54,14 @@ internal class EventSubscriber
                     var applyerType = GetApplyerTypeFor(subscription);
                     var applyer = _provider.GetRequiredService(applyerType);
                     var method = applyerType.GetMethod(nameof(TransposeApplyer<AggregateBase>.CallTransposeAsync), BindingFlags.Public | BindingFlags.Instance);
-                    var transposedEvents = (IEnumerable<Event>)await (dynamic)method.Invoke(applyer, new[] { subscription.Transpose, eventsToHandle })!;
+                    var transposedEvents = (IEnumerable<Event>)await (dynamic)method.Invoke(applyer, new[] { subscription.Transpose, eventsToHandle, token })!;
                     var firstEvent = transposedEvents.FirstOrDefault();
                     if (firstEvent != default)
                     {
                         var commandNumber = firstEvent.Metadata.EventNumber - 1;
                         var command = parentCommand.ChangeTargetAggregate(firstEvent.Metadata.Aggregate);
-                        commandNumber = await _eventStore.AppendCommandAsync(command, commandNumber);
-                        await _eventStore.AppendEventsAsync(transposedEvents, commandNumber, command);
+                        commandNumber = await _eventStore.AppendCommandAsync(command, commandNumber, token);
+                        await _eventStore.AppendEventsAsync(transposedEvents, commandNumber, command, token);
                     }
                 }
             }

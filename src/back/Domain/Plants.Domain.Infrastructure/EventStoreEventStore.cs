@@ -22,7 +22,7 @@ internal class EventStoreEventStore : IEventStore
         _converter = converter;
     }
 
-    public async Task<ulong> AppendEventAsync(Event @event)
+    public async Task<ulong> AppendEventAsync(Event @event, CancellationToken token = default)
     {
         var metadata = @event.Metadata;
         try
@@ -36,7 +36,8 @@ internal class EventStoreEventStore : IEventStore
             var writeResult = await _clientFactory.Create().AppendToStreamAsync(
                 metadata.Aggregate.ToTopic(),
                 metadata.EventNumber,
-                new[] { eventData });
+                new[] { eventData },
+                cancellationToken: token);
 
             return writeResult.NextExpectedStreamRevision.ToUInt64();
         }
@@ -46,7 +47,7 @@ internal class EventStoreEventStore : IEventStore
         }
     }
 
-    public async Task<ulong> AppendCommandAsync(Command command, ulong version)
+    public async Task<ulong> AppendCommandAsync(Command command, ulong version, CancellationToken token = default)
     {
         var metadata = command.Metadata;
         var aggregate = metadata.Aggregate;
@@ -54,7 +55,7 @@ internal class EventStoreEventStore : IEventStore
         {
             if (version == StreamRevision.None)
             {
-                await _granter.GrantAccessesAsync(aggregate);
+                await _granter.GrantAccessesAsync(aggregate, token);
             }
 
             var eventData = new EventData(
@@ -66,7 +67,8 @@ internal class EventStoreEventStore : IEventStore
             var writeResult = await _clientFactory.Create().AppendToStreamAsync(
                 aggregate.ToTopic(),
                 version,
-                new[] { eventData });
+                new[] { eventData },
+                cancellationToken: token);
 
             return writeResult.NextExpectedStreamRevision.ToUInt64();
         }
@@ -76,7 +78,7 @@ internal class EventStoreEventStore : IEventStore
         }
     }
 
-    public async Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(AggregateDescription aggregate)
+    public async Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(AggregateDescription aggregate, CancellationToken token = default)
     {
         try
         {
@@ -86,7 +88,8 @@ internal class EventStoreEventStore : IEventStore
             var readResult = _clientFactory.Create().ReadStreamAsync(
                  Direction.Forwards,
                  aggregate.ToTopic(),
-                 StreamPosition.Start
+                 StreamPosition.Start,
+                 cancellationToken: token
              );
 
             if (await readResult.ReadState == ReadState.StreamNotFound)
@@ -95,7 +98,7 @@ internal class EventStoreEventStore : IEventStore
                 return Array.Empty<CommandHandlingResult>();
             }
 
-            var readEvents = await readResult.ToListAsync();
+            var readEvents = await readResult.ToListAsync(cancellationToken: token);
             readResult.ReadState.Dispose();
             foreach (var resolvedEvent in readEvents)
             {

@@ -25,15 +25,15 @@ internal class EventStoreUserUpdater : IUserUpdater
         _config = options.Value;
     }
 
-    public async Task CreateAsync(string username, string password, string fullName, UserRole[] roles)
+    public async Task CreateAsync(string username, string password, string fullName, UserRole[] roles, CancellationToken token = default)
     {
         var groups = roles.Select(x => x.ToString()).Append("$admins").ToArray();
-        await _factory.Create().CreateUserAsync(username, fullName, groups, password, userCredentials: GetCallerCreds());
+        await _factory.Create().CreateUserAsync(username, fullName, groups, password, userCredentials: GetCallerCreds(), cancellationToken: token);
     }
 
     private static bool _attachedCallback = false;
 
-    public async Task ChangeRoleAsync(string username, string fullName, UserRole[] oldRoles, UserRole newRole)
+    public async Task ChangeRoleAsync(string username, string fullName, UserRole[] oldRoles, UserRole newRole, CancellationToken token = default)
     {
         var groups =
             newRole.ApplyChangeInto(oldRoles)
@@ -68,10 +68,10 @@ internal class EventStoreUserUpdater : IUserUpdater
         }
     }
 
-    public async Task UpdatePasswordAsync(string username, string oldPassword, string newPassword)
+    public async Task UpdatePasswordAsync(string username, string oldPassword, string newPassword, CancellationToken token = default)
     {
         var creds = GetCallerCreds();
-        await _factory.Create().ChangePasswordAsync(username, oldPassword, newPassword, userCredentials: creds);
+        await _factory.Create().ChangePasswordAsync(username, oldPassword, newPassword, userCredentials: creds, cancellationToken: token);
     }
 
     private UserCredentials GetCallerCreds()

@@ -50,13 +50,13 @@ public class SearchControllerV2 : ControllerBase
     public async Task<ActionResult<SearchResult>> Stats
         ([FromQuery] SearchRequest request, CancellationToken token)
     {
-        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId);
+        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
         var groups = request.GroupIds?.Select(id => info.GroupNames[id])?.ToArray();
         var regions = request.RegionIds?.Select(id => info.RegionNames[id])?.ToArray();
         var soils = request.SoilIds?.Select(id => info.SoilNames[id])?.ToArray();
         var images = info.PlantImagePaths.ToInverse();
         var param = new PlantPostParams(request.PlantName, request.LowerPrice, request.TopPrice, request.LastDate, groups, regions, soils);
-        var result = await _search.SearchAsync(param, new SearchAll());
+        var result = await _search.SearchAsync(param, new SearchAll(), token);
 
         return new SearchResult(result.Select(item => 
             new SearchResultItem(

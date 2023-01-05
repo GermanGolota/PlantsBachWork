@@ -2,5 +2,5 @@
 
 public interface ISearchProjectionRepository<T>
 {
-    Task IndexAsync(T item);
+    Task IndexAsync(T item, CancellationToken token = default);
 }

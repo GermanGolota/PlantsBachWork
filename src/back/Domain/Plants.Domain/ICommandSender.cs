@@ -2,7 +2,7 @@
 
 public interface ICommandSender
 {
-    Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCommandAsync(Command command);
+    Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCommandAsync(Command command, CancellationToken token = default);
 }
 
 public record struct CommandAcceptedResult();

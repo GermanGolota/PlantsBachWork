@@ -21,7 +21,7 @@ public class EventStoreHostedService : IHostedService
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _worker.Stop(cancellationToken);
+        _worker.Stop();
         _scope.Dispose();
 
         return Task.CompletedTask;

@@ -85,7 +85,7 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
                     logger.LogInformation("Processing subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
                     try
                     {
-                        await subscriber.ProcessCommandAsync(command, subscriptionState.Events);
+                        await subscriber.ProcessCommandAsync(command, subscriptionState.Events, cancellationToken);
                     }
                     catch (Exception e)
                     {
@@ -127,7 +127,7 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
         }
     }
 
-    public void Stop(CancellationToken token)
+    public void Stop()
     {
         if (_subscriptions is null)
         {

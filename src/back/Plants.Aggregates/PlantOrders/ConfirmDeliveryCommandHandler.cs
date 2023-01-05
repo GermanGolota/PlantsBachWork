@@ -10,15 +10,15 @@ internal class ConfirmDeliveryCommandHandler : ICommandHandler<ConfirmDeliveryCo
         _repo = repo;
     }
 
-    public Task<IEnumerable<Event>> HandleAsync(ConfirmDeliveryCommand command) =>
+    public Task<IEnumerable<Event>> HandleAsync(ConfirmDeliveryCommand command, CancellationToken token = default) =>
         (new[]
         {
             new DeliveryConfirmedEvent(EventFactory.Shared.Create<DeliveryConfirmedEvent>(command), _order.Post.Seller.Login, _order.Post.Stock.Information.GroupName, _order.Post.Price)
         }).ToResultTask<IEnumerable<Event>>();
 
-    public async Task<CommandForbidden?> ShouldForbidAsync(ConfirmDeliveryCommand command, IUserIdentity user)
+    public async Task<CommandForbidden?> ShouldForbidAsync(ConfirmDeliveryCommand command, IUserIdentity user, CancellationToken token = default)
     {
-        _order ??= await _repo.GetByIdAsync(command.Metadata.Aggregate.Id);
+        _order ??= await _repo.GetByIdAsync(command.Metadata.Aggregate.Id, token);
         return user.HasRole(Manager).Or(user.HasRole(Producer).And(_order.IsBuyer(user)))
             .And(_order.StatusIs(OrderStatus.Delivering));
     }

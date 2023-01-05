@@ -1,6 +1,5 @@
 ﻿using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Aggregates.Services;
-using System.Data;
 
 namespace Plants.Aggregates.Infrastructure.Services;
 
@@ -17,24 +16,24 @@ internal class UserUpdater : IUserUpdater
         _elasticSearch = elasticSearch;
     }
 
-    public async Task ChangeRoleAsync(string username, string fullName, UserRole[] oldRoles, UserRole changedRole)
+    public async Task ChangeRoleAsync(string username, string fullName, UserRole[] oldRoles, UserRole changedRole, CancellationToken token = default)
     {
-        await _eventStore.ChangeRoleAsync(username, fullName, oldRoles, changedRole);
-        await _mongoDb.ChangeRoleAsync(username, fullName, oldRoles, changedRole);
-        await _elasticSearch.ChangeRoleAsync(username, fullName, oldRoles, changedRole);
+        await _eventStore.ChangeRoleAsync(username, fullName, oldRoles, changedRole, token);
+        await _mongoDb.ChangeRoleAsync(username, fullName, oldRoles, changedRole, token);
+        await _elasticSearch.ChangeRoleAsync(username, fullName, oldRoles, changedRole, token);
     }
 
-    public async Task CreateAsync(string username, string password, string fullName, UserRole[] roles)
+    public async Task CreateAsync(string username, string password, string fullName, UserRole[] roles, CancellationToken token = default)
     {
-        await _eventStore.CreateAsync(username, password, fullName, roles);
-        await _mongoDb.CreateAsync(username, password, fullName, roles);
-        await _elasticSearch.CreateAsync(username, password, fullName, roles);
+        await _eventStore.CreateAsync(username, password, fullName, roles, token);
+        await _mongoDb.CreateAsync(username, password, fullName, roles, token);
+        await _elasticSearch.CreateAsync(username, password, fullName, roles, token);
     }
 
-    public async Task UpdatePasswordAsync(string username, string oldPassword, string newPassword)
+    public async Task UpdatePasswordAsync(string username, string oldPassword, string newPassword, CancellationToken token = default)
     {
-        await _eventStore.UpdatePasswordAsync(username, oldPassword, newPassword);
-        await _mongoDb.UpdatePasswordAsync(username, oldPassword, newPassword);
-        await _elasticSearch.UpdatePasswordAsync(username, oldPassword, newPassword);
+        await _eventStore.UpdatePasswordAsync(username, oldPassword, newPassword, token);
+        await _mongoDb.UpdatePasswordAsync(username, oldPassword, newPassword, token);
+        await _elasticSearch.UpdatePasswordAsync(username, oldPassword, newPassword, token);
     }
 }

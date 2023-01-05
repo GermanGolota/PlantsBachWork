@@ -43,20 +43,20 @@ public class ElasticSearchHelper
         return builder.Uri;
     }
 
-    public async Task HandleCreationAsync<T>(string objectType, string objectName, HttpResponseMessage result, Func<T, bool> isValid)
+    public async Task HandleCreationAsync<T>(string objectType, string objectName, HttpResponseMessage result, Func<T, bool> isValid, CancellationToken token = default)
     {
         if (result.IsSuccessStatusCode)
         {
-            var resultObject = await result.Content.ReadFromJsonAsync<T>();
+            var resultObject = await result.Content.ReadFromJsonAsync<T>(cancellationToken: token);
             if (resultObject is null || isValid(resultObject) is false)
             {
-                var message = await result.Content.ReadAsStringAsync();
+                var message = await result.Content.ReadAsStringAsync(cancellationToken: token);
                 _logger.LogInformation("Did not create '{type}' '{value}' with message - '{msg}'", objectType, objectName, message);
             }
         }
         else
         {
-            var message = await result.Content.ReadAsStringAsync();
+            var message = await result.Content.ReadAsStringAsync(cancellationToken: token);
             _logger.LogError("Failed to create '{type}' '{value}' with message - '{msg}'", objectType, objectName, message);
             throw new Exception($"Failed to create '{objectType}' '{objectName}' with message - '{message}'");
         }

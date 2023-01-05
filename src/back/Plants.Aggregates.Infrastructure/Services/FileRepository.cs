@@ -18,7 +18,7 @@ internal class FileRepository : IFileRepository
         _context = context;
     }
 
-    public async Task<FileLocation> SaveAsync(FileDto file)
+    public async Task<FileLocation> SaveAsync(FileDto file, CancellationToken token = default)
     {
         var location = GetLocation(file.Location);
 
@@ -28,7 +28,7 @@ internal class FileRepository : IFileRepository
             var fullPath = Path.Combine(_context.WebRootPath, location);
             var directory = Path.GetDirectoryName(fullPath)!;
             Directory.CreateDirectory(directory);
-            await File.WriteAllBytesAsync(fullPath, file.Content);
+            await File.WriteAllBytesAsync(fullPath, file.Content, token);
         }
         else
         {

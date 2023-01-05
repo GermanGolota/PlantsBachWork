@@ -14,17 +14,17 @@ internal class ChangeRoleCommandHandler : ICommandHandler<ChangeRoleCommand>
         _userRepo = userRepo;
     }
 
-    public async Task<CommandForbidden?> ShouldForbidAsync(ChangeRoleCommand command, IUserIdentity identity)
+    public async Task<CommandForbidden?> ShouldForbidAsync(ChangeRoleCommand command, IUserIdentity identity, CancellationToken token = default)
     {
         var result = identity.HasRole(command.Role);
-        _user = await _userRepo.GetByIdAsync(command.Metadata.Aggregate.Id);
+        _user = await _userRepo.GetByIdAsync(command.Metadata.Aggregate.Id, token);
         return result.And((_user.Roles.Length != 1 || _user.Roles[0] != command.Role).ToForbidden("Cannot remove last role of the user"));
     }
 
-    public async Task<IEnumerable<Event>> HandleAsync(ChangeRoleCommand command)
+    public async Task<IEnumerable<Event>> HandleAsync(ChangeRoleCommand command, CancellationToken token = default)
     {
-        _user ??= await _userRepo.GetByIdAsync(command.Metadata.Aggregate.Id);
-        await _updater.ChangeRoleAsync(_user.Login, _user.FullName, _user.Roles, command.Role);
+        _user ??= await _userRepo.GetByIdAsync(command.Metadata.Aggregate.Id, token);
+        await _updater.ChangeRoleAsync(_user.Login, _user.FullName, _user.Roles, command.Role, token);
         return new[]
         {
             new RoleChangedEvent(EventFactory.Shared.Create<RoleChangedEvent>(command), command.Role)

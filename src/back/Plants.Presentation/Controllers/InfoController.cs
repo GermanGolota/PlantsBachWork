@@ -56,7 +56,7 @@ public class InfoControllerV2 : ControllerBase
     [HttpGet("dicts")]
     public async Task<ActionResult<DictsResult>> Dicts(CancellationToken token)
     {
-        var dicts = await _infoQuery.GetByIdAsync(PlantInfo.InfoId);
+        var dicts = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
         return new DictsResult(dicts.GroupNames, dicts.RegionNames, dicts.SoilNames);
     }
 
@@ -64,7 +64,7 @@ public class InfoControllerV2 : ControllerBase
     public async Task<ActionResult<AddressResult>> Addresses(CancellationToken token)
     {
         var id = _identity.Identity!.UserName.ToGuid();
-        var user = await _userQuery.GetByIdAsync(id);
+        var user = await _userQuery.GetByIdAsync(id, token);
         return new AddressResult(user.UsedAdresses.Select(address => new PersonAddress(address.City, address.MailNumber)).ToList());
     }
 }

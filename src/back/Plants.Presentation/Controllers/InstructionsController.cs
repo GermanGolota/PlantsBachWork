@@ -35,9 +35,9 @@ public class InstructionsController : ControllerBase
     }
 
     [HttpPost("create")]
-    public async Task<ActionResult<CreateInstructionResult>> Create([FromForm] CreateInstructionCommandDto cmd, IFormFile file)
+    public async Task<ActionResult<CreateInstructionResult>> Create([FromForm] CreateInstructionCommandDto cmd, IFormFile? file)
     {
-        var bytes = await file?.ReadBytesAsync();
+        var bytes = await file.ReadBytesAsync();
         var req = new Plants.Application.Commands.CreateInstructionCommand(cmd.GroupId, cmd.Text, cmd.Title, cmd.Description, bytes);
         return await _mediator.Send(req);
     }
@@ -47,7 +47,7 @@ public class InstructionsController : ControllerBase
         [FromRoute] int id, [FromForm] CreateInstructionCommandDto cmd, IFormFile file
         )
     {
-        var bytes = await file?.ReadBytesAsync();
+        var bytes = await file.ReadBytesAsync();
         var req = new Plants.Application.Commands.EditInstructionCommand(id, cmd.GroupId, cmd.Text, cmd.Title, cmd.Description, bytes);
         return await _mediator.Send(req);
     }
@@ -79,26 +79,26 @@ public class InstructionsControllerV2 : ControllerBase
     }
 
     [HttpGet("find")]
-    public async Task<ActionResult<FindInstructionsResult>> Find([FromQuery] FindInstructionsRequest request)
+    public async Task<ActionResult<FindInstructionsResult>> Find([FromQuery] FindInstructionsRequest request, CancellationToken token)
     {
-        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId);
+        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
         var param = new PlantInstructionParams(info.GroupNames[request.GroupId], request.Title, request.Description);
-        var results = await _instructionSearch.SearchAsync(param, new SearchAll());
+        var results = await _instructionSearch.SearchAsync(param, new SearchAll(), token);
         return new FindInstructionsResult(
-            results.Select(result => 
+            results.Select(result =>
                 new FindInstructionsResultItem(result.Id.ToLong(), result.Information.Title, result.Information.Description, result.CoverUrl is not null))
             .ToList());
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<GetInstructionResult>> Get([FromRoute] long id)
+    public async Task<ActionResult<GetInstructionResult>> Get([FromRoute] long id, CancellationToken token)
     {
         var guid = id.ToGuid();
         GetInstructionResult result;
-        if (await _instructionQuery.ExistsAsync(guid))
+        if (await _instructionQuery.ExistsAsync(guid, token))
         {
-            var instruction = await _instructionQuery.GetByIdAsync(guid);
-            var groups = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId)).GroupNames.ToInverse();
+            var instruction = await _instructionQuery.GetByIdAsync(guid, token);
+            var groups = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token)).GroupNames.ToInverse();
 
             var information = instruction.Information;
             result = new(true, new(instruction.Id.ToLong(), information.Title, information.Description, information.Text, instruction.CoverUrl is not null, groups[information.GroupName]));
@@ -111,28 +111,30 @@ public class InstructionsControllerV2 : ControllerBase
     }
 
     [HttpPost("create")]
-    public async Task<ActionResult<CreateInstructionResult>> Create([FromForm] CreateInstructionCommandDto cmd, IFormFile? file)
+    public async Task<ActionResult<CreateInstructionResult>> Create([FromForm] CreateInstructionCommandDto cmd, IFormFile? file, CancellationToken token)
     {
-        var bytes = await file.ReadBytesAsync();
+        var bytes = await file.ReadBytesAsync(token);
         var guid = new Random().GetRandomConvertableGuid();
-        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId);
+        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<Plants.Aggregates.PlantInstructions.CreateInstructionCommand>(new(guid, nameof(PlantInstruction))),
-            meta => new Plants.Aggregates.PlantInstructions.CreateInstructionCommand(meta, new(info.GroupNames[cmd.GroupId], cmd.Text, cmd.Title, cmd.Description), bytes));
+            meta => new Plants.Aggregates.PlantInstructions.CreateInstructionCommand(meta, new(info.GroupNames[cmd.GroupId], cmd.Text, cmd.Title, cmd.Description), bytes),
+            token);
         return new CreateInstructionResult(guid.ToLong());
     }
 
     [HttpPost("{id}/edit")]
     public async Task<ActionResult<EditInstructionResult>> Edit(
-        [FromRoute] long id, [FromForm] CreateInstructionCommandDto cmd, IFormFile? file
+        [FromRoute] long id, [FromForm] CreateInstructionCommandDto cmd, IFormFile? file, CancellationToken token
         )
     {
-        var bytes = await file.ReadBytesAsync();
+        var bytes = await file.ReadBytesAsync(token);
         var guid = new Random().GetRandomConvertableGuid();
-        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId);
+        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<Plants.Aggregates.PlantInstructions.EditInstructionCommand>(new(guid, nameof(PlantInstruction))),
-            meta => new Plants.Aggregates.PlantInstructions.EditInstructionCommand(meta, new(info.GroupNames[cmd.GroupId], cmd.Text, cmd.Title, cmd.Description), bytes));
+            meta => new Plants.Aggregates.PlantInstructions.EditInstructionCommand(meta, new(info.GroupNames[cmd.GroupId], cmd.Text, cmd.Title, cmd.Description), bytes),
+            token);
         return new EditInstructionResult(guid.ToLong());
     }
 }

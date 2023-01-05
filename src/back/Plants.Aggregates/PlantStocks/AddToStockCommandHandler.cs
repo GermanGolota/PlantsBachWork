@@ -16,19 +16,19 @@ internal class AddToStockCommandHandler : ICommandHandler<AddToStockCommand>
         _repo = repo;
     }
 
-    public async Task<IEnumerable<Event>> HandleAsync(AddToStockCommand command)
+    public async Task<IEnumerable<Event>> HandleAsync(AddToStockCommand command, CancellationToken token = default)
     {
-        _stock ??= await _repo.GetByIdAsync(command.Metadata.Aggregate.Id);
-        var urls = await _uploader.UploadPlantAsync(_stock.Id, command.Pictures);
+        _stock ??= await _repo.GetByIdAsync(command.Metadata.Aggregate.Id, token);
+        var urls = await _uploader.UploadPlantAsync(_stock.Id, command.Pictures, token);
         return new[]
         {
             new StockAddedEvent(EventFactory.Shared.Create<StockAddedEvent>(command), command.Plant, command.CreatedTime, urls, command.Metadata.UserName)
         };
     }
 
-    public async Task<CommandForbidden?> ShouldForbidAsync(AddToStockCommand command, IUserIdentity userIdentity)
+    public async Task<CommandForbidden?> ShouldForbidAsync(AddToStockCommand command, IUserIdentity userIdentity, CancellationToken token = default)
     {
-        _stock ??= await _repo.GetByIdAsync(command.Metadata.Aggregate.Id);
+        _stock ??= await _repo.GetByIdAsync(command.Metadata.Aggregate.Id, token);
         return userIdentity.HasRole(Producer).And(_stock.RequireNew);
     }
 
