@@ -26,7 +26,7 @@ internal class MongoRolesDbInitializer
     {
         //TODO: Fix multiple envs not working
         var db = _factory.GetDatabase("admin");
-        var dbName = _connection.MongoDbDatabaseName;
+        var dbName = _connection.MongoDb.DatabaseName;
         await InitializeCollectionsAsync(dbName, token);
 
         await CleanUpExistingRolesAsync(db, token);

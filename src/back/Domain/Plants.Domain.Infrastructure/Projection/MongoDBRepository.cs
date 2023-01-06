@@ -17,7 +17,7 @@ public class MongoDBRepository<T> : IProjectionQueryService<T>, IProjectionRepos
         _options = options.Value;
     }
 
-    private IMongoDatabase Database => _clientFactory.GetDatabase(_options.MongoDbDatabaseName);
+    private IMongoDatabase Database => _clientFactory.GetDatabase(_options.MongoDb.DatabaseName);
     private string CollectionName => typeof(T).Name;
 
     public Task<bool> ExistsAsync(Guid id, CancellationToken token = default)
