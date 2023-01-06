@@ -67,16 +67,6 @@ public class Startup
                                     .AllowAnyHeader();
             });
         });
-
-        services.AddAuthorization(options =>
-        {
-            UserRole[] allRoles = (UserRole[])Enum.GetValues(typeof(UserRole));
-            for (int i = 0; i < allRoles.Length; i++)
-            {
-                var policyName = allRoles[i].ToString();
-                options.AddPolicy(policyName, (policy) => policy.RequireClaim(policyName));
-            }
-        });
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
