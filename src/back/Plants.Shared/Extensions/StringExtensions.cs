@@ -20,4 +20,10 @@ public static class StringExtensions
     public static string QuoteDelimitList(this IEnumerable<string> strings) =>
         string.Join(", ", strings.Select(x => x.QuoteDelimit()));
 
+    public static string Format(this string format, object? arg0, object? arg1) =>
+        String.Format(format, arg0, arg1);
+
+    public static string Format(this string format, params string[] values) =>
+        String.Format(format, values);
+
 }
