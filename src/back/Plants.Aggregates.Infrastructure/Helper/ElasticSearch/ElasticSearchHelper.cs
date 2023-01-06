@@ -37,7 +37,7 @@ public class ElasticSearchHelper
     public Uri GetUrl(string path)
     {
         var identity = _identity.Identity!;
-        var baseUrl = new Uri(string.Format(_options.ElasticSearchConnectionTemplate, identity.UserName, _encrypter.Decrypt(identity.Hash)));
+        var baseUrl = new Uri(string.Format(_options.ElasticSearch.Template, identity.UserName, _encrypter.Decrypt(identity.Hash)));
         var builder = new UriBuilder(baseUrl);
         builder.Path = path;
         return builder.Uri;

@@ -54,7 +54,7 @@ internal class EventStoreUserUpdater : IUserUpdater
                 return true;
             };
             var creds = GetCallerCreds();
-            var uri = new Uri(_config.EventStoreConnection.Replace("esdb", "http"));
+            var uri = new Uri(_config.EventStore.Template.Replace("esdb", "http"));
             var hostInfo = Dns.GetHostEntry(uri.Host);
             var manager = new UsersManager(
                 new ConsoleLogger(),
