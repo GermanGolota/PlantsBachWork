@@ -11,7 +11,7 @@ services:
       PGDATA: var/lib/postgresql/data
     volumes:
       - ./persist/db:/var/lib/postgresql/data
-      
+
   eventstore:
     image: eventstore/eventstore:22.10.0-buster-slim
     environment:
@@ -20,13 +20,13 @@ services:
       - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
       - EVENTSTORE_HTTP_PORT=2113
       - EVENTSTORE_TRUSTED_ROOT_CERTIFICATES_PATH=/certs/ca
-      - EVENTSTORE_CERTIFICATE_FILE=/certs/node1/node.crt
-      - EVENTSTORE_CERTIFICATE_PRIVATE_KEY_FILE=/certs/node1/node.key
+      - EVENTSTORE_CERTIFICATE_FILE=/certs/es01/es01.crt
+      - EVENTSTORE_CERTIFICATE_PRIVATE_KEY_FILE=/certs/es01/es01.key
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "curl --fail --insecure https://node1.eventstore:2113/health/live || exit 1",
+          "curl --fail --insecure https://node1.eventstore:2113/health/live || exit 1"
         ]
       interval: 5s
       timeout: 5s
@@ -38,7 +38,7 @@ services:
       - ./persist/es/data:/var/lib/eventstore
       - ./persist/es/eslogs:/var/log/eventstore
       - ./persist/certs:/certs
-    
+
   mongo:
     image: mongo:4.4.17
     ports:
@@ -48,7 +48,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=changeit
     volumes:
       - ./persist/mongo:/data/db
-      
+
   elasticsearch:
     image: elasticsearch:8.5.3
     environment:
@@ -59,17 +59,18 @@ services:
       - ELASTIC_PASSWORD=changeit
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=true
-      - xpack.security.http.ssl.key=certs/node1/node.key
-      - xpack.security.http.ssl.certificate=certs/node1/node.crt
+      - xpack.security.http.ssl.key=certs/es01/es01.key
+      - xpack.security.http.ssl.certificate=certs/es01/es01.crt
       - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
       - xpack.security.http.ssl.verification_mode=certificate
       - xpack.security.transport.ssl.enabled=true
-      - xpack.security.transport.ssl.key=certs/node1/node.key
-      - xpack.security.transport.ssl.certificate=certs/node1/node.crt
+      - xpack.security.transport.ssl.key=certs/es01/es01.key
+      - xpack.security.transport.ssl.certificate=certs/es01/es01.crt
       - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
       - xpack.security.transport.ssl.verification_mode=certificate
       - xpack.license.self_generated.type=basic
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - KIBANA_PASSWORD=changeit
     ulimits:
       memlock:
         soft: -1
@@ -79,3 +80,18 @@ services:
       - ./persist/certs:/usr/share/elasticsearch/config/certs
     ports:
       - 9200:9200
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.5.3
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=https://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=changeit
+      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
+    volumes:
+      - ./persist/certs:/usr/share/kibana/config/certs
+      - ./persist/kibana:/usr/share/kibana/data

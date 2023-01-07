@@ -37,12 +37,25 @@ internal class ElasticSearchRolesInitializer
         var elasticIdentity = _identityHelper.Build(password, "elastic", currentIdentity.Roles);
         _identity.UpdateIdentity(elasticIdentity);
 
+        await InitializeKibanaUserAsync(token);
+
         await CreateRolesAsync(token);
 
         await CreateAdminUserAsync(token);
 
         var oldIdentity = _identityHelper.Build(password, oldUsername, currentIdentity.Roles);
         _identity.UpdateIdentity(oldIdentity);
+    }
+
+    private async Task InitializeKibanaUserAsync(CancellationToken token)
+    {
+        var client = _helper.GetClient();
+        var url = _helper.GetUrl("/_security/user/kibana_system/_password");
+        var result = await client.PostAsJsonAsync(url, new
+        {
+            password = _options.Password
+        }, token);
+        await _helper.HandleCreationAsync<object>("password change", "kibana_system", result, _ => _ is not null, token);
     }
 
     private async Task CreateRolesAsync(CancellationToken token = default)
