@@ -92,6 +92,7 @@ internal class CommandSender : ICommandSender
             {
                 events = await ExecuteHandlersAsync(command, checkResults, token);
                 await _eventStore.AppendEventsAsync(events, commandVersion, command, token);
+                _logger.LogInformation("Successfully processes command '{commandId}' for '{aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
                 result = new CommandAcceptedResult();
             }
             catch (Exception e)
