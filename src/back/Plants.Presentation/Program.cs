@@ -1,4 +1,5 @@
 using Plants.Presentation;
+using Plants.Presentation.Services;
 using Serilog;
 
 var host = Host.CreateDefaultBuilder(args)
@@ -9,12 +10,7 @@ var host = Host.CreateDefaultBuilder(args)
         .UseSerilog()
         .Build();
 
-var config = host.Services.GetRequiredService<IConfiguration>();
-Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(config)
-                .CreateLogger();
-
-//Serilog.Debugging.SelfLog.Enable(Console.WriteLine);
+host.Services.GetRequiredService<LoggerInitializer>().Initialize();
 
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 host.Run();

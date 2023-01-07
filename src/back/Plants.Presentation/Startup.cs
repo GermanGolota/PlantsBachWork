@@ -28,6 +28,7 @@ public class Startup
     {
         services.AddMediatR(typeof(Plants.Application.AssemblyTag).Assembly);
         services
+            .AddSingleton<LoggerInitializer>()
             .AddSingleton<IHostingContext, HostingContext>()
             .AddPlantsConfiguration(Configuration)
             .AddShared()
