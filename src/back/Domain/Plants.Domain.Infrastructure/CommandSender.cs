@@ -35,7 +35,7 @@ internal class CommandSender : ICommandSender
 
     public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCommandAsync(Command command, CancellationToken token = default)
     {
-        _logger.LogInformation("Sending command '{commandId}' into '{aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
+        _logger.LogInformation("Sending command '{commandId}' into '{@aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
         var commandType = command.GetType();
         if (commandType == typeof(Command))
         {
@@ -62,7 +62,7 @@ internal class CommandSender : ICommandSender
             result = new CommandForbidden($"Cannot perform any updates against '{commandAggregate.Name}'");
         }
 
-        _logger.LogInformation("Processed command '{commandId}' for '{aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
+        _logger.LogInformation("Processed command '{commandId}' for '{@aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
 
         return result;
     }
