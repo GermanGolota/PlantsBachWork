@@ -22,7 +22,7 @@ internal class HealthChecker
     public async Task WaitForServicesStartupOrTimeout(CancellationToken token)
     {
         var timer = Stopwatch.StartNew();
-        _logger.LogInformation("Waiting for services to startup for '{sec}' seconds", _options.TimeoutInSeconds);
+        _logger.LogInformation("Waiting for services to startup for up to '{sec}' seconds", _options.TimeoutInSeconds);
 
         var timeoutTask = Task.Delay(TimeSpan.FromSeconds(_options.TimeoutInSeconds), token);
         var healthCheckTask = Task.Run(async () =>
