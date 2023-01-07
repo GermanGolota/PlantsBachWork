@@ -7,3 +7,7 @@ global using Plants.Domain.Infrastructure;
 global using Plants.Domain.Infrastructure.Projection;
 global using Plants.Shared;
 global using Plants.Shared.Extensions;
+global using Plants.Initializer;
+global using Plants.Initializer.HealthCheck;
+global using Plants.Initializer.Roles;
+global using Plants.Initializer.Users;

@@ -4,9 +4,8 @@ using MongoDB.Driver;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Services;
-using System.Linq;
 
-namespace Plants.Initializer;
+namespace Plants.Initializer.Roles;
 
 internal class MongoRolesDbInitializer
 {
@@ -76,7 +75,7 @@ internal class MongoRolesDbInitializer
             }
             """;
 
-        Func<UserRole, string> buildPrivelegesString = role => String.Join(",\n", _accesses.RoleToAggregate[role].Select(agg => buildPrivelege(role, agg)));
+        Func<UserRole, string> buildPrivelegesString = role => string.Join(",\n", _accesses.RoleToAggregate[role].Select(agg => buildPrivelege(role, agg)));
 
         List<string> roleDefinitions = new()
         {

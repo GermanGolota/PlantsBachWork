@@ -9,3 +9,4 @@ foreach ($cert in $certs){
 docker-compose -f docker-compose-env.yml up --remove-orphans -d
 cd back/Plants.Initializer
 dotnet run
+cd ../..

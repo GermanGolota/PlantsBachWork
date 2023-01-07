@@ -1,15 +1,36 @@
 version: "3.3"
 services:
-    setup:
-        image: eventstore/es-gencert-cli:1.0.2
-        entrypoint: bash
-        user: "1000:1000"
-        command: >
-          -c "mkdir -p ./certs && cd /certs
-          && es-gencert-cli create-ca
-          && es-gencert-cli create-node -out ./node1 -ip-addresses 127.0.0.1,172.30.240.11 -dns-names localhost
-          && find . -type f -print0 | xargs -0 chmod 666"
-        container_name: setup
-        volumes:
-          - ./persist/certs:/certs
- 
+  setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.3
+    volumes:
+      - ./persist/certs:/usr/share/elasticsearch/config/certs
+    user: "1000:1000"
+    command: >
+      bash -c '
+        echo "Creating CA";
+        bin/elasticsearch-certutil ca --silent --pem -out config/certs/ca.zip;
+        unzip config/certs/ca.zip -d config/certs;
+        echo "Creating certs";
+        echo -ne \
+        "instances:\n"\
+        "  - name: es01\n"\
+        "    dns:\n"\
+        "      - es01\n"\
+        "      - localhost\n"\
+        "      - elasticsearch\n"\
+        "    ip:\n"\
+        "      - 127.0.0.1\n"\
+        > config/certs/instances.yml;
+        bin/elasticsearch-certutil cert --silent --pem -out config/certs/certs.zip --in config/certs/instances.yml --ca-cert config/certs/ca/ca.crt --ca-key config/certs/ca/ca.key;
+        unzip config/certs/certs.zip -d config/certs;
+        echo "Setting file permissions"
+        chown -R root:root config/certs;
+        find . -type d -exec chmod 750 \{\} \;;
+        find . -type f -exec chmod 640 \{\} \;;
+        echo "Done!"
+      '
+    healthcheck:
+      test: [ "CMD-SHELL", "[ -f config/certs/es01/es01.crt ]" ]
+      interval: 1s
+      timeout: 5s
+      retries: 120

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Plants.Aggregates.Users;
 
-namespace Plants.Initializer;
+namespace Plants.Initializer.Users;
 
 internal class AdminUserCreator
 {

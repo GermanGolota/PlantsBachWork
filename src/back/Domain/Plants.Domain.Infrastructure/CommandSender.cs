@@ -35,6 +35,7 @@ internal class CommandSender : ICommandSender
 
     public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCommandAsync(Command command, CancellationToken token = default)
     {
+        _logger.LogInformation("Sending command '{commandId}' into '{@aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
         var commandType = command.GetType();
         if (commandType == typeof(Command))
         {
@@ -57,8 +58,11 @@ internal class CommandSender : ICommandSender
         }
         else
         {
+            _logger.LogInformation("Unauthorized command tried to perform by '{username}'", command.Metadata.UserName);
             result = new CommandForbidden($"Cannot perform any updates against '{commandAggregate.Name}'");
         }
+
+        _logger.LogInformation("Processed command '{commandId}' for '{@aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
 
         return result;
     }
@@ -88,6 +92,7 @@ internal class CommandSender : ICommandSender
             {
                 events = await ExecuteHandlersAsync(command, checkResults, token);
                 await _eventStore.AppendEventsAsync(events, commandVersion, command, token);
+                _logger.LogInformation("Successfully processes command '{commandId}' for '{aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
                 result = new CommandAcceptedResult();
             }
             catch (Exception e)

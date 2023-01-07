@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Plants.Aggregates.Infrastructure;
 using Plants.Aggregates.Infrastructure.Abstractions;
+using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Infrastructure;
 using Plants.Presentation.Extensions;
 using Plants.Presentation.HostedServices;
