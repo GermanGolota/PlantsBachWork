@@ -1,13 +1,15 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Plants.Domain.Infrastructure.Config;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.Elasticsearch;
 using Serilog.Sinks.SystemConsole.Themes;
 
-namespace Plants.Presentation.Services;
+namespace Plants.Aggregates.Infrastructure.Helper;
 
-public class LoggerInitializer
+internal sealed class LoggerInitializer : ILoggerInitializer
 {
     private readonly IConfiguration _configuration;
     private readonly IHostEnvironment _environment;
@@ -35,7 +37,7 @@ public class LoggerInitializer
             .Destructure.ToMaximumStringLength(500)
             .WriteTo.Console(LogEventLevel.Information, theme: AnsiConsoleTheme.Code)
             .WriteTo.File("Logs/log.txt", restrictedToMinimumLevel: LogEventLevel.Information, rollingInterval: RollingInterval.Hour, fileSizeLimitBytes: 1024L * 1024 * 1024 * 10)
-            .WriteTo.Elasticsearch(elasticUrl, 
+            .WriteTo.Elasticsearch(elasticUrl,
                 indexFormat: $"{_environment.EnvironmentName}-{_environment.ApplicationName}-{{0:yyyy.MM.dd}}".ToLower(),
                 restrictedToMinimumLevel: LogEventLevel.Information,
                 deadLetterIndexName: $"{_environment.EnvironmentName}-deadletter-{{0:yyyy.MM.dd}}",

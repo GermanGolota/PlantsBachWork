@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Plants.Aggregates.Infrastructure;
 using Plants.Aggregates.Infrastructure.Abstractions;
+using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Infrastructure;
 using Plants.Presentation.Extensions;
 using Plants.Presentation.HostedServices;
@@ -28,7 +29,6 @@ public class Startup
     {
         services.AddMediatR(typeof(Plants.Application.AssemblyTag).Assembly);
         services
-            .AddSingleton<LoggerInitializer>()
             .AddSingleton<IHostingContext, HostingContext>()
             .AddPlantsConfiguration(Configuration)
             .AddShared()

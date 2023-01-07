@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Plants.Aggregates.Infrastructure;
+using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Initializer;
 using Plants.Services.Infrastructure;
+using Serilog;
 
 var host = Host.CreateDefaultBuilder(args)
         .ConfigureServices((ctx, services) =>
@@ -24,7 +26,10 @@ var host = Host.CreateDefaultBuilder(args)
                     .AddTransient<Initializer>()
                     .AddTransient<HealthChecker>();
         })
+        .UseSerilog()
         .Build();
+
+host.Services.GetRequiredService<ILoggerInitializer>().Initialize();
 
 var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (s, e) =>
