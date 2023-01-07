@@ -6,4 +6,6 @@ $certs = Get-ChildItem persist/certs -Filter '*.crt' -Recurse | % {$_.FullName}
 foreach ($cert in $certs){
 	Import-Certificate -FilePath $cert -CertStoreLocation Cert:\LocalMachine\Root
 }
-docker-compose -f docker-compose-env.yml up --remove-orphans
+docker-compose -f docker-compose-env.yml up --remove-orphans -d
+cd back/Plants.Initializer
+dotnet run
