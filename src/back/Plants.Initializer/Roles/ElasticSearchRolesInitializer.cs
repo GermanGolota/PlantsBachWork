@@ -7,7 +7,7 @@ using Plants.Services.Infrastructure.Encryption;
 using System.Data;
 using System.Net.Http.Json;
 
-namespace Plants.Initializer;
+namespace Plants.Initializer.Roles;
 
 internal class ElasticSearchRolesInitializer
 {

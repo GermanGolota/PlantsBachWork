@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using System.Diagnostics;
 
-namespace Plants.Initializer;
+namespace Plants.Initializer.HealthCheck;
 
 internal class HealthChecker
 {
@@ -30,7 +29,7 @@ internal class HealthChecker
             while (true)
             {
                 var report = await _health.CheckHealthAsync(token);
-                if (report.Status == HealthStatus.Healthy || (report.Status == HealthStatus.Degraded && _options.AcceptDegraded))
+                if (report.Status == HealthStatus.Healthy || report.Status == HealthStatus.Degraded && _options.AcceptDegraded)
                 {
                     break;
                 }

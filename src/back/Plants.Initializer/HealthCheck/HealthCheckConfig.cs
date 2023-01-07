@@ -1,4 +1,4 @@
-﻿namespace Plants.Initializer;
+﻿namespace Plants.Initializer.HealthCheck;
 
 [ConfigSection(Section)]
 internal class HealthCheckConfig

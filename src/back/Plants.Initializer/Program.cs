@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Hosting;
 using Plants.Aggregates.Infrastructure;
 using Plants.Aggregates.Infrastructure.Helper;
-using Plants.Initializer;
 using Plants.Services.Infrastructure;
 using Serilog;
 
