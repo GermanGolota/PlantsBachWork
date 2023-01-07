@@ -13,9 +13,9 @@ internal class EditStockItemCommandHandler : ICommandHandler<EditStockItemComman
 
     private PlantStock _stock;
 
-    public async Task<CommandForbidden?> ShouldForbidAsync(EditStockItemCommand command, IUserIdentity user)
+    public async Task<CommandForbidden?> ShouldForbidAsync(EditStockItemCommand command, IUserIdentity user, CancellationToken token = default)
     {
-        _stock ??= await _stockRepository.GetByIdAsync(command.Metadata.Aggregate.Id);
+        _stock ??= await _stockRepository.GetByIdAsync(command.Metadata.Aggregate.Id, token);
         var validIdentity = user.HasRole(Manager).Or(user.HasRole(Producer).And(IsCaretaker(user, _stock)));
         var notPosted = _stock.BeenPosted.ToForbidden("Cannot edit stock after it was posted");
         //TODO: Should validate data here
@@ -25,10 +25,10 @@ internal class EditStockItemCommandHandler : ICommandHandler<EditStockItemComman
     private CommandForbidden? IsCaretaker(IUserIdentity user, PlantStock plant) =>
         (user.UserName == plant.Caretaker.Login).ToForbidden("Cannot eddit somebody elses stock item");
 
-    public async Task<IEnumerable<Event>> HandleAsync(EditStockItemCommand command)
+    public async Task<IEnumerable<Event>> HandleAsync(EditStockItemCommand command, CancellationToken token = default)
     {
-        _stock ??= await _stockRepository.GetByIdAsync(command.Metadata.Aggregate.Id);
-        var newUrls = await _uploader.UploadPlantAsync(_stock.Id, command.NewPictures);
+        _stock ??= await _stockRepository.GetByIdAsync(command.Metadata.Aggregate.Id, token);
+        var newUrls = await _uploader.UploadPlantAsync(_stock.Id, command.NewPictures, token);
         return new[]
         {
             new StockEdditedEvent(EventFactory.Shared.Create<StockEdditedEvent>(command), command.Plant, newUrls, command.RemovedPictureUrls)

@@ -60,7 +60,8 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
             }
             var subscription = await client.SubscribeToAllAsync(aggregate,
                 Process(_subscriber, _logger),
-                HandleStop);
+                HandleStop,
+                cancellationToken: token);
             subscriptions.Add(subscription);
         }
 
@@ -85,7 +86,7 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
                     logger.LogInformation("Processing subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
                     try
                     {
-                        await subscriber.ProcessCommandAsync(command, subscriptionState.Events);
+                        await subscriber.ProcessCommandAsync(command, subscriptionState.Events, cancellationToken);
                     }
                     catch (Exception e)
                     {
@@ -104,7 +105,8 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
             {
                 subscriptionState.Command = command;
                 return Task.CompletedTask;
-            });
+            }
+            );
         };
     }
 
@@ -127,7 +129,7 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
         }
     }
 
-    public void Stop(CancellationToken token)
+    public void Stop()
     {
         if (_subscriptions is null)
         {

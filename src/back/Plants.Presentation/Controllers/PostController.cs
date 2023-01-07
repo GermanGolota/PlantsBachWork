@@ -62,13 +62,13 @@ public class PostControllerV2 : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<PostResult>> GetPost([FromRoute] long id)
+    public async Task<ActionResult<PostResult>> GetPost([FromRoute] long id, CancellationToken token)
     {
         var guid = id.ToGuid();
         PostResult result;
-        if (await _postQuery.ExistsAsync(guid))
+        if (await _postQuery.ExistsAsync(guid, token))
         {
-            var post = await _postQuery.GetByIdAsync(guid);
+            var post = await _postQuery.GetByIdAsync(guid, token);
             if (post.IsRemoved)
             {
                 result = new();
@@ -79,7 +79,7 @@ public class PostControllerV2 : ControllerBase
                 var stock = post.Stock;
                 var caretaker = stock.Caretaker;
                 var plant = stock.Information;
-                var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId)).PlantImagePaths.ToInverse();
+                var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token)).PlantImagePaths.ToInverse();
                 result = new(new(post.Id.ToLong(), plant.PlantName, plant.Description, post.Price,
                     plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
                     seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
@@ -94,12 +94,13 @@ public class PostControllerV2 : ControllerBase
     }
 
     [HttpPost("{id}/order")]
-    public async Task<ActionResult<PlaceOrderResult>> Order([FromRoute] long id, [FromQuery] string city, [FromQuery] long mailNumber)
+    public async Task<ActionResult<PlaceOrderResult>> Order([FromRoute] long id, [FromQuery] string city, [FromQuery] long mailNumber, CancellationToken token = default)
     {
         var guid = id.ToGuid();
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<OrderPostCommand>(new(guid, nameof(PlantPost))),
-            meta => new OrderPostCommand(meta, new(city, mailNumber))
+            meta => new OrderPostCommand(meta, new(city, mailNumber)),
+            token
             );
         return result.Match<PlaceOrderResult>(
             succ => new(true, "Success"),
@@ -107,12 +108,13 @@ public class PostControllerV2 : ControllerBase
     }
 
     [HttpPost("{id}/delete")]
-    public async Task<ActionResult<DeletePostResult>> Delete([FromRoute] long id)
+    public async Task<ActionResult<DeletePostResult>> Delete([FromRoute] long id, CancellationToken token = default)
     {
         var guid = id.ToGuid();
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<RemovePostCommand>(new(guid, nameof(PlantPost))),
-            meta => new RemovePostCommand(meta)
+            meta => new RemovePostCommand(meta),
+            token
             );
         return result.Match<DeletePostResult>(succ => new(true), fail => new(false));
     }

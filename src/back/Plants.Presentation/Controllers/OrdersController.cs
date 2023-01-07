@@ -70,9 +70,9 @@ public class OrdersControllerV2 : ControllerBase
     [HttpGet()]
     public async Task<ActionResult<OrdersResult>> GetAll([FromQuery] bool onlyMine, CancellationToken token)
     {
-        var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId)).PlantImagePaths.ToInverse();
+        var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token)).PlantImagePaths.ToInverse();
 
-        var items = await _orderQuery.SearchAsync(new(onlyMine), new SearchAll());
+        var items = await _orderQuery.SearchAsync(new(onlyMine), new SearchAll(), token);
         return new OrdersResult(new(items.Select(item =>
         {
             var seller = item.Post.Seller;
@@ -96,7 +96,8 @@ public class OrdersControllerV2 : ControllerBase
         var guid = id.ToGuid();
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<StartOrderDeliveryCommand>(new(guid, nameof(PlantOrder))),
-            meta => new StartOrderDeliveryCommand(meta, trackingNumber));
+            meta => new StartOrderDeliveryCommand(meta, trackingNumber), 
+            token);
         return result.Match<StartDeliveryResult>(succ => new(true), fail => new(false));
     }
 
@@ -116,7 +117,8 @@ public class OrdersControllerV2 : ControllerBase
         var guid = id.ToGuid();
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<Plants.Aggregates.PlantOrders.ConfirmDeliveryCommand>(new(guid, nameof(PlantOrder))),
-            meta => new Plants.Aggregates.PlantOrders.ConfirmDeliveryCommand(meta));
+            meta => new Plants.Aggregates.PlantOrders.ConfirmDeliveryCommand(meta),
+            token);
         return result.Match<ConfirmDeliveryResult>(succ => new(true), fail => new(false));
     }
 

@@ -18,7 +18,7 @@ internal class AdminUserCreator
         _options = options.Get(UserConstrants.NewAdmin);
     }
 
-    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCreateAdminCommandAsync()
+    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCreateAdminCommandAsync(CancellationToken token = default)
     {
         var meta = _metadataFactory.Create<CreateUserCommand, User>(_options.Username.ToGuid());
         var command = new CreateUserCommand(meta,
@@ -30,13 +30,13 @@ internal class AdminUserCreator
                 "admin@admin.admin",
                 "English",
                 Enum.GetValues<UserRole>()));
-        return await _sender.SendCommandAsync(command);
+        return await _sender.SendCommandAsync(command, token);
     }
 
-    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendResetPasswordCommandAsync()
+    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendResetPasswordCommandAsync(CancellationToken token = default)
     {
         var meta = _metadataFactory.Create<ChangePasswordCommand, User>(_options.Username.ToGuid());
         var command = new ChangePasswordCommand(meta, _options.Username, _context.TempPassword, _options.Password);
-        return await _sender.SendCommandAsync(command);
+        return await _sender.SendCommandAsync(command, token);
     }
 }

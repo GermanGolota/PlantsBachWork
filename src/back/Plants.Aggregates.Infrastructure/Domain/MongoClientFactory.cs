@@ -22,7 +22,7 @@ internal class MongoClientFactory : IMongoClientFactory
     public MongoClient CreateClient()
     {
         var identity = _identity.Identity!;
-        var connectionString = string.Format(_config.MongoDbConnectionTemplate, identity.UserName, _encrypter.Decrypt(identity.Hash));
+        var connectionString = string.Format(_config.MongoDb.Template, identity.UserName, _encrypter.Decrypt(identity.Hash));
         return new MongoClient(connectionString);
     }
 

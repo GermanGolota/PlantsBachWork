@@ -6,17 +6,40 @@ namespace Plants.Domain.Infrastructure.Config;
 public class ConnectionConfig
 {
     public const string Section = "Connection";
+
     [Required]
-    public string EventStoreConnection { get; set; } = null!;
+    public EventStoreServiceConenction EventStore { get; set; } = null!;
+
     [Required]
-    public string EventStoreServiceUsername { get; set; } = null!;
+    public MongoDbServiceConnection MongoDb { get; set; } = null!;
+
     [Required]
-    public string EventStoreServicePassword { get; set; } = null!;
-    public long EventStoreTimeoutInSeconds { get; set; } = 60;
+    public ServiceConnection ElasticSearch { get; set; } = null!;
+
     [Required]
-    public string MongoDbConnectionTemplate { get; set; } = null!;
-    [Required]
-    public string MongoDbDatabaseName { get; set; } = null!;
-    [Required]
-    public string ElasticSearchConnectionTemplate { get; set; } = null!;
+    public ServiceCreds DefaultCreds { get; set; } = null!;
+
+    public ServiceCreds GetCreds(Func<ConnectionConfig, ServiceConnection> connectionGetter) =>
+        connectionGetter(this).Creds ?? DefaultCreds;
 }
+
+public class ServiceConnection
+{
+    [Required]
+    public string Template { get; set; } = null!;
+    public ServiceCreds? Creds { get; set; }
+}
+
+public class MongoDbServiceConnection : ServiceConnection
+{
+    [Required]
+    public string DatabaseName { get; set; } = null!;
+}
+
+public class EventStoreServiceConenction : ServiceConnection
+{
+    [Range(1L, Int64.MaxValue)]
+    public long TimeoutInSeconds { get; set; } = 60;
+}
+
+public record ServiceCreds([Required] string Username, [Required] string Password);

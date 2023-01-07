@@ -17,36 +17,36 @@ public class MongoDBRepository<T> : IProjectionQueryService<T>, IProjectionRepos
         _options = options.Value;
     }
 
-    private IMongoDatabase Database => _clientFactory.GetDatabase(_options.MongoDbDatabaseName);
+    private IMongoDatabase Database => _clientFactory.GetDatabase(_options.MongoDb.DatabaseName);
     private string CollectionName => typeof(T).Name;
 
-    public Task<bool> ExistsAsync(Guid id)
+    public Task<bool> ExistsAsync(Guid id, CancellationToken token = default)
     {
         return Database.GetCollection<T>(CollectionName)
             .Find(x => x.Id == id)
-            .AnyAsync();
+            .AnyAsync(cancellationToken: token);
     }
 
-    public async Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> predicate)
+    public async Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> predicate, CancellationToken token = default)
     {
         var cursor = await Database.GetCollection<T>(CollectionName)
-            .FindAsync(predicate);
+            .FindAsync(predicate, cancellationToken: token);
         return cursor.ToEnumerable();
     }
 
-    public Task<T> GetByIdAsync(Guid id)
+    public Task<T> GetByIdAsync(Guid id, CancellationToken token = default)
     {
         return Database.GetCollection<T>(CollectionName)
             .Find(x => x.Id == id)
-            .SingleAsync();
+            .SingleAsync(cancellationToken: token);
     }
 
-    public async Task InsertAsync(T entity)
+    public async Task InsertAsync(T entity, CancellationToken token = default)
     {
         try
         {
             await Database.GetCollection<T>(CollectionName)
-                .InsertOneAsync(entity);
+                .InsertOneAsync(entity, new(), token);
         }
         catch (MongoWriteException ex)
         {
@@ -54,12 +54,12 @@ public class MongoDBRepository<T> : IProjectionQueryService<T>, IProjectionRepos
         }
     }
 
-    public async Task UpdateAsync(T entity)
+    public async Task UpdateAsync(T entity, CancellationToken token = default)
     {
         try
         {
             var result = await Database.GetCollection<T>(CollectionName)
-                .ReplaceOneAsync(x => x.Id == entity.Id, entity);
+                .ReplaceOneAsync(x => x.Id == entity.Id, entity, cancellationToken: token);
 
             if (result.MatchedCount != 1)
             {

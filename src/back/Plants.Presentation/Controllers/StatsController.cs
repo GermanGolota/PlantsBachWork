@@ -59,8 +59,8 @@ public class StatsControllerV2 : ControllerBase
     [HttpGet("financial")]
     public async Task<ActionResult<FinancialStatsResult>> Financial([FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken token)
     {
-        var stats = await _timedStatQuery.FindAllAsync(_ => true);
-        var groups = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId)).GroupNames.ToInverse();
+        var stats = await _timedStatQuery.FindAllAsync(_ => true, token);
+        var groups = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token)).GroupNames.ToInverse();
         List<GroupFinancialStats> results = new();
         return new FinancialStatsResult(stats.Where(_ => IsInRange(_.Date.ToDateTime(TimeOnly.MinValue), from, to)).GroupBy(stat => stat.GroupName)
             .Select(pair =>
@@ -85,8 +85,8 @@ public class StatsControllerV2 : ControllerBase
     [HttpGet("total")]
     public async Task<ActionResult<TotalStatsResult>> Total(CancellationToken token)
     {
-        var stats = await _statQuery.FindAllAsync(_ => true);
-        var groups = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId)).GroupNames.ToInverse();
+        var stats = await _statQuery.FindAllAsync(_ => true, token);
+        var groups = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token)).GroupNames.ToInverse();
         return new TotalStatsResult(stats.Select(stat => new GroupTotalStats(groups[stat.GroupName], stat.GroupName, stat.Income, stat.InstructionsCount, stat.PlantsCount)));
     }
 }

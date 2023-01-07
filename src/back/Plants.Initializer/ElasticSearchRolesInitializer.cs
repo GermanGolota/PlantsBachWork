@@ -29,7 +29,7 @@ internal class ElasticSearchRolesInitializer
         _options = options.Get(UserConstrants.Admin);
     }
 
-    public async Task InitializeAsync()
+    public async Task InitializeAsync(CancellationToken token = default)
     {
         var currentIdentity = _identity.Identity!;
         var oldUsername = currentIdentity.UserName;
@@ -37,15 +37,15 @@ internal class ElasticSearchRolesInitializer
         var elasticIdentity = _identityHelper.Build(password, "elastic", currentIdentity.Roles);
         _identity.UpdateIdentity(elasticIdentity);
 
-        await CreateRolesAsync();
+        await CreateRolesAsync(token);
 
-        await CreateAdminUserAsync();
+        await CreateAdminUserAsync(token);
 
         var oldIdentity = _identityHelper.Build(password, oldUsername, currentIdentity.Roles);
         _identity.UpdateIdentity(oldIdentity);
     }
 
-    private async Task CreateRolesAsync()
+    private async Task CreateRolesAsync(CancellationToken token = default)
     {
         var client = _helper.GetClient();
         var allowToPriveleges = new Dictionary<AllowType, List<string>>()
@@ -84,8 +84,8 @@ internal class ElasticSearchRolesInitializer
         foreach (var (roleName, role) in roleDefs)
         {
             var uri = _helper.GetUrl($"_security/role/{roleName}");
-            var result = await client.PostAsJsonAsync(uri, role);
-            await _helper.HandleCreationAsync<RoleDefinitionResult>("role", roleName, result, _ => _.Role.Created);
+            var result = await client.PostAsJsonAsync(uri, role, token);
+            await _helper.HandleCreationAsync<RoleDefinitionResult>("role", roleName, result, _ => _.Role.Created, token);
         }
     }
 
@@ -108,7 +108,7 @@ internal class ElasticSearchRolesInitializer
         return indices;
     }
 
-    private async Task CreateAdminUserAsync()
+    private async Task CreateAdminUserAsync(CancellationToken token = default)
     {
         var client = _helper.GetClient();
         var url = _helper.GetUrl($"_security/user/{_options.Username}");
@@ -118,9 +118,9 @@ internal class ElasticSearchRolesInitializer
             FullName = $"{_options.FirstName} {_options.LastName}",
             Roles = Enum.GetValues<UserRole>().Select(x => x.ToString()).ToList()
         };
-        var result = await client.PostAsJsonAsync(url, user);
+        var result = await client.PostAsJsonAsync(url, user, token);
 
-        await _helper.HandleCreationAsync<CreationStatus>("user", _options.Username, result, _ => _.Created);
+        await _helper.HandleCreationAsync<CreationStatus>("user", _options.Username, result, _ => _.Created, token);
     }
 
 }

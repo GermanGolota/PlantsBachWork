@@ -3,5 +3,5 @@
 public interface IEventSubscriptionWorker
 {
     Task StartAsync(CancellationToken token);
-    void Stop(CancellationToken token);
+    void Stop();
 }

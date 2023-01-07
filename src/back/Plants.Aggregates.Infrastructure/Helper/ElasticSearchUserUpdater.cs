@@ -16,7 +16,7 @@ public class ElasticSearchUserUpdater : IUserUpdater
         _identity = identity;
     }
 
-    public async Task CreateAsync(string username, string password, string fullName, UserRole[] roles)
+    public async Task CreateAsync(string username, string password, string fullName, UserRole[] roles, CancellationToken token = default)
     {
         var client = _helper.GetClient();
         var url = _helper.GetUrl($"_security/user/{username}");
@@ -26,12 +26,12 @@ public class ElasticSearchUserUpdater : IUserUpdater
             FullName = fullName,
             Roles = roles.Select(x => x.ToString()).ToList()
         };
-        var result = await client.PostAsJsonAsync(url, user);
+        var result = await client.PostAsJsonAsync(url, user, token);
 
-        await _helper.HandleCreationAsync<CreationStatus>("user", username, result, _ => _.Created);
+        await _helper.HandleCreationAsync<CreationStatus>("user", username, result, _ => _.Created, token);
     }
 
-    public async Task ChangeRoleAsync(string username, string fullName, UserRole[] oldRoles, UserRole changedRole)
+    public async Task ChangeRoleAsync(string username, string fullName, UserRole[] oldRoles, UserRole changedRole, CancellationToken token = default)
     {
         var client = _helper.GetClient();
         var url = _helper.GetUrl($"_security/user/{username}");
@@ -44,12 +44,12 @@ public class ElasticSearchUserUpdater : IUserUpdater
             FullName = fullName,
             Roles = roles
         };
-        var result = await client.PutAsJsonAsync(url, user);
+        var result = await client.PutAsJsonAsync(url, user, token);
 
-        await _helper.HandleCreationAsync<CreationStatus>("user", username, result, _ => _.Created is false);
+        await _helper.HandleCreationAsync<CreationStatus>("user", username, result, _ => _.Created is false, token);
     }
 
-    public async Task UpdatePasswordAsync(string username, string oldPassword, string newPassword)
+    public async Task UpdatePasswordAsync(string username, string oldPassword, string newPassword, CancellationToken token = default)
     {
         var client = _helper.GetClient();
         var url = _identity.Identity!.UserName == username 
@@ -58,8 +58,8 @@ public class ElasticSearchUserUpdater : IUserUpdater
         var result = await client.PostAsJsonAsync(url, new
         {
             password = newPassword
-        });
-        await _helper.HandleCreationAsync<object>("password change", username, result, _ => _ is not null);
+        }, token);
+        await _helper.HandleCreationAsync<object>("password change", username, result, _ => _ is not null, token);
     }
 
 }

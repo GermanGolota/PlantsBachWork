@@ -18,11 +18,11 @@ internal class ElasticSearchProjectionRepository<T> : ISearchProjectionRepositor
         _loggerFactory = loggerFactory;
     }
 
-    public async Task IndexAsync(T item)
+    public async Task IndexAsync(T item, CancellationToken token = default)
     {
         var aggregateName = _helper.Aggregates.Get(typeof(T));
         var client = _factory.Create();
-        var response = await client.IndexAsync(item, _ => _.Index(aggregateName.ToIndexName()));
+        var response = await client.IndexAsync(item, _ => _.Index(aggregateName.ToIndexName()), token);
         response.Process(_loggerFactory.CreateLogger(GetType()), aggregateName, "Index");
     }
 }

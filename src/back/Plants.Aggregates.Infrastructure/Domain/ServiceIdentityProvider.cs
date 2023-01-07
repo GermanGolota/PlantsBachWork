@@ -18,8 +18,8 @@ internal class ServiceIdentityProvider : IServiceIdentityProvider
 
     public IUserIdentity ServiceIdentity => new UserIdentity
     {
-        Hash = _encrypter.Encrypt(_options.EventStoreServicePassword),
-        UserName = _options.EventStoreServiceUsername,
+        Hash = _encrypter.Encrypt(_options.DefaultCreds.Password),
+        UserName = _options.DefaultCreds.Username,
         Roles = Enum.GetValues<UserRole>()
     };
 }

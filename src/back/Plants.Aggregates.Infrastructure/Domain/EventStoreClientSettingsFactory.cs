@@ -27,7 +27,7 @@ internal class EventStoreClientSettingsFactory
     public EventStoreClientSettings CreateFor(EventStoreClientSettingsType type)
     {
         var options = _options.Value;
-        var settings = EventStoreClientSettings.Create(options.EventStoreConnection);
+        var settings = EventStoreClientSettings.Create(options.EventStore.Template);
         switch (type)
         {
             case EventStoreClientSettingsType.User:
@@ -38,13 +38,14 @@ internal class EventStoreClientSettingsFactory
                 }
                 break;
             case EventStoreClientSettingsType.Service:
-                settings.DefaultCredentials = new UserCredentials(options.EventStoreServiceUsername, options.EventStoreServicePassword);
+                var creds = options.EventStore.Creds ?? options.DefaultCreds;
+                settings.DefaultCredentials = new UserCredentials(creds.Username, creds.Password);
                 break;
             default:
                 throw new NotSupportedException($"Setting type - '{type}' is not supported");
         }
 
-        settings.DefaultDeadline = TimeSpan.FromSeconds(options.EventStoreTimeoutInSeconds);
+        settings.DefaultDeadline = TimeSpan.FromSeconds(options.EventStore.TimeoutInSeconds);
         settings.LoggerFactory ??= _factory;
         settings.Interceptors ??= _interceptors;
         return settings;

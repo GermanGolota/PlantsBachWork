@@ -33,7 +33,7 @@ internal class CommandSender : ICommandSender
         _accesses = accesses;
     }
 
-    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCommandAsync(Command command)
+    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCommandAsync(Command command, CancellationToken token = default)
     {
         var commandType = command.GetType();
         if (commandType == typeof(Command))
@@ -47,7 +47,7 @@ internal class CommandSender : ICommandSender
         {
             if (_cqrs.CommandHandlers.TryGetValue(commandType, out var handlePairs))
             {
-                result = await ExecuteCommand(command, commandAggregate, handlePairs);
+                result = await ExecuteCommand(command, commandAggregate, handlePairs, token);
             }
             else
             {
@@ -67,34 +67,34 @@ internal class CommandSender : ICommandSender
         identity.Roles.Contains(UserRole.Manager)
         || _accesses.AggregateToWriteRoles[commandAggregate.Name].Intersect(identity.Roles).Any();
 
-    private async Task<OneOf<CommandAcceptedResult, CommandForbidden>> ExecuteCommand(Command command, AggregateDescription commandAggregate, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs)
+    private async Task<OneOf<CommandAcceptedResult, CommandForbidden>> ExecuteCommand(Command command, AggregateDescription commandAggregate, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs, CancellationToken token = default)
     {
-        var aggregate = await _caller.LoadAsync(commandAggregate);
+        var aggregate = await _caller.LoadAsync(commandAggregate, token);
         var commandVersion = aggregate.Version;
-        commandVersion = await _eventStore.AppendCommandAsync(command, commandVersion);
+        commandVersion = await _eventStore.AppendCommandAsync(command, commandVersion, token);
 
-        var checkResults = await PerformChecksAsync(command, handlePairs);
+        var checkResults = await PerformChecksAsync(command, handlePairs, token);
         var checkFailures = checkResults.Where(_ => _.CheckFailure.HasValue).Select(_ => _.CheckFailure!.Value);
         OneOf<CommandAcceptedResult, CommandForbidden> result;
         if (checkFailures.Any())
         {
             var reasons = checkFailures.Select(failure => failure.Reasons).Flatten().ToArray();
-            result = await AppendFailureAsync(command, commandVersion, reasons, false);
+            result = await AppendFailureAsync(command, commandVersion, reasons, false, token);
         }
         else
         {
             List<Event>? events = null;
             try
             {
-                events = await ExecuteHandlersAsync(command, checkResults);
-                await _eventStore.AppendEventsAsync(events, commandVersion, command);
+                events = await ExecuteHandlersAsync(command, checkResults, token);
+                await _eventStore.AppendEventsAsync(events, commandVersion, command, token);
                 result = new CommandAcceptedResult();
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Failed to process events for command");
                 var reasons = new[] { e.Message, e.ToString() };
-                result = await AppendFailureAsync(command, commandVersion, reasons, true);
+                result = await AppendFailureAsync(command, commandVersion, reasons, true, token);
             }
 
         }
@@ -102,13 +102,13 @@ internal class CommandSender : ICommandSender
         return result;
     }
 
-    private async Task<OneOf<CommandAcceptedResult, CommandForbidden>> AppendFailureAsync(Command command, ulong commandVersion, string[] reasons, bool isException)
+    private async Task<OneOf<CommandAcceptedResult, CommandForbidden>> AppendFailureAsync(Command command, ulong commandVersion, string[] reasons, bool isException, CancellationToken token = default)
     {
-        await _eventStore.AppendEventsAsync(new[] { new FailEvent(EventFactory.Shared.Create<FailEvent>(command), reasons, isException) }, commandVersion, command);
+        await _eventStore.AppendEventsAsync(new[] { new FailEvent(EventFactory.Shared.Create<FailEvent>(command), reasons, isException) }, commandVersion, command, token);
         return new CommandForbidden(reasons);
     }
 
-    private static async Task<List<Event>> ExecuteHandlersAsync(Command command, List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object>)> checkResults)
+    private static async Task<List<Event>> ExecuteHandlersAsync(Command command, List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object>)> checkResults, CancellationToken token = default)
     {
         List<Event> events = new();
         foreach (var (_, handle, dependency) in checkResults)
@@ -120,7 +120,7 @@ internal class CommandSender : ICommandSender
                 },
                 async service =>
                 {
-                    return await (Task<IEnumerable<Event>>)handle.Invoke(service, new object[] { command })!;
+                    return await (Task<IEnumerable<Event>>)handle.Invoke(service, new object[] { command, token })!;
                 });
             events.AddRange(newEvents);
         }
@@ -128,7 +128,7 @@ internal class CommandSender : ICommandSender
         return events;
     }
 
-    private async Task<List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object> Dependency)>> PerformChecksAsync(Command command, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs)
+    private async Task<List<(CommandForbidden? CheckFailure, MethodInfo Handle, OneOf<AggregateBase, object> Dependency)>> PerformChecksAsync(Command command, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs, CancellationToken token = default)
     {
         var identity = _identityProvider.Identity!;
 
@@ -140,14 +140,14 @@ internal class CommandSender : ICommandSender
             {
                 var handlerType = typeof(ICommandHandler<>).MakeGenericType(command.GetType());
                 var service = _service.GetRequiredService(handlerType);
-                var task = (Task<CommandForbidden?>)check.Invoke(service, new object[] { command, identity })!;
+                var task = (Task<CommandForbidden?>)check.Invoke(service, new object[] { command, identity, token })!;
                 var dependency = new OneOf<AggregateBase, object>(service);
                 checkResults.Add((await task, handle, dependency));
             }
             else
             {
                 //aggregate command
-                var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate);
+                var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate, token);
                 var checkResult = (CommandForbidden?)check.Invoke(aggregate, new object[] { command, identity });
                 var dependency = new OneOf<AggregateBase, object>(aggregate);
                 checkResults.Add((checkResult, handle, dependency));

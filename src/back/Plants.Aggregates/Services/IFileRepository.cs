@@ -2,7 +2,7 @@
 
 public interface IFileRepository
 {
-    Task<FileLocation> SaveAsync(FileDto file);
+    Task<FileLocation> SaveAsync(FileDto file, CancellationToken token = default);
     string GetUrl(FileLocation location);
 }
 

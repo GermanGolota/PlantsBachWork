@@ -28,7 +28,7 @@ internal class ElasticSearchClientFactory : IElasticSearchClientFactory
     public ElasticClient Create()
     {
         var identity = _identity.Identity!;
-        var uri = new Uri(string.Format(_connection.ElasticSearchConnectionTemplate, identity.UserName, _encrypter.Decrypt(identity.Hash)));
+        var uri = new Uri(string.Format(_connection.ElasticSearch.Template, identity.UserName, _encrypter.Decrypt(identity.Hash)));
         var pool = new SingleNodeConnectionPool(uri);
         var settings =
             new ConnectionSettings(pool,

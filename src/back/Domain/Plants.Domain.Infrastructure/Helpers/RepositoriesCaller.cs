@@ -15,37 +15,37 @@ internal class RepositoriesCaller
         _service = service;
     }
 
-    public async Task<AggregateBase> LoadAsync(AggregateDescription aggregate)
+    public async Task<AggregateBase> LoadAsync(AggregateDescription aggregate, CancellationToken token = default)
     {
         if (_aggregate.Aggregates.TryGetFor(aggregate.Name, out var aggregateType))
         {
             var repositoryType = typeof(IRepository<>).MakeGenericType(aggregateType);
             var repository = _service.GetRequiredService(repositoryType);
             var method = repository.GetType().GetMethod(nameof(IRepository<AggregateBase>.GetByIdAsync));
-            var aggValue = await (dynamic)method.Invoke(repository, new object[] { aggregate.Id })!;
+            var aggValue = await (dynamic)method.Invoke(repository, new object[] { aggregate.Id, token })!;
             return (AggregateBase)aggValue;
         }
 
         throw new Exception("Aggregate was not found");
     }
 
-    public async Task InsertOrUpdateProjectionAsync(AggregateBase aggregate)
+    public async Task InsertOrUpdateProjectionAsync(AggregateBase aggregate, CancellationToken token = default)
     {
         var aggregateType = _aggregate.Aggregates.Get(aggregate.Name);
         var repositoryType = typeof(IProjectionRepository<>).MakeGenericType(aggregateType);
         var repository = _service.GetRequiredService(repositoryType);
         var method = typeof(ProjectionRepositoryExtensions).GetMethod(nameof(ProjectionRepositoryExtensions.InsertOrUpdateAsync));
         method = method!.MakeGenericMethod(new[] { aggregateType });
-        await (Task)method.Invoke(null, new object[] { repository, aggregate });
+        await (Task)method.Invoke(null, new object[] { repository, aggregate, token });
     }
 
-    public async Task IndexProjectionAsync(AggregateBase aggregate)
+    public async Task IndexProjectionAsync(AggregateBase aggregate, CancellationToken token = default)
     {
         var aggregateType = _aggregate.Aggregates.Get(aggregate.Name);
         var repositoryType = typeof(ISearchProjectionRepository<>).MakeGenericType(aggregateType);
         var repository = _service.GetRequiredService(repositoryType);
         var method = repository.GetType().GetMethod(nameof(ISearchProjectionRepository<AggregateBase>.IndexAsync));
-        await (Task)method.Invoke(repository, new object[] { aggregate });
+        await (Task)method.Invoke(repository, new object[] { aggregate, token });
     }
 
 }

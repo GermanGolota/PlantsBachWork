@@ -17,20 +17,20 @@ internal class Authorizer : IAuthorizer
     }
 
     //TODO: Integrate into user session aggregate?
-    public async Task<AuthorizeResult?> AuthorizeAsync(string username, string password)
+    public async Task<AuthorizeResult?> AuthorizeAsync(string username, string password, CancellationToken token = default)
     {
         AuthorizeResult? result;
         try
         {
-            var user = await _factory.Create().GetCurrentUserAsync(new(username, password));
+            var user = await _factory.Create().GetCurrentUserAsync(new(username, password), cancellationToken: token);
             var roles = user.Groups
                 .Select(group => (valid: Enum.TryParse<UserRole>(group, out var role), role))
                 .Where(x => x.valid)
                 .Select(x => x.role)
                 .Distinct()
                 .ToArray();
-            var token = _tokenManager.CreateToken(username, password, roles);
-            result = new(username, roles, token);
+            var userToken = _tokenManager.CreateToken(username, password, roles);
+            result = new(username, roles, userToken);
         }
         catch
         {

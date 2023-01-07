@@ -1,4 +1,6 @@
+using HealthChecks.UI.Client;
 using MediatR;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Plants.Aggregates.Infrastructure;
 using Plants.Aggregates.Infrastructure.Abstractions;
 using Plants.Infrastructure;
@@ -42,6 +44,12 @@ public class Startup
                 _.JsonSerializerOptions.Converters.AddOneOfConverter();
             });
 
+        services.AddHealthChecks()
+            .AddDomain(Configuration);
+
+        services.AddHealthChecksUI()
+            .AddInMemoryStorage();
+
         services.AddCors(opt =>
         {
             opt.AddPolicy(DevPolicyName, options =>
@@ -58,16 +66,6 @@ public class Startup
                                     .AllowAnyMethod()
                                     .AllowAnyHeader();
             });
-        });
-
-        services.AddAuthorization(options =>
-        {
-            UserRole[] allRoles = (UserRole[])Enum.GetValues(typeof(UserRole));
-            for (int i = 0; i < allRoles.Length; i++)
-            {
-                var policyName = allRoles[i].ToString();
-                options.AddPolicy(policyName, (policy) => policy.RequireClaim(policyName));
-            }
         });
     }
 
@@ -86,7 +84,20 @@ public class Startup
             app.UseCors(ProdPolicyName);
         }
 
+        app.UseHealthChecks("/health", new HealthCheckOptions()
+        {
+            Predicate = _ => true,
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+
+        app.UseHealthChecksUI(options =>
+        {
+            options.UIPath = "/health-ui";
+            options.ApiPath = "/health-ui-api";
+        });
+
         app.UseHttpsRedirection();
+
         app.UseAuthentication();
         app.UseStaticFiles();
 

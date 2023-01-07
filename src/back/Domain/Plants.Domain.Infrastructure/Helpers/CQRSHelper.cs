@@ -45,8 +45,8 @@ internal class CqrsHelper
                 foreach (var handler in handlers)
                 {
                     var commandType = handler.GetGenericArguments()[0];
-                    var handleMethod = type.GetMethod(nameof(ICommandHandler<Command>.HandleAsync), new[] { commandType })!;
-                    var checkMethod = type.GetMethod(nameof(ICommandHandler<Command>.ShouldForbidAsync), new[] { commandType, identityType })!;
+                    var handleMethod = type.GetMethod(nameof(ICommandHandler<Command>.HandleAsync), new[] { commandType, typeof(CancellationToken) })!;
+                    var checkMethod = type.GetMethod(nameof(ICommandHandler<Command>.ShouldForbidAsync), new[] { commandType, identityType, typeof(CancellationToken) })!;
                     if (handleMethod.DeclaringType == type)
                     {
                         commands.AddList(commandType, (checkMethod, handleMethod));

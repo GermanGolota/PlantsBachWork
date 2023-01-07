@@ -49,9 +49,9 @@ public class FileControllerV2 : ControllerBase
     }
 
     [HttpGet("plant/{id}")]
-    public async Task<ActionResult> Load([FromRoute] long id)
+    public async Task<ActionResult> Load([FromRoute] long id, CancellationToken token)
     {
-        var plantInfo = await _queryService.GetByIdAsync(PlantInfo.InfoId);
+        var plantInfo = await _queryService.GetByIdAsync(PlantInfo.InfoId, token);
         var path = plantInfo.PlantImagePaths[id];
         var info = _provider.GetFileInfo(path);
         if (info.Exists)
@@ -67,9 +67,9 @@ public class FileControllerV2 : ControllerBase
     }
 
     [HttpGet("instruction/{id}")]
-    public async Task<ActionResult> LoadInstruction([FromRoute] long id)
+    public async Task<ActionResult> LoadInstruction([FromRoute] long id, CancellationToken token)
     {
-        var plantInfo = await _queryService.GetByIdAsync(PlantInfo.InfoId);
+        var plantInfo = await _queryService.GetByIdAsync(PlantInfo.InfoId, token);
         var path = plantInfo.InstructionCoverImagePaths[id];
         var info = _provider.GetFileInfo(path);
         if (info.Exists)

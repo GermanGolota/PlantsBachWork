@@ -22,32 +22,32 @@ internal class MongoRolesDbInitializer
         _connection = connection.Value;
     }
 
-    public async Task InitializeAsync()
+    public async Task InitializeAsync(CancellationToken token = default)
     {
         //TODO: Fix multiple envs not working
         var db = _factory.GetDatabase("admin");
-        var dbName = _connection.MongoDbDatabaseName;
-        await InitializeCollectionsAsync(dbName);
+        var dbName = _connection.MongoDb.DatabaseName;
+        await InitializeCollectionsAsync(dbName, token);
 
-        await CleanUpExistingRolesAsync(db);
+        await CleanUpExistingRolesAsync(db, token);
 
-        await CreateRolesAsync(db, dbName);
+        await CreateRolesAsync(db, dbName, token);
     }
 
-    private async Task InitializeCollectionsAsync(string dbName)
+    private async Task InitializeCollectionsAsync(string dbName, CancellationToken token = default)
     {
         var envDb = _factory.GetDatabase(dbName);
 
-        var names = await (await envDb.ListCollectionNamesAsync()).ToListAsync();
+        var names = await (await envDb.ListCollectionNamesAsync(cancellationToken: token)).ToListAsync(cancellationToken: token);
         foreach (var aggregate in _accesses.Flat.Select(x => x.Aggregate).Where(agg => names.Contains(agg) is false).Distinct())
         {
-            await envDb.CreateCollectionAsync(aggregate);
+            await envDb.CreateCollectionAsync(aggregate, cancellationToken: token);
         }
     }
 
-    private static async Task CleanUpExistingRolesAsync(IMongoDatabase db)
+    private static async Task CleanUpExistingRolesAsync(IMongoDatabase db, CancellationToken token = default)
     {
-        var existingRoles = await GetExistingRolesAsync(db);
+        var existingRoles = await GetExistingRolesAsync(db, token);
 
         foreach (var role in existingRoles)
         {
@@ -56,11 +56,11 @@ internal class MongoRolesDbInitializer
                 "dropRole": "{{role}}"
             }
             """);
-            var dropResult = await db.RunCommandAsync<BsonDocument>(dropRole);
+            var dropResult = await db.RunCommandAsync<BsonDocument>(dropRole, cancellationToken: token);
         }
     }
 
-    private async Task CreateRolesAsync(IMongoDatabase db, string dbName)
+    private async Task CreateRolesAsync(IMongoDatabase db, string dbName, CancellationToken token = default)
     {
         var accessTypeToPermissions = new Dictionary<AllowType, string[]>
         {
@@ -130,11 +130,11 @@ internal class MongoRolesDbInitializer
 
         foreach (var definition in roleDefinitions)
         {
-            var createRoleResult = await db.RunCommandAsync<BsonDocument>(BsonDocument.Parse(definition));
+            var createRoleResult = await db.RunCommandAsync<BsonDocument>(BsonDocument.Parse(definition), cancellationToken: token);
         }
     }
 
-    private static async Task<IEnumerable<string>> GetExistingRolesAsync(IMongoDatabase db)
+    private static async Task<IEnumerable<string>> GetExistingRolesAsync(IMongoDatabase db, CancellationToken token = default)
     {
         var allRoles = Enum.GetValues<UserRole>().Select(x => x.ToString()).Append(_commonRoleName);
         var getRolesCommand = BsonDocument.Parse($$"""
@@ -142,7 +142,7 @@ internal class MongoRolesDbInitializer
             "rolesInfo": [{{allRoles.QuoteDelimitList()}}]
         }
         """);
-        var rolesResult = await db.RunCommandAsync<BsonDocument>(getRolesCommand);
+        var rolesResult = await db.RunCommandAsync<BsonDocument>(getRolesCommand, cancellationToken: token);
         return rolesResult!.GetElement("roles").Value.AsBsonArray.Select(x => x.AsBsonDocument.GetElement("role").Value.ToString());
     }
 }
