@@ -48,7 +48,7 @@ internal class HealthChecker
         var resultingTask = await Task.WhenAny(timeoutTask, healthCheckTask);
         if (resultingTask == timeoutTask)
         {
-            _logger.LogError("Timeout out after '{sec}' seconds while waiting for services to becoma aailable", _options.TimeoutInSeconds);
+            _logger.LogError("Timeout out after '{sec}' seconds while waiting for services to become available", _options.TimeoutInSeconds);
             throw new Exception("Some services failed to come up on time");
         }
         else
