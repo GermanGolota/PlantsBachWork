@@ -13,11 +13,16 @@ var host = Host.CreateDefaultBuilder(args)
                 .AddSharedServices()
                 .AddDomainInfrastructure()
                 .AddAggregatesInfrastructure();
+
+            services.AddHealthChecks()
+                .AddDomain(ctx.Configuration);
+
             services.AddTransient<MongoRolesDbInitializer>()
                     .AddTransient<ElasticSearchRolesInitializer>()
                     .AddSingleton<IIdentityProvider, ConfigIdentityProvider>()
                     .AddTransient<AdminUserCreator>()   
-                    .AddTransient<Initializer>();
+                    .AddTransient<Initializer>()
+                    .AddTransient<HealthChecker>();
         })
         .Build();
 
@@ -29,9 +34,14 @@ Console.CancelKeyPress += (s, e) =>
     e.Cancel = true;
 };
 
+var check = host.Services.GetRequiredService<HealthChecker>();
+await check.WaitForServicesStartupOrTimeout(cts.Token);
+
 var sub = host.Services.GetRequiredService<IEventSubscriptionWorker>();
 await sub.StartAsync(cts.Token);
 var initer = host.Services.GetRequiredService<Initializer>();
 await initer.InitializeAsync(cts.Token);
 sub.Stop();
 await host.StopAsync(cts.Token);
+
+cts.Cancel();
