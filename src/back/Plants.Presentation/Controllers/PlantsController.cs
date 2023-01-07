@@ -132,7 +132,10 @@ public class PlantsControllerV2 : ControllerBase
             var soils = dict.SoilNames.ToInverse();
             var regions = dict.RegionNames.ToInverse();
             result = new PlantResult(new PlantResultDto(info.PlantName, info.Description,
-                groups[info.GroupName], soils[info.SoilName], plant.PictureUrls.Select(url => images[url]).ToArray(), info.RegionNames.Select(_ => regions[_]).ToArray()));
+                groups[info.GroupName], soils[info.SoilName], plant.PictureUrls.Select(url => images[url]).ToArray(), info.RegionNames.Select(_ => regions[_]).ToArray())
+            {
+                Created = plant.CreatedTime
+            });
         }
         else
         {
