@@ -109,6 +109,16 @@ public static class OneOfExtensions
             }
         }
     }
+    public static (IEnumerable<T0>, IEnumerable<T1>) Split<T0, T1>(this IEnumerable<OneOf<T0, T1>> values)
+    {
+        List<T0> firsts = new();
+        List<T1> seconds = new();
+        foreach (var value in values)
+        {
+            value.Match(_ => firsts.Add(_), _ => seconds.Add(_));
+        }
+        return (firsts, seconds);
+    }
 }
 
 internal sealed class OneOfJsonConverterFactory : JsonConverterFactory

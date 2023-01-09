@@ -1,0 +1,33 @@
+﻿{
+  "Regions": [
+    "Taiga",
+    "Savana",
+    "Desert",
+    "Moderate",
+    "Mild",
+    "Jungle"
+  ],
+  "Groups": [
+    "Cherry",
+    "Apple",
+    "Strawberry",
+    "Blackberry",
+    "Grape",
+    "Plum",
+    "Raspberry",
+    "Blueberry"
+  ],
+  "Soils": [
+    "Loamy",
+    "Sandy",
+    "Peaty",
+    "Silty",
+    "Chalky",
+    "Clay"
+  ],
+  "Languages": [
+    "English",
+    "Español",
+    "Українська"
+  ]
+}
