@@ -37,8 +37,7 @@ internal class EventSubscriber
 
     private async Task UpdateSubscribersAsync(Command parentCommand, List<Event> aggEvents, CancellationToken token = default)
     {
-        var aggregate = parentCommand.Metadata.Aggregate;
-        if (_cqrs.EventSubscriptions.TryGetValue(aggregate.Name, out var subscriptions))
+        if (_cqrs.EventSubscriptions.TryGetValue(parentCommand.Metadata.Aggregate.Name, out var subscriptions))
         {
             foreach (var subscription in subscriptions)
             {
@@ -58,8 +57,10 @@ internal class EventSubscriber
                     var firstEvent = transposedEvents.FirstOrDefault();
                     if (firstEvent != default)
                     {
-                        var commandNumber = firstEvent.Metadata.EventNumber - 1;
-                        var command = parentCommand.ChangeTargetAggregate(firstEvent.Metadata.Aggregate);
+                        var firstEventAggregate = firstEvent.Metadata.Aggregate;
+                        var aggregate = await _caller.LoadAsync(firstEventAggregate, token);
+                        var commandNumber = aggregate.Version;
+                        var command = parentCommand.ChangeTargetAggregate(firstEventAggregate);
                         commandNumber = await _eventStore.AppendCommandAsync(command, commandNumber, token);
                         await _eventStore.AppendEventsAsync(transposedEvents, commandNumber, command, token);
                     }
