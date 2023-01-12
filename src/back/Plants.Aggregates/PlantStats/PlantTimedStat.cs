@@ -14,12 +14,12 @@ public class PlantTimedStat : PlantStat, IEventHandler<GroupSelectedEvent>
     }
 
     public string GroupName { get; private set; }
-    public DateOnly Date { get; private set; }
+    public DateTime Date { get; private set; }
 
     public void Handle(GroupSelectedEvent @event)
     {
         GroupName = @event.GroupName;
-        Date = DateOnly.FromDateTime(@event.Metadata.Time);
+        Date = @event.Metadata.Time;
     }
 
     private class PlantStockSubscription : IAggregateSubscription<PlantTimedStat, PlantStock>
