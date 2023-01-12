@@ -65,6 +65,7 @@ public class PlantOrder : AggregateBase, IEventHandler<PostOrderedEvent>,
     {
         Status = OrderStatus.Delivering;
         DeliveryStartedTime = @event.Metadata.Time;
+        TrackingNumber = @event.TrackingNumber;
     }
 
     public void Handle(RejectedOrderEvent @event)
