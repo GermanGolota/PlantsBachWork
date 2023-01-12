@@ -59,10 +59,12 @@ internal class EventSubscriber
                     {
                         var firstEventAggregate = firstEvent.Metadata.Aggregate;
                         var aggregate = await _caller.LoadAsync(firstEventAggregate, token);
-                        var commandNumber = aggregate.Version;
                         var command = parentCommand.ChangeTargetAggregate(firstEventAggregate);
-                        commandNumber = await _eventStore.AppendCommandAsync(command, commandNumber, token);
-                        await _eventStore.AppendEventsAsync(transposedEvents, commandNumber, command, token);
+                        if(aggregate.CommandsProcessedIds.Contains(command.Metadata.Id) is false)
+                        {
+                            var commandNumber = await _eventStore.AppendCommandAsync(command, aggregate.Version, token);
+                            await _eventStore.AppendEventsAsync(transposedEvents, commandNumber, command, token);
+                        }
                     }
                 }
             }

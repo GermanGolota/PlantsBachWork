@@ -52,6 +52,7 @@ public static class BsonConfigurator
         var aggregateClassMap = new BsonClassMap(typeof(AggregateBase));
         aggregateClassMap.MapProperty(nameof(AggregateBase.Version));
         aggregateClassMap.MapProperty(nameof(AggregateBase.CommandsProcessed));
+        aggregateClassMap.MapProperty(nameof(AggregateBase.CommandsProcessedIds));
         aggregateClassMap.MapProperty(nameof(AggregateBase.Name));
         aggregateClassMap.MapProperty(nameof(AggregateBase.LastUpdateTime));
         aggregateClassMap.MapIdProperty(nameof(AggregateBase.Id));

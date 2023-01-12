@@ -9,6 +9,7 @@ public abstract class AggregateBase
     }
 
     public ulong CommandsProcessed { get; private set; } = 0;
+    public List<Guid> CommandsProcessedIds { get; set; } = new();
     public ulong Version { get; private set; } = UInt64.MaxValue;
     public Guid Id { get; }
     public string Name { get; }
@@ -19,7 +20,11 @@ public abstract class AggregateBase
     public void Record(OneOf<Command, Event> newRecord)
     {
         Version++;
-        newRecord.Match(cmd => CommandsProcessed++, _ => { });
+        newRecord.Match(cmd =>
+        {
+            CommandsProcessed++;
+            CommandsProcessedIds.Add(cmd.Metadata.Id);
+        }, _ => { });
         LastUpdateTime = newRecord.Match(cmd => cmd.Metadata.Time, @event => @event.Metadata.Time);
     }
 }
