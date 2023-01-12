@@ -5,8 +5,8 @@ using Plants.Aggregates.PlantStocks;
 
 namespace Plants.Aggregates.PlantStats;
 
-//subscriptions work with no authorization
 [Allow(Manager, Read)]
+[Allow(Manager, Write)]
 public class PlantTimedStat : PlantStat, IEventHandler<GroupSelectedEvent>
 {
     public PlantTimedStat(Guid id) : base(id)

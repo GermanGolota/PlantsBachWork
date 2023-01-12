@@ -1,4 +1,5 @@
 ﻿using EventStore.Client;
+using Microsoft.Extensions.Logging;
 using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Services;
@@ -13,13 +14,16 @@ internal class EventStoreEventStore : IEventStore
     private readonly AggregateHelper _helper;
     private readonly EventStoreAccessGranter _granter;
     private readonly EventStoreConverter _converter;
+    private readonly ILogger<EventStoreEventStore> _logger;
 
-    public EventStoreEventStore(IEventStoreClientFactory client, AggregateHelper helper, EventStoreAccessGranter granter, EventStoreConverter converter)
+    public EventStoreEventStore(IEventStoreClientFactory client, AggregateHelper helper, 
+        EventStoreAccessGranter granter, EventStoreConverter converter, ILogger<EventStoreEventStore> logger)
     {
         _clientFactory = client;
         _helper = helper;
         _granter = granter;
         _converter = converter;
+        _logger = logger;
     }
 
     public async Task<ulong> AppendEventAsync(Event @event, CancellationToken token = default)
@@ -110,8 +114,16 @@ internal class EventStoreEventStore : IEventStore
                     },
                     command =>
                     {
-                        idToCommand.Add(command.Metadata.Id, command);
-                        events[command] = new List<Event>();
+                        var commandId = command.Metadata.Id;
+                        if (idToCommand.ContainsKey(commandId))
+                        {
+                            _logger.LogWarning("There is already a command with id '{commandId}' stored for '{aggregate}'", commandId, aggregate);
+                        }
+                        else
+                        {
+                            idToCommand.Add(commandId, command);
+                            events[command] = new List<Event>();
+                        }
                     });
             }
 
