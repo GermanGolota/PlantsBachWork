@@ -11,3 +11,12 @@ public record FindInstructionsResultItem(long Id, string Title, string Descripti
 
     }
 }
+
+public record FindInstructionsResult2(List<FindInstructionsResultItem2> Items);
+public record FindInstructionsResultItem2(Guid Id, string Title, string Description, bool HasCover)
+{
+    public FindInstructionsResultItem2() : this(Guid.NewGuid(), "", "", false)
+    {
+
+    }
+}

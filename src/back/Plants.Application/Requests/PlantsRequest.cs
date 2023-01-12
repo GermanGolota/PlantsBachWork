@@ -12,3 +12,13 @@ public record PlantResultItem(long Id, string PlantName, string Description, boo
 
     }
 }
+
+public record PlantsResult2(List<PlantResultItem2> Items);
+public record PlantResultItem2(Guid Id, string PlantName, string Description, bool IsMine)
+{
+    //for decoder
+    public PlantResultItem2() : this(Guid.NewGuid(), "", "", false)
+    {
+
+    }
+}

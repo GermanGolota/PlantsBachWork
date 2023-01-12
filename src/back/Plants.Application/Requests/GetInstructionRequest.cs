@@ -13,3 +13,14 @@ public record GetInstructionResultItem(long Id, string Title, string Description
 
     }
 }
+
+public record GetInstructionResult2(bool Exists, GetInstructionResultItem2 Item);
+public record GetInstructionResultItem2(Guid Id, string Title, string Description,
+    string InstructionText, bool HasCover, string PlantGroupId)
+{
+    //decoder
+    public GetInstructionResultItem2() : this(Guid.NewGuid(), "", "", "", false, "-1")
+    {
+
+    }
+}

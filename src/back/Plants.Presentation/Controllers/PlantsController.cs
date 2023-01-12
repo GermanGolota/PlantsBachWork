@@ -107,61 +107,62 @@ public class PlantsControllerV2 : ControllerBase
     }
 
     [HttpGet("notposted")]
-    public async Task<ActionResult<PlantsResult>> GetNotPosted(CancellationToken token)
+    public async Task<ActionResult<PlantsResult2>> GetNotPosted(CancellationToken token)
     {
         var username = _command.IdentityProvider.Identity!.UserName;
         var result = await _search.SearchAsync(new PlantStockParams(false), new SearchAll(), token);
-        return new PlantsResult(
+        return new PlantsResult2(
                 result
                     .Select(stock => MapPlant(stock, username))
                     .ToList());
     }
 
     [HttpGet("notposted/{id}")]
-    public async Task<ActionResult<PlantResult>> GetNotPosted([FromRoute] long id, CancellationToken token)
+    public async Task<ActionResult<PlantResult2>> GetNotPosted([FromRoute] Guid id, CancellationToken token)
     {
-        var guid = id.ToGuid();
-        PlantResult result;
-        if (await _stockProjector.ExistsAsync(guid, token))
+        PlantResult2 result;
+        if (await _stockProjector.ExistsAsync(id, token))
         {
-            var plant = await _stockProjector.GetByIdAsync(guid, token);
+            var plant = await _stockProjector.GetByIdAsync(id, token);
             var images = (await _infoProjector.GetByIdAsync(PlantInfo.InfoId, token)).PlantImagePaths.ToInverse();
             var info = plant.Information;
             var dict = await _infoProjector.GetByIdAsync(PlantInfo.InfoId, token);
             var groups = dict.GroupNames.ToInverse();
             var soils = dict.SoilNames.ToInverse();
             var regions = dict.RegionNames.ToInverse();
-            result = new PlantResult(new PlantResultDto(info.PlantName, info.Description,
-                groups[info.GroupName], soils[info.SoilName], plant.PictureUrls.Select(url => images[url]).ToArray(), info.RegionNames.Select(_ => regions[_]).ToArray())
+            result = new PlantResult2(new PlantResultDto2(info.PlantName, info.Description,
+                groups[info.GroupName].ToString(), soils[info.SoilName].ToString(), 
+                plant.PictureUrls.Select(url => images[url].ToString()).ToArray(), 
+                info.RegionNames.Select(_ => regions[_].ToString()).ToArray())
             {
                 Created = plant.CreatedTime
             });
         }
         else
         {
-            result = new PlantResult();
+            result = new PlantResult2();
         }
         return result;
     }
 
     [HttpGet("prepared/{id}")]
-    public async Task<ActionResult<PreparedPostResult>> GetPrepared(long id, CancellationToken token)
+    public async Task<ActionResult<PreparedPostResult2>> GetPrepared(Guid id, CancellationToken token)
     {
-        var guid = id.ToGuid();
         var userId = _command.IdentityProvider.Identity!.UserName.ToGuid();
-        PreparedPostResult result;
-        if (await _stockProjector.ExistsAsync(guid, token) && await _userProjector.ExistsAsync(userId, token))
+        PreparedPostResult2 result;
+        if (await _stockProjector.ExistsAsync(id, token) && await _userProjector.ExistsAsync(userId, token))
         {
-            var stock = await _stockProjector.GetByIdAsync(guid, token);
+            var stock = await _stockProjector.GetByIdAsync(id, token);
             var seller = await _userProjector.GetByIdAsync(userId, token);
             var images = (await _infoProjector.GetByIdAsync(PlantInfo.InfoId, token)).PlantImagePaths.ToInverse();
             var caretaker = stock.Caretaker;
             var plant = stock.Information;
-            result = new PreparedPostResult(new(stock.Id.ToLong(),
+            result = new PreparedPostResult2(new(stock.Id,
                 plant.PlantName, plant.Description,
                 plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
                 seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
-                caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated, stock.PictureUrls.Select(url => images[url]).ToArray()
+                caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated, 
+                stock.PictureUrls.Select(url => images[url].ToString()).ToArray()
                 ));
         }
         else
@@ -173,12 +174,11 @@ public class PlantsControllerV2 : ControllerBase
     }
 
     [HttpPost("{id}/post")]
-    public async Task<ActionResult<CreatePostResult>> Post([FromRoute] long id,
+    public async Task<ActionResult<CreatePostResult>> Post([FromRoute] Guid id,
         [FromQuery] decimal price, CancellationToken token)
     {
-        var guid = id.ToGuid();
         var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<PostStockItemCommand, PlantStock>(guid),
+            factory => factory.Create<PostStockItemCommand, PlantStock>(id),
             meta => new PostStockItemCommand(meta, price),
             token);
         return result.Match(
@@ -188,7 +188,7 @@ public class PlantsControllerV2 : ControllerBase
 
     [HttpPost("add")]
     [ApiVersion("2")]
-    public async Task<ActionResult<AddPlantResult>> Create
+    public async Task<ActionResult<AddPlantResult2>> Create
         ([FromForm] AddPlantDto body, IEnumerable<IFormFile> files, CancellationToken token)
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
@@ -204,15 +204,15 @@ public class PlantsControllerV2 : ControllerBase
             token
             );
 
-        return result.Match<ActionResult<AddPlantResult>>(
-            success => Ok(new AddPlantResult(stockId.ToLong())),
+        return result.Match<ActionResult<AddPlantResult2>>(
+            success => Ok(new AddPlantResult2(stockId)),
             failure => BadRequest(failure.Reasons)
             );
     }
 
     [HttpPost("add2")]
     [ApiVersion("2")]
-    public async Task<ActionResult<AddPlantResult>> Create2
+    public async Task<ActionResult<AddPlantResult2>> Create2
         ([FromForm] PlantInformation body, DateTime created, IEnumerable<IFormFile> files, CancellationToken token)
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
@@ -223,19 +223,17 @@ public class PlantsControllerV2 : ControllerBase
             token
             );
 
-        var resultId = stockId.ToLong();
-        return result.Match<ActionResult<AddPlantResult>>(
-            success => Ok(new AddPlantResult(resultId)),
+        return result.Match<ActionResult<AddPlantResult2>>(
+            success => Ok(new AddPlantResult2(stockId)),
             failure => BadRequest(failure.Reasons)
             );
     }
 
     [HttpPost("{id}/edit")]
     public async Task<ActionResult<EditPlantResult>> Edit
-      ([FromRoute] long id, [FromForm] EditPlantDto plant, IEnumerable<IFormFile> files, CancellationToken token)
+      ([FromRoute] Guid id, [FromForm] EditPlantDto plant, IEnumerable<IFormFile> files, CancellationToken token)
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
-        var stockId = id.ToGuid();
         var info = await _infoProjector.GetByIdAsync(PlantInfo.InfoId, token);
         var regions = plant.RegionIds.Select(regionId => info.RegionNames[regionId]).ToArray();
         var soil = info.SoilNames[plant.SoilId];
@@ -243,13 +241,13 @@ public class PlantsControllerV2 : ControllerBase
         var plantInfo = new PlantInformation(plant.PlantName, plant.PlantDescription, regions, soil, group);
         var removed = plant.RemovedImages.Select(image => info.PlantImagePaths[image]).ToArray();
         var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<EditStockItemCommand>(new(stockId, nameof(PlantStock))),
+            factory => factory.Create<EditStockItemCommand>(new(id, nameof(PlantStock))),
             meta => new EditStockItemCommand(meta, plantInfo, pictures, removed),
             token);
         return new EditPlantResult();
     }
 
-    private static PlantResultItem MapPlant(PlantStock stock, string username) =>
-        new(stock.Id.ToLong(), stock.Information.PlantName, stock.Information.Description, stock.Caretaker.Login == username);
+    private static PlantResultItem2 MapPlant(PlantStock stock, string username) =>
+        new(stock.Id, stock.Information.PlantName, stock.Information.Description, stock.Caretaker.Login == username);
 
 }

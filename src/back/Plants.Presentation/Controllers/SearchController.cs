@@ -47,7 +47,7 @@ public class SearchControllerV2 : ControllerBase
     }
 
     [HttpGet("")]
-    public async Task<ActionResult<SearchResult>> Stats
+    public async Task<ActionResult<SearchResult2>> Search
         ([FromQuery] SearchRequest request, CancellationToken token)
     {
         var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
@@ -58,12 +58,12 @@ public class SearchControllerV2 : ControllerBase
         var param = new PlantPostParams(request.PlantName, request.LowerPrice, request.TopPrice, request.LastDate, groups, regions, soils);
         var result = await _search.SearchAsync(param, new SearchAll(), token);
 
-        return new SearchResult(result.Select(item => 
-            new SearchResultItem(
-                item.Id.ToLong(), 
+        return new SearchResult2(result.Select(item => 
+            new SearchResultItem2(
+                item.Id, 
                 item.Stock.Information.PlantName, 
                 item.Stock.Information.Description, 
-                item.Stock.PictureUrls.Select(url => images[url]).ToArray(), 
+                item.Stock.PictureUrls.Select(url => images[url].ToString()).ToArray(), 
                 (double)item.Price)).ToList()
                 );
     }

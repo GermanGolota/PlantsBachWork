@@ -62,13 +62,12 @@ public class PostControllerV2 : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<PostResult>> GetPost([FromRoute] long id, CancellationToken token)
+    public async Task<ActionResult<PostResult2>> GetPost([FromRoute] Guid id, CancellationToken token)
     {
-        var guid = id.ToGuid();
-        PostResult result;
-        if (await _postQuery.ExistsAsync(guid, token))
+        PostResult2 result;
+        if (await _postQuery.ExistsAsync(id, token))
         {
-            var post = await _postQuery.GetByIdAsync(guid, token);
+            var post = await _postQuery.GetByIdAsync(id, token);
             if (post.IsRemoved)
             {
                 result = new();
@@ -80,10 +79,11 @@ public class PostControllerV2 : ControllerBase
                 var caretaker = stock.Caretaker;
                 var plant = stock.Information;
                 var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token)).PlantImagePaths.ToInverse();
-                result = new(new(post.Id.ToLong(), plant.PlantName, plant.Description, post.Price,
+                result = new(new(post.Id, plant.PlantName, plant.Description, post.Price,
                     plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
                     seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
-                    caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated, stock.PictureUrls.Select(url => images[url]).ToArray()));
+                    caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated, 
+                    stock.PictureUrls.Select(url => images[url].ToString()).ToArray()));
             }
         }
         else
@@ -94,11 +94,10 @@ public class PostControllerV2 : ControllerBase
     }
 
     [HttpPost("{id}/order")]
-    public async Task<ActionResult<PlaceOrderResult>> Order([FromRoute] long id, [FromQuery] string city, [FromQuery] long mailNumber, CancellationToken token = default)
+    public async Task<ActionResult<PlaceOrderResult>> Order([FromRoute] Guid id, [FromQuery] string city, [FromQuery] long mailNumber, CancellationToken token = default)
     {
-        var guid = id.ToGuid();
         var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<OrderPostCommand>(new(guid, nameof(PlantPost))),
+            factory => factory.Create<OrderPostCommand>(new(id, nameof(PlantPost))),
             meta => new OrderPostCommand(meta, new(city, mailNumber)),
             token
             );
@@ -108,11 +107,10 @@ public class PostControllerV2 : ControllerBase
     }
 
     [HttpPost("{id}/delete")]
-    public async Task<ActionResult<DeletePostResult>> Delete([FromRoute] long id, CancellationToken token = default)
+    public async Task<ActionResult<DeletePostResult>> Delete([FromRoute] Guid id, CancellationToken token = default)
     {
-        var guid = id.ToGuid();
         var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<RemovePostCommand>(new(guid, nameof(PlantPost))),
+            factory => factory.Create<RemovePostCommand>(new(id, nameof(PlantPost))),
             meta => new RemovePostCommand(meta),
             token
             );

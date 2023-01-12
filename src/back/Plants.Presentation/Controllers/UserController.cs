@@ -84,7 +84,10 @@ public class UserControllerV2 : ControllerBase
         var rolesToFetch = currentUserRoles.Intersect(roles ?? allRoles).ToArray();
         var results = await _search.SearchAsync(new(name, phone, roles), new SearchAll(), token);
         return new FindUsersResult(
-            results.Select(user => new FindUsersResultItem(user.FullName, user.PhoneNumber, user.Login)).ToList()
+            results.Select(user => new FindUsersResultItem(user.FullName, user.PhoneNumber, user.Login)
+            {
+                RoleCodes = user.Roles
+            }).ToList()
             );
     }
 

@@ -57,19 +57,19 @@ public class StatsControllerV2 : ControllerBase
     }
 
     [HttpGet("financial")]
-    public async Task<ActionResult<FinancialStatsResult>> Financial([FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken token)
+    public async Task<ActionResult<FinancialStatsResult2>> Financial([FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken token)
     {
         var stats = await _timedStatQuery.FindAllAsync(_ => true, token);
         var groups = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token)).GroupNames.ToInverse();
         List<GroupFinancialStats> results = new();
-        return new FinancialStatsResult(stats.Where(_ => IsInRange(_.Date.ToDateTime(TimeOnly.MinValue), from, to)).GroupBy(stat => stat.GroupName)
+        return new FinancialStatsResult2(stats.Where(_ => IsInRange(_.Date, from, to)).GroupBy(stat => stat.GroupName)
             .Select(pair =>
             {
                 var sold = pair.Sum(_ => _.SoldCount);
                 var plants = pair.Sum(_ => _.PlantsCount);
-                return new GroupFinancialStats
+                return new GroupFinancialStats2
                 {
-                    GroupId = groups[pair.Key],
+                    GroupId = groups[pair.Key].ToString(),
                     GroupName = pair.Key,
                     Income = pair.Sum(_ => _.Income),
                     SoldCount = sold,
@@ -83,10 +83,10 @@ public class StatsControllerV2 : ControllerBase
         (from is null || time > from) && (to is null || time < to);
 
     [HttpGet("total")]
-    public async Task<ActionResult<TotalStatsResult>> Total(CancellationToken token)
+    public async Task<ActionResult<TotalStatsResult2>> Total(CancellationToken token)
     {
         var stats = await _statQuery.FindAllAsync(_ => true, token);
         var groups = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token)).GroupNames.ToInverse();
-        return new TotalStatsResult(stats.Select(stat => new GroupTotalStats(groups[stat.GroupName], stat.GroupName, stat.Income, stat.InstructionsCount, stat.PlantsCount)));
+        return new TotalStatsResult2(stats.Select(stat => new GroupTotalStats2(groups[stat.GroupName].ToString(), stat.GroupName, stat.Income, stat.InstructionsCount, stat.PlantsCount)));
     }
 }

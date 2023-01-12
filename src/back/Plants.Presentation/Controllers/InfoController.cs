@@ -52,13 +52,16 @@ public class InfoControllerV2 : ControllerBase
         _userQuery = userQuery;
         _identity = identity;
     }
-    
+
     [HttpGet("dicts")]
-    public async Task<ActionResult<DictsResult>> Dicts(CancellationToken token)
+    public async Task<ActionResult<DictsResult2>> Dicts(CancellationToken token)
     {
         var dicts = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
-        return new DictsResult(dicts.GroupNames, dicts.RegionNames, dicts.SoilNames);
+        return new DictsResult2(ConvertDict(dicts.GroupNames), ConvertDict(dicts.RegionNames), ConvertDict(dicts.SoilNames));
     }
+
+    private static Dictionary<string, string> ConvertDict(Dictionary<long, string> dict) =>
+        dict.ToDictionary(_ => _.Key.ToString(), _ => _.Value);
 
     [HttpGet("addresses")]
     public async Task<ActionResult<AddressResult>> Addresses(CancellationToken token)

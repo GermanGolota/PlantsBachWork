@@ -13,3 +13,13 @@ public class GroupFinancialStats
     public long SoldCount { get; set; }
     public double PercentSold { get; set; }
 }
+
+public record FinancialStatsResult2(IEnumerable<GroupFinancialStats2> Groups);
+public class GroupFinancialStats2
+{
+    public decimal Income { get; set; }
+    public string GroupId { get; set; }
+    public string GroupName { get; set; }
+    public long SoldCount { get; set; }
+    public double PercentSold { get; set; }
+}
