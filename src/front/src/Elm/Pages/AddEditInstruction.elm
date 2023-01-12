@@ -17,7 +17,7 @@ import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication
 import Multiselect
 import NavBar exposing (instructionsLink, viewNav)
 import Transition exposing (constant)
-import Utils exposing (fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, textHtml)
+import Utils exposing (decodeId, fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, textHtml)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -41,18 +41,18 @@ type alias Model =
 
 type ViewType
     = Add View
-    | Edit Int (WebData View)
+    | Edit String (WebData View)
     | BadEdit
 
 
 type alias View =
     { selectedText : String
-    , selectedGroupId : Int
+    , selectedGroupId : String
     , selectedTitle : String
     , selectedDescription : String
     , uploadedFile : Maybe File
     , available : WebData Available
-    , result : Maybe (WebData Int)
+    , result : Maybe (WebData String)
     }
 
 
@@ -64,12 +64,12 @@ type Msg
     = NoOp
     | GotInstruction (Result Http.Error (Maybe InstructionView))
     | EditorTextUpdated String
-    | GroupSelected Int
+    | GroupSelected String
     | TitleChanged String
     | DescriptionChanged String
     | OpenEditor
     | GotAvailable (Result Http.Error Available)
-    | GotSubmit (Result Http.Error Int)
+    | GotSubmit (Result Http.Error String)
     | StartUpload
     | ImagesLoaded File (List File)
     | Submit
@@ -153,7 +153,7 @@ update msg m =
                     updateModel { getMainView | selectedGroupId = groupId }
 
                 GotAvailable (Ok res) ->
-                    updateModel { getMainView | available = Loaded res }
+                    updateModel { getMainView | available = Loaded res, selectedGroupId = res.groups |> Multiselect.getValues |> List.head |> Maybe.withDefault ( "", "" ) |> Tuple.first }
 
                 GotAvailable (Err err) ->
                     updateModel { getMainView | available = Error }
@@ -199,16 +199,16 @@ submitAddCommand : String -> View -> Cmd Msg
 submitAddCommand token page =
     let
         expect =
-            Http.expectJson GotSubmit (D.field "id" D.int)
+            Http.expectJson GotSubmit (D.field "id" decodeId)
     in
     postAuthed token CreateInstruction (bodyEncoder page) expect Nothing
 
 
-submitEditCommand : String -> Int -> View -> Cmd Msg
+submitEditCommand : String -> String -> View -> Cmd Msg
 submitEditCommand token id page =
     let
         expect =
-            Http.expectJson GotSubmit (D.field "instructionId" D.int)
+            Http.expectJson GotSubmit (D.field "instructionId" decodeId)
     in
     postAuthed token (EditInstruction id) (bodyEncoder page) expect Nothing
 
@@ -217,7 +217,7 @@ bodyEncoder : View -> Http.Body
 bodyEncoder page =
     let
         constant =
-            [ Http.stringPart "GroupId" <| String.fromInt page.selectedGroupId
+            [ Http.stringPart "GroupId" page.selectedGroupId
             , Http.stringPart "Text" page.selectedText
             , Http.stringPart "Title" page.selectedTitle
             , Http.stringPart "Description" page.selectedDescription
@@ -275,14 +275,6 @@ viewMain isEdit page av =
         viewCol =
             div [ flex1, Flex.col, flex, smallMargin ]
 
-        changeFunc str =
-            case String.toInt str of
-                Just res ->
-                    GroupSelected res
-
-                Nothing ->
-                    NoOp
-
         groups =
             Multiselect.getValues av.groups
 
@@ -308,7 +300,7 @@ viewMain isEdit page av =
             viewRow
                 [ viewCol
                     [ div largeCentered [ text resultText ]
-                    , Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ String.fromInt result ] ] [ text "Open Instruction" ]
+                    , Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ result ] ] [ text "Open Instruction" ]
                     ]
                 ]
 
@@ -331,7 +323,7 @@ viewMain isEdit page av =
         [ viewRow
             [ viewCol
                 [ div largeCentered [ text "Group" ]
-                , Select.select [ Select.onChange changeFunc ] (List.map viewGroup groups)
+                , Select.select [ Select.onChange GroupSelected ] (List.map viewGroup groups)
                 ]
             ]
         , viewRow
@@ -375,7 +367,7 @@ viewMain isEdit page av =
 
 
 emptyView =
-    View "" 1 "" "" Nothing Loading Nothing
+    View "" "1" "" "" Nothing Loading Nothing
 
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
@@ -385,7 +377,7 @@ init resp flags =
             case D.decodeValue (D.field "isEdit" D.bool) flags of
                 Ok isEdit ->
                     if isEdit then
-                        Edit (Result.withDefault -1 (D.decodeValue (D.field "id" D.int) flags)) Loading
+                        Edit (Result.withDefault "-1" (D.decodeValue (D.field "id" decodeId) flags)) Loading
 
                     else
                         Add emptyView

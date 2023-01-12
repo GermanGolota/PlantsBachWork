@@ -25,7 +25,7 @@ type alias Model =
 
 type View
     = NoPlant
-    | Plant Int PlantView
+    | Plant String PlantView
 
 
 type alias PlantView =
@@ -114,7 +114,7 @@ update msg m =
 --commands
 
 
-getPlantCommand : String -> Int -> Cmd Msg
+getPlantCommand : String -> String -> Cmd Msg
 getPlantCommand token plantId =
     let
         expect =
@@ -123,7 +123,7 @@ getPlantCommand token plantId =
     getAuthed token (PreparedPlant plantId) expect Nothing
 
 
-submitCommand : String -> Int -> Float -> Cmd Msg
+submitCommand : String -> String -> Float -> Cmd Msg
 submitCommand token plantId price =
     let
         decoder =
@@ -158,7 +158,7 @@ viewPage resp page =
             viewWebdata plantWeb.plant (viewPlant noplant id plantWeb.postResult)
 
 
-viewPlant : Html Msg -> Int -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
+viewPlant : Html Msg -> String -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
 viewPlant noplant id res plant =
     let
         plantUpdate str =
@@ -177,7 +177,7 @@ viewPlant noplant id res plant =
             noplant
 
 
-viewButtons : Maybe (WebData SubmittedResult) -> Int -> Html Msg
+viewButtons : Maybe (WebData SubmittedResult) -> String -> Html Msg
 viewButtons result id =
     let
         resultView =
@@ -198,7 +198,7 @@ viewButtons result id =
                 [ Button.primary
                 , Button.attrs
                     [ smallMargin
-                    , href ("/notPosted/" ++ String.fromInt id ++ "/edit")
+                    , href ("/notPosted/" ++ id ++ "/edit")
                     , largeFont
                     ]
                 ]
@@ -254,12 +254,7 @@ decodeInitial flags =
             NoPlant
 
         Ok plantId ->
-            case String.toInt plantId of
-                Just id ->
-                    Plant id (PlantView Loading Nothing)
-
-                Nothing ->
-                    NoPlant
+            Plant plantId (PlantView Loading Nothing)
 
 
 decodePlantId : D.Value -> Result D.Error String

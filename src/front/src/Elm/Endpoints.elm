@@ -5,11 +5,12 @@ import Http exposing (header, request)
 import ImageList
 import Json.Decode as D
 import Main exposing (UserRole, roleToNumber)
+import Utils exposing (decodeId)
 
 
 baseUrl : String
 baseUrl =
-    "https://localhost:5001/"
+    "https://localhost:5001/v2/"
 
 
 type Endpoint
@@ -18,30 +19,30 @@ type Endpoint
     | StatsFinancial
     | Search
     | Dicts
-    | Image Int String
-    | Post Int
-    | OrderPost Int String Int --plantId, city, mailNumber
+    | Image String String --id, token
+    | Post String
+    | OrderPost String String Int --plantId, city, mailNumber
     | Addresses
     | NotPostedPlants
-    | NotPostedPlant Int
-    | PreparedPlant Int
-    | PostPlant Int Float
+    | NotPostedPlant String
+    | PreparedPlant String
+    | PostPlant String Float
     | AddPlant
-    | EditPlant Int
+    | EditPlant String
     | AllOrders Bool
-    | SendOrder Int String
-    | ReceivedOrder Int
+    | SendOrder String String
+    | ReceivedOrder String
     | SearchUsers
     | AddRole String UserRole
     | RemoveRole String UserRole
     | CreateUser
     | FindInstructions
-    | CoverImage Int String
+    | CoverImage String String
     | CreateInstruction
-    | EditInstruction Int
-    | GetInstruction Int
-    | DeletePost Int
-    | RejectOrder Int
+    | EditInstruction String
+    | GetInstruction String
+    | DeletePost String
+    | RejectOrder String
     | ChangePassword
 
 
@@ -64,13 +65,13 @@ endpointToUrl endpoint =
             baseUrl ++ "info/dicts"
 
         Image id token ->
-            baseUrl ++ "file/plant/" ++ String.fromInt id ++ "?token=" ++ token
+            baseUrl ++ "file/plant/" ++ id ++ "?token=" ++ token
 
         Post plantId ->
-            baseUrl ++ "post/" ++ String.fromInt plantId
+            baseUrl ++ "post/" ++ plantId
 
         OrderPost plantId city mailNumber ->
-            baseUrl ++ "post/" ++ String.fromInt plantId ++ "/order" ++ "?city=" ++ city ++ "&mailNumber=" ++ String.fromInt mailNumber
+            baseUrl ++ "post/" ++ plantId ++ "/order" ++ "?city=" ++ city ++ "&mailNumber=" ++ String.fromInt mailNumber
 
         Addresses ->
             baseUrl ++ "info/addresses"
@@ -79,19 +80,19 @@ endpointToUrl endpoint =
             baseUrl ++ "plants/notposted"
 
         PreparedPlant plantId ->
-            baseUrl ++ "plants/prepared/" ++ String.fromInt plantId
+            baseUrl ++ "plants/prepared/" ++ plantId
 
         PostPlant plantId price ->
-            baseUrl ++ "plants/" ++ String.fromInt plantId ++ "/post?price=" ++ String.fromFloat price
+            baseUrl ++ "plants/" ++ plantId ++ "/post?price=" ++ String.fromFloat price
 
         NotPostedPlant id ->
-            baseUrl ++ "plants/notposted/" ++ String.fromInt id
+            baseUrl ++ "plants/notposted/" ++ id
 
         AddPlant ->
             baseUrl ++ "plants/add"
 
         EditPlant plantId ->
-            baseUrl ++ "plants/" ++ String.fromInt plantId ++ "/edit"
+            baseUrl ++ "plants/" ++ plantId ++ "/edit"
 
         AllOrders onlyMine ->
             let
@@ -105,10 +106,10 @@ endpointToUrl endpoint =
             baseUrl ++ "orders?onlyMine=" ++ mineStr
 
         SendOrder orderId ttn ->
-            baseUrl ++ "orders/" ++ String.fromInt orderId ++ "/deliver?trackingNumber=" ++ ttn
+            baseUrl ++ "orders/" ++ orderId ++ "/deliver?trackingNumber=" ++ ttn
 
         ReceivedOrder orderId ->
-            baseUrl ++ "orders/" ++ String.fromInt orderId ++ "/delivered"
+            baseUrl ++ "orders/" ++ orderId ++ "/delivered"
 
         SearchUsers ->
             baseUrl ++ "users"
@@ -126,33 +127,33 @@ endpointToUrl endpoint =
             baseUrl ++ "instructions/find"
 
         CoverImage id token ->
-            baseUrl ++ "file/instruction/" ++ String.fromInt id ++ "?token=" ++ token
+            baseUrl ++ "file/instruction/" ++ id ++ "?token=" ++ token
 
         CreateInstruction ->
             baseUrl ++ "instructions/create"
 
         GetInstruction id ->
-            baseUrl ++ "instructions/" ++ String.fromInt id
+            baseUrl ++ "instructions/" ++ id
 
         EditInstruction id ->
-            baseUrl ++ "instructions/" ++ String.fromInt id ++ "/edit"
+            baseUrl ++ "instructions/" ++ id ++ "/edit"
 
         DeletePost id ->
-            baseUrl ++ "post/" ++ String.fromInt id ++ "/delete"
+            baseUrl ++ "post/" ++ id ++ "/delete"
 
         RejectOrder orderId ->
-            baseUrl ++ "orders/" ++ String.fromInt orderId ++ "/reject"
+            baseUrl ++ "orders/" ++ orderId ++ "/reject"
 
         ChangePassword ->
             baseUrl ++ "users/changePass"
 
 
-imageIdToUrl : String -> Int -> String
+imageIdToUrl : String -> String -> String
 imageIdToUrl token id =
     endpointToUrl <| Image id token
 
 
-instructioIdToCover : String -> Int -> String
+instructioIdToCover : String -> String -> String
 instructioIdToCover token id =
     endpointToUrl <| CoverImage id token
 
@@ -163,10 +164,10 @@ imagesDecoder token at =
         baseDecoder =
             imageIdsToModel token
     in
-    D.map baseDecoder (D.at at (D.list D.int))
+    D.map baseDecoder (D.at at (D.list decodeId))
 
 
-imageIdsToModel : String -> List Int -> ImageList.Model
+imageIdsToModel : String -> List String -> ImageList.Model
 imageIdsToModel token ids =
     let
         baseList =

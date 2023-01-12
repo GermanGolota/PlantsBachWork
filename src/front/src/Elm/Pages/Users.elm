@@ -6,6 +6,7 @@ import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
+import Debug exposing (log)
 import Endpoints exposing (Endpoint(..), getAuthedQuery, postAuthed)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, href, style)
@@ -94,7 +95,16 @@ update msg m =
                     ( authed <| { model | users = Loaded res }, Cmd.none )
 
                 GotUsers (Err err) ->
-                    ( authed <| { model | users = Error }, Cmd.none )
+                    let
+                        msg2 =
+                            case err of
+                                Http.BadBody t ->
+                                    t
+
+                                _ ->
+                                    ""
+                    in
+                    ( log msg2 authed <| { model | users = Error }, Cmd.none )
 
                 SelectedRole roleMsg ->
                     let

@@ -4,20 +4,20 @@ import Endpoints exposing (Endpoint(..), getAuthed, instructioIdToCover)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, requiredAt)
-import Utils exposing (existsDecoder)
+import Utils exposing (decodeId, existsDecoder)
 
 
 type alias InstructionView =
-    { id : Int
+    { id : String
     , title : String
     , description : String
     , imageUrl : Maybe String
     , text : String
-    , groupId : Int
+    , groupId : String
     }
 
 
-getInstruction : (Result Http.Error (Maybe InstructionView) -> msg) -> String -> Int -> Cmd msg
+getInstruction : (Result Http.Error (Maybe InstructionView) -> msg) -> String -> String -> Cmd msg
 getInstruction cmd token id =
     let
         expect =
@@ -38,12 +38,12 @@ decodeInstructionBase token =
             requiredAt [ "item", name ]
     in
     D.succeed InstructionView
-        |> requiredItem "id" D.int
+        |> requiredItem "id" decodeId
         |> requiredItem "title" D.string
         |> requiredItem "description" D.string
         |> custom (coverDecoder token)
         |> requiredItem "instructionText" D.string
-        |> requiredItem "plantGroupId" D.int
+        |> requiredItem "plantGroupId" decodeId
 
 
 coverDecoder : String -> D.Decoder (Maybe String)
@@ -53,7 +53,7 @@ coverDecoder token =
 
 coverImageDecoder token hasCover =
     if hasCover then
-        D.map (\id -> Just (instructioIdToCover token id)) (D.at [ "item", "id" ] D.int)
+        D.map (\id -> Just (instructioIdToCover token id)) (D.at [ "item", "id" ] decodeId)
 
     else
         D.succeed Nothing

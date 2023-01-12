@@ -9,15 +9,15 @@ import Utils exposing (fillParent, flex, flex1, mediumMargin, smallMargin)
 
 
 type Msg
-    = ImageSwitched Int
-    | Clicked Int
+    = ImageSwitched String
+    | Clicked String
 
 
 type alias Model =
-    { selected : Maybe Int, available : Dict Int String }
+    { selected : Maybe String, available : Dict String String }
 
 
-fromDict : Dict Int String -> Model
+fromDict : Dict String String -> Model
 fromDict dict =
     let
         selected =
@@ -54,7 +54,7 @@ view model =
                             index
 
                         Nothing ->
-                            Tuple.first <| Maybe.withDefault ( -1, "" ) <| List.head available
+                            Tuple.first <| Maybe.withDefault ( "-1", "" ) <| List.head available
             in
             case Dict.get selected model.available of
                 Just url ->
@@ -63,13 +63,13 @@ view model =
                             List.map Tuple.first available
 
                         keyOfSelected =
-                            Maybe.withDefault -1 <| List.head <| List.map (\item -> Tuple.first item) <| List.filter (\item -> Tuple.second item == url) available
+                            Maybe.withDefault "-1" <| List.head <| List.map (\item -> Tuple.first item) <| List.filter (\item -> Tuple.second item == url) available
 
                         isSelected key =
                             key == keyOfSelected
                     in
                     div (fillParent ++ [ mediumMargin, flex, Flex.col ])
-                        [ Html.img ([ src url, alt "No images for this plant", style "max-width" "70%", style "max-height" "70%", flex1, onClick (Clicked <| Maybe.withDefault -1 model.selected) ] ++ imageCenter) []
+                        [ Html.img ([ src url, alt "No images for this plant", style "max-width" "70%", style "max-height" "70%", flex1, onClick (Clicked <| Maybe.withDefault "-1" model.selected) ] ++ imageCenter) []
                         , div [ flex, Flex.row, Flex.justifyCenter, mediumMargin ]
                             (List.map
                                 (\key -> viewIcon (isSelected key) key)

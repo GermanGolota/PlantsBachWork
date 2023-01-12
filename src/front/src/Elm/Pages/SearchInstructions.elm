@@ -16,7 +16,7 @@ import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import Multiselect as Multiselect
 import NavBar exposing (instructionsLink, viewNav)
-import Utils exposing (buildQuery, chunkedView, fillParent, flex, flex1, intersect, largeCentered, mediumMargin, smallMargin)
+import Utils exposing (buildQuery, chunkedView, decodeId, fillParent, flex, flex1, intersect, largeCentered, mediumMargin, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -31,7 +31,7 @@ type alias Model =
 type alias View =
     { available : WebData Available
     , instructions : WebData (List Instruction)
-    , selectedGroup : Int
+    , selectedGroup : String
     , selectedDescription : String
     , selectedTitle : String
     , showAdd : Bool
@@ -55,7 +55,7 @@ type Msg
     | GotAvailable (Result Http.Error Available)
     | TitleChanged String
     | DescriptionChanged String
-    | GroupChanged Int
+    | GroupChanged String
     | GotSearch (Result Http.Error (List Instruction))
 
 
@@ -76,7 +76,11 @@ update msg m =
             in
             case msg of
                 GotAvailable (Ok res) ->
-                    ( authed { model | available = Loaded res }, triggerSearch model )
+                    let
+                        newModel =
+                            { model | available = Loaded res, selectedGroup = res.groups |> Multiselect.getValues |> List.head |> Maybe.withDefault ( "", "" ) |> Tuple.first }
+                    in
+                    ( authed newModel, triggerSearch newModel )
 
                 GotAvailable (Err err) ->
                     ( authed { model | available = Error }, Cmd.none )
@@ -124,14 +128,14 @@ getAvailable token =
     Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing
 
 
-search : String -> String -> Int -> String -> Cmd Msg
+search : String -> String -> String -> String -> Cmd Msg
 search title description groupId token =
     let
         expect =
             Http.expectJson GotSearch (searchDecoder token)
 
         queryParams =
-            [ ( "GroupId", String.fromInt groupId ), ( "Title", title ), ( "Description", description ) ]
+            [ ( "GroupId", groupId ), ( "Title", title ), ( "Description", description ) ]
     in
     Endpoints.getAuthedQuery (buildQuery queryParams) token FindInstructions expect Nothing
 
@@ -157,7 +161,7 @@ coverDecoder token =
 
 coverImageDecoder token hasCover =
     if hasCover then
-        D.map (\id -> Just (instructioIdToCover token id)) (D.field "id" D.int)
+        D.map (\id -> Just (instructioIdToCover token id)) (D.field "id" decodeId)
 
     else
         D.succeed Nothing
@@ -174,7 +178,7 @@ view model =
 
 viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
-    viewWebdata page.available (viewMain (intersect [Producer, Manager] resp.roles) page)
+    viewWebdata page.available (viewMain (intersect [ Producer, Manager ] resp.roles) page)
 
 
 viewMain : Bool -> View -> Available -> Html Msg
@@ -198,14 +202,6 @@ viewMain isProducer page av =
 viewSelections : View -> Available -> List (Html Msg)
 viewSelections page av =
     let
-        changeFunc str =
-            case String.toInt str of
-                Just res ->
-                    GroupChanged res
-
-                Nothing ->
-                    NoOp
-
         groups =
             Multiselect.getValues av.groups
 
@@ -217,7 +213,7 @@ viewSelections page av =
     in
     [ div colAttrs
         [ div largeCentered [ text "Group" ]
-        , Select.select [ Select.onChange changeFunc ] (List.map viewGroup groups)
+        , Select.select [ Select.onChange GroupChanged ] (List.map viewGroup groups)
         ]
     , div colAttrs
         [ div largeCentered [ text "Title" ]
@@ -240,9 +236,10 @@ viewInstructions isProducer ins =
 viewInstruction : Bool -> Instruction -> Html Msg
 viewInstruction isProducer ins =
     let
-        editBtn = 
+        editBtn =
             if isProducer then
                 Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ String.fromInt ins.id ++ "/edit", smallMargin ] ] [ text "Edit" ]
+
             else
                 div [] []
     in
@@ -255,7 +252,8 @@ viewInstruction isProducer ins =
             , Block.text [] [ text ins.description ]
             , Block.custom <|
                 div [ flex, Flex.row, Flex.justifyEnd, Flex.alignItemsCenter ]
-                    [ editBtn, Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ String.fromInt ins.id ] ] [ text "Open Full" ]
+                    [ editBtn
+                    , Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ String.fromInt ins.id ] ] [ text "Open Full" ]
                     ]
             ]
         |> Card.view
@@ -272,7 +270,7 @@ init resp flags =
                 Nothing ->
                     False
     in
-    initBase [ Producer, Consumer, Manager ] (View Loading Loading 1 "" "" shouldShow) (\res -> getAvailable res.token) resp
+    initBase [ Producer, Consumer, Manager ] (View Loading Loading "" "" "" shouldShow) (\res -> getAvailable res.token) resp
 
 
 subscriptions : Model -> Sub Msg

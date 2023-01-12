@@ -18,7 +18,7 @@ import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication
 import NavBar exposing (statsLink, viewNav)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Time
-import Utils exposing (AlignDirection(..), fillParent, flatten, itself, largeFont, textAlign, textCenter, unique, viewLoading)
+import Utils exposing (AlignDirection(..), decodeId, fillParent, flatten, itself, largeFont, textAlign, textCenter, unique, viewLoading)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -422,11 +422,11 @@ type alias TotalsView =
 
 
 type alias TotalsPieItem =
-    { id : Int, text : String, income : Float, instructions : Float, popularity : Float }
+    { id : String, text : String, income : Float, instructions : Float, popularity : Float }
 
 
 type alias PieSlice =
-    { id : Int
+    { id : String
     , text : String
     , value : Float
     , name : String
@@ -452,7 +452,7 @@ type alias FinancialView =
 
 
 type alias FinancialPieItem =
-    { id : Int, text : String, soldCount : Float, percentSold : Float, income : Float }
+    { id : String, text : String, soldCount : Float, percentSold : Float, income : Float }
 
 
 type alias Model =
@@ -476,7 +476,7 @@ financialDecoder =
 totalItemDecoder : D.Decoder TotalsPieItem
 totalItemDecoder =
     D.succeed TotalsPieItem
-        |> required "groupId" D.int
+        |> required "groupId" decodeId
         |> required "groupName" D.string
         |> required "income" D.float
         |> required "instructions" D.float
@@ -486,7 +486,7 @@ totalItemDecoder =
 financialItemDecoder : D.Decoder FinancialPieItem
 financialItemDecoder =
     D.succeed FinancialPieItem
-        |> required "groupId" D.int
+        |> required "groupId" decodeId
         |> required "groupName" D.string
         |> required "soldCount" D.float
         |> required "percentSold" D.float

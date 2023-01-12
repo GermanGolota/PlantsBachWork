@@ -33,7 +33,7 @@ type View
 
 
 type alias PlantView =
-    { id : Int
+    { id : String
     , plantType : ViewType
     }
 
@@ -250,7 +250,7 @@ update msg m =
 --commands
 
 
-submitCmd : String -> Int -> String -> Int -> Cmd Msg
+submitCmd : String -> String -> String -> Int -> Cmd Msg
 submitCmd token plantId city mailNumber =
     let
         expect =
@@ -280,7 +280,7 @@ addressDecoder =
         |> required "mailNumber" D.int
 
 
-getPlantCommand : String -> Int -> Cmd Msg
+getPlantCommand : String -> String -> Cmd Msg
 getPlantCommand token plantId =
     let
         expect =
@@ -324,12 +324,12 @@ viewPage auth page =
                     viewWebdata plant (orderView selected addresses result)
 
 
-viewOrderFull : Bool -> Int -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
+viewOrderFull : Bool -> String -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
 viewOrderFull allowOrder id selected del result p =
     viewPlantFull id (viewOrder allowOrder selected del result) p
 
 
-viewOrder : Bool -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Int -> PlantModel -> Html Msg
+viewOrder : Bool -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> String -> PlantModel -> Html Msg
 viewOrder allowOrder selected del result id pl =
     let
         header textT =
@@ -469,7 +469,7 @@ viewSelected selected =
     ]
 
 
-viewPlantFull : Int -> (Int -> PlantModel -> Html Msg) -> Maybe PlantModel -> Html Msg
+viewPlantFull : String -> (String -> PlantModel -> Html Msg) -> Maybe PlantModel -> Html Msg
 viewPlantFull id viewFunc p =
     case p of
         Just plant ->
@@ -479,17 +479,17 @@ viewPlantFull id viewFunc p =
             div [] [ text "This plant is no longer available, sorry" ]
 
 
-viewPlant : Bool -> Int -> PlantModel -> Html Msg
+viewPlant : Bool -> String -> PlantModel -> Html Msg
 viewPlant allowOrder id plant =
     viewPlantBase False (\str -> NoOp) Images (interactionButtons allowOrder False id) plant
 
 
-interactionButtons : Bool -> Bool -> Int -> Html Msg
+interactionButtons : Bool -> Bool -> String -> Html Msg
 interactionButtons allowOrder isOrder id =
     let
         backUrl =
             if isOrder then
-                "/plant/" ++ String.fromInt id
+                "/plant/" ++ id
 
             else
                 "/search"
@@ -506,7 +506,7 @@ interactionButtons allowOrder isOrder id =
                 "#"
 
             else
-                "/plant/" ++ String.fromInt id ++ "/order"
+                "/plant/" ++ id ++ "/order"
 
         orderOnClick =
             if isOrder then
@@ -574,16 +574,11 @@ decodeInitial flags =
             NoPlant
 
         Ok plantId ->
-            case String.toInt plantId of
-                Just plantNumber ->
-                    if isOrder then
-                        Plant (PlantView plantNumber <| Order <| OrderView Loading Loading None Nothing)
+            if isOrder then
+                Plant (PlantView plantId <| Order <| OrderView Loading Loading None Nothing)
 
-                    else
-                        Plant (PlantView plantNumber <| JustPlant Loading)
-
-                Nothing ->
-                    NoPlant
+            else
+                Plant (PlantView plantId <| JustPlant Loading)
 
 
 decodeIsOrder : D.Value -> Bool

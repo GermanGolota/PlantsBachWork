@@ -11,7 +11,7 @@ import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (instructionsLink, viewNav)
-import Utils exposing (existsDecoder, fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, textCenter, textHtml)
+import Utils exposing (decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, textCenter, textHtml)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -129,7 +129,7 @@ init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init resp flags =
     let
         insId =
-            D.decodeValue (D.field "id" D.int) flags
+            D.decodeValue (D.field "id" decodeId) flags
 
         initialModel =
             case insId of

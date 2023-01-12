@@ -13,7 +13,7 @@ import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (plantsLink, viewNav)
-import Utils exposing (bgTeal, chunkedView, fillParent, flex, flex1, largeFont, smallMargin)
+import Utils exposing (bgTeal, chunkedView, decodeId, fillParent, flex, flex1, largeFont, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -30,7 +30,7 @@ type alias View =
 
 
 type alias PlantItem =
-    { id : Int
+    { id : String
     , name : String
     , description : String
     , isMine : Bool
@@ -133,8 +133,8 @@ viewItem item =
             [ Block.text [] [ text item.description ]
             , Block.custom <|
                 div [ flex, Flex.row, Flex.justifyEnd, Flex.alignItemsCenter ]
-                    [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/notPosted/" ++ String.fromInt item.id ++ "/edit" ] ] [ text "Edit" ]
-                    , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/notPosted/" ++ String.fromInt item.id ++ "/post" ] ] [ text "Post" ]
+                    [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/notPosted/" ++ item.id ++ "/edit" ] ] [ text "Edit" ]
+                    , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/notPosted/" ++ item.id ++ "/post" ] ] [ text "Post" ]
                     ]
             ]
         |> Card.view
@@ -167,7 +167,7 @@ plantsDecoder =
 
 plantDecoder =
     D.succeed PlantItem
-        |> required "id" D.int
+        |> required "id" decodeId
         |> required "plantName" D.string
         |> required "description" D.string
         |> required "isMine" D.bool

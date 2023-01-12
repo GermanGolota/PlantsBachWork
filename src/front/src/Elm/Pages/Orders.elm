@@ -14,7 +14,7 @@ import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import NavBar exposing (ordersLink, viewNav)
-import Utils exposing (bgTeal, fillParent, flex, flex1, formatPrice, mediumCentered, smallMargin)
+import Utils exposing (bgTeal, decodeId, fillParent, flex, flex1, formatPrice, mediumCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -31,8 +31,8 @@ type alias View =
     , viewType : ViewType
     , showAdditional : Bool
     , hideFulfilled : Bool
-    , selectedTtns : Dict Int String
-    , rejected : Dict Int (WebData Bool)
+    , selectedTtns : Dict String String
+    , rejected : Dict String (WebData Bool)
     }
 
 
@@ -43,7 +43,7 @@ type ViewType
 
 type alias OrderBase a =
     { status : String
-    , postId : Int
+    , postId : String
     , city : String
     , mailNumber : Int
     , sellerName : String
@@ -93,14 +93,14 @@ type Msg
     = NoOp
     | GotOrders (Result Http.Error (List Order))
     | HideFullfilledChecked Bool
-    | Images ImageList.Msg Int
-    | SelectedTtn Int String
-    | ConfirmSend Int
-    | GotConfirmSend Int (Result Http.Error Bool)
-    | ConfirmReceived Int
-    | GotConfirmReceived Int (Result Http.Error Bool)
-    | Reject Int
-    | GotReject Int (Result Http.Error Bool)
+    | Images ImageList.Msg String
+    | SelectedTtn String String
+    | ConfirmSend String
+    | GotConfirmSend String (Result Http.Error Bool)
+    | ConfirmReceived String
+    | GotConfirmReceived String (Result Http.Error Bool)
+    | Reject String
+    | GotReject String (Result Http.Error Bool)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -200,7 +200,7 @@ update msg m =
             noOp
 
 
-getPostId : Order -> Int
+getPostId : Order -> String
 getPostId o =
     case o of
         Created c ->
@@ -217,12 +217,12 @@ getPostId o =
 --commands
 
 
-rejectOrder : String -> Int -> Cmd Msg
+rejectOrder : String -> String -> Cmd Msg
 rejectOrder token orderId =
     postAuthed token (RejectOrder orderId) Http.emptyBody (Http.expectJson (GotReject orderId) (D.field "success" D.bool)) Nothing
 
 
-confirmDelivery : String -> Int -> Cmd Msg
+confirmDelivery : String -> String -> Cmd Msg
 confirmDelivery token orderId =
     let
         expect =
@@ -231,7 +231,7 @@ confirmDelivery token orderId =
     postAuthed token (ReceivedOrder orderId) Http.emptyBody expect Nothing
 
 
-startDelivery : String -> Int -> String -> Cmd Msg
+startDelivery : String -> String -> String -> Cmd Msg
 startDelivery token orderId ttn =
     let
         expect =
@@ -305,7 +305,7 @@ orderDecoderBase : String -> D.Decoder a -> D.Decoder (OrderBase a)
 orderDecoderBase token addDecoder =
     D.succeed OrderBase
         |> custom statusDecoder
-        |> required "postId" D.int
+        |> required "postId" decodeId
         |> required "city" D.string
         |> required "mailNumber" D.int
         |> required "sellerName" D.string
@@ -397,7 +397,7 @@ viewPage resp page =
         ]
 
 
-mainView : Dict Int (WebData Bool) -> Dict Int String -> ViewType -> Bool -> List Order -> Html Msg
+mainView : Dict String (WebData Bool) -> Dict String String -> ViewType -> Bool -> List Order -> Html Msg
 mainView rejected ttns viewType hide orders =
     let
         isNotDelivered order =
@@ -418,7 +418,7 @@ mainView rejected ttns viewType hide orders =
     div [ flex, Flex.col, style "flex" "8", style "overflow-y" "scroll" ] (List.map (viewOrder rejected ttns viewType) fOrders)
 
 
-viewOrder : Dict Int (WebData Bool) -> Dict Int String -> ViewType -> Order -> Html Msg
+viewOrder : Dict String (WebData Bool) -> Dict String String -> ViewType -> Order -> Html Msg
 viewOrder rejected ttns viewType order =
     let
         ttn =
@@ -510,7 +510,7 @@ viewOrderBase fill order viewAdd btnView =
     let
         imgCol =
             div [ flex, Flex.col, smallMargin, flex1 ]
-                [ div mediumCentered [ text ("#" ++ String.fromInt order.postId ++ " from " ++ order.orderedDate) ]
+                [ div mediumCentered [ text ("#" ++ order.postId ++ " from " ++ order.orderedDate) ]
                 , Html.map (\e -> Images e order.postId) (ImageList.view order.images)
                 ]
 

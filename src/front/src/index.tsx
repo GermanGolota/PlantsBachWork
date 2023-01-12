@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from "react";import ReactDOM from "react-dom";
+import React, { useCallback, useState } from "react";
+import ReactDOM from "react-dom";
 import {
   Route,
   Link,
@@ -201,7 +202,7 @@ const AddEditPage = (props: { isEdit: boolean }) => {
 
     let finalResult = {
       ...model,
-      plantId: Number(plantId),
+      plantId: plantId,
       isEdit: props.isEdit,
     };
     return AddEditPlantElm.Pages.AddEditPlant.init({

@@ -16,7 +16,7 @@ import Json.Decode.Pipeline exposing (hardcoded, required)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar exposing (viewNav)
-import Utils exposing (buildQuery, fillParent, flex, flex1, formatPrice, intersect, largeCentered, largeFont, smallMargin, textCenter)
+import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, largeFont, smallMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -36,11 +36,11 @@ type alias View =
 
 
 type alias SearchResultItem =
-    { id : Int
+    { id : String
     , name : String
     , description : String
     , price : Float
-    , imageIds : List Int
+    , imageIds : List String
     , wasAbleToDelete : Maybe (WebData Bool)
     }
 
@@ -56,8 +56,8 @@ type Msg
     | RegionsMS Multiselect.Msg
     | SoilMS Multiselect.Msg
     | GroupMS Multiselect.Msg
-    | SelectedDeletePost Int
-    | GotDeletePost Int (Result Http.Error Bool)
+    | SelectedDeletePost String
+    | GotDeletePost String (Result Http.Error Bool)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -307,7 +307,7 @@ setQuery key value viewType =
 --commands
 
 
-deletePlant : String -> Int -> Cmd Msg
+deletePlant : String -> String -> Cmd Msg
 deletePlant token id =
     postAuthed token (DeletePost id) Http.emptyBody (Http.expectJson (GotDeletePost id) deletedDecoder) Nothing
 
@@ -334,12 +334,17 @@ searchResultsDecoder =
 searchResultDecoder : D.Decoder SearchResultItem
 searchResultDecoder =
     D.succeed SearchResultItem
-        |> required "id" D.int
+        |> required "id" decodeId
         |> required "plantName" D.string
         |> required "description" D.string
         |> required "price" D.float
-        |> required "imageIds" (D.list D.int)
+        |> required "imageIds" (D.list decodeId)
         |> hardcoded Nothing
+
+
+convertIds : List Int -> List String
+convertIds ids =
+    List.map String.fromInt ids
 
 
 
@@ -407,10 +412,10 @@ resultView : Bool -> Bool -> String -> SearchResultItem -> Html Msg
 resultView showOrder showDelete token item =
     let
         url =
-            imageIdToUrl token (Maybe.withDefault -1 (List.head item.imageIds))
+            imageIdToUrl token (Maybe.withDefault "-1" (List.head item.imageIds))
 
         orderBtn =
-            Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ String.fromInt item.id ++ "/order" ], Button.disabled (not showOrder) ] [ text "Order" ]
+            Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ item.id ++ "/order" ], Button.disabled (not showOrder) ] [ text "Order" ]
 
         msgText val =
             if val then
@@ -450,7 +455,7 @@ resultView showOrder showDelete token item =
                     , div [ flex, Flex.row ]
                         [ deleteBtn
                         , orderBtn
-                        , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ String.fromInt item.id ] ] [ text "Open" ]
+                        , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ item.id ] ] [ text "Open" ]
                         ]
                     ]
             ]

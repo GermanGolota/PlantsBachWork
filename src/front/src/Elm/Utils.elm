@@ -312,3 +312,8 @@ textHtml t =
 
         Err _ ->
             []
+
+
+decodeId : D.Decoder String
+decodeId =
+    D.oneOf [ D.string, D.map String.fromInt D.int ]

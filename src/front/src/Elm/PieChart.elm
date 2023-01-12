@@ -16,7 +16,7 @@ import TypedSvg.Types exposing (AnchorAlignment(..), FontWeight(..), Paint(..), 
 
 
 type Msg
-    = ChartItemClicked Int
+    = ChartItemClicked String
 
 
 w : Float
@@ -47,9 +47,9 @@ radius =
     min w h / 2
 
 
-pieSlice : Int -> Shape.Arc -> Svg.Svg Msg
+pieSlice : String -> Shape.Arc -> Svg.Svg Msg
 pieSlice index datum =
-    Path.element (Shape.arc datum) [ createFill index, stroke (Paint Color.white), onClick <| ChartItemClicked index ]
+    Path.element (Shape.arc datum) [ createFill (String.length index), stroke (Paint Color.white), onClick <| ChartItemClicked index ]
 
 
 createFill : Int -> Svg.Attribute msg
@@ -79,7 +79,7 @@ pieLabel slice label =
         [ text label ]
 
 
-pieChart : List Int -> List Float -> List String -> Svg.Svg Msg
+pieChart : List String -> List Float -> List String -> Svg.Svg Msg
 pieChart ids values labels =
     let
         pieData =
@@ -97,7 +97,7 @@ pieChart ids values labels =
         ]
 
 
-pieChartWithLabel : String -> List Int -> List Float -> List String -> List (Html Msg)
+pieChartWithLabel : String -> List String -> List Float -> List String -> List (Html Msg)
 pieChartWithLabel label ids values labels =
     [ Html.div
         [ Html.Attributes.style "text-align" "center", Html.Attributes.style "font-size" "3rem" ]

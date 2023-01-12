@@ -18,7 +18,7 @@ import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import Multiselect
 import NavBar exposing (plantsLink, viewNav)
-import Utils exposing (createdDecoder, existsDecoder, fillParent, flex, flex1, largeCentered, smallMargin)
+import Utils exposing (createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -37,13 +37,13 @@ type View
 
 
 type alias AddView =
-    { available : WebData Available, plant : PlantView, result : Maybe (WebData Int) }
+    { available : WebData Available, plant : PlantView, result : Maybe (WebData String) }
 
 
 type alias EditView =
     { available : WebData Available
     , plant : WebData PlantView
-    , plantId : Int
+    , plantId : String
     , result : Maybe (WebData Bool)
     , removedItems : ImageList.Model
     }
@@ -54,8 +54,8 @@ type alias PlantView =
     , description : String
     , created : String
     , regions : Multiselect.Model
-    , soil : Int
-    , group : Int
+    , soil : String
+    , group : String
     , images : ImageList.Model
     , uploadedFiles : List File
     }
@@ -71,8 +71,8 @@ type Msg
     | RemovedImages ImageList.Msg
     | NameUpdate String
     | DescriptionUpdate String
-    | SoilUpdate Int
-    | GroupUpdate Int
+    | SoilUpdate String
+    | GroupUpdate String
     | DateUpdate String
     | StartUpload
     | ImagesLoaded File (List File)
@@ -80,7 +80,7 @@ type Msg
     | GotAvailable (Result Http.Error Available)
     | GotPlant (Result Http.Error (Maybe PlantView))
     | Submit
-    | GotSubmitAdd (Result Http.Error Int)
+    | GotSubmitAdd (Result Http.Error String)
     | GotSubmitEdit (Result Http.Error Bool)
 
 
@@ -124,8 +124,15 @@ update msg m =
 
                 ( GotAvailable (Ok res), Add addView ) ->
                     let
+                        getFirstValue multi =
+                            Multiselect.getValues multi |> List.head |> Maybe.withDefault ( "", "" ) |> Tuple.first
+
                         updatePlant plant =
-                            { plant | regions = res.regions }
+                            { plant
+                                | regions = res.regions
+                                , soil = getFirstValue res.soils
+                                , group = getFirstValue res.groups
+                            }
                     in
                     ( authed <| Add <| { addView | available = Loaded res, plant = updatePlant addView.plant }, Cmd.none )
 
@@ -397,16 +404,16 @@ viewResultEdit result =
             div [ flex1 ] []
 
 
-viewResultAdd : Maybe (WebData Int) -> Html msg
+viewResultAdd : Maybe (WebData String) -> Html msg
 viewResultAdd result =
     case result of
         Just web ->
             viewWebdata web
                 (\data ->
                     div [ flex1, flex, Flex.col, class "text-success", Flex.alignItemsCenter, Flex.justifyEnd ]
-                        [ div [] [ text ("Successfully created plant " ++ String.fromInt data) ]
+                        [ div [] [ text ("Successfully created plant " ++ data) ]
                         , div []
-                            [ Button.linkButton [ Button.primary, Button.attrs [ href ("/notPosted/" ++ String.fromInt data ++ "/edit") ] ] [ text "Go to edit" ]
+                            [ Button.linkButton [ Button.primary, Button.attrs [ href ("/notPosted/" ++ data ++ "/edit") ] ] [ text "Go to edit" ]
                             ]
                         ]
                 )
@@ -481,26 +488,14 @@ leftView isEdit plant av =
                     String.join ", " (List.map File.name plant.uploadedFiles)
 
         isSelected isGroup val =
-            let
-                parsed =
-                    Maybe.withDefault -1 <| String.toInt val
-            in
             if isGroup then
-                plant.group == parsed
+                plant.group == val
 
             else
-                plant.soil == parsed
+                plant.soil == val
 
         viewOption isGroup ( val, desc ) =
             Select.item [ value val, selected <| isSelected isGroup val ] [ text desc ]
-
-        pareOrNoOp ev str =
-            case String.toInt str of
-                Just num ->
-                    ev num
-
-                Nothing ->
-                    NoOp
 
         viewOptions vals isGroup =
             List.map (viewOption isGroup) (Multiselect.getValues vals)
@@ -523,11 +518,11 @@ leftView isEdit plant av =
             )
         ++ viewInput "Regions" (Html.map RegionsMS <| Multiselect.view plant.regions)
         ++ viewInput "Soil"
-            (Select.select [ Select.onChange (pareOrNoOp SoilUpdate) ]
+            (Select.select [ Select.onChange SoilUpdate ]
                 (viewOptions av.soils False)
             )
         ++ viewInput "Group"
-            (Select.select [ Select.onChange (pareOrNoOp GroupUpdate) ]
+            (Select.select [ Select.onChange GroupUpdate ]
                 (viewOptions av.groups True)
             )
         ++ viewInput "Description" (Input.text [ Input.onInput DescriptionUpdate, Input.value plant.description ])
@@ -571,7 +566,7 @@ decodeInitial flags =
             Multiselect.initModel [] "regions" Multiselect.Show
     in
     if isEdit then
-        case D.decodeValue (D.field "plantId" D.int) flags of
+        case D.decodeValue (D.field "plantId" decodeId) flags of
             Ok id ->
                 Edit <| EditView Loading Loading id Nothing empyImageList
 
@@ -579,7 +574,7 @@ decodeInitial flags =
                 BadEdit
 
     else
-        Add <| AddView Loading (PlantView "" "" "" emptyMultiSelect 1 1 empyImageList []) Nothing
+        Add <| AddView Loading (PlantView "" "" "" emptyMultiSelect "1" "1" empyImageList []) Nothing
 
 
 
@@ -605,7 +600,7 @@ getAvailable token =
     Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing
 
 
-getPlantCommand : Available -> String -> Int -> Cmd Msg
+getPlantCommand : Available -> String -> String -> Cmd Msg
 getPlantCommand av token plantId =
     let
         expect =
@@ -639,14 +634,11 @@ plantDecoderBase av token =
                 Nothing ->
                     ( "-1", "Unknown" )
 
-        regFunc id =
-            getRegionFor (String.fromInt id)
-
         regIdsDecoder =
-            D.at [ "item", "regions" ] (D.list D.int)
+            D.at [ "item", "regions" ] (D.list decodeId)
 
         selected ids =
-            List.map regFunc ids
+            List.map getRegionFor ids
 
         reg ids =
             Multiselect.populateValues (Multiselect.initModel regions "regions" Multiselect.Show) regions (selected ids)
@@ -659,13 +651,13 @@ plantDecoderBase av token =
         |> itemRequired "description" D.string
         |> custom createdDecoder
         |> custom regDecoder
-        |> itemRequired "soilId" D.int
-        |> itemRequired "groupId" D.int
+        |> itemRequired "soilId" decodeId
+        |> itemRequired "groupId" decodeId
         |> custom (imagesDecoder token [ "item", "images" ])
         |> hardcoded []
 
 
-submitEditCommand : String -> Int -> PlantView -> List Int -> Cmd Msg
+submitEditCommand : String -> String -> PlantView -> List String -> Cmd Msg
 submitEditCommand token plantId plant removed =
     let
         expect =
@@ -678,18 +670,18 @@ submitAddCommand : String -> PlantView -> Cmd Msg
 submitAddCommand token plant =
     let
         expect =
-            Http.expectJson GotSubmitAdd (D.field "id" D.int)
+            Http.expectJson GotSubmitAdd (D.field "id" decodeId)
     in
     postAuthed token AddPlant (getAddBody plant) expect Nothing
 
 
-getEditBody : PlantView -> List Int -> Http.Body
+getEditBody : PlantView -> List String -> Http.Body
 getEditBody plant removed =
     Http.multipartBody
         ([ Http.stringPart "PlantName" plant.name
          , Http.stringPart "PlantDescription" plant.description
-         , Http.stringPart "SoilId" (String.fromInt plant.soil)
-         , Http.stringPart "GroupId" (String.fromInt plant.group)
+         , Http.stringPart "SoilId" plant.soil
+         , Http.stringPart "GroupId" plant.group
          , Http.stringPart "Created" plant.created
          ]
             ++ regionsParts "RegionIds" plant.regions
@@ -703,8 +695,8 @@ getAddBody plant =
     Http.multipartBody
         ([ Http.stringPart "Name" plant.name
          , Http.stringPart "Description" plant.description
-         , Http.stringPart "SoilId" (String.fromInt plant.soil)
-         , Http.stringPart "GroupId" (String.fromInt plant.group)
+         , Http.stringPart "SoilId" plant.soil
+         , Http.stringPart "GroupId" plant.group
          , Http.stringPart "Created" plant.created
          ]
             ++ regionsParts "Regions" plant.regions
@@ -712,9 +704,9 @@ getAddBody plant =
         )
 
 
-removedParts : List Int -> List Http.Part
+removedParts : List String -> List Http.Part
 removedParts removed =
-    List.map (\r -> Http.stringPart "RemovedImages" (String.fromInt r)) removed
+    List.map (\r -> Http.stringPart "RemovedImages" r) removed
 
 
 regionsParts : String -> Multiselect.Model -> List Http.Part
