@@ -134,5 +134,4 @@ internal class EventStoreEventStore : IEventStore
             throw new EventStoreCommunicationException($"Error while reading events for aggregate {aggregate.Id}", ex);
         }
     }
-
 }

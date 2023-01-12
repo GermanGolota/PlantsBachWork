@@ -21,7 +21,7 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
 
     public EventSubscriptionWorker(IEventStorePersistentSubscriptionsClientFactory clientFactory,
         AggregateHelper aggregate, ILogger<EventSubscriptionWorker> logger, IDateTimeProvider dateTime,
-        EventSubscriber subscriber, EventStoreConverter converter, IIdentityProvider identityProvider, 
+        EventSubscriber subscriber, EventStoreConverter converter, IIdentityProvider identityProvider,
         IServiceIdentityProvider serviceIdentity)
     {
         _clientFactory = clientFactory;
@@ -75,39 +75,43 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
         {
             var result = _converter.Convert(resolved);
             var aggregateId = result.Match(_ => _.Metadata.Aggregate.Id, _ => _.Metadata.Aggregate.Id);
-            var subscriptionState = aggregateStates.GetOrAdd(aggregateId, _ => new());
+            var subscriptionState = aggregateStates.GetOrAdd(aggregateId, _ => (new()));
             subscriptionState.EventIds.Add(resolved.Event.EventId);
-            await result.MatchAsync(async @event =>
+            result.Match(@event =>
             {
                 subscriptionState.Events.Add(@event);
-                if (@event is CommandProcessedEvent)
-                {
-                    var command = subscriptionState.Command!;
-                    logger.LogInformation("Processing subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
-                    try
-                    {
-                        await subscriber.ProcessCommandAsync(command, subscriptionState.Events, cancellationToken);
-                    }
-                    catch (Exception e)
-                    {
-                        logger.LogError(e, "Failed to process command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
-                        //TODO: add dead letter queue here
-                    }
-                    await subscription.Ack(subscriptionState.EventIds);
-                    if (aggregateStates.TryRemove(aggregateId, out var _) is false)
-                    {
-                        logger.LogWarning("Failed to remove aggregate events from subscriber cache for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}''", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
-                    }
-                    logger.LogInformation("Processed command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
-                }
             },
             command =>
             {
                 subscriptionState.Command = command;
-                return Task.CompletedTask;
-            }
-            );
+            });
+
+            await TryProcessCommand(subscriber, logger, subscription, aggregateStates, aggregateId, subscriptionState, cancellationToken);
         };
+    }
+
+    private static async Task TryProcessCommand(EventSubscriber subscriber, ILogger logger, PersistentSubscription subscription, ConcurrentDictionary<Guid, AggregateSubscriptionState> aggregateStates, Guid aggregateId, AggregateSubscriptionState subscriptionState, CancellationToken cancellationToken)
+    {
+        if (subscriptionState.Command is not null && subscriptionState.Events.Any(_ => _ is CommandProcessedEvent))
+        {
+            var command = subscriptionState.Command!;
+            logger.LogInformation("Processing subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
+            try
+            {
+                await subscriber.ProcessCommandAsync(command, subscriptionState.Events, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to process command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
+                //TODO: add dead letter queue here
+            }
+            await subscription.Ack(subscriptionState.EventIds);
+            if (aggregateStates.TryRemove(aggregateId, out var _) is false)
+            {
+                logger.LogWarning("Failed to remove aggregate events from subscriber cache for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}''", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
+            }
+            logger.LogInformation("Processed command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
+        }
     }
 
     private class AggregateSubscriptionState
