@@ -69,7 +69,7 @@ internal class Seeder
             foreach (var user in users)
             {
                 results.Add(await _command.CreateAndSendAsync(
-                    factory => factory.Create<CreateUserCommand, User>(rng.GetRandomConvertableGuid()),
+                    factory => factory.Create<CreateUserCommand, User>(user.Login.ToGuid()),
                     meta => new CreateUserCommand(meta, user),
                     token)
                     );
