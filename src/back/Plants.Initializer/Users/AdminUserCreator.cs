@@ -5,23 +5,21 @@ namespace Plants.Initializer.Users;
 
 internal class AdminUserCreator
 {
-    private readonly ICommandSender _sender;
-    private readonly CommandMetadataFactory _metadataFactory;
     private readonly TempPasswordContext _context;
+    private readonly CommandHelper _command;
     private readonly UserConfig _options;
 
-    public AdminUserCreator(ICommandSender sender, CommandMetadataFactory metadataFactory, IOptionsSnapshot<UserConfig> options, TempPasswordContext context)
+    public AdminUserCreator(IOptionsSnapshot<UserConfig> options, TempPasswordContext context, CommandHelper command)
     {
-        _sender = sender;
-        _metadataFactory = metadataFactory;
         _context = context;
+        _command = command;
         _options = options.Get(UserConstrants.NewAdmin);
     }
 
-    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCreateAdminCommandAsync(CancellationToken token = default)
-    {
-        var meta = _metadataFactory.Create<CreateUserCommand, User>(_options.Username.ToGuid());
-        var command = new CreateUserCommand(meta,
+    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCreateAdminCommandAsync(CancellationToken token = default) =>
+        await _command.CreateAndSendAsync(
+            factory => factory.Create<CreateUserCommand, User>(_options.Username.ToGuid()),
+            meta => new CreateUserCommand(meta,
             new UserCreationDto(
                 _options.FirstName,
                 _options.LastName,
@@ -29,14 +27,12 @@ internal class AdminUserCreator
                 _options.Username,
                 "admin@admin.admin",
                 "English",
-                Enum.GetValues<UserRole>()));
-        return await _sender.SendCommandAsync(command, token);
-    }
+                Enum.GetValues<UserRole>())),
+            token);
 
-    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendResetPasswordCommandAsync(CancellationToken token = default)
-    {
-        var meta = _metadataFactory.Create<ChangePasswordCommand, User>(_options.Username.ToGuid());
-        var command = new ChangePasswordCommand(meta, _options.Username, _context.TempPassword, _options.Password);
-        return await _sender.SendCommandAsync(command, token);
-    }
+    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendResetPasswordCommandAsync(CancellationToken token = default) =>
+        await _command.CreateAndSendAsync(
+            factory => factory.Create<ChangePasswordCommand, User>(_options.Username.ToGuid()),
+            meta => new ChangePasswordCommand(meta, _options.Username, _context.TempPassword, _options.Password),
+            token);
 }

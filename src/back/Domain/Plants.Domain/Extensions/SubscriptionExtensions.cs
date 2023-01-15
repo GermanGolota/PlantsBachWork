@@ -12,6 +12,10 @@ public static class SubscriptionExtensions
     public static Event TransposeSubscribedEvent(this AggregateBase subscribingAggregate, Event @event) =>
          @event.ChangeTargetAggregate(subscribingAggregate.GetDescription()).ChangeVersion(subscribingAggregate.Version + 1);
 
-    public static Command ChangeTargetAggregate(this Command command, AggregateDescription description) =>
-         command with { Metadata = command.Metadata with { Aggregate = description } };
+    public static Command ChangeTargetAggregate(this Command command, AggregateDescription newAggregate)
+    {
+        var initialAggregate = command.Metadata.InitialAggregate ?? command.Metadata.Aggregate;
+        var newMeta = command.Metadata with { Aggregate = newAggregate, InitialAggregate = initialAggregate };
+        return command with { Metadata = newMeta };
+    }
 }

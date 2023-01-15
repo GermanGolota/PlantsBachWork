@@ -1,17 +1,24 @@
-﻿namespace Plants.Domain.Services;
+﻿using Microsoft.Extensions.Options;
+using Plants.Domain.Config;
+
+namespace Plants.Domain.Services;
 
 public class CommandHelper
 {
-	public CommandHelper(ICommandSender sender, CommandMetadataFactory factory, IIdentityProvider identityProvider)
+	public CommandHelper(
+        ICommandSender sender, CommandMetadataFactory factory, 
+        IIdentityProvider identityProvider, IOptions<CommandSenderOptions> options)
 	{
         Sender = sender;
         Factory = factory;
         IdentityProvider = identityProvider;
+        Options = options.Value;
     }
 
     public ICommandSender Sender { get; }
     public CommandMetadataFactory Factory { get; }
     public IIdentityProvider IdentityProvider { get; }
+    public CommandSenderOptions Options { get; }
 }
 
 public static class CommandHelperExtensions
@@ -23,7 +30,7 @@ public static class CommandHelperExtensions
     {
         var meta = metadataFunc(helper.Factory);
         var command = commandFunc(meta);
-        return await helper.Sender.SendCommandAsync(command, token);
+        return await helper.Sender.SendCommandAsync(command, GetOptions(helper), token);
     }
 
     public static async Task<OneOf<CommandAcceptedResult, CommandForbidden>> CreateAndSendAsync(this CommandHelper helper,
@@ -34,6 +41,10 @@ public static class CommandHelperExtensions
         var identity = helper.IdentityProvider.Identity!;
         var meta = metadataFunc(helper.Factory, identity);
         var command = commandFunc(meta, identity);
-        return await helper.Sender.SendCommandAsync(command, token);
+        return await helper.Sender.SendCommandAsync(command, GetOptions(helper), token);
     }
+
+    private static CommandExecutionOptions.Wait GetOptions(CommandHelper helper) =>
+        new CommandExecutionOptions.Wait(TimeSpan.FromSeconds(helper.Options.DefaultTimeoutInSeconds));
+
 }
