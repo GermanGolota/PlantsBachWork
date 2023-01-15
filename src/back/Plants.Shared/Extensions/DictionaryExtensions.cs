@@ -1,4 +1,6 @@
-﻿namespace Plants.Shared.Extensions;
+﻿using System.Collections.Concurrent;
+
+namespace Plants.Shared.Extensions;
 
 public static class DictionaryExtensions
 {
@@ -35,6 +37,22 @@ public static class DictionaryExtensions
         }
     }
 
-    public static IDictionary<TValue, TKey> ToInverse<TKey, TValue>(this IDictionary<TKey, TValue> dict) =>
+    public static IDictionary<TValue, TKey> ToInverse<TKey, TValue>(this IDictionary<TKey, TValue> dict) where TKey : notnull where TValue : notnull =>
         dict.ToDictionary(_ => _.Value, _ => _.Key);
+
+    public static void RemoveWithRetry<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dict, TKey key) where TKey : notnull
+    {
+        const int maxRetryCount = 5;
+        int retryCount = 0;
+        while (dict.Remove(key, out _) is false && retryCount < maxRetryCount)
+        {
+            retryCount++;
+            Thread.Sleep(15);
+        }
+
+        if (retryCount == maxRetryCount)
+        {
+            throw new Exception($"Failed to remove information for '{key}'");
+        }
+    }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Plants.Domain.Infrastructure.Helpers;
+using Plants.Domain.Infrastructure.Subscription;
 using Plants.Infrastructure.Domain.Helpers;
 
 namespace Plants.Domain.Infrastructure;
@@ -37,6 +38,10 @@ public static class DiExtensions
         //works with the service scope
         services.AddScoped<IEventSubscription, EventSubscription>();
         services.AddTransient<AggregateEventSubscription>();
+        services.AddSingleton<EventSubscriptionState>();
+        services.AddSingleton<ISubscriptionProcessingNotificator, EventSubscriptionState>();
+        services.AddSingleton<ISubscriptionProcessingMarker, EventSubscriptionState>();
+        services.AddSingleton<IEventSubscriptionState, EventSubscriptionState>();
         services.AddTransient<IEventStore, EventStoreEventStore>();
         services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
         return services;

@@ -3,7 +3,7 @@ using Plants.Domain.Infrastructure.Helpers;
 using Plants.Infrastructure.Domain.Helpers;
 using System.Reflection;
 
-namespace Plants.Domain.Infrastructure;
+namespace Plants.Domain.Infrastructure.Subscription;
 
 internal class EventSubscriptionProcessor
 {
@@ -60,7 +60,7 @@ internal class EventSubscriptionProcessor
                         var firstEventAggregate = firstEvent.Metadata.Aggregate;
                         var aggregate = await _caller.LoadAsync(firstEventAggregate, token);
                         var command = parentCommand.ChangeTargetAggregate(firstEventAggregate);
-                        if(aggregate.CommandsProcessedIds.Contains(command.Metadata.Id) is false)
+                        if (aggregate.CommandsProcessedIds.Contains(command.Metadata.Id) is false)
                         {
                             var commandNumber = await _eventStore.AppendCommandAsync(command, aggregate.Version, token);
                             await _eventStore.AppendEventsAsync(transposedEvents, commandNumber, command, token);
