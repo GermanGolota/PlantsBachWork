@@ -8,20 +8,20 @@ using System.Collections.Concurrent;
 
 namespace Plants.Domain.Infrastructure;
 
-internal class EventSubscriptionWorker : IEventSubscriptionWorker
+internal class EventSubscription : IEventSubscription
 {
     private readonly IEventStorePersistentSubscriptionsClientFactory _clientFactory;
     private readonly AggregateHelper _aggregate;
-    private readonly ILogger<EventSubscriptionWorker> _logger;
+    private readonly ILogger<EventSubscription> _logger;
     private readonly IDateTimeProvider _dateTime;
-    private readonly EventSubscriber _subscriber;
+    private readonly EventSubscriptionProcessor _subscriber;
     private readonly EventStoreConverter _converter;
     private readonly IIdentityProvider _identityProvider;
     private readonly IServiceIdentityProvider _serviceIdentity;
 
-    public EventSubscriptionWorker(IEventStorePersistentSubscriptionsClientFactory clientFactory,
-        AggregateHelper aggregate, ILogger<EventSubscriptionWorker> logger, IDateTimeProvider dateTime,
-        EventSubscriber subscriber, EventStoreConverter converter, IIdentityProvider identityProvider,
+    public EventSubscription(IEventStorePersistentSubscriptionsClientFactory clientFactory,
+        AggregateHelper aggregate, ILogger<EventSubscription> logger, IDateTimeProvider dateTime,
+        EventSubscriptionProcessor subscriber, EventStoreConverter converter, IIdentityProvider identityProvider,
         IServiceIdentityProvider serviceIdentity)
     {
         _clientFactory = clientFactory;
@@ -68,7 +68,7 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
         _subscriptions = subscriptions;
     }
 
-    private Func<PersistentSubscription, ResolvedEvent, int?, CancellationToken, Task> Process(EventSubscriber subscriber, ILogger logger)
+    private Func<PersistentSubscription, ResolvedEvent, int?, CancellationToken, Task> Process(EventSubscriptionProcessor subscriber, ILogger logger)
     {
         ConcurrentDictionary<Guid, AggregateSubscriptionState> aggregateStates = new();
         return async (subscription, resolved, retryCount, cancellationToken) =>
@@ -90,7 +90,7 @@ internal class EventSubscriptionWorker : IEventSubscriptionWorker
         };
     }
 
-    private static async Task TryProcessCommand(EventSubscriber subscriber, ILogger logger, PersistentSubscription subscription, ConcurrentDictionary<Guid, AggregateSubscriptionState> aggregateStates, Guid aggregateId, AggregateSubscriptionState subscriptionState, CancellationToken cancellationToken)
+    private static async Task TryProcessCommand(EventSubscriptionProcessor subscriber, ILogger logger, PersistentSubscription subscription, ConcurrentDictionary<Guid, AggregateSubscriptionState> aggregateStates, Guid aggregateId, AggregateSubscriptionState subscriptionState, CancellationToken cancellationToken)
     {
         if (subscriptionState.Command is not null && subscriptionState.Events.Any(_ => _ is CommandProcessedEvent))
         {

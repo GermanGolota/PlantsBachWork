@@ -5,14 +5,14 @@ using System.Reflection;
 
 namespace Plants.Domain.Infrastructure;
 
-internal class EventSubscriber
+internal class EventSubscriptionProcessor
 {
     private readonly RepositoriesCaller _caller;
     private readonly CqrsHelper _cqrs;
     private readonly IEventStore _eventStore;
     private readonly IServiceProvider _provider;
 
-    public EventSubscriber(RepositoriesCaller caller, CqrsHelper cqrs, IEventStore eventStore, IServiceProvider provider)
+    public EventSubscriptionProcessor(RepositoriesCaller caller, CqrsHelper cqrs, IEventStore eventStore, IServiceProvider provider)
     {
         _caller = caller;
         _cqrs = cqrs;

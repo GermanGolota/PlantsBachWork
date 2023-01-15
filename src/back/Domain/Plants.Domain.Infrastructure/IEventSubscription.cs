@@ -1,6 +1,6 @@
 ﻿namespace Plants.Domain.Infrastructure;
 
-public interface IEventSubscriptionWorker
+public interface IEventSubscription
 {
     Task StartAsync(CancellationToken token);
     void Stop();

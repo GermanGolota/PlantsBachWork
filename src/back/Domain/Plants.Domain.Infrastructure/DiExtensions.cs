@@ -23,7 +23,7 @@ public static class DiExtensions
         services.AddSingleton<AccessesHelper>();
         services.AddScoped<EventStoreAccessGranter>();
         services.AddTransient<RepositoriesCaller>();
-        services.AddTransient<EventSubscriber>();
+        services.AddTransient<EventSubscriptionProcessor>();
         services.AddTransient<AggregateEventApplyer>();
         services.AddTransient(typeof(TransposeApplyer<>));
         services.AddTransient(typeof(TransposeApplyer<,>));
@@ -35,7 +35,7 @@ public static class DiExtensions
         services.AddTransient<ICommandSender, CommandSender>();
         services.AddSingleton<EventStoreConverter>();
         //works with the service scope
-        services.AddScoped<IEventSubscriptionWorker, EventSubscriptionWorker>();
+        services.AddScoped<IEventSubscription, EventSubscription>();
         services.AddTransient<IEventStore, EventStoreEventStore>();
         services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
         return services;
