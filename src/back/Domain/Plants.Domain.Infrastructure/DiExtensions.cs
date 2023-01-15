@@ -39,9 +39,9 @@ public static class DiExtensions
         services.AddScoped<IEventSubscription, EventSubscription>();
         services.AddTransient<AggregateEventSubscription>();
         services.AddSingleton<EventSubscriptionState>();
-        services.AddSingleton<ISubscriptionProcessingNotificator, EventSubscriptionState>();
-        services.AddSingleton<ISubscriptionProcessingMarker, EventSubscriptionState>();
-        services.AddSingleton<IEventSubscriptionState, EventSubscriptionState>();
+        services.AddSingleton<ISubscriptionProcessingNotificator>(_ => _.GetRequiredService<EventSubscriptionState>());
+        services.AddSingleton<ISubscriptionProcessingMarker>(_ => _.GetRequiredService<EventSubscriptionState>());
+        services.AddSingleton<IEventSubscriptionState>(_ => _.GetRequiredService<EventSubscriptionState>());
         services.AddTransient<IEventStore, EventStoreEventStore>();
         services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
         return services;
