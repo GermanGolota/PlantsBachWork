@@ -83,6 +83,7 @@ internal class CommandSender : ICommandSender
                 _logger.LogInformation("Failed to wait to subscription to be processed for '{@aggregate}'", commandAggregate);
                 throw new TimeoutException($"Timeout while waiting for subscription to be processed for '{commandAggregate.Id}' in '{commandAggregate.Name}'");
             }
+            _notificator.UnsubscribeFromNotifications(commandAggregate);
         }
 
         _logger.LogInformation("Processed command '{commandId}' for '{@aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
