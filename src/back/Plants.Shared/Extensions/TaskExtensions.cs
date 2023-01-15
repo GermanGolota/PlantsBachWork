@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Plants.Shared.Extensions;
+﻿namespace Plants.Shared.Extensions;
 
 public static class TaskExtensions
 {
@@ -13,9 +7,9 @@ public static class TaskExtensions
     /// true - task executed
     /// false - timed out
     /// </returns>
-    public static async Task<bool> ExecuteWithTimeoutAsync(this Task task, TimeSpan timeout)
+    public static async Task<bool> ExecuteWithTimeoutAsync(this Task task, TimeSpan timeout, CancellationToken token)
     {
-        var timeoutTask = Task.Delay(timeout);
+        var timeoutTask = Task.Delay(timeout, token);
         var resultingTask = await Task.WhenAny(timeoutTask, task);
         bool success;
         if (resultingTask == timeoutTask)

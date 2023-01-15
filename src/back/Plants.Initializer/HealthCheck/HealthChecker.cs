@@ -23,7 +23,7 @@ internal class HealthChecker
         var timer = Stopwatch.StartNew();
         _logger.LogInformation("Waiting for services to startup for up to '{sec}' seconds", _options.TimeoutInSeconds);
 
-        var executed = await WaitForHealthCheckAsync(token).ExecuteWithTimeoutAsync(TimeSpan.FromSeconds(_options.TimeoutInSeconds));
+        var executed = await WaitForHealthCheckAsync(token).ExecuteWithTimeoutAsync(TimeSpan.FromSeconds(_options.TimeoutInSeconds), token);
         if (executed)
         {
             timer.Stop();
@@ -38,7 +38,7 @@ internal class HealthChecker
 
     private async Task WaitForHealthCheckAsync(CancellationToken token)
     {
-        while (true)
+        while (token.IsCancellationRequested is false)
         {
             var report = await _health.CheckHealthAsync(token);
             if (report.Status == HealthStatus.Healthy || report.Status == HealthStatus.Degraded && _options.AcceptDegraded)

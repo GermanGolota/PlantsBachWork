@@ -11,19 +11,23 @@ internal class EventSubscriptionProcessor
     private readonly CqrsHelper _cqrs;
     private readonly IEventStore _eventStore;
     private readonly IServiceProvider _provider;
+    private readonly ISubscriptionProcessingMarker _marker;
 
-    public EventSubscriptionProcessor(RepositoriesCaller caller, CqrsHelper cqrs, IEventStore eventStore, IServiceProvider provider)
+    public EventSubscriptionProcessor(RepositoriesCaller caller, CqrsHelper cqrs, IEventStore eventStore, 
+        IServiceProvider provider, ISubscriptionProcessingMarker marker)
     {
         _caller = caller;
         _cqrs = cqrs;
         _eventStore = eventStore;
         _provider = provider;
+        _marker = marker;
     }
 
     public async Task ProcessCommandAsync(Command command, List<Event> aggEvents, CancellationToken token = default)
     {
         await UpdateProjectionAsync(command.Metadata.Aggregate, aggEvents, token);
         await UpdateSubscribersAsync(command, aggEvents, token);
+        _marker.MarkSubscriptionComplete(command.Metadata.Aggregate);
     }
 
     private async Task UpdateProjectionAsync(AggregateDescription desc, IEnumerable<Event> newEvents, CancellationToken token = default)
@@ -62,6 +66,7 @@ internal class EventSubscriptionProcessor
                         var command = parentCommand.ChangeTargetAggregate(firstEventAggregate);
                         if (aggregate.CommandsProcessedIds.Contains(command.Metadata.Id) is false)
                         {
+                            _marker.MarkSubscribersCount(command.Metadata.InitialAggregate!, 1);
                             var commandNumber = await _eventStore.AppendCommandAsync(command, aggregate.Version, token);
                             await _eventStore.AppendEventsAsync(transposedEvents, commandNumber, command, token);
                         }

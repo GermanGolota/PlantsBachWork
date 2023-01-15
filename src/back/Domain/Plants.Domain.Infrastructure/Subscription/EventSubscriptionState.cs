@@ -24,7 +24,7 @@ internal class EventSubscriptionState : ISubscriptionProcessingMarker, ISubscrip
         }
 
         public bool WasProcessed() =>
-            _isNew is false && _subscriptionProcessed == _subscriptionToProcess;
+            _isNew is false && _subscriptionProcessed >= _subscriptionToProcess;
     }
 
     private ConcurrentDictionary<string, SubscriptionProcessingState> _processingStates = new();
