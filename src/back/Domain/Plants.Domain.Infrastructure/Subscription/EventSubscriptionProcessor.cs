@@ -13,7 +13,7 @@ internal class EventSubscriptionProcessor
     private readonly IServiceProvider _provider;
     private readonly ISubscriptionProcessingMarker _marker;
 
-    public EventSubscriptionProcessor(RepositoriesCaller caller, CqrsHelper cqrs, IEventStore eventStore, 
+    public EventSubscriptionProcessor(RepositoriesCaller caller, CqrsHelper cqrs, IEventStore eventStore,
         IServiceProvider provider, ISubscriptionProcessingMarker marker)
     {
         _caller = caller;
@@ -25,12 +25,12 @@ internal class EventSubscriptionProcessor
 
     public async Task ProcessCommandAsync(Command command, List<Event> aggEvents, CancellationToken token = default)
     {
-        await UpdateProjectionAsync(command.Metadata.Aggregate, aggEvents, token);
+        await UpdateProjectionAsync(command.Metadata.Aggregate, token);
         await UpdateSubscribersAsync(command, aggEvents, token);
-        _marker.MarkSubscriptionComplete(command.Metadata.Aggregate);
+        _marker.MarkSubscriptionComplete(command.Metadata.InitialAggregate ?? command.Metadata.Aggregate);
     }
 
-    private async Task UpdateProjectionAsync(AggregateDescription desc, IEnumerable<Event> newEvents, CancellationToken token = default)
+    private async Task UpdateProjectionAsync(AggregateDescription desc, CancellationToken token = default)
     {
         var aggregate = await _caller.LoadAsync(desc, token);
         //would make sense for times in which we would load projection and apply events to it

@@ -1,9 +1,17 @@
-﻿using System.Collections.Concurrent;
+﻿using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 
 namespace Plants.Domain.Infrastructure.Subscription;
 
 internal class EventSubscriptionState : ISubscriptionProcessingMarker, ISubscriptionProcessingNotificator, IEventSubscriptionState
 {
+    public EventSubscriptionState(ILogger<EventSubscriptionState> logger)
+    {
+        _logger = logger;
+    }
+
+    private readonly ILogger<EventSubscriptionState> _logger;
+
     #region Processing
     private class SubscriptionProcessingState
     {
@@ -29,20 +37,38 @@ internal class EventSubscriptionState : ISubscriptionProcessingMarker, ISubscrip
 
     private ConcurrentDictionary<string, SubscriptionProcessingState> _processingStates = new();
 
-    public void SubscribeToNotifications(AggregateDescription description) =>
-        GetProcessing(description, shouldCreate: true);
+    public void SubscribeToNotifications(AggregateDescription description)
+    {
+        var state = GetProcessing(description, shouldCreate: true);
+        _logger.LogInformation("Subscribed to '{@aggregate}'", description);
+    }
 
-    public bool WasProcessed(AggregateDescription description) =>
-        GetProcessing(description)?.WasProcessed() ?? false;
+    public bool WasProcessed(AggregateDescription description)
+    {
+        _logger.LogInformation("Checking subscription to '{@aggregate}'", description);
+        var state = GetProcessing(description);
+        return state?.WasProcessed() ?? false;
+    }
 
-    public void UnsubscribeFromNotifications(AggregateDescription description) =>
+    public void UnsubscribeFromNotifications(AggregateDescription description)
+    {
+        _logger.LogInformation("Unsubscribed to '{@aggregate}'", description);
         _processingStates.RemoveWithRetry(GetKey(description));
+    }
 
-    public void MarkSubscriptionComplete(AggregateDescription description) =>
-          GetProcessing(description)?.MarkProcessed();
+    public void MarkSubscriptionComplete(AggregateDescription description)
+    {
+        _logger.LogInformation("Marking complete for '{@aggregate}'", description);
+        var state = GetProcessing(description);
+        state?.MarkProcessed();
+    }
 
-    public void MarkSubscribersCount(AggregateDescription description, long subscriptionsCount) =>
-        GetProcessing(description)?.MarkSubscriptions(subscriptionsCount);
+    public void MarkSubscribersCount(AggregateDescription description, long subscriptionsCount)
+    {
+        _logger.LogInformation("Marking subscribers for '{@aggregate}' - '{count}'", description, subscriptionsCount);
+        var state = GetProcessing(description);
+        state?.MarkSubscriptions(subscriptionsCount);
+    }
 
     private SubscriptionProcessingState? GetProcessing(AggregateDescription description, bool shouldCreate = false)
     {
@@ -51,13 +77,10 @@ internal class EventSubscriptionState : ISubscriptionProcessingMarker, ISubscrip
         var key = GetKey(description);
         if (shouldCreate is false)
         {
-            if (_processingStates.ContainsKey(key))
+            result = _processingStates.GetValueOrDefault(key);
+            if (result is null)
             {
-                _processingStates.TryGetValue(key, out result);
-            }
-            else
-            {
-                result = null;
+                _logger.LogWarning("Failed to get processing state for '{@aggregate}'", description);
             }
         }
         else
@@ -80,6 +103,6 @@ internal class EventSubscriptionState : ISubscriptionProcessingMarker, ISubscrip
     }
 
     private static string GetKey(AggregateDescription description) =>
-        $"{description.Name}_{description.Id}";
+        $"{description.Name}_{description.Id}".ToLower();
     #endregion
 }
