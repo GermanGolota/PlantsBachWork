@@ -36,6 +36,7 @@ public static class DiExtensions
         services.AddSingleton<EventStoreConverter>();
         //works with the service scope
         services.AddScoped<IEventSubscription, EventSubscription>();
+        services.AddTransient<AggregateEventSubscription>();
         services.AddTransient<IEventStore, EventStoreEventStore>();
         services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
         return services;

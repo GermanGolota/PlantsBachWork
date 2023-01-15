@@ -1,5 +1,6 @@
 ﻿using EventStore.Client;
 using Grpc.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Services;
@@ -13,37 +14,31 @@ internal class EventSubscription : IEventSubscription
     private readonly IEventStorePersistentSubscriptionsClientFactory _clientFactory;
     private readonly AggregateHelper _aggregate;
     private readonly ILogger<EventSubscription> _logger;
-    private readonly IDateTimeProvider _dateTime;
-    private readonly EventSubscriptionProcessor _subscriber;
-    private readonly EventStoreConverter _converter;
-    private readonly IIdentityProvider _identityProvider;
     private readonly IServiceIdentityProvider _serviceIdentity;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public EventSubscription(IEventStorePersistentSubscriptionsClientFactory clientFactory,
-        AggregateHelper aggregate, ILogger<EventSubscription> logger, IDateTimeProvider dateTime,
-        EventSubscriptionProcessor subscriber, EventStoreConverter converter, IIdentityProvider identityProvider,
-        IServiceIdentityProvider serviceIdentity)
+        AggregateHelper aggregate, ILogger<EventSubscription> logger,
+        IServiceIdentityProvider serviceIdentity, IServiceScopeFactory scopeFactory)
     {
         _clientFactory = clientFactory;
         _aggregate = aggregate;
         _logger = logger;
-        _dateTime = dateTime;
-        _subscriber = subscriber;
-        _converter = converter;
-        _identityProvider = identityProvider;
         _serviceIdentity = serviceIdentity;
+        _scopeFactory = scopeFactory;
     }
 
     private IEnumerable<PersistentSubscription>? _subscriptions = null;
+    private IEnumerable<IServiceScope>? _scopes = null;
 
     public async Task StartAsync(CancellationToken token)
     {
-        var service = _serviceIdentity.ServiceIdentity;
-        _identityProvider.UpdateIdentity(service);
+        _serviceIdentity.SetServiceIdentity();
 
         var client = _clientFactory.Create();
         var settings = new PersistentSubscriptionSettings();
         var subscriptions = new List<PersistentSubscription>();
+        var scopes = new List<IServiceScope>();
         foreach (var (aggregate, _) in _aggregate.Aggregates)
         {
             var filter = StreamFilter.Prefix(aggregate);
@@ -58,67 +53,20 @@ internal class EventSubscription : IEventSubscription
                     throw;
                 }
             }
+            var scope = _scopeFactory.CreateScope();
+            var provider = scope.ServiceProvider;
+            provider.GetRequiredService<IServiceIdentityProvider>().SetServiceIdentity();
+            var aggregateSubscription = provider.GetRequiredService<AggregateEventSubscription>();
             var subscription = await client.SubscribeToAllAsync(aggregate,
-                Process(_subscriber, _logger),
+                aggregateSubscription.Process,
                 HandleStop,
                 cancellationToken: token);
+            scopes.Add(scope);
             subscriptions.Add(subscription);
         }
 
+        _scopes = scopes;
         _subscriptions = subscriptions;
-    }
-
-    private Func<PersistentSubscription, ResolvedEvent, int?, CancellationToken, Task> Process(EventSubscriptionProcessor subscriber, ILogger logger)
-    {
-        ConcurrentDictionary<Guid, AggregateSubscriptionState> aggregateStates = new();
-        return async (subscription, resolved, retryCount, cancellationToken) =>
-        {
-            var result = _converter.Convert(resolved);
-            var aggregateId = result.Match(_ => _.Metadata.Aggregate.Id, _ => _.Metadata.Aggregate.Id);
-            var subscriptionState = aggregateStates.GetOrAdd(aggregateId, _ => (new()));
-            subscriptionState.EventIds.Add(resolved.Event.EventId);
-            result.Match(@event =>
-            {
-                subscriptionState.Events.Add(@event);
-            },
-            command =>
-            {
-                subscriptionState.Command = command;
-            });
-
-            await TryProcessCommand(subscriber, logger, subscription, aggregateStates, aggregateId, subscriptionState, cancellationToken);
-        };
-    }
-
-    private static async Task TryProcessCommand(EventSubscriptionProcessor subscriber, ILogger logger, PersistentSubscription subscription, ConcurrentDictionary<Guid, AggregateSubscriptionState> aggregateStates, Guid aggregateId, AggregateSubscriptionState subscriptionState, CancellationToken cancellationToken)
-    {
-        if (subscriptionState.Command is not null && subscriptionState.Events.Any(_ => _ is CommandProcessedEvent))
-        {
-            var command = subscriptionState.Command!;
-            logger.LogInformation("Processing subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
-            try
-            {
-                await subscriber.ProcessCommandAsync(command, subscriptionState.Events, cancellationToken);
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "Failed to process command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
-                //TODO: add dead letter queue here
-            }
-            await subscription.Ack(subscriptionState.EventIds);
-            if (aggregateStates.TryRemove(aggregateId, out var _) is false)
-            {
-                logger.LogWarning("Failed to remove aggregate events from subscriber cache for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}''", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
-            }
-            logger.LogInformation("Processed command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
-        }
-    }
-
-    private class AggregateSubscriptionState
-    {
-        public List<Uuid> EventIds { get; set; } = new();
-        public Command? Command { get; set; } = null;
-        public List<Event> Events { get; set; } = new();
     }
 
     private void HandleStop(PersistentSubscription subscription, SubscriptionDroppedReason dropReason, Exception? exception)
@@ -144,5 +92,88 @@ internal class EventSubscription : IEventSubscription
         {
             subscription.Dispose();
         }
+
+        foreach (var scope in _scopes!)
+        {
+            scope.Dispose();
+        }
     }
+}
+
+internal class AggregateEventSubscription
+{
+    public AggregateEventSubscription(EventStoreConverter converter,
+        ILogger<AggregateEventSubscription> logger,
+        EventSubscriptionProcessor processor)
+    {
+        _converter = converter;
+        _logger = logger;
+        _processor = processor;
+    }
+
+    #region Service
+    private readonly EventStoreConverter _converter;
+    private readonly ILogger<AggregateEventSubscription> _logger;
+    private readonly EventSubscriptionProcessor _processor;
+    #endregion
+
+    #region State
+    private ConcurrentDictionary<Guid, AggregateSubscriptionState> _aggregateStates = new();
+    #endregion
+
+    public async Task Process(PersistentSubscription subscription, ResolvedEvent @event, int? retryCount, CancellationToken token)
+    {
+        if (retryCount is not null && retryCount is not 0)
+        {
+            _logger.LogWarning("Retrying subscription processing for the '{retryCount}' count", retryCount);
+        }
+
+        var result = _converter.Convert(@event);
+        var aggregateId = result.Match(_ => _.Metadata.Aggregate.Id, _ => _.Metadata.Aggregate.Id);
+        var subscriptionState = _aggregateStates.GetOrAdd(aggregateId, _ => (new()));
+        subscriptionState.EventIds.Add(@event.Event.EventId);
+        result.Match(_ =>
+        {
+            subscriptionState.Events.Add(_);
+        },
+        command =>
+        {
+            subscriptionState.Command = command;
+        });
+
+        await TryProcessCommand(subscription, aggregateId, token);
+    }
+
+    private async Task TryProcessCommand(PersistentSubscription subscription, Guid aggregateId, CancellationToken cancellationToken)
+    {
+        var subscriptionState = _aggregateStates.GetOrAdd(aggregateId, _ => (new()));
+        if (subscriptionState.Command is not null && subscriptionState.Events.Any(_ => _ is CommandProcessedEvent))
+        {
+            var command = subscriptionState.Command!;
+            _logger.LogInformation("Processing subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
+            try
+            {
+                await _processor.ProcessCommandAsync(command, subscriptionState.Events, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to process command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
+                //TODO: add dead letter queue here
+            }
+            await subscription.Ack(subscriptionState.EventIds);
+            if (_aggregateStates.TryRemove(aggregateId, out var _) is false)
+            {
+                _logger.LogWarning("Failed to remove aggregate events from subscriber cache for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}''", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
+            }
+            _logger.LogInformation("Processed command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
+        }
+    }
+
+    private class AggregateSubscriptionState
+    {
+        public List<Uuid> EventIds { get; set; } = new();
+        public Command? Command { get; set; } = null;
+        public List<Event> Events { get; set; } = new();
+    }
+
 }
