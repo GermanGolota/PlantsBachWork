@@ -45,7 +45,7 @@ public class EventStoreServiceConnection : ServiceConnection
 public class ElasticSearchConnection : ServiceConnection
 {
     [Range(1L, Int64.MaxValue)]
-    public long TimeoutInSeconds { get; set; } = 300;
+    public long TimeoutInSeconds { get; set; } = 60 * 10;
 }
 
 public record ServiceCreds([Required] string Username, [Required] string Password);
