@@ -39,7 +39,7 @@ type alias View =
 
 
 type alias Instruction =
-    { id : Int
+    { id : String
     , title : String
     , description : String
     , imageUrl : Maybe String
@@ -148,7 +148,7 @@ searchDecoder token =
 searchItemDecoder : String -> D.Decoder Instruction
 searchItemDecoder token =
     D.succeed Instruction
-        |> required "id" D.int
+        |> required "id" decodeId
         |> required "title" D.string
         |> required "description" D.string
         |> custom (coverDecoder token)
@@ -238,7 +238,7 @@ viewInstruction isProducer ins =
     let
         editBtn =
             if isProducer then
-                Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ String.fromInt ins.id ++ "/edit", smallMargin ] ] [ text "Edit" ]
+                Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ ins.id ++ "/edit", smallMargin ] ] [ text "Edit" ]
 
             else
                 div [] []
@@ -253,7 +253,7 @@ viewInstruction isProducer ins =
             , Block.custom <|
                 div [ flex, Flex.row, Flex.justifyEnd, Flex.alignItemsCenter ]
                     [ editBtn
-                    , Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ String.fromInt ins.id ] ] [ text "Open Full" ]
+                    , Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ ins.id ] ] [ text "Open Full" ]
                     ]
             ]
         |> Card.view
