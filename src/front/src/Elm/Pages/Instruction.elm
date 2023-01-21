@@ -82,7 +82,7 @@ viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     case page of
         NoInstruction ->
-            div largeCentered [ text "There is such instruction" ]
+            div largeCentered [ text "There is no such instruction" ]
 
         Instruction ins ->
             viewWebdata ins viewInstruction
