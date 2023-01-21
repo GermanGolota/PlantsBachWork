@@ -2,5 +2,5 @@
 
 public interface IServiceIdentityProvider
 {
-    IUserIdentity ServiceIdentity { get; }
+    void SetServiceIdentity();
 }

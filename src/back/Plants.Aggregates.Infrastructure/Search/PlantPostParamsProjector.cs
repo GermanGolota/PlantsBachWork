@@ -12,12 +12,12 @@ internal class PlantPostParamsProjector : ISearchParamsProjector<PlantPost, Plan
             u => u.Term(m => m.Field(_ => _.IsOrdered).Value(false)),
             u => u.FilterOrAll(parameters.PlantName, (c, filter) =>
                 c.Fuzzy(f => f.Field(_ => _.Stock.Information.PlantName).Value(filter))),
-            u => u.FilterOrAll(parameters.Regions, (c, filter) =>
+            /*u => u.FilterOrAll(parameters.Regions, (c, filter) =>
                 c.Terms(f => f.Field(_ => _.Stock.Information.RegionNames).Terms(filter))),
             u => u.FilterOrAll(parameters.Groups, (c, filter) =>
                 c.Terms(f => f.Field(_ => _.Stock.Information.GroupName).Terms(filter))),
             u => u.FilterOrAll(parameters.Soils, (c, filter) =>
-                c.Terms(f => f.Field(_ => _.Stock.Information.SoilName).Terms(filter))),
+                c.Terms(f => f.Field(_ => _.Stock.Information.SoilName).Terms(filter))),*/
             u => u.FilterOrAll(parameters.LastDate, (c, filter) =>
                 c.Range(r => r.Field(_ => _.Stock.CreatedTime).LessThan(new DateTimeOffset(filter!.Value).ToUnixTimeMilliseconds()))),
             u =>

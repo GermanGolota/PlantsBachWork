@@ -10,12 +10,12 @@ public class EventStoreHostedService : IHostedService
     }
 
     private IServiceScope _scope;
-    private IEventSubscriptionWorker _worker;
+    private IEventSubscription _worker;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _scope = _scopeFactory.CreateScope();
-        _worker = _scope.ServiceProvider.GetRequiredService<IEventSubscriptionWorker>();
+        _worker = _scope.ServiceProvider.GetRequiredService<IEventSubscription>();
         await _worker.StartAsync(cancellationToken);
     }
 

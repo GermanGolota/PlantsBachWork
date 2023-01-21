@@ -9,7 +9,7 @@ namespace Plants.Aggregates.PlantInfos;
 [Allow(Producer, Write)]
 [Allow(Manager, Read)]
 [Allow(Manager, Write)]
-public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>, IEventHandler<InstructionCreatedEvent>
+public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
 {
     //Id that is being used by plant info singleton
     public static Guid InfoId { get; } = Guid.Parse("1eebef8d-ba56-406f-a9f5-bc21c1a9ca96");
@@ -25,7 +25,6 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>, IEventHa
     public Dictionary<long, string> RegionNames { get; private set; } = new();
     public Dictionary<long, string> SoilNames { get; private set; } = new();
     public Dictionary<long, string> PlantImagePaths { get; private set; } = new();
-    public Dictionary<long, string> InstructionCoverImagePaths { get; private set; } = new();
 
     public void Handle(StockAddedEvent @event)
     {
@@ -41,11 +40,6 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>, IEventHa
         {
             PlantImagePaths.CacheTransformation(path, ToLong);
         }
-    }
-
-    public void Handle(InstructionCreatedEvent @event)
-    {
-        InstructionCoverImagePaths.CacheTransformation(@event.CoverUrl, str => @event.InstructionId.ToLong());
     }
 
     private long ToLong(string str)

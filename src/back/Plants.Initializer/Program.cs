@@ -55,7 +55,7 @@ using (var scope = scopeFactory.CreateScope())
     var provider = scope.ServiceProvider;
     var check = provider.GetRequiredService<HealthChecker>();
     await check.WaitForServicesStartupOrTimeout(cts.Token);
-    var sub = provider.GetRequiredService<IEventSubscriptionWorker>();
+    var sub = provider.GetRequiredService<IEventSubscription>();
     await sub.StartAsync(cts.Token);
     var initer = provider.GetRequiredService<Initializer>();
     await initer.InitializeAsync(cts.Token);

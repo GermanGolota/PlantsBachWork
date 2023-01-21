@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Plants.Aggregates.PlantInfos;
+using Plants.Aggregates.PlantInstructions;
 using Plants.Application.Contracts;
 
 namespace Plants.Presentation.Controllers;
@@ -40,18 +41,22 @@ public class FileController : ControllerBase
 public class FileControllerV2 : ControllerBase
 {
     private readonly IFileProvider _provider;
-    private readonly IProjectionQueryService<PlantInfo> _queryService;
+    private readonly IProjectionQueryService<PlantInstruction> _instructionQuery;
+    private readonly IProjectionQueryService<PlantInfo> _infoQuery;
 
-    public FileControllerV2(IFileProvider provider, IProjectionQueryService<PlantInfo> queryService)
+    public FileControllerV2(IFileProvider provider, 
+        IProjectionQueryService<PlantInstruction> instructionQuery,
+        IProjectionQueryService<PlantInfo> infoQuery)
     {
         _provider = provider;
-        _queryService = queryService;
+        _instructionQuery = instructionQuery;
+        _infoQuery = infoQuery;
     }
 
     [HttpGet("plant/{id}")]
     public async Task<ActionResult> Load([FromRoute] long id, CancellationToken token)
     {
-        var plantInfo = await _queryService.GetByIdAsync(PlantInfo.InfoId, token);
+        var plantInfo = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
         var path = plantInfo.PlantImagePaths[id];
         var info = _provider.GetFileInfo(path);
         if (info.Exists)
@@ -67,10 +72,10 @@ public class FileControllerV2 : ControllerBase
     }
 
     [HttpGet("instruction/{id}")]
-    public async Task<ActionResult> LoadInstruction([FromRoute] long id, CancellationToken token)
+    public async Task<ActionResult> LoadInstruction([FromRoute] Guid id, CancellationToken token)
     {
-        var plantInfo = await _queryService.GetByIdAsync(PlantInfo.InfoId, token);
-        var path = plantInfo.InstructionCoverImagePaths[id];
+        var instruction = await _instructionQuery.GetByIdAsync(id, token);
+        var path = instruction.CoverUrl;
         var info = _provider.GetFileInfo(path);
         if (info.Exists)
         {

@@ -82,8 +82,11 @@ public class InstructionsControllerV2 : ControllerBase
     public async Task<ActionResult<FindInstructionsResult2>> Find([FromQuery] FindInstructionsRequest request, CancellationToken token)
     {
         var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
-        var param = new PlantInstructionParams(info.GroupNames[request.GroupId], request.Title, request.Description);
+        var groupName = info.GroupNames[request.GroupId];
+        var param = new PlantInstructionParams(request.Title, request.Description);
         var results = await _instructionSearch.SearchAsync(param, new SearchAll(), token);
+        //TODO: Fix group filtering not working with elastic
+        results = results.Where(_ => _.Information.GroupName == groupName);
         return new FindInstructionsResult2(
             results.Select(result =>
                 new FindInstructionsResultItem2(result.Id, result.Information.Title, result.Information.Description, result.CoverUrl is not null))

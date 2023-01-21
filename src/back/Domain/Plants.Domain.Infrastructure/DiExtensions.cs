@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Plants.Domain.History;
 using Plants.Domain.Infrastructure.Helpers;
+using Plants.Domain.Infrastructure.Subscription;
 using Plants.Infrastructure.Domain.Helpers;
 
 namespace Plants.Domain.Infrastructure;
@@ -23,7 +25,7 @@ public static class DiExtensions
         services.AddSingleton<AccessesHelper>();
         services.AddScoped<EventStoreAccessGranter>();
         services.AddTransient<RepositoriesCaller>();
-        services.AddTransient<EventSubscriber>();
+        services.AddTransient<EventSubscriptionProcessor>();
         services.AddTransient<AggregateEventApplyer>();
         services.AddTransient(typeof(TransposeApplyer<>));
         services.AddTransient(typeof(TransposeApplyer<,>));
@@ -34,8 +36,14 @@ public static class DiExtensions
         services.AddSingleton(_ => InfrastructureHelpers.Aggregate);
         services.AddTransient<ICommandSender, CommandSender>();
         services.AddSingleton<EventStoreConverter>();
+        services.AddTransient<IHistoryService, HistoryService>();
         //works with the service scope
-        services.AddScoped<IEventSubscriptionWorker, EventSubscriptionWorker>();
+        services.AddScoped<IEventSubscription, EventSubscription>();
+        services.AddTransient<AggregateEventSubscription>();
+        services.AddSingleton<EventSubscriptionState>();
+        services.AddSingleton<ISubscriptionProcessingNotificator>(_ => _.GetRequiredService<EventSubscriptionState>());
+        services.AddSingleton<ISubscriptionProcessingMarker>(_ => _.GetRequiredService<EventSubscriptionState>());
+        services.AddSingleton<IEventSubscriptionState>(_ => _.GetRequiredService<EventSubscriptionState>());
         services.AddTransient<IEventStore, EventStoreEventStore>();
         services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
         return services;

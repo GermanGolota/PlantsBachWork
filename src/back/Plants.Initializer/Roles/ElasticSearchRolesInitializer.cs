@@ -3,6 +3,7 @@ using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
 using Plants.Aggregates.Services;
 using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Infrastructure.Helpers;
+using Plants.Infrastructure.Domain.Helpers;
 using Plants.Services.Infrastructure.Encryption;
 using System.Data;
 using System.Net.Http.Json;
@@ -16,16 +17,21 @@ internal class ElasticSearchRolesInitializer
     private readonly IIdentityProvider _identity;
     private readonly IIdentityHelper _identityHelper;
     private readonly SymmetricEncrypter _encrypter;
+    private readonly AggregateHelper _aggregate;
     private UserConfig _options;
 
-    public ElasticSearchRolesInitializer(ElasticSearchHelper helper, AccessesHelper accesses, IIdentityProvider identity,
-        IIdentityHelper identityHelper, SymmetricEncrypter encrypter, IOptionsSnapshot<UserConfig> options)
+    public ElasticSearchRolesInitializer(
+        ElasticSearchHelper helper, AccessesHelper accesses, 
+        IIdentityProvider identity, IIdentityHelper identityHelper, 
+        SymmetricEncrypter encrypter, IOptionsSnapshot<UserConfig> options,
+        AggregateHelper aggregate)
     {
         _helper = helper;
         _accesses = accesses;
         _identity = identity;
         _identityHelper = identityHelper;
         _encrypter = encrypter;
+        _aggregate = aggregate;
         _options = options.Get(UserConstrants.Admin);
     }
 
@@ -45,6 +51,21 @@ internal class ElasticSearchRolesInitializer
 
         var oldIdentity = _identityHelper.Build(password, oldUsername, currentIdentity.Roles);
         _identity.UpdateIdentity(oldIdentity);
+
+        await CreateAggregateIndexesAsync(token);
+    }
+
+    private async Task CreateAggregateIndexesAsync(CancellationToken token)
+    {
+        foreach (var (aggregate, _) in _aggregate.Aggregates)
+        {
+            var indexName = aggregate.ToIndexName();
+            var client = _helper.GetClient();
+            var url = _helper.GetUrl(indexName);
+            var result = await client.PutAsync(url, null, token);
+
+            await _helper.HandleCreationAsync<CreationStatus>("index", indexName, result, _ => _.Created, token);
+        }
     }
 
     private async Task InitializeKibanaUserAsync(CancellationToken token)

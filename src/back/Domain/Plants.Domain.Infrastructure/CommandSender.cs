@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Plants.Domain.Infrastructure.Helpers;
+using Plants.Domain.Infrastructure.Subscription;
 using Plants.Infrastructure.Domain.Helpers;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace Plants.Domain.Infrastructure;
@@ -15,6 +17,8 @@ internal class CommandSender : ICommandSender
     private readonly IServiceProvider _service;
     private readonly IIdentityProvider _identityProvider;
     private readonly AccessesHelper _accesses;
+    private readonly ISubscriptionProcessingNotificator _notificator;
+    private readonly ISubscriptionProcessingMarker _marker;
 
     public CommandSender(CqrsHelper cqrs,
         ILogger<CommandSender> logger,
@@ -22,7 +26,9 @@ internal class CommandSender : ICommandSender
         RepositoriesCaller caller,
         IServiceProvider service,
         IIdentityProvider identityProvider,
-        AccessesHelper accesses)
+        AccessesHelper accesses,
+        ISubscriptionProcessingNotificator notificator,
+        ISubscriptionProcessingMarker marker)
     {
         _cqrs = cqrs;
         _logger = logger;
@@ -31,9 +37,11 @@ internal class CommandSender : ICommandSender
         _service = service;
         _identityProvider = identityProvider;
         _accesses = accesses;
+        _notificator = notificator;
+        _marker = marker;
     }
 
-    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCommandAsync(Command command, CancellationToken token = default)
+    public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCommandAsync(Command command, CommandExecutionOptions options, CancellationToken token = default)
     {
         _logger.LogInformation("Sending command '{commandId}' into '{@aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
         var commandType = command.GetType();
@@ -48,6 +56,11 @@ internal class CommandSender : ICommandSender
         {
             if (_cqrs.CommandHandlers.TryGetValue(commandType, out var handlePairs))
             {
+                if (options is CommandExecutionOptions.Wait)
+                {
+                    _notificator.SubscribeToNotifications(commandAggregate);
+                    _marker.MarkSubscribersCount(commandAggregate, 1);
+                }
                 result = await ExecuteCommand(command, commandAggregate, handlePairs, token);
             }
             else
@@ -62,10 +75,45 @@ internal class CommandSender : ICommandSender
             result = new CommandForbidden($"Cannot perform any updates against '{commandAggregate.Name}'");
         }
 
+        if (options is CommandExecutionOptions.Wait wait)
+        {
+            var success = await WaitForSubscriptionAsync(commandAggregate, wait.TimeToWait, token);
+            if (success is false)
+            {
+                _logger.LogInformation("Failed to wait to subscription to be processed for '{@aggregate}'", commandAggregate);
+                throw new TimeoutException($"Timeout while waiting for subscription to be processed for '{commandAggregate.Id}' in '{commandAggregate.Name}'");
+            }
+            _notificator.UnsubscribeFromNotifications(commandAggregate);
+        }
+
         _logger.LogInformation("Processed command '{commandId}' for '{@aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
 
         return result;
     }
+
+    private async Task<bool> WaitForSubscriptionAsync(AggregateDescription aggregate, TimeSpan timeout, CancellationToken token) =>
+        await Task.Run(async () =>
+        {
+            var watch = Stopwatch.StartNew();
+            var delay = timeout.TotalSeconds < 10 ? timeout / 10 : TimeSpan.FromSeconds(10);
+
+            _logger.LogInformation("Started waiting for subscription for '{@aggregate}'", aggregate);
+            while (token.IsCancellationRequested is false)
+            {
+                _logger.LogDebug("Waiting for subscriptions for '{time}'", watch.Elapsed);
+
+                if (_notificator.WasProcessed(aggregate))
+                {
+                    break;
+                }
+
+                await Task.Delay(delay, token);
+            }
+
+            watch.Stop();
+            _logger.LogInformation("Finished waiting for subscription for '{@aggregate}'", aggregate);
+        }, token)
+        .ExecuteWithTimeoutAsync(timeout, token);
 
     private bool UserHasAccess(IUserIdentity identity, AggregateDescription commandAggregate) =>
         identity.Roles.Contains(UserRole.Manager)

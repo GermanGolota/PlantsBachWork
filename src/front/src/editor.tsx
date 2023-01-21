@@ -1,5 +1,4 @@
-import Modal from "react-modal";
-import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
+import Modal from "react-modal";import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import draftToHtml from "draftjs-to-html";
 import { ContentState, convertToRaw, EditorState } from "draft-js";
 import { Elm as AddEditInstructionElm } from "./Elm/Pages/AddEditInstruction";
@@ -26,7 +25,7 @@ const AddInstructionPage = (props: { isEdit: boolean }) => {
     if (props.isEdit) {
       model = {
         ...model,
-        id: Number(id),
+        id: id,
       };
     }
     model = {
