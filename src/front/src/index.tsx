@@ -1,5 +1,4 @@
-import React, { useCallback, useState } from "react";
-import ReactDOM from "react-dom";
+import React, { useCallback, useState } from "react";import ReactDOM from "react-dom";
 import {
   Route,
   Link,
@@ -65,7 +64,7 @@ const InstructionPage = () => {
 
     let final = {
       ...model,
-      id: Number(id),
+      id: id,
     };
 
     return InstructionElm.Pages.Instruction.init({
