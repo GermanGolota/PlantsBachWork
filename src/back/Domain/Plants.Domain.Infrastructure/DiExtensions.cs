@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Plants.Domain.History;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Subscription;
 using Plants.Infrastructure.Domain.Helpers;
@@ -35,6 +36,7 @@ public static class DiExtensions
         services.AddSingleton(_ => InfrastructureHelpers.Aggregate);
         services.AddTransient<ICommandSender, CommandSender>();
         services.AddSingleton<EventStoreConverter>();
+        services.AddTransient<IHistoryService, HistoryService>();
         //works with the service scope
         services.AddScoped<IEventSubscription, EventSubscription>();
         services.AddTransient<AggregateEventSubscription>();
