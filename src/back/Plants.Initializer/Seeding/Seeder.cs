@@ -16,11 +16,13 @@ internal class Seeder
     private readonly ILogger<Seeder> _logger;
     private readonly IIdentityProvider _identity;
     private readonly IIdentityHelper _helper;
+    private readonly TempPasswordContext _context;
     private readonly UserConfig _userOptions;
 
     public Seeder(IOptions<SeedingConfig> options, CommandHelper command, 
         IDateTimeProvider dateTime, ILogger<Seeder> logger, 
-        IOptionsSnapshot<UserConfig> userOptions, IIdentityProvider identity, IIdentityHelper helper)
+        IOptionsSnapshot<UserConfig> userOptions, IIdentityProvider identity, 
+        IIdentityHelper helper, TempPasswordContext context)
     {
         _options = options.Value;
         _command = command;
@@ -28,6 +30,7 @@ internal class Seeder
         _logger = logger;
         _identity = identity;
         _helper = helper;
+        _context = context;
         _userOptions = userOptions.Get(UserConstrants.NewAdmin);
     }
 
@@ -71,6 +74,12 @@ internal class Seeder
                 results.Add(await _command.CreateAndSendAsync(
                     factory => factory.Create<CreateUserCommand, User>(user.Login.ToGuid()),
                     meta => new CreateUserCommand(meta, user),
+                    token)
+                    );
+
+                results.Add(await _command.CreateAndSendAsync(
+                    factory => factory.Create<ChangePasswordCommand, User>(user.Login.ToGuid()),
+                    meta => new ChangePasswordCommand(meta, user.Login, _context.TempPassword, user.FirstName.ToLower().Trim()),
                     token)
                     );
             }
