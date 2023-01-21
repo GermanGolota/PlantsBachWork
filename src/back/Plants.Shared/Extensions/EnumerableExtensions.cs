@@ -2,6 +2,9 @@
 
 public static class EnumerableExtensions
 {
+    public static bool In<T>(this T value, IEnumerable<T> source) =>
+        source.Contains(value);
+
     public static IEnumerable<T> Flatten<T>(this IEnumerable<IEnumerable<T>> source) =>
         source.SelectMany(x => x);
 
