@@ -1,3 +1,5 @@
+wsl -d docker-desktop sysctl -w vm.max_map_count=262144
+
 docker-compose -f docker-compose-env.yml down --remove-orphans
 Remove-Item persist -Recurse -Confirm:$false
 git restore persist
