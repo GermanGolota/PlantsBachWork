@@ -40,7 +40,7 @@ internal class CreateEditInstructionCommandHandler : ICommandHandler<CreateInstr
         string url;
         if (cover is not null)
         {
-            url = await _uploader.UploadIntructionCover(aggregateId, cover, token);
+            url = await _uploader.UploadIntructionCoverAsync(aggregateId, cover, token);
         }
         else
         {

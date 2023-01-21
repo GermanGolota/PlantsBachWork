@@ -21,7 +21,7 @@ public class FileUploader
         return files.Select(_file.GetUrl).ToArray();
     }
 
-    public async Task<string> UploadIntructionCover(Guid instructionId, byte[] image, CancellationToken token = default)
+    public async Task<string> UploadIntructionCoverAsync(Guid instructionId, byte[] image, CancellationToken token = default)
     {
         var location = await _file.SaveAsync(new(GetNewFileLocation(instructionId, _coverImageDirectory), image), token);
         return _file.GetUrl(location);
