@@ -40,32 +40,32 @@ internal class EventSubscriptionState : ISubscriptionProcessingMarker, ISubscrip
     public void SubscribeToNotifications(AggregateDescription description)
     {
         var state = GetProcessing(description, shouldCreate: true);
-        _logger.LogInformation("Subscribed to '{@aggregate}'", description);
+        _logger.LogDebug("Subscribed to '{@aggregate}'", description);
     }
 
     public bool WasProcessed(AggregateDescription description)
     {
-        _logger.LogInformation("Checking subscription to '{@aggregate}'", description);
+        _logger.LogDebug("Checking subscription to '{@aggregate}'", description);
         var state = GetProcessing(description);
         return state?.WasProcessed() ?? false;
     }
 
     public void UnsubscribeFromNotifications(AggregateDescription description)
     {
-        _logger.LogInformation("Unsubscribed to '{@aggregate}'", description);
+        _logger.LogDebug("Unsubscribed to '{@aggregate}'", description);
         _processingStates.RemoveWithRetry(GetKey(description));
     }
 
     public void MarkSubscriptionComplete(AggregateDescription description)
     {
-        _logger.LogInformation("Marking complete for '{@aggregate}'", description);
+        _logger.LogDebug("Marking complete for '{@aggregate}'", description);
         var state = GetProcessing(description);
         state?.MarkProcessed();
     }
 
     public void MarkSubscribersCount(AggregateDescription description, long subscriptionsCount)
     {
-        _logger.LogInformation("Marking subscribers for '{@aggregate}' - '{count}'", description, subscriptionsCount);
+        _logger.LogDebug("Marking subscribers for '{@aggregate}' - '{count}'", description, subscriptionsCount);
         var state = GetProcessing(description);
         state?.MarkSubscriptions(subscriptionsCount);
     }
