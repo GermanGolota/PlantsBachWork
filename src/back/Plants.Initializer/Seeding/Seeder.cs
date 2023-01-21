@@ -79,7 +79,8 @@ internal class Seeder
 
                 results.Add(await _command.CreateAndSendAsync(
                     factory => factory.Create<ChangePasswordCommand, User>(user.Login.ToGuid()),
-                    meta => new ChangePasswordCommand(meta, user.Login, _context.TempPassword, user.FirstName.ToLower().Trim()),
+                    meta => new ChangePasswordCommand(meta, user.Login, 
+                    _context.TempPassword, $"{user.FirstName.ToLower().Trim()}password"),
                     token)
                     );
             }
