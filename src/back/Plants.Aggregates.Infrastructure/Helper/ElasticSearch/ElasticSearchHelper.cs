@@ -28,6 +28,7 @@ public class ElasticSearchHelper
     public HttpClient GetClient()
     {
         var client = _clientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromSeconds(_options.ElasticSearch.TimeoutInSeconds);
         var identity = _identity.Identity!;
         var svcCredentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{identity.UserName}:{_encrypter.Decrypt(identity.Hash)}"));
         client.DefaultRequestHeaders.TryAddWithoutValidation(HeaderNames.Authorization, $"Basic {svcCredentials}");

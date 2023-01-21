@@ -8,13 +8,13 @@ public class ConnectionConfig
     public const string Section = "Connection";
 
     [Required]
-    public EventStoreServiceConenction EventStore { get; set; } = null!;
+    public EventStoreServiceConnection EventStore { get; set; } = null!;
 
     [Required]
     public MongoDbServiceConnection MongoDb { get; set; } = null!;
 
     [Required]
-    public ServiceConnection ElasticSearch { get; set; } = null!;
+    public ElasticSearchConnection ElasticSearch { get; set; } = null!;
 
     [Required]
     public ServiceCreds DefaultCreds { get; set; } = null!;
@@ -36,10 +36,16 @@ public class MongoDbServiceConnection : ServiceConnection
     public string DatabaseName { get; set; } = null!;
 }
 
-public class EventStoreServiceConenction : ServiceConnection
+public class EventStoreServiceConnection : ServiceConnection
 {
     [Range(1L, Int64.MaxValue)]
     public long TimeoutInSeconds { get; set; } = 60;
+}
+
+public class ElasticSearchConnection : ServiceConnection
+{
+    [Range(1L, Int64.MaxValue)]
+    public long TimeoutInSeconds { get; set; } = 300;
 }
 
 public record ServiceCreds([Required] string Username, [Required] string Password);
