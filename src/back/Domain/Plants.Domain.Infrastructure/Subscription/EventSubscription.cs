@@ -2,6 +2,8 @@
 using Grpc.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Services;
 using Plants.Infrastructure.Domain.Helpers;
 
@@ -14,59 +16,79 @@ internal class EventSubscription : IEventSubscription
     private readonly ILogger<EventSubscription> _logger;
     private readonly IServiceIdentityProvider _serviceIdentity;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly SubscriptionConfig _options;
 
     public EventSubscription(IEventStorePersistentSubscriptionsClientFactory clientFactory,
         AggregateHelper aggregate, ILogger<EventSubscription> logger,
-        IServiceIdentityProvider serviceIdentity, IServiceScopeFactory scopeFactory)
+        IServiceIdentityProvider serviceIdentity, IServiceScopeFactory scopeFactory,
+        IOptions<SubscriptionConfig> options)
     {
         _clientFactory = clientFactory;
         _aggregate = aggregate;
         _logger = logger;
         _serviceIdentity = serviceIdentity;
         _scopeFactory = scopeFactory;
+        _options = options.Value;
     }
 
-    private IEnumerable<PersistentSubscription>? _subscriptions = null;
-    private IEnumerable<IServiceScope>? _scopes = null;
+    private IEnumerable<(IServiceScope, PersistentSubscription)>? _subscriptions = null;
 
     public async Task StartAsync(CancellationToken token)
     {
         _serviceIdentity.SetServiceIdentity();
 
         var client = _clientFactory.Create();
-        var settings = new PersistentSubscriptionSettings();
+        var settings = CreateSettings(_options);
+
         var subscriptions = new List<PersistentSubscription>();
         var scopes = new List<IServiceScope>();
-        foreach (var (aggregate, _) in _aggregate.Aggregates)
-        {
-            var filter = StreamFilter.Prefix(aggregate);
-            try
-            {
-                await client.CreateToAllAsync(aggregate, filter, settings, cancellationToken: token);
-            }
-            catch (RpcException e)
-            {
-                if (e.StatusCode != StatusCode.AlreadyExists)
-                {
-                    throw;
-                }
-            }
-            var scope = _scopeFactory.CreateScope();
-            var provider = scope.ServiceProvider;
-            provider.GetRequiredService<IServiceIdentityProvider>().SetServiceIdentity();
-            var aggregateSubscription = provider.GetRequiredService<AggregateEventSubscription>();
-            aggregateSubscription.Initialize(aggregate);
-            var subscription = await client.SubscribeToAllAsync(aggregate,
-                aggregateSubscription.Process,
-                HandleStop,
-                cancellationToken: token);
-            scopes.Add(scope);
-            subscriptions.Add(subscription);
-        }
 
-        _scopes = scopes;
-        _subscriptions = subscriptions;
+        var subscriptionTasks = _aggregate.Aggregates.Firsts
+            .Select(async aggregateName =>
+            {
+                await CreateSubscriptionAsync(client, settings, aggregateName, token);
+
+                return await StartSubscriptionAsync(client, aggregateName, token);
+            });
+
+        _subscriptions = await Task.WhenAll(subscriptionTasks);
     }
+
+    private async Task<(IServiceScope, PersistentSubscription)> StartSubscriptionAsync(EventStorePersistentSubscriptionsClient client, string aggregate, CancellationToken token)
+    {
+        var scope = _scopeFactory.CreateScope();
+        var provider = scope.ServiceProvider;
+        provider.GetRequiredService<IServiceIdentityProvider>().SetServiceIdentity();
+        var aggregateSubscription = provider.GetRequiredService<AggregateEventSubscription>();
+        aggregateSubscription.Initialize(aggregate);
+        var subscription = await client.SubscribeToAllAsync(aggregate,
+            aggregateSubscription.Process,
+            HandleStop,
+            cancellationToken: token);
+
+        return (scope, subscription);
+    }
+
+    private static async Task CreateSubscriptionAsync(EventStorePersistentSubscriptionsClient client, PersistentSubscriptionSettings settings, string aggregate, CancellationToken token)
+    {
+        var filter = StreamFilter.Prefix(aggregate);
+        try
+        {
+            await client.CreateToAllAsync(aggregate, filter, settings, cancellationToken: token);
+        }
+        catch (RpcException e)
+        {
+            if (e.StatusCode != StatusCode.AlreadyExists)
+            {
+                throw;
+            }
+        }
+    }
+
+    private PersistentSubscriptionSettings CreateSettings(SubscriptionConfig options) =>
+        new PersistentSubscriptionSettings(
+            messageTimeout: TimeSpan.FromSeconds(options.CommandProcessingTimeoutInSeconds),
+            maxRetryCount: 0);
 
     private void HandleStop(PersistentSubscription subscription, SubscriptionDroppedReason dropReason, Exception? exception)
     {
@@ -87,14 +109,10 @@ internal class EventSubscription : IEventSubscription
             throw new InvalidOperationException("Cannot stop service before starting it");
         }
 
-        foreach (var subscription in _subscriptions)
-        {
-            subscription.Dispose();
-        }
-
-        foreach (var scope in _scopes!)
+        foreach (var (scope, sub) in _subscriptions)
         {
             scope.Dispose();
+            sub.Dispose();
         }
     }
 }
