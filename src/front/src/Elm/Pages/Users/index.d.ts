@@ -6,6 +6,9 @@ export namespace Elm {
   namespace Pages.Users {
     export interface App {
       ports: {
+        navigate: {
+          subscribe(callback: (data: string) => void): void
+        }
         openEditor: {
           subscribe(callback: (data: string) => void): void
         }
