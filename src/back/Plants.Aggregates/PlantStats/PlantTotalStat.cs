@@ -23,24 +23,24 @@ public class PlantTotalStat : PlantStat, IEventHandler<GroupSelectedEvent>
     private class PlantStockSubscription : IAggregateSubscription<PlantTotalStat, PlantStock>
     {
         public IEnumerable<EventSubscriptionBase<PlantTotalStat, PlantStock>> Subscriptions =>
-              StatsHelper.CreateStatsSubscription<PlantTotalStat, PlantStock, StockAddedEvent>(StatsHelper.GetGroup, true);
+              StatsHelper.CreateStatsSubscription<PlantTotalStat, PlantStock, StockAddedEvent>(StatsHelper.GetGroup, false);
     }
 
     private class PlantInstructionSubscription : IAggregateSubscription<PlantTotalStat, PlantInstruction>
     {
         public IEnumerable<EventSubscriptionBase<PlantTotalStat, PlantInstruction>> Subscriptions =>
-            StatsHelper.CreateStatsSubscription<PlantTotalStat, PlantInstruction, InstructionCreatedEvent>(StatsHelper.GetGroup, true);
+            StatsHelper.CreateStatsSubscription<PlantTotalStat, PlantInstruction, InstructionCreatedEvent>(StatsHelper.GetGroup, false);
     }
 
     private class PlantPostSubscription : IAggregateSubscription<PlantTotalStat, PlantPost>
     {
         public IEnumerable<EventSubscriptionBase<PlantTotalStat, PlantPost>> Subscriptions =>
-              StatsHelper.CreateStatsSubscription<PlantTotalStat, PlantPost, StockItemPostedEvent>(StatsHelper.GetGroup, true);
+              StatsHelper.CreateStatsSubscription<PlantTotalStat, PlantPost, StockItemPostedEvent>(StatsHelper.GetGroup, false);
     }
 
     private class TimeStatsSubscriptions : IAggregateSubscription<PlantTotalStat, PlantOrder>
     {
         public IEnumerable<EventSubscriptionBase<PlantTotalStat, PlantOrder>> Subscriptions =>
-            StatsHelper.CreateStatsSubscription<PlantTotalStat, PlantOrder, DeliveryConfirmedEvent>(StatsHelper.GetGroup, true);
+            StatsHelper.CreateStatsSubscription<PlantTotalStat, PlantOrder, DeliveryConfirmedEvent>(StatsHelper.GetGroup, false);
     }
 }
