@@ -5,6 +5,7 @@ import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
+import Color exposing (Color, toCssString)
 import Dict
 import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder, postAuthed)
 import File exposing (File)
@@ -18,7 +19,7 @@ import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
 import Multiselect
 import NavBar exposing (plantsLink, viewNav)
-import Utils exposing (createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, smallMargin)
+import Utils exposing (SubmittedResult(..), createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -44,7 +45,7 @@ type alias EditView =
     { available : WebData Available
     , plant : WebData PlantView
     , plantId : String
-    , result : Maybe (WebData Bool)
+    , result : Maybe (WebData SubmittedResult)
     , removedItems : ImageList.Model
     }
 
@@ -81,7 +82,7 @@ type Msg
     | GotPlant (Result Http.Error (Maybe PlantView))
     | Submit
     | GotSubmitAdd (Result Http.Error String)
-    | GotSubmitEdit (Result Http.Error Bool)
+    | GotSubmitEdit (Result Http.Error SubmittedResult)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -391,13 +392,30 @@ viewPage resp page =
             viewPlant (ImageList.fromDict Dict.empty) addView.available False (viewResultAdd addView.result) addView.plant
 
 
-viewResultEdit : Maybe (WebData Bool) -> Html msg
+viewResultEdit : Maybe (WebData SubmittedResult) -> Html msg
 viewResultEdit result =
     case result of
         Just web ->
+            let
+                textContent data =
+                    case data of
+                        SubmittedSuccess msg ->
+                            msg
+
+                        SubmittedFail msg ->
+                            msg
+
+                colorClass data =
+                    case data of
+                        SubmittedSuccess msg ->
+                            "text-primary"
+
+                        SubmittedFail msg ->
+                            "text-danger"
+            in
             viewWebdata web
                 (\data ->
-                    div ([ flex1, class "text-primary" ] ++ largeCentered) [ text "Successfully edited!" ]
+                    div ([ flex1, class <| colorClass data ] ++ largeCentered) [ text <| textContent data ]
                 )
 
         Nothing ->
@@ -661,7 +679,7 @@ submitEditCommand : String -> String -> PlantView -> List String -> Cmd Msg
 submitEditCommand token plantId plant removed =
     let
         expect =
-            Http.expectJson GotSubmitEdit (D.succeed True)
+            Http.expectJson GotSubmitEdit (submittedDecoder (D.field "success" D.bool) (D.field "message" D.string))
     in
     postAuthed token (EditPlant plantId) (getEditBody plant removed) expect Nothing
 
@@ -682,7 +700,6 @@ getEditBody plant removed =
          , Http.stringPart "PlantDescription" plant.description
          , Http.stringPart "SoilId" plant.soil
          , Http.stringPart "GroupId" plant.group
-         , Http.stringPart "Created" plant.created
          ]
             ++ regionsParts "RegionIds" plant.regions
             ++ filesParts plant.uploadedFiles

@@ -17,7 +17,7 @@ internal class EditStockItemCommandHandler : ICommandHandler<EditStockItemComman
     {
         _stock ??= await _stockRepository.GetByIdAsync(command.Metadata.Aggregate.Id, token);
         var validIdentity = user.HasRole(Manager).Or(user.HasRole(Producer).And(IsCaretaker(user, _stock)));
-        var notPosted = _stock.BeenPosted.ToForbidden("Cannot edit stock after it was posted");
+        var notPosted = (_stock.BeenPosted is false).ToForbidden("Cannot edit stock after it was posted");
         //TODO: Should validate data here
         return validIdentity.And(notPosted);
     }

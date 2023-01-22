@@ -67,7 +67,7 @@ public class PlantsController : ControllerBase
         var totalBytes = await ReadFilesAsync(files);
 
         var request = new EditPlantCommand(id, plant.PlantName, plant.PlantDescription,
-            plant.RegionIds, plant.SoilId, plant.GroupId, plant.RemovedImages, totalBytes);
+            plant.RegionIds, plant.SoilId, plant.GroupId, plant.RemovedImages ?? Array.Empty<long>(), totalBytes);
         return await _mediator.Send(request, token);
     }
 
@@ -79,7 +79,7 @@ public class PlantsController : ControllerBase
 public record AddPlantDto(string Name, string Description, long[] Regions, long SoilId, long GroupId, DateTime Created);
 
 public record EditPlantDto(string PlantName,
-  string PlantDescription, long[] RegionIds, long SoilId, long GroupId, long[] RemovedImages);
+  string PlantDescription, long[] RegionIds, long SoilId, long GroupId, long[]? RemovedImages);
 
 [ApiController]
 [Route("v2/plants")]
@@ -131,8 +131,8 @@ public class PlantsControllerV2 : ControllerBase
             var soils = dict.SoilNames.ToInverse();
             var regions = dict.RegionNames.ToInverse();
             result = new PlantResult2(new PlantResultDto2(info.PlantName, info.Description,
-                groups[info.GroupName].ToString(), soils[info.SoilName].ToString(), 
-                plant.PictureUrls.Select(url => images[url].ToString()).ToArray(), 
+                groups[info.GroupName].ToString(), soils[info.SoilName].ToString(),
+                plant.PictureUrls.Select(url => images[url].ToString()).ToArray(),
                 info.RegionNames.Select(_ => regions[_].ToString()).ToArray())
             {
                 Created = plant.CreatedTime
@@ -161,7 +161,7 @@ public class PlantsControllerV2 : ControllerBase
                 plant.PlantName, plant.Description,
                 plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
                 seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
-                caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated, 
+                caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated,
                 stock.PictureUrls.Select(url => images[url].ToString()).ToArray()
                 ));
         }
@@ -239,12 +239,14 @@ public class PlantsControllerV2 : ControllerBase
         var soil = info.SoilNames[plant.SoilId];
         var group = info.GroupNames[plant.GroupId];
         var plantInfo = new PlantInformation(plant.PlantName, plant.PlantDescription, regions, soil, group);
-        var removed = plant.RemovedImages.Select(image => info.PlantImagePaths[image]).ToArray();
+        var removed = plant.RemovedImages?.Select(image => info.PlantImagePaths[image])?.ToArray() ?? Array.Empty<string>();
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<EditStockItemCommand>(new(id, nameof(PlantStock))),
             meta => new EditStockItemCommand(meta, plantInfo, pictures, removed),
             token);
-        return new EditPlantResult();
+        return result.Match<EditPlantResult>(
+            _ => new(true, "Successfull"),
+            failure => new(false, String.Join("\n", failure.Reasons)));
     }
 
     private static PlantResultItem2 MapPlant(PlantStock stock, string username) =>

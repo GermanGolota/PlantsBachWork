@@ -17,6 +17,6 @@ public class EditPlantCommandHandler : IRequestHandler<EditPlantCommand, EditPla
         await _plants.Edit(request.PlantId, request.PlantName, 
             request.PlantDescription, request.RegionIds, request.SoilId, request.GroupId,
             request.RemovedImages, request.NewImages);
-        return new EditPlantResult();
+        return new EditPlantResult(true, "Successfull");
     }
 }
