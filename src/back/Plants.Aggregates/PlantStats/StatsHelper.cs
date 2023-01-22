@@ -13,7 +13,7 @@ internal static class StatsHelper
             EventSubscriptionFactory.CreateForwarded<TStats, TSub, TEvent>(
                 @event => isTimed ? @event.TimedId(getGroupName(@event)) : getGroupName(@event).ToGuid(),
                     (stat, events) =>
-                    stat.CommandsProcessed < 1
+                    stat.Metadata.CommandsProcessed < 1
                         ? new[] {new GroupSelectedEvent(EventFactory.Shared.CreateForSubscription<GroupSelectedEvent>(stat, events.First()), getGroupName(events.First()))}
                         : Array.Empty<Event>()
                     )

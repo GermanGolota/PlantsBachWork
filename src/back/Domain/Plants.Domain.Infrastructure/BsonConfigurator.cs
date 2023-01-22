@@ -50,11 +50,7 @@ public static class BsonConfigurator
     private static BsonClassMap GetAggregateClassMap()
     {
         var aggregateClassMap = new BsonClassMap(typeof(AggregateBase));
-        aggregateClassMap.MapProperty(nameof(AggregateBase.Version));
-        aggregateClassMap.MapProperty(nameof(AggregateBase.CommandsProcessed));
-        aggregateClassMap.MapProperty(nameof(AggregateBase.CommandsProcessedIds));
-        aggregateClassMap.MapProperty(nameof(AggregateBase.Name));
-        aggregateClassMap.MapProperty(nameof(AggregateBase.LastUpdateTime));
+        aggregateClassMap.MapProperty(nameof(AggregateBase.Metadata));
         aggregateClassMap.MapIdProperty(nameof(AggregateBase.Id));
         return aggregateClassMap;
     }

@@ -18,7 +18,7 @@ public sealed class EventMetadataFactory
     public EventMetadata CreateForSubscription<T>(AggregateBase subscribingAggregate, Event initialEvent) where T : Event
     {
         var name = typeof(T).Name.Replace("Event", "");
-        return new EventMetadata(Guid.NewGuid(), new(subscribingAggregate.Id, subscribingAggregate.Name), initialEvent.Metadata.CommandId, _dateTime.UtcNow, name);
+        return new EventMetadata(Guid.NewGuid(), new(subscribingAggregate.Id, subscribingAggregate.Metadata.Name), initialEvent.Metadata.CommandId, _dateTime.UtcNow, name);
     }
 }
 

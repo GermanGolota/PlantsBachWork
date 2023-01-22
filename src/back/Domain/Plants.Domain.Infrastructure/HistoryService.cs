@@ -31,6 +31,6 @@ internal class HistoryService : IHistoryService
                 return result;
             })
             .ToList();
-        return new(allEvents, processed.Referenced);
+        return new(allEvents, processed.Metadata.Referenced);
     }
 }

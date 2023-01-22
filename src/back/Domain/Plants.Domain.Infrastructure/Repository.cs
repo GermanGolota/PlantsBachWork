@@ -35,7 +35,7 @@ internal class Repository<TAggregate> : IRepository<TAggregate> where TAggregate
         var events = await _store.ReadEventsAsync(desc, token);
         var aggregate = _applyer.ApplyEvents(desc, events);
         var referencedFields = _aggregateHelper.ReferencedAggregates[desc.Name];
-        foreach (var reference in aggregate.Referenced)
+        foreach (var reference in aggregate.Metadata.Referenced)
         {
             var field = referencedFields[reference.Name];
             var value = await LoadAggregate(reference, token);
