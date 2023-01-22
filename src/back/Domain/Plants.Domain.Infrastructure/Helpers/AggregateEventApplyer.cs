@@ -15,11 +15,17 @@ internal class AggregateEventApplyer
 
     public AggregateBase ApplyEvents(AggregateDescription desc, IEnumerable<CommandHandlingResult> results)
     {
+        var aggregate = ConstructAggregate(desc);
+        return ApplyEventsTo(aggregate, results);
+    }
+
+    public AggregateBase ConstructAggregate(AggregateDescription desc)
+    {
         var aggregateType = _aggregateHelper.Aggregates.Get(desc.Name);
         var ctor = _aggregateHelper.AggregateCtors[aggregateType];
 
         var aggregate = (AggregateBase)ctor.Invoke(new object[] { desc.Id });
-        return ApplyEventsTo(aggregate, results);
+        return aggregate;
     }
 
     public AggregateBase ApplyEventsTo(AggregateBase aggregate, IEnumerable<CommandHandlingResult> results)
@@ -62,7 +68,6 @@ internal class AggregateEventApplyer
                 var eventRecord = @event.ToOneOf<Command, Event>();
                 recordFunc.Invoke(aggregate, new[] { eventRecord });
             }
-
         }
         return aggregate;
     }
