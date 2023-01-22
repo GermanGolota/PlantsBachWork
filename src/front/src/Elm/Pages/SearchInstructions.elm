@@ -13,7 +13,7 @@ import Html.Attributes exposing (alt, class, href, src, style, value)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import Multiselect as Multiselect
 import NavBar exposing (instructionsLink, viewNav)
 import Utils exposing (buildQuery, chunkedView, decodeId, fillParent, flex, flex1, intersect, largeCentered, mediumMargin, smallMargin)
@@ -50,7 +50,7 @@ type alias Instruction =
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | GotAvailable (Result Http.Error Available)
     | TitleChanged String
@@ -59,8 +59,16 @@ type Msg
     | GotSearch (Result Http.Error (List Instruction))
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+type alias Msg =
+    MsgBase LocalMsg
+
+
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -125,7 +133,7 @@ update msg m =
 
 getAvailable : String -> Cmd Msg
 getAvailable token =
-    Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing
+    Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing |> mapCmd
 
 
 search : String -> String -> String -> String -> Cmd Msg
@@ -137,7 +145,7 @@ search title description groupId token =
         queryParams =
             [ ( "GroupId", groupId ), ( "Title", title ), ( "Description", description ) ]
     in
-    Endpoints.getAuthedQuery (buildQuery queryParams) token FindInstructions expect Nothing
+    Endpoints.getAuthedQuery (buildQuery queryParams) token FindInstructions expect Nothing |> mapCmd
 
 
 searchDecoder : String -> D.Decoder (List Instruction)
@@ -171,17 +179,21 @@ coverImageDecoder token hasCover =
 --view
 
 
-view : Model -> Html Msg
 view model =
+    viewLocal model |> Html.map Main
+
+
+viewLocal : Model -> Html LocalMsg
+viewLocal model =
     viewNav model (Just instructionsLink) viewPage
 
 
-viewPage : AuthResponse -> View -> Html Msg
+viewPage : AuthResponse -> View -> Html LocalMsg
 viewPage resp page =
     viewWebdata page.available (viewMain (intersect [ Producer, Manager ] resp.roles) page)
 
 
-viewMain : Bool -> View -> Available -> Html Msg
+viewMain : Bool -> View -> Available -> Html LocalMsg
 viewMain isProducer page av =
     let
         btnView =
@@ -199,7 +211,7 @@ viewMain isProducer page av =
         ]
 
 
-viewSelections : View -> Available -> List (Html Msg)
+viewSelections : View -> Available -> List (Html LocalMsg)
 viewSelections page av =
     let
         groups =
@@ -228,12 +240,12 @@ viewSelections page av =
     ]
 
 
-viewInstructions : Bool -> List Instruction -> Html Msg
+viewInstructions : Bool -> List Instruction -> Html LocalMsg
 viewInstructions isProducer ins =
     chunkedView 3 (viewInstruction isProducer) ins
 
 
-viewInstruction : Bool -> Instruction -> Html Msg
+viewInstruction : Bool -> Instruction -> Html LocalMsg
 viewInstruction isProducer ins =
     let
         editBtn =

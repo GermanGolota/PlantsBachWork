@@ -10,11 +10,10 @@ import Html.Attributes exposing (class, href, style)
 import Http
 import Json.Decode as D
 import Json.Encode as E
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, roleToStr, updateBase)
 import NavBar exposing (viewNav)
 import Utils exposing (SubmittedResult(..), fillParent, flex, flexCenter, largeCentered, mediumMargin, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
-import Main exposing (roleToStr)
 
 
 
@@ -35,15 +34,24 @@ type alias View =
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | NewPasswordChanged String
     | ChangePass
     | GotChangePass (Result Http.Error SubmittedResult)
 
 
+type alias Msg =
+    MsgBase LocalMsg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -93,7 +101,7 @@ submitCommand token pass =
         body =
             Http.jsonBody (E.object [ ( "password", E.string pass ) ])
     in
-    postAuthed token ChangePassword body expect Nothing
+    postAuthed token ChangePassword body expect Nothing |> mapCmd
 
 
 
@@ -102,10 +110,15 @@ submitCommand token pass =
 
 view : Model -> Html Msg
 view model =
+    viewLocal model |> Html.map Main
+
+
+viewLocal : Model -> Html LocalMsg
+viewLocal model =
     viewNav model Nothing viewPage
 
 
-viewPage : AuthResponse -> View -> Html Msg
+viewPage : AuthResponse -> View -> Html LocalMsg
 viewPage resp page =
     let
         btnAttr add =

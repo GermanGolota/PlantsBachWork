@@ -8,7 +8,7 @@ import Html.Attributes exposing (class, href, style)
 import Http
 import ImageList
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (plantsLink, viewNav)
 import PlantHelper exposing (PlantModel, plantDecoder, viewPlantBase)
 import Utils exposing (SubmittedResult(..), flex, flex1, largeFont, smallMargin, submittedDecoder)
@@ -36,7 +36,7 @@ type alias PlantView =
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | GotPlant (Result Http.Error (Maybe PlantModel))
     | Images ImageList.Msg
@@ -45,8 +45,17 @@ type Msg
     | GotResult (Result Http.Error SubmittedResult)
 
 
+type alias Msg =
+    MsgBase LocalMsg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -120,7 +129,7 @@ getPlantCommand token plantId =
         expect =
             Http.expectJson GotPlant (plantDecoder (Just 0) token)
     in
-    getAuthed token (PreparedPlant plantId) expect Nothing
+    getAuthed token (PreparedPlant plantId) expect Nothing |> mapCmd
 
 
 submitCommand : String -> String -> Float -> Cmd Msg
@@ -132,7 +141,7 @@ submitCommand token plantId price =
         expect =
             Http.expectJson GotResult decoder
     in
-    postAuthed token (PostPlant plantId price) Http.emptyBody expect Nothing
+    postAuthed token (PostPlant plantId price) Http.emptyBody expect Nothing |> mapCmd
 
 
 
@@ -141,10 +150,15 @@ submitCommand token plantId price =
 
 view : Model -> Html Msg
 view model =
+    viewLocal model |> Html.map Main
+
+
+viewLocal : Model -> Html LocalMsg
+viewLocal model =
     viewNav model (Just plantsLink) viewPage
 
 
-viewPage : AuthResponse -> View -> Html Msg
+viewPage : AuthResponse -> View -> Html LocalMsg
 viewPage resp page =
     let
         noplant =
@@ -158,7 +172,7 @@ viewPage resp page =
             viewWebdata plantWeb.plant (viewPlant noplant id plantWeb.postResult)
 
 
-viewPlant : Html Msg -> String -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
+viewPlant : Html LocalMsg -> String -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html LocalMsg
 viewPlant noplant id res plant =
     let
         plantUpdate str =
@@ -177,7 +191,7 @@ viewPlant noplant id res plant =
             noplant
 
 
-viewButtons : Maybe (WebData SubmittedResult) -> String -> Html Msg
+viewButtons : Maybe (WebData SubmittedResult) -> String -> Html LocalMsg
 viewButtons result id =
     let
         resultView =
@@ -216,7 +230,7 @@ viewButtons result id =
         ]
 
 
-viewRes : SubmittedResult -> Html Msg
+viewRes : SubmittedResult -> Html LocalMsg
 viewRes res =
     let
         baseView className message =

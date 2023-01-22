@@ -11,7 +11,7 @@ import Html.Attributes exposing (class, href, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (plantsLink, viewNav)
 import Utils exposing (bgTeal, chunkedView, decodeId, fillParent, flex, flex1, largeFont, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -41,13 +41,22 @@ type alias PlantItem =
 --update
 
 
-type Msg
+type LocalMsg
     = GotPlants (Result Http.Error (List PlantItem))
     | OnlyMineChecked Bool
 
 
+type alias Msg =
+    MsgBase LocalMsg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -79,10 +88,15 @@ update msg m =
 
 view : Model -> Html Msg
 view model =
+    viewLocal model |> Html.map Main
+
+
+viewLocal : Model -> Html LocalMsg
+viewLocal model =
     viewNav model (Just plantsLink) viewPage
 
 
-viewPage : AuthResponse -> View -> Html Msg
+viewPage : AuthResponse -> View -> Html LocalMsg
 viewPage resp page =
     let
         viewChunked items =
@@ -153,12 +167,13 @@ init resp flags =
 --cmds
 
 
+plantsCmd : String -> Cmd Msg
 plantsCmd token =
     let
         expect =
             Http.expectJson GotPlants plantsDecoder
     in
-    getAuthed token NotPostedPlants expect Nothing
+    getAuthed token NotPostedPlants expect Nothing |> mapCmd
 
 
 plantsDecoder =

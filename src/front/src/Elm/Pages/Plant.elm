@@ -11,7 +11,7 @@ import Http
 import ImageList as ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import Maybe exposing (map)
 import NavBar exposing (searchLink, viewNav)
 import PlantHelper exposing (PlantModel, plantDecoder, viewDesc, viewPlantBase, viewPlantLeft)
@@ -68,7 +68,7 @@ type alias DeliveryAddress =
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | GotPlant (Result Http.Error (Maybe PlantModel))
     | GotAddresses (Result Http.Error (List DeliveryAddress))
@@ -80,8 +80,17 @@ type Msg
     | GotSubmit (Result Http.Error SubmittedResult)
 
 
+type alias Msg =
+    MsgBase LocalMsg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+update =
+    updateBase localUpdate
+
+
+localUpdate : LocalMsg -> Model -> ( Model, Cmd Msg )
+localUpdate msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -256,7 +265,7 @@ submitCmd token plantId city mailNumber =
         expect =
             Http.expectJson GotSubmit (submittedDecoder (D.field "successfull" D.bool) (D.field "message" D.string))
     in
-    postAuthed token (OrderPost plantId city mailNumber) Http.emptyBody expect Nothing
+    postAuthed token (OrderPost plantId city mailNumber) Http.emptyBody expect Nothing |> mapCmd
 
 
 getAddressesCommand : String -> Cmd Msg
@@ -265,7 +274,7 @@ getAddressesCommand token =
         expect =
             Http.expectJson GotAddresses addressesDecoder
     in
-    getAuthed token Addresses expect Nothing
+    getAuthed token Addresses expect Nothing |> mapCmd
 
 
 addressesDecoder : D.Decoder (List DeliveryAddress)
@@ -286,7 +295,7 @@ getPlantCommand token plantId =
         expect =
             Http.expectJson GotPlant (plantDecoder Nothing token)
     in
-    getAuthed token (Post plantId) expect Nothing
+    getAuthed token (Post plantId) expect Nothing |> mapCmd
 
 
 
@@ -295,10 +304,15 @@ getPlantCommand token plantId =
 
 view : Model -> Html Msg
 view model =
+    viewLocal model |> Html.map Main
+
+
+viewLocal : Model -> Html LocalMsg
+viewLocal model =
     viewNav model (Just searchLink) viewPage
 
 
-viewPage : AuthResponse -> View -> Html Msg
+viewPage : AuthResponse -> View -> Html LocalMsg
 viewPage auth page =
     let
         allowOrder =
@@ -324,12 +338,12 @@ viewPage auth page =
                     viewWebdata plant (orderView selected addresses result)
 
 
-viewOrderFull : Bool -> String -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
+viewOrderFull : Bool -> String -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html LocalMsg
 viewOrderFull allowOrder id selected del result p =
     viewPlantFull id (viewOrder allowOrder selected del result) p
 
 
-viewOrder : Bool -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> String -> PlantModel -> Html Msg
+viewOrder : Bool -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> String -> PlantModel -> Html LocalMsg
 viewOrder allowOrder selected del result id pl =
     let
         header textT =
@@ -365,7 +379,7 @@ customRadio isDisabled msg isChecked =
         ]
 
 
-viewResult : SubmittedResult -> Html Msg
+viewResult : SubmittedResult -> Html LocalMsg
 viewResult result =
     let
         baseView className message =
@@ -379,7 +393,7 @@ viewResult result =
             baseView "bg-warning" msg
 
 
-viewLocation : SelectedAddress -> List DeliveryAddress -> Html Msg
+viewLocation : SelectedAddress -> List DeliveryAddress -> Html LocalMsg
 viewLocation sel dels =
     let
         valSep =
@@ -426,7 +440,7 @@ locationToString location =
     String.fromInt location ++ ", Nova Poshta Delivery Address"
 
 
-viewSelected : SelectedAddress -> List (Html Msg)
+viewSelected : SelectedAddress -> List (Html LocalMsg)
 viewSelected selected =
     let
         cityText =
@@ -469,7 +483,7 @@ viewSelected selected =
     ]
 
 
-viewPlantFull : String -> (String -> PlantModel -> Html Msg) -> Maybe PlantModel -> Html Msg
+viewPlantFull : String -> (String -> PlantModel -> Html LocalMsg) -> Maybe PlantModel -> Html LocalMsg
 viewPlantFull id viewFunc p =
     case p of
         Just plant ->
@@ -479,12 +493,12 @@ viewPlantFull id viewFunc p =
             div [] [ text "This plant is no longer available, sorry" ]
 
 
-viewPlant : Bool -> String -> PlantModel -> Html Msg
+viewPlant : Bool -> String -> PlantModel -> Html LocalMsg
 viewPlant allowOrder id plant =
     viewPlantBase False (\str -> NoOp) Images (interactionButtons allowOrder False id) plant
 
 
-interactionButtons : Bool -> Bool -> String -> Html Msg
+interactionButtons : Bool -> Bool -> String -> Html LocalMsg
 interactionButtons allowOrder isOrder id =
     let
         backUrl =

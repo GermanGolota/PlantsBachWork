@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Browser
 import Html exposing (Html, a, div, text)
@@ -143,6 +143,14 @@ type ModelBase model
     | Authorized AuthResponse model
 
 
+port navigate : String -> Cmd msg
+
+
+type MsgBase msg
+    = Navigate String
+    | Main msg
+
+
 initBase : List UserRole -> model -> (AuthResponse -> Cmd msg) -> Maybe AuthResponse -> ( ModelBase model, Cmd msg )
 initBase requiredRoles initialModel initialCmd response =
     case response of
@@ -155,6 +163,26 @@ initBase requiredRoles initialModel initialCmd response =
 
         Nothing ->
             ( NotLoggedIn, Cmd.none )
+
+
+updateBase : (msg -> model -> ( model, Cmd (MsgBase msg) )) -> MsgBase msg -> model -> ( model, Cmd (MsgBase msg) )
+updateBase updateFunc message model =
+    case message of
+        Navigate location ->
+            ( model, navigate location )
+
+        Main main ->
+            updateFunc main model
+
+
+mapCmd : Cmd a -> Cmd (MsgBase a)
+mapCmd msg =
+    Cmd.map Main msg
+
+
+mapSub : Sub a -> Sub (MsgBase a)
+mapSub msg =
+    Sub.map Main msg
 
 
 viewBase : (AuthResponse -> model -> Html msg) -> ModelBase model -> Html msg

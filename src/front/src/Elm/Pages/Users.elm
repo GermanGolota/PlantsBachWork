@@ -13,7 +13,7 @@ import Html.Attributes exposing (class, href, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), allRoles, baseApplication, convertRole, initBase, roleToNumber, roleToStr, rolesDecoder)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), allRoles, baseApplication, convertRole, initBase, mapCmd, roleToNumber, roleToStr, rolesDecoder, updateBase)
 import Multiselect as Multiselect
 import NavBar exposing (usersLink, viewNav)
 import UserRolesSelector exposing (userRolesBtns)
@@ -50,7 +50,7 @@ type alias User =
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | GotUsers (Result Http.Error (List User))
     | SelectedRole Multiselect.Msg
@@ -61,8 +61,16 @@ type Msg
     | GotAddRole String (Result Http.Error Bool)
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+type alias Msg =
+    MsgBase LocalMsg
+
+
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -121,7 +129,7 @@ update msg m =
                             else
                                 Cmd.none
                     in
-                    ( authed updatedModel, Cmd.batch [ Cmd.map SelectedRole subCmd, search ] )
+                    ( authed updatedModel, Cmd.batch [ Cmd.map SelectedRole subCmd |> mapCmd, search ] )
 
                 ChangedName name ->
                     ( authed { model | selectedName = Just name }, searchCmd (Just name) model.selectedPhone model.selectedRoles )
@@ -217,12 +225,16 @@ update msg m =
 --view
 
 
-view : Model -> Html Msg
 view model =
+    viewLocal model |> Html.map Main
+
+
+viewLocal : Model -> Html LocalMsg
+viewLocal model =
     viewNav model (Just usersLink) viewPage
 
 
-viewPage : AuthResponse -> View -> Html Msg
+viewPage : AuthResponse -> View -> Html LocalMsg
 viewPage resp page =
     div ([ flex, Flex.col ] ++ fillParent)
         [ div [ flex1, mediumMargin ]
@@ -239,7 +251,7 @@ viewPage resp page =
         ]
 
 
-viewUser : List UserRole -> User -> Html Msg
+viewUser : List UserRole -> User -> Html LocalMsg
 viewUser viewerRoles user =
     let
         btnViewBase =
@@ -325,7 +337,7 @@ removeRole token role login =
         expect =
             Http.expectJson (GotRemoveRole login) (D.succeed True)
     in
-    postAuthed token (RemoveRole login role) Http.emptyBody expect Nothing
+    postAuthed token (RemoveRole login role) Http.emptyBody expect Nothing |> mapCmd
 
 
 addRole : String -> UserRole -> String -> Cmd Msg
@@ -334,7 +346,7 @@ addRole token role login =
         expect =
             Http.expectJson (GotAddRole login) (D.succeed True)
     in
-    postAuthed token (AddRole login role) Http.emptyBody expect Nothing
+    postAuthed token (AddRole login role) Http.emptyBody expect Nothing |> mapCmd
 
 
 searchForUsers : String -> Maybe String -> Maybe String -> Maybe (List UserRole) -> Cmd Msg
@@ -360,7 +372,7 @@ searchForUsers token name contact roles =
         queryList =
             justOrEmpty "name" name ++ justOrEmpty "phone" contact ++ List.map (Tuple.mapSecond String.fromInt) rolesQuery
     in
-    getAuthedQuery (buildQuery queryList) token SearchUsers expect Nothing
+    getAuthedQuery (buildQuery queryList) token SearchUsers expect Nothing |> mapCmd
 
 
 usersDecoder : D.Decoder (List User)

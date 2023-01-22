@@ -16,7 +16,7 @@ import Http
 import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import Multiselect
 import NavBar exposing (plantsLink, viewNav)
 import Utils exposing (SubmittedResult(..), createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, smallMargin, submittedDecoder)
@@ -66,7 +66,7 @@ type alias PlantView =
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | Images ImageList.Msg
     | RemovedImages ImageList.Msg
@@ -85,8 +85,17 @@ type Msg
     | GotSubmitEdit (Result Http.Error SubmittedResult)
 
 
+type alias Msg =
+    MsgBase LocalMsg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -159,7 +168,7 @@ update msg m =
                         updatedRegion plant =
                             { plant | regions = subModel }
                     in
-                    ( authed <| Add <| { addView | plant = updatedRegion addView.plant }, Cmd.map RegionsMS subCmd )
+                    ( authed <| Add <| { addView | plant = updatedRegion addView.plant }, Cmd.map RegionsMS subCmd |> mapCmd )
 
                 ( RegionsMS msEvent, Edit editView ) ->
                     case editView.plant of
@@ -168,7 +177,7 @@ update msg m =
                                 ( subModel, subCmd, _ ) =
                                     Multiselect.update msEvent plantView.regions
                             in
-                            ( authed <| Edit <| { editView | plant = Loaded { plantView | regions = subModel } }, Cmd.map RegionsMS subCmd )
+                            ( authed <| Edit <| { editView | plant = Loaded { plantView | regions = subModel } }, Cmd.map RegionsMS subCmd |> mapCmd )
 
                         _ ->
                             noOp
@@ -376,10 +385,10 @@ update msg m =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just plantsLink) viewPage
+    viewNav model (Just plantsLink) viewPage |> Html.map Main
 
 
-viewPage : AuthResponse -> View -> Html Msg
+viewPage : AuthResponse -> View -> Html LocalMsg
 viewPage resp page =
     case page of
         BadEdit ->
@@ -440,12 +449,12 @@ viewResultAdd result =
             div [ flex1 ] []
 
 
-viewPlant : ImageList.Model -> WebData Available -> Bool -> Html Msg -> PlantView -> Html Msg
+viewPlant : ImageList.Model -> WebData Available -> Bool -> Html LocalMsg -> PlantView -> Html LocalMsg
 viewPlant imgs av isEdit resultView plant =
     viewWebdata av (viewPlantBase imgs isEdit plant resultView)
 
 
-viewPlantBase : ImageList.Model -> Bool -> PlantView -> Html Msg -> Available -> Html Msg
+viewPlantBase : ImageList.Model -> Bool -> PlantView -> Html LocalMsg -> Available -> Html LocalMsg
 viewPlantBase imgs isEdit plant resultView av =
     div ([ flex, Flex.row ] ++ fillParent)
         [ div [ Flex.col, flex1, flex ] (leftView isEdit plant av)
@@ -453,7 +462,7 @@ viewPlantBase imgs isEdit plant resultView av =
         ]
 
 
-rightView : Html Msg -> Bool -> ImageList.Model -> PlantView -> List (Html Msg)
+rightView : Html LocalMsg -> Bool -> ImageList.Model -> PlantView -> List (Html LocalMsg)
 rightView resultView isEdit additionalImages plant =
     let
         btnMsg =
@@ -494,7 +503,7 @@ rightView resultView isEdit additionalImages plant =
         [ resultView, btnView ]
 
 
-leftView : Bool -> PlantView -> Available -> List (Html Msg)
+leftView : Bool -> PlantView -> Available -> List (Html LocalMsg)
 leftView isEdit plant av =
     let
         filesText =
@@ -610,12 +619,12 @@ subscriptions model =
 
 requestImages : Cmd Msg
 requestImages =
-    FileSelect.files [ "image/png", "image/jpg" ] ImagesLoaded
+    FileSelect.files [ "image/png", "image/jpg" ] ImagesLoaded |> mapCmd
 
 
 getAvailable : String -> Cmd Msg
 getAvailable token =
-    Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing
+    Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing |> mapCmd
 
 
 getPlantCommand : Available -> String -> String -> Cmd Msg
@@ -624,7 +633,7 @@ getPlantCommand av token plantId =
         expect =
             Http.expectJson GotPlant (plantDecoder av token)
     in
-    getAuthed token (NotPostedPlant plantId) expect Nothing
+    getAuthed token (NotPostedPlant plantId) expect Nothing |> mapCmd
 
 
 plantDecoder : Available -> String -> D.Decoder (Maybe PlantView)
@@ -681,7 +690,7 @@ submitEditCommand token plantId plant removed =
         expect =
             Http.expectJson GotSubmitEdit (submittedDecoder (D.field "success" D.bool) (D.field "message" D.string))
     in
-    postAuthed token (EditPlant plantId) (getEditBody plant removed) expect Nothing
+    postAuthed token (EditPlant plantId) (getEditBody plant removed) expect Nothing |> mapCmd
 
 
 submitAddCommand : String -> PlantView -> Cmd Msg
@@ -690,7 +699,7 @@ submitAddCommand token plant =
         expect =
             Http.expectJson GotSubmitAdd (D.field "id" decodeId)
     in
-    postAuthed token AddPlant (getAddBody plant) expect Nothing
+    postAuthed token AddPlant (getAddBody plant) expect Nothing |> mapCmd
 
 
 getEditBody : PlantView -> List String -> Http.Body
