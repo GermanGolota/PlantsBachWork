@@ -9,7 +9,7 @@ import Bootstrap.Utilities.Flex as Flex
 import Debug exposing (log)
 import Endpoints exposing (Endpoint(..), getAuthedQuery, postAuthed)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, href, style)
+import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required)
@@ -226,28 +226,25 @@ updateLocal msg m =
 
 
 view model =
-    viewLocal model |> Html.map Main
-
-
-viewLocal : Model -> Html LocalMsg
-viewLocal model =
     viewNav model (Just usersLink) viewPage
 
 
-viewPage : AuthResponse -> View -> Html LocalMsg
+viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     div ([ flex, Flex.col ] ++ fillParent)
         [ div [ flex1, mediumMargin ]
-            [ Button.linkButton [ Button.primary, Button.attrs ([ href "/user/add" ] ++ largeCentered) ] [ text "Create User" ]
+            [ Button.linkButton [ Button.primary, Button.onClick <| Navigate "/user/add", Button.attrs largeCentered ] [ text "Create User" ]
             ]
         , div [ style "flex" "2", flex, Flex.row, Flex.alignItemsCenter ]
             [ viewInput (Input.text [ Input.onInput ChangedName ]) "Name"
             , viewInput (Input.text [ Input.onInput ChangedPhone ]) "Mobile Number"
             , viewInput (Html.map SelectedRole <| Multiselect.view page.selectedRoles) "Roles"
             ]
+            |> Html.map Main
         , div [ flex, Flex.row, style "flex" "16", style "overflow-y" "scroll" ]
             [ viewWebdata page.users (chunkedView 3 <| viewUser resp.roles)
             ]
+            |> Html.map Main
         ]
 
 

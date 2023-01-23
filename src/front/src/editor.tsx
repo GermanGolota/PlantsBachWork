@@ -5,7 +5,7 @@ import { Elm as AddEditInstructionElm } from "./Elm/Pages/AddEditInstruction";
 import React from "react";
 import { retrieve } from "./Store";
 import { Editor } from "react-draft-wysiwyg";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import htmlToDraft from "html-to-draftjs";
 
 const AddInstructionPage = (props: { isEdit: boolean }) => {
@@ -17,7 +17,7 @@ const AddInstructionPage = (props: { isEdit: boolean }) => {
     EditorState.createEmpty()
   );
   const elmRef = React.useRef(null);
-
+  const navigate = useNavigate();
   const { id } = useParams();
 
   const elmApp = () => {
@@ -41,13 +41,17 @@ const AddInstructionPage = (props: { isEdit: boolean }) => {
 
   // Subscribe to state changes from Elm
   React.useEffect(() => {
-    app &&
+    if (app) {
       app.ports.openEditor.subscribe((txt) => {
         let state = convertText(txt);
         setState(state);
         setEditorVisible(true);
       });
-  }, [app]);
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
 
   React.useEffect(() => {
     setApp(elmApp());
@@ -56,28 +60,36 @@ const AddInstructionPage = (props: { isEdit: boolean }) => {
   if (editorVisible) {
     return (
       <div>
-        <Modal
-          isOpen={editorVisible}
-          onRequestClose={() => setEditorVisible(false)}
-          contentLabel="Instruction Text"
-        >
-          <Editor
-            editorState={state}
-            onEditorStateChange={(newState) => {
-              let text = draftToHtml(
-                convertToRaw(newState.getCurrentContent())
-              );
-              setState(newState);
-              app?.ports.editorChanged.send(text);
-            }}
-          />
-        </Modal>
-        <div ref={elmRef}></div>
+        <div>
+          <Modal
+            isOpen={editorVisible}
+            onRequestClose={() => setEditorVisible(false)}
+            contentLabel="Instruction Text"
+          >
+            <Editor
+              editorState={state}
+              onEditorStateChange={(newState) => {
+                let text = draftToHtml(
+                  convertToRaw(newState.getCurrentContent())
+                );
+                setState(newState);
+                app?.ports.editorChanged.send(text);
+              }}
+            />
+          </Modal>
+        </div>
+        <div>
+          <div ref={elmRef}></div>
+        </div>
       </div>
     );
   }
 
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const convertText = (text: string) => {

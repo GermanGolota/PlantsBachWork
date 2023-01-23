@@ -5,7 +5,6 @@ import {
   BrowserRouter,
   Router,
   Routes,
-  Navigate,
   useNavigate,
   useParams,
 } from "react-router-dom";
@@ -35,6 +34,7 @@ const SearchPage = () => {
   >();
   const elmRef = React.useRef(null);
 
+  const navigate = useNavigate();
   const elmApp = () => {
     let model = retrieve();
 
@@ -48,7 +48,19 @@ const SearchPage = () => {
     setApp(elmApp());
   }, []);
 
-  return <div ref={elmRef}></div>;
+  React.useEffect(() => {
+    if (app) {
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
+
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const InstructionPage = () => {
@@ -56,7 +68,7 @@ const InstructionPage = () => {
     InstructionElm.Pages.Instruction.App | undefined
   >();
   const elmRef = React.useRef(null);
-
+  const navigate = useNavigate();
   const { id } = useParams();
 
   const elmApp = () => {
@@ -77,7 +89,19 @@ const InstructionPage = () => {
     setApp(elmApp());
   }, []);
 
-  return <div ref={elmRef}></div>;
+  React.useEffect(() => {
+    if (app) {
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
+
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const SearchInstructionsPage = () => {
@@ -85,6 +109,7 @@ const SearchInstructionsPage = () => {
     SearchInstructionsElm.Pages.SearchInstructions.App | undefined
   >();
   const elmRef = React.useRef(null);
+  const navigate = useNavigate();
 
   const elmApp = () => {
     let model = retrieve();
@@ -99,7 +124,19 @@ const SearchInstructionsPage = () => {
     setApp(elmApp());
   }, []);
 
-  return <div ref={elmRef}></div>;
+  React.useEffect(() => {
+    if (app) {
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
+
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const ProfilePage = () => {
@@ -107,6 +144,7 @@ const ProfilePage = () => {
     ProfileElm.Pages.Profile.App | undefined
   >();
   const elmRef = React.useRef(null);
+  const navigate = useNavigate();
 
   const elmApp = () => {
     let model = retrieve();
@@ -121,12 +159,26 @@ const ProfilePage = () => {
     setApp(elmApp());
   }, []);
 
-  return <div ref={elmRef}></div>;
+  React.useEffect(() => {
+    if (app) {
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
+
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const UsersPage = () => {
   const [app, setApp] = React.useState<UsersElm.Pages.Users.App | undefined>();
   const elmRef = React.useRef(null);
+
+  const navigate = useNavigate();
 
   const elmApp = () => {
     let model = retrieve();
@@ -141,7 +193,19 @@ const UsersPage = () => {
     setApp(elmApp());
   }, []);
 
-  return <div ref={elmRef}></div>;
+  React.useEffect(() => {
+    if (app) {
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
+
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const AddUserPage = () => {
@@ -149,6 +213,7 @@ const AddUserPage = () => {
     AddUserElm.Pages.AddUser.App | undefined
   >();
   const elmRef = React.useRef(null);
+  const navigate = useNavigate();
 
   const elmApp = () => {
     let model = retrieve();
@@ -162,8 +227,19 @@ const AddUserPage = () => {
   React.useEffect(() => {
     setApp(elmApp());
   }, []);
+  React.useEffect(() => {
+    if (app) {
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
 
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const NotPostedPage = () => {
@@ -171,7 +247,7 @@ const NotPostedPage = () => {
     NotPostedElm.Pages.NotPosted.App | undefined
   >();
   const elmRef = React.useRef(null);
-
+  const navigate = useNavigate();
   const elmApp = () => {
     let model = retrieve();
 
@@ -185,7 +261,19 @@ const NotPostedPage = () => {
     setApp(elmApp());
   }, []);
 
-  return <div ref={elmRef}></div>;
+  React.useEffect(() => {
+    if (app) {
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
+
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const AddEditPage = (props: { isEdit: boolean }) => {
@@ -193,7 +281,7 @@ const AddEditPage = (props: { isEdit: boolean }) => {
     AddEditPlantElm.Pages.AddEditPlant.App | undefined
   >();
   const elmRef = React.useRef(null);
-
+  const navigate = useNavigate();
   const { plantId } = useParams();
 
   const elmApp = () => {
@@ -214,7 +302,19 @@ const AddEditPage = (props: { isEdit: boolean }) => {
     setApp(elmApp());
   }, []);
 
-  return <div ref={elmRef}></div>;
+  React.useEffect(() => {
+    if (app) {
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
+
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const OrdersPage = (props: { isEmployee: boolean }) => {
@@ -222,6 +322,7 @@ const OrdersPage = (props: { isEmployee: boolean }) => {
     OrdersElm.Pages.Orders.App | undefined
   >();
   const elmRef = React.useRef(null);
+  const navigate = useNavigate();
   const elmApp = () => {
     let model = retrieve();
 
@@ -249,12 +350,26 @@ const OrdersPage = (props: { isEmployee: boolean }) => {
     setApp(elmApp());
   }, []);
 
-  return <div ref={elmRef}></div>;
+  React.useEffect(() => {
+    if (app) {
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
+
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const PlantPage = (props: { isOrder: boolean }) => {
   const [app, setApp] = React.useState<PlantElm.Pages.Plant.App | undefined>();
   const elmRef = React.useRef(null);
+
+  const navigate = useNavigate();
 
   const { plantId } = useParams();
 
@@ -275,7 +390,19 @@ const PlantPage = (props: { isOrder: boolean }) => {
     setApp(elmApp());
   }, []);
 
-  return <div ref={elmRef}></div>;
+  React.useEffect(() => {
+    if (app) {
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
+
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const PostPlantPage = () => {
@@ -284,6 +411,7 @@ const PostPlantPage = () => {
   >();
   const elmRef = React.useRef(null);
 
+  const navigate = useNavigate();
   const { plantId } = useParams();
 
   const elmApp = () => {
@@ -302,13 +430,25 @@ const PostPlantPage = () => {
     setApp(elmApp());
   }, []);
 
-  return <div ref={elmRef}></div>;
+  React.useEffect(() => {
+    if (app) {
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
+
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const StatsPage = () => {
   const [app, setApp] = React.useState<StatsElm.Pages.Stats.App | undefined>();
   const elmRef = React.useRef(null);
-
+  const navigate = useNavigate();
   const elmApp = () => {
     let model = retrieve();
 
@@ -322,12 +462,25 @@ const StatsPage = () => {
     setApp(elmApp());
   }, []);
 
-  return <div ref={elmRef}></div>;
+  React.useEffect(() => {
+    if (app) {
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
+
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const LoginPage = (props: { isNew: boolean }) => {
   const [app, setApp] = React.useState<LoginElm.Pages.Login.App | undefined>();
   const elmRef = React.useRef(null);
+  const navigate = useNavigate();
 
   const elmApp = () =>
     LoginElm.Pages.Login.init({
@@ -347,15 +500,23 @@ const LoginPage = (props: { isNew: boolean }) => {
   }, []);
   // Subscribe to state changes from Elm
   React.useEffect(() => {
-    app &&
+    if (app) {
       app.ports.notifyLoggedIn.subscribe((userModel) => {
         let model = userModel as AuthResponse;
         store(model);
         window.location.replace("/search");
       });
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
   }, [app]);
 
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const NotFound = () => {

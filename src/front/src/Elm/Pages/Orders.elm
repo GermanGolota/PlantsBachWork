@@ -351,15 +351,10 @@ statusDecoder =
 
 view : Model -> Html Msg
 view model =
-    viewLocal model |> Html.map Main
-
-
-viewLocal : Model -> Html LocalMsg
-viewLocal model =
     viewNav model (Just ordersLink) viewPage
 
 
-viewPage : AuthResponse -> View -> Html LocalMsg
+viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     let
         switchViewMessage =
@@ -370,7 +365,7 @@ viewPage resp page =
                 ConsumerView ->
                     "To Producer View"
 
-        switchViewHref =
+        viewLocation =
             case page.viewType of
                 ProducerView ->
                     "/orders"
@@ -386,7 +381,7 @@ viewPage resp page =
                 [ Checkbox.checkbox [ Checkbox.checked True, Checkbox.disabled True, checkAttrs ] ""
                 , Checkbox.checkbox
                     [ Checkbox.checked page.hideFulfilled
-                    , Checkbox.onCheck HideFullfilledChecked
+                    , Checkbox.onCheck (\check -> Main <| HideFullfilledChecked check)
                     , checkAttrs
                     ]
                     "Hide delivered"
@@ -395,7 +390,7 @@ viewPage resp page =
         topViewItems =
             if page.showAdditional then
                 [ checksView
-                , div [] [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href switchViewHref ] ] [ text switchViewMessage ] ]
+                , div [] [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href viewLocation ] ] [ text switchViewMessage ] ]
                 ]
 
             else
@@ -407,7 +402,7 @@ viewPage resp page =
     in
     div ([ flex, Flex.col ] ++ fillParent)
         [ topView
-        , viewWebdata page.data (mainView page.rejected page.selectedTtns page.viewType page.hideFulfilled)
+        , viewWebdata page.data (mainView page.rejected page.selectedTtns page.viewType page.hideFulfilled) |> Html.map Main
         ]
 
 

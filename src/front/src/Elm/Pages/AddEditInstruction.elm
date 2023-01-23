@@ -9,7 +9,7 @@ import Endpoints exposing (Endpoint(..), postAuthed)
 import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (href, style, value)
+import Html.Attributes exposing (style, value)
 import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
@@ -259,10 +259,10 @@ requestImages =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just instructionsLink) viewPage |> Html.map Main
+    viewNav model (Just instructionsLink) viewPage
 
 
-viewPage : AuthResponse -> ViewType -> Html LocalMsg
+viewPage : AuthResponse -> ViewType -> Html Msg
 viewPage resp page =
     case page of
         Add add ->
@@ -275,7 +275,7 @@ viewPage resp page =
             div largeCentered [ text "There is not such instruction!" ]
 
 
-viewMain : Bool -> View -> Available -> Html LocalMsg
+viewMain : Bool -> View -> Available -> Html Msg
 viewMain isEdit page av =
     let
         viewRow =
@@ -309,7 +309,7 @@ viewMain isEdit page av =
             viewRow
                 [ viewCol
                     [ div largeCentered [ text resultText ]
-                    , Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ result ] ] [ text "Open Instruction" ]
+                    , Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/instructions/" ++ result) ] [ text "Open Instruction" ]
                     ]
                 ]
 
@@ -332,28 +332,28 @@ viewMain isEdit page av =
         [ viewRow
             [ viewCol
                 [ div largeCentered [ text "Group" ]
-                , Select.select [ Select.onChange GroupSelected ] (List.map viewGroup groups)
+                , Select.select [ Select.onChange (\str -> Main <| GroupSelected str) ] (List.map viewGroup groups)
                 ]
             ]
         , viewRow
             [ viewCol
                 [ div largeCentered [ text "Title" ]
-                , Input.text [ Input.value page.selectedTitle, Input.onInput TitleChanged ]
+                , Input.text [ Input.value page.selectedTitle, Input.onInput (\str -> Main <| TitleChanged str) ]
                 ]
             , viewCol
                 [ div largeCentered [ text "Description" ]
-                , Input.text [ Input.value page.selectedDescription, Input.onInput DescriptionChanged ]
+                , Input.text [ Input.value page.selectedDescription, Input.onInput (\str -> Main <| DescriptionChanged str) ]
                 ]
             ]
         , viewRow
             [ Button.button
-                [ Button.primary, Button.onClick StartUpload, Button.attrs [ flex1 ] ]
+                [ Button.primary, Button.onClick <| Main StartUpload, Button.attrs [ flex1 ] ]
                 [ text "Upload" ]
             , viewCol [ div largeCentered [ text fileStr ] ]
             ]
         , viewRow
             [ Button.button
-                [ Button.primary, Button.onClick OpenEditor, Button.attrs [ flex1 ] ]
+                [ Button.primary, Button.onClick <| Main OpenEditor, Button.attrs [ flex1 ] ]
                 [ text "Edit text" ]
             ]
         , div [ flex, Flex.row, style "flex" "4" ]
@@ -365,7 +365,7 @@ viewMain isEdit page av =
         , resultRow
         , viewRow
             [ Button.button
-                [ Button.primary, Button.onClick Submit, Button.attrs [ flex1, mediumMargin ] ]
+                [ Button.primary, Button.onClick <| Main Submit, Button.attrs [ flex1, mediumMargin ] ]
                 [ text createText ]
             ]
         ]

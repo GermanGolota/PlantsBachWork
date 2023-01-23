@@ -304,15 +304,10 @@ getPlantCommand token plantId =
 
 view : Model -> Html Msg
 view model =
-    viewLocal model |> Html.map Main
-
-
-viewLocal : Model -> Html LocalMsg
-viewLocal model =
     viewNav model (Just searchLink) viewPage
 
 
-viewPage : AuthResponse -> View -> Html LocalMsg
+viewPage : AuthResponse -> View -> Html Msg
 viewPage auth page =
     let
         allowOrder =
@@ -320,7 +315,7 @@ viewPage auth page =
     in
     case page of
         NoPlant ->
-            div [] [ text "Please select a plant", Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href "/search" ] ] [ text "Return to search" ] ]
+            div [] [ text "Please select a plant", Button.linkButton [ Button.primary, Button.onClick <| Navigate "/search", Button.attrs [ smallMargin ] ] [ text "Return to search" ] ]
 
         Plant p ->
             let
@@ -338,12 +333,12 @@ viewPage auth page =
                     viewWebdata plant (orderView selected addresses result)
 
 
-viewOrderFull : Bool -> String -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html LocalMsg
+viewOrderFull : Bool -> String -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
 viewOrderFull allowOrder id selected del result p =
     viewPlantFull id (viewOrder allowOrder selected del result) p
 
 
-viewOrder : Bool -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> String -> PlantModel -> Html LocalMsg
+viewOrder : Bool -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> String -> PlantModel -> Html Msg
 viewOrder allowOrder selected del result id pl =
     let
         header textT =
@@ -358,20 +353,21 @@ viewOrder allowOrder selected del result id pl =
                     div [] []
     in
     div (fillParent ++ [ flex, Flex.row ])
-        [ viewPlantLeft Images pl
+        [ viewPlantLeft (\msg -> Main <| Images msg) pl
         , div [ flex, Flex.col, flex1 ]
-            (viewDesc False (\str -> NoOp) pl
+            (viewDesc False (\str -> Main NoOp) pl
                 ++ [ header "Payment methods"
                    , customRadio True "Pay now" False
                    , customRadio False "Pay on arrival" True
-                   , viewWebdata del (viewLocation selected)
-                   , resultView
+                   , viewWebdata del (viewLocation selected) |> Html.map Main
+                   , resultView |> Html.map Main
                    , interactionButtons allowOrder True id
                    ]
             )
         ]
 
 
+customRadio : Bool -> String -> Bool -> Html msg
 customRadio isDisabled msg isChecked =
     div [ flex1, flex, Flex.row, Flex.alignItemsCenter ]
         [ input [ type_ "radio", disabled isDisabled, checked isChecked ] []
@@ -483,7 +479,7 @@ viewSelected selected =
     ]
 
 
-viewPlantFull : String -> (String -> PlantModel -> Html LocalMsg) -> Maybe PlantModel -> Html LocalMsg
+viewPlantFull : String -> (String -> PlantModel -> Html Msg) -> Maybe PlantModel -> Html Msg
 viewPlantFull id viewFunc p =
     case p of
         Just plant ->
@@ -493,12 +489,12 @@ viewPlantFull id viewFunc p =
             div [] [ text "This plant is no longer available, sorry" ]
 
 
-viewPlant : Bool -> String -> PlantModel -> Html LocalMsg
+viewPlant : Bool -> String -> PlantModel -> Html Msg
 viewPlant allowOrder id plant =
-    viewPlantBase False (\str -> NoOp) Images (interactionButtons allowOrder False id) plant
+    viewPlantBase False (\str -> Main NoOp) (\msg -> Main <| Images msg) (interactionButtons allowOrder False id) plant
 
 
-interactionButtons : Bool -> Bool -> String -> Html LocalMsg
+interactionButtons : Bool -> Bool -> String -> Html Msg
 interactionButtons allowOrder isOrder id =
     let
         backUrl =
@@ -507,6 +503,13 @@ interactionButtons allowOrder isOrder id =
 
             else
                 "/search"
+
+        backNavigate =
+            if isOrder then
+                []
+
+            else
+                [ Button.onClick <| Navigate backUrl ]
 
         orderText =
             if isOrder then
@@ -524,17 +527,19 @@ interactionButtons allowOrder isOrder id =
 
         orderOnClick =
             if isOrder then
-                Button.onClick Submit
+                Button.onClick <| Main Submit
 
             else
+                --fix issue with plants component not reloading
                 Button.attrs []
 
+        --Button.onClick <| Navigate orderUrl
         orderBtn =
             if allowOrder then
                 Button.linkButton
                     [ Button.primary
-                    , Button.attrs [ smallMargin, href orderUrl, largeFont ]
                     , orderOnClick
+                    , Button.attrs [ smallMargin, largeFont, href orderUrl ]
                     ]
                     [ text orderText ]
 
@@ -542,7 +547,7 @@ interactionButtons allowOrder isOrder id =
                 div [] []
     in
     div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
-        [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href backUrl, largeFont ] ] [ text "Back" ]
+        [ Button.linkButton ([ Button.primary, Button.attrs [ smallMargin, largeFont, href backUrl ] ] ++ backNavigate) [ text "Back" ]
         , orderBtn
         ]
 

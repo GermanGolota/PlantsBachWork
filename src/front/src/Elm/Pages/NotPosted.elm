@@ -7,7 +7,7 @@ import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), getAuthed)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, href, style)
+import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
@@ -88,15 +88,10 @@ updateLocal msg m =
 
 view : Model -> Html Msg
 view model =
-    viewLocal model |> Html.map Main
-
-
-viewLocal : Model -> Html LocalMsg
-viewLocal model =
     viewNav model (Just plantsLink) viewPage
 
 
-viewPage : AuthResponse -> View -> Html LocalMsg
+viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     let
         viewChunked items =
@@ -106,9 +101,9 @@ viewPage resp page =
         [ div [ flex, style "flex" "13", Flex.justifyBetween, Flex.row ]
             [ Button.linkButton
                 [ Button.primary
+                , Button.onClick <| Navigate "/notPosted/add"
                 , Button.attrs
                     [ smallMargin
-                    , href "/notPosted/add"
                     , largeFont
                     , bgTeal
                     ]
@@ -116,7 +111,7 @@ viewPage resp page =
                 [ text "Add Plant" ]
             , div [ flex, Flex.row, Flex.alignItemsCenter ]
                 [ div [ smallMargin ] [ text "Only Mine" ]
-                , Checkbox.checkbox [ Checkbox.attrs [ bgTeal ], Checkbox.onCheck OnlyMineChecked, Checkbox.checked page.onlyMine ] ""
+                , Checkbox.checkbox [ Checkbox.attrs [ bgTeal ], Checkbox.onCheck (\val -> Main <| OnlyMineChecked val), Checkbox.checked page.onlyMine ] ""
                 , Checkbox.checkbox [ Checkbox.checked True, Checkbox.disabled True, Checkbox.attrs [ bgTeal ] ] ""
                 ]
             ]
@@ -147,8 +142,8 @@ viewItem item =
             [ Block.text [] [ text item.description ]
             , Block.custom <|
                 div [ flex, Flex.row, Flex.justifyEnd, Flex.alignItemsCenter ]
-                    [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/notPosted/" ++ item.id ++ "/edit" ] ] [ text "Edit" ]
-                    , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/notPosted/" ++ item.id ++ "/post" ] ] [ text "Post" ]
+                    [ Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/notPosted/" ++ item.id ++ "/edit"), Button.attrs [ smallMargin ] ] [ text "Edit" ]
+                    , Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/notPosted/" ++ item.id ++ "/post"), Button.attrs [ smallMargin ] ] [ text "Post" ]
                     ]
             ]
         |> Card.view

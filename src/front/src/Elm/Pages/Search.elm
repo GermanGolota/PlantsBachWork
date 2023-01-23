@@ -9,7 +9,7 @@ import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
 import Endpoints exposing (Endpoint(..), endpointToUrl, getAuthedQuery, imageIdToUrl, postAuthed)
 import Html exposing (Html, div, i, text)
-import Html.Attributes exposing (alt, class, href, src, style)
+import Html.Attributes exposing (alt, class, src, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
@@ -360,15 +360,10 @@ convertIds ids =
 
 
 view model =
-    viewLocal model |> Html.map Main
-
-
-viewLocal : Model -> Html LocalMsg
-viewLocal model =
     viewNav model (Just NavBar.searchLink) pageView
 
 
-pageView : AuthResponse -> View -> Html LocalMsg
+pageView : AuthResponse -> View -> Html Msg
 pageView resp viewType =
     let
         viewFunc =
@@ -383,7 +378,7 @@ pageView resp viewType =
                     div [] [ text "No search is selected" ]
     in
     div ([ flex, Flex.col ] ++ fillParent)
-        [ viewWebdata viewType.availableValues viewAvailable
+        [ viewWebdata viewType.availableValues viewAvailable |> Html.map Main
         , div [ Flex.row, flex ]
             [ viewInput "Plant Name" <| Input.text [ Input.onInput (\val -> SetQuery "PlantName" val) ]
             , viewInput "Price" <|
@@ -394,6 +389,7 @@ pageView resp viewType =
                     ]
             , viewInput "Created Before" <| Input.date [ Input.onInput (\val -> SetQuery "LastDate" val) ]
             ]
+            |> Html.map Main
         , div [ style "overflow-y" "scroll" ] [ result ]
         ]
 
@@ -411,7 +407,7 @@ viewAvailable av =
         ]
 
 
-resultsView : Bool -> Bool -> String -> List SearchResultItem -> Html LocalMsg
+resultsView : Bool -> Bool -> String -> List SearchResultItem -> Html Msg
 resultsView showOrder showDelete token items =
     let
         viewFunc =
@@ -420,14 +416,14 @@ resultsView showOrder showDelete token items =
     Utils.chunkedView 3 viewFunc items
 
 
-resultView : Bool -> Bool -> String -> SearchResultItem -> Html LocalMsg
+resultView : Bool -> Bool -> String -> SearchResultItem -> Html Msg
 resultView showOrder showDelete token item =
     let
         url =
             imageIdToUrl token (Maybe.withDefault "-1" (List.head item.imageIds))
 
         orderBtn =
-            Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ item.id ++ "/order" ], Button.disabled (not showOrder) ] [ text "Order" ]
+            Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/plant/" ++ item.id ++ "/order"), Button.attrs [ smallMargin ], Button.disabled (not showOrder) ] [ text "Order" ]
 
         msgText val =
             if val then
@@ -465,9 +461,9 @@ resultView showOrder showDelete token item =
                 div [ flex, Flex.row, style "justify-content" "space-between", Flex.alignItemsCenter ]
                     [ div [ largeFont ] [ text <| formatPrice item.price ]
                     , div [ flex, Flex.row ]
-                        [ deleteBtn
+                        [ deleteBtn |> Html.map Main
                         , orderBtn
-                        , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ item.id ] ] [ text "Open" ]
+                        , Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/plant/" ++ item.id), Button.attrs [ smallMargin ] ] [ text "Open" ]
                         ]
                     ]
             ]

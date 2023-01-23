@@ -4,7 +4,7 @@ import Bootstrap.Button as Button
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), getAuthed, postAuthed)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, href, style)
+import Html.Attributes exposing (class, style)
 import Http
 import ImageList
 import Json.Decode as D
@@ -150,15 +150,10 @@ submitCommand token plantId price =
 
 view : Model -> Html Msg
 view model =
-    viewLocal model |> Html.map Main
-
-
-viewLocal : Model -> Html LocalMsg
-viewLocal model =
     viewNav model (Just plantsLink) viewPage
 
 
-viewPage : AuthResponse -> View -> Html LocalMsg
+viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     let
         noplant =
@@ -172,26 +167,26 @@ viewPage resp page =
             viewWebdata plantWeb.plant (viewPlant noplant id plantWeb.postResult)
 
 
-viewPlant : Html LocalMsg -> String -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html LocalMsg
+viewPlant : Html LocalMsg -> String -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
 viewPlant noplant id res plant =
     let
         plantUpdate str =
             case String.toFloat str of
                 Just val ->
-                    UpdatePrice val
+                    Main <| UpdatePrice val
 
                 Nothing ->
-                    NoOp
+                    Main NoOp
     in
     case plant of
         Just plantView ->
-            viewPlantBase True plantUpdate Images (viewButtons res id) plantView
+            viewPlantBase True plantUpdate (\msg -> Main <| Images msg) (viewButtons res id) plantView
 
         Nothing ->
-            noplant
+            noplant |> Html.map Main
 
 
-viewButtons : Maybe (WebData SubmittedResult) -> String -> Html LocalMsg
+viewButtons : Maybe (WebData SubmittedResult) -> String -> Html Msg
 viewButtons result id =
     let
         resultView =
@@ -203,16 +198,16 @@ viewButtons result id =
                     div [] []
 
         postOnClick =
-            Button.onClick Submit
+            Button.onClick <| Main Submit
     in
     div [ flex, style "flex" "2", Flex.col ]
-        [ resultView
+        [ resultView |> Html.map Main
         , div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
             [ Button.linkButton
                 [ Button.primary
+                , Button.onClick <| Navigate ("/notPosted/" ++ id ++ "/edit")
                 , Button.attrs
                     [ smallMargin
-                    , href ("/notPosted/" ++ id ++ "/edit")
                     , largeFont
                     ]
                 ]

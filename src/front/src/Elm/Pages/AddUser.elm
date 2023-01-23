@@ -161,10 +161,10 @@ encodeBody page =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just usersLink) viewPage |> Html.map Main
+    viewNav model (Just usersLink) viewPage
 
 
-viewPage : AuthResponse -> View -> Html LocalMsg
+viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     let
         viewSubmit submit =
@@ -194,6 +194,7 @@ viewPage resp page =
                 [ viewBtn ]
             ]
         ]
+        |> Html.map Main
 
 
 viewInputs : View -> List (Html LocalMsg)

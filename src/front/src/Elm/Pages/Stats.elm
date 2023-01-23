@@ -217,15 +217,10 @@ viewRow key value =
 
 
 view model =
-    viewLocal model |> Html.map Main
-
-
-viewLocal : Model -> Html.Html LocalMsg
-viewLocal model =
     viewNav model (Just statsLink) viewMain
 
 
-viewMain : AuthResponse -> View -> Html LocalMsg
+viewMain : AuthResponse -> View -> Html Msg
 viewMain resp model =
     let
         localizedView =
@@ -249,6 +244,7 @@ viewMain resp model =
         , h1 [ textCenter ] [ text localizedTitle ]
         , localizedView
         ]
+        |> Html.map Main
 
 
 viewFinancials : FinancialViewType -> Html LocalMsg

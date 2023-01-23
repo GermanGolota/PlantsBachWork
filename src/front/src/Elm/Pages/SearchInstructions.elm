@@ -9,7 +9,7 @@ import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), instructioIdToCover)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (alt, class, href, src, style, value)
+import Html.Attributes exposing (alt, class, src, style, value)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
@@ -179,33 +179,29 @@ coverImageDecoder token hasCover =
 --view
 
 
+view : Model -> Html Msg
 view model =
-    viewLocal model |> Html.map Main
-
-
-viewLocal : Model -> Html LocalMsg
-viewLocal model =
     viewNav model (Just instructionsLink) viewPage
 
 
-viewPage : AuthResponse -> View -> Html LocalMsg
+viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     viewWebdata page.available (viewMain (intersect [ Producer, Manager ] resp.roles) page)
 
 
-viewMain : Bool -> View -> Available -> Html LocalMsg
+viewMain : Bool -> View -> Available -> Html Msg
 viewMain isProducer page av =
     let
         btnView =
             if page.showAdd then
-                div [ flex, Flex.row, style "flex" "0.5", mediumMargin ] [ Button.linkButton [ Button.attrs [ href "/instructions/add" ], Button.primary ] [ text "Create" ] ]
+                div [ flex, Flex.row, style "flex" "0.5", mediumMargin ] [ Button.linkButton [ Button.primary, Button.onClick <| Navigate "/instructions/add" ] [ text "Create" ] ]
 
             else
                 div [] []
     in
     div ([ Flex.col, flex ] ++ fillParent)
         [ btnView
-        , div [ flex, Flex.row, flex1 ] (viewSelections page av)
+        , div [ flex, Flex.row, flex1 ] (viewSelections page av) |> Html.map Main
         , div [ flex, Flex.row, style "flex" "8" ]
             [ viewWebdata page.instructions (viewInstructions isProducer) ]
         ]
@@ -240,17 +236,17 @@ viewSelections page av =
     ]
 
 
-viewInstructions : Bool -> List Instruction -> Html LocalMsg
+viewInstructions : Bool -> List Instruction -> Html Msg
 viewInstructions isProducer ins =
     chunkedView 3 (viewInstruction isProducer) ins
 
 
-viewInstruction : Bool -> Instruction -> Html LocalMsg
+viewInstruction : Bool -> Instruction -> Html Msg
 viewInstruction isProducer ins =
     let
         editBtn =
             if isProducer then
-                Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ ins.id ++ "/edit", smallMargin ] ] [ text "Edit" ]
+                Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/instructions/" ++ ins.id ++ "/edit"), Button.attrs [ smallMargin ] ] [ text "Edit" ]
 
             else
                 div [] []
@@ -265,7 +261,7 @@ viewInstruction isProducer ins =
             , Block.custom <|
                 div [ flex, Flex.row, Flex.justifyEnd, Flex.alignItemsCenter ]
                     [ editBtn
-                    , Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ ins.id ] ] [ text "Open Full" ]
+                    , Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/instructions/" ++ ins.id) ] [ text "Open Full" ]
                     ]
             ]
         |> Card.view

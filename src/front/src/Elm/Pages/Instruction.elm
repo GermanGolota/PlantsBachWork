@@ -4,12 +4,12 @@ import Bootstrap.Button as Button
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), getAuthed, instructioIdToCover)
 import Html exposing (Html, div, img, text)
-import Html.Attributes exposing (alt, href, src, style)
+import Html.Attributes exposing (alt, src, style)
 import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase, UserRole(..), baseApplication, initBase, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (instructionsLink, viewNav)
 import Utils exposing (decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, textCenter, textHtml)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -125,7 +125,7 @@ viewInstruction ins =
                 [ Html.p [] (textHtml ins.text) ]
             ]
         , div [ style "flex" "0.5", flex, Flex.row, Flex.justifyCenter, smallMargin ]
-            [ Button.linkButton [ Button.outlinePrimary, Button.attrs [ href "/instructions" ] ] [ text "Go back" ]
+            [ Button.linkButton [ Button.outlinePrimary, Button.onClick <| Navigate "/instructions" ] [ text "Go back" ]
             ]
         ]
 

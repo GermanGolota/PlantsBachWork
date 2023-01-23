@@ -6,7 +6,7 @@ import Bootstrap.ListGroup as ListGroup
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), postAuthed)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, href, style)
+import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as D
 import Json.Encode as E
@@ -110,20 +110,12 @@ submitCommand token pass =
 
 view : Model -> Html Msg
 view model =
-    viewLocal model |> Html.map Main
-
-
-viewLocal : Model -> Html LocalMsg
-viewLocal model =
     viewNav model Nothing viewPage
 
 
-viewPage : AuthResponse -> View -> Html LocalMsg
+viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     let
-        btnAttr add =
-            Button.attrs ([ mediumMargin ] ++ add)
-
         shouldDisableInput =
             case page.result of
                 Just Loading ->
@@ -146,8 +138,9 @@ viewPage resp page =
                     ]
                 , Input.disabled shouldDisableInput
                 ]
-            , buttonView page
-            , Button.linkButton [ Button.danger, btnAttr [ href "/login/new" ] ] [ text "Logout" ]
+                |> Html.map Main
+            , buttonView page |> Html.map Main
+            , Button.linkButton [ Button.danger, Button.onClick <| Navigate "/login/new", Button.attrs [ mediumMargin ] ] [ text "Logout" ]
             ]
         ]
 

@@ -385,10 +385,10 @@ updateLocal msg m =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just plantsLink) viewPage |> Html.map Main
+    viewNav model (Just plantsLink) viewPage
 
 
-viewPage : AuthResponse -> View -> Html LocalMsg
+viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     case page of
         BadEdit ->
@@ -431,30 +431,32 @@ viewResultEdit result =
             div [ flex1 ] []
 
 
-viewResultAdd : Maybe (WebData String) -> Html msg
+viewResultAdd : Maybe (WebData String) -> Html Msg
 viewResultAdd result =
     case result of
         Just web ->
-            viewWebdata web
-                (\data ->
-                    div [ flex1, flex, Flex.col, class "text-success", Flex.alignItemsCenter, Flex.justifyEnd ]
-                        [ div [] [ text ("Successfully created plant " ++ data) ]
-                        , div []
-                            [ Button.linkButton [ Button.primary, Button.attrs [ href ("/notPosted/" ++ data ++ "/edit") ] ] [ text "Go to edit" ]
-                            ]
-                        ]
-                )
+            viewWebdata web viewResultAddValue
 
         Nothing ->
             div [ flex1 ] []
 
 
-viewPlant : ImageList.Model -> WebData Available -> Bool -> Html LocalMsg -> PlantView -> Html LocalMsg
+viewResultAddValue : String -> Html Msg
+viewResultAddValue data =
+    div [ flex1, flex, Flex.col, class "text-success", Flex.alignItemsCenter, Flex.justifyEnd ]
+        [ div [] [ text ("Successfully created plant " ++ data) ]
+        , div []
+            [ Button.linkButton [ Button.primary, Button.attrs [ href ("/notPosted/" ++ data ++ "/edit") ] ] [ text "Go to edit" ]
+            ]
+        ]
+
+
+viewPlant : ImageList.Model -> WebData Available -> Bool -> Html Msg -> PlantView -> Html Msg
 viewPlant imgs av isEdit resultView plant =
     viewWebdata av (viewPlantBase imgs isEdit plant resultView)
 
 
-viewPlantBase : ImageList.Model -> Bool -> PlantView -> Html LocalMsg -> Available -> Html LocalMsg
+viewPlantBase : ImageList.Model -> Bool -> PlantView -> Html Msg -> Available -> Html Msg
 viewPlantBase imgs isEdit plant resultView av =
     div ([ flex, Flex.row ] ++ fillParent)
         [ div [ Flex.col, flex1, flex ] (leftView isEdit plant av)
@@ -462,7 +464,7 @@ viewPlantBase imgs isEdit plant resultView av =
         ]
 
 
-rightView : Html LocalMsg -> Bool -> ImageList.Model -> PlantView -> List (Html LocalMsg)
+rightView : Html Msg -> Bool -> ImageList.Model -> PlantView -> List (Html Msg)
 rightView resultView isEdit additionalImages plant =
     let
         btnMsg =
@@ -492,18 +494,18 @@ rightView resultView isEdit additionalImages plant =
     in
     if isEdit then
         [ imgText "Remaining"
-        , imgView Images plant.images
+        , imgView Images plant.images |> Html.map Main
         , imgText "Removed"
-        , imgView RemovedImages additionalImages
+        , imgView RemovedImages additionalImages |> Html.map Main
         , resultView
-        , btnView
+        , btnView |> Html.map Main
         ]
 
     else
-        [ resultView, btnView ]
+        [ resultView, btnView |> Html.map Main ]
 
 
-leftView : Bool -> PlantView -> Available -> List (Html LocalMsg)
+leftView : Bool -> PlantView -> Available -> List (Html Msg)
 leftView isEdit plant av =
     let
         filesText =
@@ -534,7 +536,7 @@ leftView isEdit plant av =
             else
                 Input.date [ Input.onInput DateUpdate, Input.value plant.created, Input.disabled isEdit ]
     in
-    viewInput "Name" (Input.text [ Input.onInput NameUpdate, Input.value plant.name ])
+    (viewInput "Name" (Input.text [ Input.onInput NameUpdate, Input.value plant.name ])
         ++ viewInput "Add Image"
             (div [ flex, Flex.row ]
                 [ Button.button
@@ -554,6 +556,8 @@ leftView isEdit plant av =
             )
         ++ viewInput "Description" (Input.text [ Input.onInput DescriptionUpdate, Input.value plant.description ])
         ++ viewInput "Created Date" dateInput
+    )
+        |> List.map (Html.map Main)
 
 
 viewInput : String -> Html msg -> List (Html msg)
