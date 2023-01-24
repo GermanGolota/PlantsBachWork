@@ -11,6 +11,7 @@ import {
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
 import { Elm as SearchElm } from "./Elm/Pages/Search";
+import { Elm as HistoryElm } from "./Elm/Pages/History";
 import { Elm as PlantElm } from "./Elm/Pages/Plant";
 import { Elm as NotPostedElm } from "./Elm/Pages/NotPosted";
 import { Elm as PostPlantElm } from "./Elm/Pages/PostPlant";
@@ -28,9 +29,9 @@ import "./main.css";
 import { AuthResponse, retrieve, store } from "./Store";
 import AddInstructionPage from "./editor";
 
-const SearchPage = () => {
+const HistoryPage = () => {
   const [app, setApp] = React.useState<
-    SearchElm.Pages.Search.App | undefined
+    HistoryElm.Pages.History.App | undefined
   >();
   const elmRef = React.useRef(null);
 
@@ -38,9 +39,44 @@ const SearchPage = () => {
   const elmApp = () => {
     let model = retrieve();
 
-    return SearchElm.Pages.Search.init({
+    return HistoryElm.Pages.History.init({
       node: elmRef.current,
       flags: model,
+    });
+  };
+
+  React.useEffect(() => {
+    setApp(elmApp());
+  }, []);
+
+  React.useEffect(() => {
+    if (app) {
+      app.ports.navigate.subscribe((location) => {
+        navigate(location);
+      });
+    }
+  }, [app, navigate]);
+
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
+};
+
+const SearchPage = () => {
+  const [app, setApp] = React.useState<
+    SearchElm.Pages.Search.App | undefined
+  >();
+  const elmRef = React.useRef(null);
+  const { name, id } = useParams();
+  const navigate = useNavigate();
+  const elmApp = () => {
+    let model = retrieve();
+
+    return SearchElm.Pages.Search.init({
+      node: elmRef.current,
+      flags: { ...model, name, id },
     });
   };
 
@@ -565,6 +601,7 @@ const App = () => (
       />
       <Route path="/instructions/:id" element={<InstructionPage />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/history/:name/:id" element={<HistoryPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>
