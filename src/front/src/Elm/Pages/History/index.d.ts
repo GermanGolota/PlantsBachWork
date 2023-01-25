@@ -9,6 +9,9 @@ export namespace Elm {
         navigate: {
           subscribe(callback: (data: string) => void): void
         }
+        goBack: {
+          subscribe(callback: (data: null) => void): void
+        }
         openEditor: {
           subscribe(callback: (data: string) => void): void
         }

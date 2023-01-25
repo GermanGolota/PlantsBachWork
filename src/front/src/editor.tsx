@@ -3,59 +3,44 @@ import draftToHtml from "draftjs-to-html";
 import { ContentState, convertToRaw, EditorState } from "draft-js";
 import { Elm as AddEditInstructionElm } from "./Elm/Pages/AddEditInstruction";
 import React from "react";
-import { retrieve } from "./Store";
 import { Editor } from "react-draft-wysiwyg";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import htmlToDraft from "html-to-draftjs";
+import { useElmApp } from "./hooks";
 
 const AddInstructionPage = (props: { isEdit: boolean }) => {
-  const [app, setApp] = React.useState<
-    AddEditInstructionElm.Pages.AddEditInstruction.App | undefined
-  >();
   const [editorVisible, setEditorVisible] = React.useState<boolean>(false);
   const [state, setState] = React.useState<EditorState>(
     EditorState.createEmpty()
   );
-  const elmRef = React.useRef(null);
-  const navigate = useNavigate();
   const { id } = useParams();
+  const { elmRef, ports } = useElmApp(
+    AddEditInstructionElm.Pages.AddEditInstruction.init,
+    {
+      setFlags: (model) => {
+        let result: any = {
+          ...model,
+          isEdit: props.isEdit,
+        };
 
-  const elmApp = () => {
-    let model: any = retrieve();
-    if (props.isEdit) {
-      model = {
-        ...model,
-        id: id,
-      };
+        if (props.isEdit) {
+          result = {
+            ...result,
+            id: id,
+          };
+        }
+
+        return result;
+      },
+      additional: (ports) => {
+        ports.openEditor.subscribe((txt) => {
+          let state = convertText(txt);
+          setState(state);
+          setEditorVisible(true);
+        });
+      },
     }
-    model = {
-      ...model,
-      isEdit: props.isEdit,
-    };
-
-    return AddEditInstructionElm.Pages.AddEditInstruction.init({
-      node: elmRef.current,
-      flags: model,
-    });
-  };
-
-  // Subscribe to state changes from Elm
-  React.useEffect(() => {
-    if (app) {
-      app.ports.openEditor.subscribe((txt) => {
-        let state = convertText(txt);
-        setState(state);
-        setEditorVisible(true);
-      });
-      app.ports.navigate.subscribe((location) => {
-        navigate(location);
-      });
-    }
-  }, [app, navigate]);
-
-  React.useEffect(() => {
-    setApp(elmApp());
-  }, []);
+  );
 
   if (editorVisible) {
     return (
@@ -73,7 +58,7 @@ const AddInstructionPage = (props: { isEdit: boolean }) => {
                   convertToRaw(newState.getCurrentContent())
                 );
                 setState(newState);
-                app?.ports.editorChanged.send(text);
+                ports.editorChanged.send(text);
               }}
             />
           </Modal>

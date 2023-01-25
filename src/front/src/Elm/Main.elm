@@ -146,8 +146,12 @@ type ModelBase model
 port navigate : String -> Cmd msg
 
 
+port goBack : () -> Cmd msg
+
+
 type MsgBase msg
     = Navigate String
+    | GoBack
     | Main msg
 
 
@@ -170,6 +174,9 @@ updateBase updateFunc message model =
     case message of
         Navigate location ->
             ( model, navigate location )
+
+        GoBack ->
+            ( model, goBack () )
 
         Main main ->
             updateFunc main model
