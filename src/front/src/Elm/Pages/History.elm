@@ -1,11 +1,15 @@
 module Pages.History exposing (..)
 
+import Bootstrap.Accordion as Accordion
+import Bootstrap.Card.Block as Block
+import Bootstrap.ListGroup as ListGroup
 import Bootstrap.Utilities.Flex as Flex
+import Dict exposing (Dict)
 import Endpoints exposing (getAuthedQuery)
 import Html exposing (Html, div, text)
 import Http
 import Json.Decode as D exposing (errorToString)
-import Json.Decode.Pipeline exposing (required, requiredAt)
+import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (plantsLink, viewNav)
 import Utils exposing (buildQuery)
@@ -38,7 +42,7 @@ type alias AggregateDescription =
 
 
 type alias History =
-    List AggregateSnapshot
+    List ( AggregateSnapshot, Accordion.State )
 
 
 type alias AggregateSnapshot =
@@ -59,8 +63,14 @@ type alias RelatedAggregate =
 
 
 type alias EventData =
-    { metadata : D.Value
+    { metadata : EventMetadata
     , payload : D.Value
+    }
+
+
+type alias EventMetadata =
+    { name : String
+    , fullMetadata : D.Value
     }
 
 
@@ -72,8 +82,15 @@ type alias AggregateData =
 
 type alias CommandData =
     { isLocal : Bool
-    , metadata : D.Value
+    , metadata : CommandMetadata
     , payload : D.Value
+    }
+
+
+type alias CommandMetadata =
+    { userName : String
+    , name : String
+    , fullMetadata : D.Value
     }
 
 
@@ -84,6 +101,7 @@ type alias CommandData =
 type LocalMsg
     = NoOp
     | GotAggregate (Result Http.Error History)
+    | AccordionMsg AggregateSnapshot Accordion.State
 
 
 type alias Msg =
@@ -113,6 +131,22 @@ update msg m =
                     case msg of
                         NoOp ->
                             noOp
+
+                        AccordionMsg aggregate state ->
+                            case viewModel.history of
+                                Loaded history ->
+                                    let
+                                        mapSnapshot snapshot oldState =
+                                            if snapshot == aggregate then
+                                                ( snapshot, state )
+
+                                            else
+                                                ( snapshot, oldState )
+                                    in
+                                    ( authed <| Valid <| { viewModel | history = Loaded <| List.map (\( k, v ) -> mapSnapshot k v) history }, Cmd.none )
+
+                                _ ->
+                                    noOp
 
                         GotAggregate (Err err) ->
                             ( authed <| Valid <| { viewModel | history = Debug.log (errorToString err) Error }, Cmd.none )
@@ -167,7 +201,17 @@ loadHistoryCmd token aggregate =
 
 historyDecoder : D.Decoder History
 historyDecoder =
-    D.field "snapshots" <| D.list snapshotDecoder
+    D.field "snapshots" (D.list snapshotDecoder)
+        |> D.andThen (\d -> D.succeed <| snapshotMapper d)
+
+
+snapshotMapper : List AggregateSnapshot -> History
+snapshotMapper snapshots =
+    List.map (\v -> ( v, Accordion.initialState )) snapshots
+
+
+
+--Dict.fromList <| List.map (\v -> ( v, Accordion.initialState ) snapshots
 
 
 snapshotDecoder : D.Decoder AggregateSnapshot
@@ -203,16 +247,31 @@ aggregateDecoder =
 eventDecoder : D.Decoder EventData
 eventDecoder =
     D.succeed EventData
-        |> required "metadata" D.value
+        |> required "metadata" eventMetadataDecoder
         |> required "payload" D.value
+
+
+eventMetadataDecoder : D.Decoder EventMetadata
+eventMetadataDecoder =
+    D.succeed EventMetadata
+        |> required "name" D.string
+        |> custom D.value
 
 
 commandDecoder : D.Decoder CommandData
 commandDecoder =
     D.succeed CommandData
         |> required "isLocal" D.bool
-        |> required "metadata" D.value
+        |> required "metadata" commandMetadataDecoder
         |> required "payload" D.value
+
+
+commandMetadataDecoder : D.Decoder CommandMetadata
+commandMetadataDecoder =
+    D.succeed CommandMetadata
+        |> required "userName" D.string
+        |> required "name" D.string
+        |> custom D.value
 
 
 
@@ -236,7 +295,40 @@ viewPage resp page =
 
 viewHistory : History -> Html LocalMsg
 viewHistory history =
-    div [] [ text <| "Viewing history for " ++ (String.fromInt <| List.length history) ++ " records" ]
+    ListGroup.ul (List.map (\( snapshot, state ) -> ListGroup.li [] [ viewSnapshot snapshot state ]) history)
+
+
+viewSnapshot : AggregateSnapshot -> Accordion.State -> Html LocalMsg
+viewSnapshot snapshot state =
+    let
+        commandMeta =
+            snapshot.lastCommand.metadata
+    in
+    div []
+        [ text (commandMeta.name ++ " by " ++ commandMeta.userName ++ " " ++ snapshot.displayTime)
+        , Accordion.config (AccordionMsg snapshot)
+            |> Accordion.withAnimation
+            |> Accordion.cards (List.map viewSnapshotEvent snapshot.events)
+            |> Accordion.view state
+        ]
+
+
+viewSnapshotEvent : EventData -> Accordion.Card msg
+viewSnapshotEvent event =
+    Accordion.card
+        { id = event.metadata.name
+        , options = []
+        , header =
+            Accordion.header [] <| Accordion.toggle [] [ text event.metadata.name ]
+        , blocks =
+            viewEvent event
+        }
+
+
+viewEvent event =
+    [ Accordion.block []
+        [ Block.text [] [ text event.metadata.name ] ]
+    ]
 
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
@@ -266,7 +358,31 @@ init resp flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    case model of
+        Authorized _ a ->
+            case a of
+                Valid v ->
+                    case v.history of
+                        Loaded history ->
+                            history
+                                |> List.map (\( agg, state ) -> Accordion.subscriptions state (\st -> Main <| AccordionMsg agg st))
+                                |> Sub.batch
+
+                        _ ->
+                            Sub.none
+
+                _ ->
+                    Sub.none
+
+        _ ->
+            Sub.none
+
+
+
+--Accordion.subscriptions model.accordionState AccordionMsg
+--Sub.batch [
+--  List.map (\val -> Accordion.subscriptions state (AccordionMsg agg) state)
+--]
 
 
 main : Program D.Value Model Msg
