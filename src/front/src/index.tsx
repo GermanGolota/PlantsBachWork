@@ -1,4 +1,5 @@
-import React from "react";import ReactDOM from "react-dom";
+import React from "react";
+import ReactDOM from "react-dom";
 import { Route, BrowserRouter, Routes, useParams } from "react-router-dom";
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
@@ -23,7 +24,17 @@ import AddInstructionPage from "./editor";
 import { useElmApp } from "./hooks";
 
 const HistoryPage = () => {
-  const { elmRef } = useElmApp(HistoryElm.Pages.History.init, {});
+  const { name, id } = useParams();
+
+  const { elmRef } = useElmApp(HistoryElm.Pages.History.init, {
+    setFlags: (model) => {
+      return {
+        ...model,
+        id,
+        name,
+      };
+    },
+  });
 
   return (
     <div>

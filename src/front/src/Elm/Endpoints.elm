@@ -44,6 +44,7 @@ type Endpoint
     | DeletePost String
     | RejectOrder String
     | ChangePassword
+    | History
 
 
 endpointToUrl : Endpoint -> String
@@ -146,6 +147,9 @@ endpointToUrl endpoint =
 
         ChangePassword ->
             baseUrl ++ "users/changePass"
+
+        History ->
+            baseUrl ++ "history"
 
 
 imageIdToUrl : String -> String -> String

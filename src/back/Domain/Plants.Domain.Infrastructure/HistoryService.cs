@@ -35,14 +35,15 @@ internal class HistoryService : IHistoryService
                 result.Events
                     .Where(_ => _ is not CommandProcessedEvent)
                     .Select(_ => new ObjectWithMetadata<EventMetadata>(RemoveMetadata(_), _.Metadata))
-                    .ToList()
+                    .ToList(),
+                aggregate.Metadata.Referenced.Select(reference => GetReferenced(desc, reference)).ToList()
                 ));
         }
-        var refences = aggregate.Metadata.Referenced
-            .Select(reference => new RelatedAggregate(reference.Name, reference.Id, _helper.ReferencedAggregates[desc.Name][reference.Name].Name))
-            .ToList();
-        return new(snapshots, refences);
+        return new(snapshots);
     }
+
+    private RelatedAggregate GetReferenced(AggregateDescription desc, AggregateDescription reference) =>
+        new RelatedAggregate(reference.Name, reference.Id, _helper.ReferencedAggregates[desc.Name][reference.Name].Name);
 
     private static object RemoveMetadata(AggregateBase aggregate) =>
         aggregate.RemoveProperty(nameof(AggregateBase.Metadata));
