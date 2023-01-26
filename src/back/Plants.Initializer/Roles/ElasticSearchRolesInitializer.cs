@@ -7,6 +7,7 @@ using Plants.Infrastructure.Domain.Helpers;
 using Plants.Services.Infrastructure.Encryption;
 using System.Data;
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 
 namespace Plants.Initializer.Roles;
 
@@ -64,8 +65,17 @@ internal class ElasticSearchRolesInitializer
             var url = _helper.GetUrl(indexName);
             var result = await client.PutAsync(url, null, token);
 
-            await _helper.HandleCreationAsync<CreationStatus>("index", indexName, result, _ => _.Created, token);
+            await _helper.HandleCreationAsync<IndexCreationResult>("index", 
+                indexName, result, 
+                _ => _.Acknowledged && _.ShardsAcknowledged, token);
         }
+    }
+
+    private class IndexCreationResult
+    {
+        public bool Acknowledged { get; set; }
+        [JsonPropertyName("shards_acknowledged")]
+        public bool ShardsAcknowledged { get; set; }
     }
 
     private async Task InitializeKibanaUserAsync(CancellationToken token)

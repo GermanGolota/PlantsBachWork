@@ -20,7 +20,7 @@ var host = Host.CreateDefaultBuilder(args)
                 .AddAggregatesInfrastructure();
 
             services.AddHealthChecks()
-                .AddDomain(ctx.Configuration);
+                .AddDomainHealthChecks(ctx.Configuration);
 
             services.AddSingleton<MongoRolesDbInitializer>()
                     .AddSingleton<ElasticSearchRolesInitializer>()

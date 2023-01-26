@@ -8,13 +8,18 @@ namespace Plants.Domain.Infrastructure;
 
 public static class HealthChecksBuilderExtensions
 {
-    public static IHealthChecksBuilder AddDomain(this IHealthChecksBuilder builder, IConfiguration configuration)
+    public static IHealthChecksBuilder AddDomainHealthChecks(this IHealthChecksBuilder builder, IConfiguration configuration)
     {
         var connection = configuration.GetSection(ConnectionConfig.Section).Get<ConnectionConfig>()!;
         var elasticCreds = connection.GetCreds(_ => _.ElasticSearch);
         var mongoCreds = connection.GetCreds(_ => _.MongoDb);
         var eventStoreCreds = connection.GetCreds(_ => _.EventStore);
-        builder.AddElasticsearch(connection.ElasticSearch.Template.Format(elasticCreds.Username, elasticCreds.Password))
+        builder
+            .AddElasticsearch(opt =>
+            {
+                opt.UseServer(connection.ElasticSearch.Template)
+                   .UseBasicAuthentication(elasticCreds.Username, elasticCreds.Password);
+            })
             .AddEventStore(connection.EventStore.Template, eventStoreCreds.Username, eventStoreCreds.Password)
             .AddMongoDb(connection.MongoDb.Template.Format(mongoCreds.Username, mongoCreds.Password));
 
