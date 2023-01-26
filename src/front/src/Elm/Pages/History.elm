@@ -305,7 +305,7 @@ viewSnapshot snapshot state =
             snapshot.lastCommand.metadata
     in
     div []
-        [ text (commandMeta.name ++ " by " ++ commandMeta.userName ++ " " ++ snapshot.displayTime)
+        [ text ("\"" ++ commandMeta.userName ++ "\"" ++ " executed " ++ "\"" ++ commandMeta.name ++ "\"" ++ " " ++ snapshot.displayTime)
         , Accordion.config (AccordionMsg snapshot)
             |> Accordion.withAnimation
             |> Accordion.cards (List.map viewSnapshotEvent snapshot.events)
