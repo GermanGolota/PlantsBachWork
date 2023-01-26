@@ -19,6 +19,7 @@ import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import Multiselect
 import NavBar exposing (plantsLink, viewNav)
+import Pages.Plant exposing (SelectedAddress(..))
 import Utils exposing (SubmittedResult(..), createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -350,12 +351,12 @@ updateLocal msg m =
                     ( setPlant { plant | created = date }, Cmd.none )
 
                 ( Submit, Add addView ) ->
-                    ( m, submitAddCommand auth.token addView.plant )
+                    ( authed <| Add <| { addView | result = Just Loading }, submitAddCommand auth.token addView.plant )
 
                 ( Submit, Edit editView ) ->
                     case editView.plant of
                         Loaded pl ->
-                            ( m, submitEditCommand auth.token editView.plantId pl (Dict.toList editView.removedItems.available |> List.map Tuple.first) )
+                            ( authed <| Edit <| { editView | result = Just Loading }, submitEditCommand auth.token editView.plantId pl (Dict.toList editView.removedItems.available |> List.map Tuple.first) )
 
                         _ ->
                             noOp
@@ -390,15 +391,47 @@ view model =
 
 viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
+    let
+        shouldShowActions =
+            case page of
+                BadEdit ->
+                    False
+
+                Edit e ->
+                    case e.result of
+                        Just result ->
+                            case result of
+                                Loading ->
+                                    False
+
+                                _ ->
+                                    True
+
+                        Nothing ->
+                            True
+
+                Add a ->
+                    case a.result of
+                        Just result ->
+                            case result of
+                                Loading ->
+                                    False
+
+                                _ ->
+                                    True
+
+                        Nothing ->
+                            True
+    in
     case page of
         BadEdit ->
             div [] [ text "There is no such plant" ]
 
         Edit editView ->
-            viewWebdata editView.plant (viewPlant editView.removedItems editView.available True (viewResultEdit editView.result))
+            viewWebdata editView.plant (viewPlant editView.removedItems editView.available True shouldShowActions (viewResultEdit editView.result))
 
         Add addView ->
-            viewPlant (ImageList.fromDict Dict.empty) addView.available False (viewResultAdd addView.result) addView.plant
+            viewPlant (ImageList.fromDict Dict.empty) addView.available False shouldShowActions (viewResultAdd addView.result) addView.plant
 
 
 viewResultEdit : Maybe (WebData SubmittedResult) -> Html msg
@@ -451,21 +484,21 @@ viewResultAddValue data =
         ]
 
 
-viewPlant : ImageList.Model -> WebData Available -> Bool -> Html Msg -> PlantView -> Html Msg
-viewPlant imgs av isEdit resultView plant =
-    viewWebdata av (viewPlantBase imgs isEdit plant resultView)
+viewPlant : ImageList.Model -> WebData Available -> Bool -> Bool -> Html Msg -> PlantView -> Html Msg
+viewPlant imgs av isEdit shouldShowBtns resultView plant =
+    viewWebdata av (viewPlantBase imgs isEdit shouldShowBtns plant resultView)
 
 
-viewPlantBase : ImageList.Model -> Bool -> PlantView -> Html Msg -> Available -> Html Msg
-viewPlantBase imgs isEdit plant resultView av =
+viewPlantBase : ImageList.Model -> Bool -> Bool -> PlantView -> Html Msg -> Available -> Html Msg
+viewPlantBase imgs isEdit shouldShowBtns plant resultView av =
     div ([ flex, Flex.row ] ++ fillParent)
         [ div [ Flex.col, flex1, flex ] (leftView isEdit plant av)
-        , div [ flex, Flex.col, flex1, Flex.justifyBetween, Flex.alignItemsCenter ] (rightView resultView isEdit imgs plant)
+        , div [ flex, Flex.col, flex1, Flex.justifyBetween, Flex.alignItemsCenter ] (rightView resultView isEdit shouldShowBtns imgs plant)
         ]
 
 
-rightView : Html Msg -> Bool -> ImageList.Model -> PlantView -> List (Html Msg)
-rightView resultView isEdit additionalImages plant =
+rightView : Html Msg -> Bool -> Bool -> ImageList.Model -> PlantView -> List (Html Msg)
+rightView resultView isEdit shouldShow additionalImages plant =
     let
         btnMsg =
             if isEdit then
@@ -475,14 +508,18 @@ rightView resultView isEdit additionalImages plant =
                 "Add"
 
         btnView =
-            div [ flex1 ]
-                [ Button.button
-                    [ Button.primary
-                    , Button.onClick Submit
-                    , Button.attrs ([ smallMargin ] ++ largeCentered)
+            if shouldShow then
+                div [ flex1 ]
+                    [ Button.button
+                        [ Button.primary
+                        , Button.onClick Submit
+                        , Button.attrs ([ smallMargin ] ++ largeCentered)
+                        ]
+                        [ text btnMsg ]
                     ]
-                    [ text btnMsg ]
-                ]
+
+            else
+                div [] []
 
         imgView event imgs =
             div [ style "flex" "2" ]
