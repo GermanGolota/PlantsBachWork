@@ -102,7 +102,7 @@ updateLocal msg m =
                 GroupChanged groupId ->
                     let
                         newModel =
-                            { model | selectedGroup = groupId }
+                            { model | selectedGroup = groupId, instructions = Loading }
                     in
                     ( authed newModel, triggerSearch newModel )
 

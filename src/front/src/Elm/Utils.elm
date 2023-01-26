@@ -10,7 +10,7 @@ import Color exposing (Color, rgba)
 import Dict exposing (Dict)
 import FormatNumber exposing (format)
 import FormatNumber.Locales exposing (usLocale)
-import Html exposing (Attribute, Html, a, div)
+import Html exposing (Attribute, Html, a, div, p, text)
 import Html.Attributes exposing (attribute, style)
 import Html.Parser
 import Html.Parser.Util
@@ -233,9 +233,13 @@ chunkedView size viewFunc items =
                 )
     in
     Grid.container []
-        (List.indexedMap
-            buildRow
-            chunks
+        (if List.length chunks == 0 then
+            [ div (largeCentered ++ fillParent ++ flexCenter ++ [ flex ]) [ p [] [ text "No items were found" ] ] ]
+
+         else
+            List.indexedMap
+                buildRow
+                chunks
         )
 
 
