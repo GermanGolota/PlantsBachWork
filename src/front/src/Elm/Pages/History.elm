@@ -12,7 +12,7 @@ import Json.Decode as D exposing (errorToString)
 import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (plantsLink, viewNav)
-import Utils exposing (buildQuery)
+import Utils exposing (buildQuery, humanizePascalCase)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -305,7 +305,7 @@ viewSnapshot snapshot state =
             snapshot.lastCommand.metadata
     in
     div []
-        [ text ("\"" ++ commandMeta.userName ++ "\"" ++ " executed " ++ "\"" ++ commandMeta.name ++ "\"" ++ " " ++ snapshot.displayTime)
+        [ text ("\"" ++ commandMeta.userName ++ "\"" ++ " executed " ++ "\"" ++ humanizePascalCase commandMeta.name ++ "\"" ++ " " ++ snapshot.displayTime)
         , Accordion.config (AccordionMsg snapshot)
             |> Accordion.withAnimation
             |> Accordion.cards (List.map viewSnapshotEvent snapshot.events)
@@ -319,7 +319,7 @@ viewSnapshotEvent event =
         { id = event.metadata.name
         , options = []
         , header =
-            Accordion.header [] <| Accordion.toggle [] [ text event.metadata.name ]
+            Accordion.header [] <| Accordion.toggle [] [ text <| humanizePascalCase event.metadata.name ]
         , blocks =
             viewEvent event
         }

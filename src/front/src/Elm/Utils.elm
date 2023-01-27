@@ -15,6 +15,7 @@ import Html.Attributes exposing (attribute, style)
 import Html.Parser
 import Html.Parser.Util
 import Json.Decode as D
+import Regex
 
 
 type AlignDirection
@@ -296,6 +297,21 @@ createdDecoder =
 buildQuery : List ( String, String ) -> String
 buildQuery items =
     List.foldl addQuery "?" items
+
+
+humanizePascalCase : String -> String
+humanizePascalCase =
+    regexReplace "(?!^)([A-Z])" (\m -> " " ++ m.match)
+
+
+regexReplace : String -> (Regex.Match -> String) -> String -> String
+regexReplace userRegex replacer string =
+    case Regex.fromString userRegex of
+        Nothing ->
+            string
+
+        Just regex ->
+            Regex.replace regex replacer string
 
 
 addQuery : ( String, String ) -> String -> String
