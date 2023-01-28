@@ -3,20 +3,18 @@ port module Pages.History exposing (..)
 import Bootstrap.Accordion as Accordion exposing (State(..))
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
-import Bootstrap.ListGroup as ListGroup
 import Bootstrap.Text as Text
 import Bootstrap.Utilities.Flex as Flex
-import Dict exposing (Dict)
 import Endpoints exposing (getAuthedQuery)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required, requiredAt)
-import JsonViewer exposing (initJsonTree, initJsonTreeCollapsed, jsonTreeDecoder, updateJsonTree, viewJsonTree)
+import JsonViewer exposing (initJsonTree, initJsonTreeCollapsed, updateJsonTree, viewJsonTree)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (plantsLink, viewNav)
-import Utils exposing (buildQuery, fillParent, flatten, flex, flexCenter, humanizePascalCase, largeCentered, mediumMargin, textCenter)
+import Utils exposing (buildQuery, fillParent, flex, humanizePascalCase, largeCentered, mediumMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
