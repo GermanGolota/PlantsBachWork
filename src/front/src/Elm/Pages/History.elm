@@ -1,6 +1,6 @@
-module Pages.History exposing (..)
+port module Pages.History exposing (..)
 
-import Bootstrap.Accordion as Accordion
+import Bootstrap.Accordion as Accordion exposing (State(..))
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.ListGroup as ListGroup
@@ -11,13 +11,20 @@ import Endpoints exposing (getAuthedQuery)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, style)
 import Http
-import Json.Decode as D exposing (errorToString, field)
+import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import JsonViewer exposing (initJsonTree, initJsonTreeCollapsed, jsonTreeDecoder, updateJsonTree, viewJsonTree)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (plantsLink, viewNav)
-import Utils exposing (buildQuery, fillParent, flex, flexCenter, humanizePascalCase, largeCentered, mediumMargin, textCenter)
+import Utils exposing (buildQuery, fillParent, flatten, flex, flexCenter, humanizePascalCase, largeCentered, mediumMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
+
+
+
+-- ports
+
+
+port resizeAggregates : () -> Cmd msg
 
 
 
@@ -46,7 +53,9 @@ type alias AggregateDescription =
 
 
 type alias History =
-    List ( AggregateSnapshot, Accordion.State )
+    { snapshots : List ( AggregateSnapshot, Accordion.State )
+    , aggregateView : Accordion.State
+    }
 
 
 type alias AggregateSnapshot =
@@ -107,7 +116,8 @@ type alias CommandMetadata =
 type LocalMsg
     = NoOp
     | GotAggregate (Result Http.Error History)
-    | AccordionMsg AggregateSnapshot Accordion.State
+    | AccordionSnapshotMsg AggregateSnapshot Accordion.State
+    | AccordionAggregateMsg Accordion.State
     | CommandDataJson AggregateSnapshot JsonViewer.Msg
     | EventDataJson AggregateSnapshot EventData JsonViewer.Msg
     | AggregateDataJson AggregateSnapshot JsonViewer.Msg
@@ -141,7 +151,7 @@ update msg m =
                         NoOp ->
                             noOp
 
-                        AccordionMsg aggregate state ->
+                        AccordionSnapshotMsg aggregate state ->
                             case viewModel.history of
                                 Loaded history ->
                                     let
@@ -151,8 +161,23 @@ update msg m =
 
                                             else
                                                 ( snapshot, oldState )
+
+                                        updateHistory =
+                                            { history | snapshots = List.map (\( k, v ) -> mapSnapshot k v) history.snapshots }
                                     in
-                                    ( authed <| Valid <| { viewModel | history = Loaded <| List.map (\( k, v ) -> mapSnapshot k v) history }, Cmd.none )
+                                    ( authed <| Valid <| { viewModel | history = Loaded updateHistory }, resizeAggregates () )
+
+                                _ ->
+                                    noOp
+
+                        AccordionAggregateMsg state ->
+                            case viewModel.history of
+                                Loaded history ->
+                                    let
+                                        updateHistory =
+                                            { history | aggregateView = state }
+                                    in
+                                    ( authed <| Valid <| { viewModel | history = Loaded updateHistory }, resizeAggregates () )
 
                                 _ ->
                                     noOp
@@ -174,7 +199,11 @@ update msg m =
                             in
                             case viewModel.history of
                                 Loaded history ->
-                                    ( authed <| Valid <| { viewModel | history = Loaded <| List.map mapJsonSnapshot history }, Cmd.none )
+                                    let
+                                        updateHistory =
+                                            { history | snapshots = List.map mapJsonSnapshot history.snapshots }
+                                    in
+                                    ( authed <| Valid <| { viewModel | history = Loaded updateHistory }, Cmd.none )
 
                                 _ ->
                                     noOp
@@ -190,7 +219,11 @@ update msg m =
                             in
                             case viewModel.history of
                                 Loaded history ->
-                                    ( authed <| Valid <| { viewModel | history = Loaded <| List.map mapJsonSnapshot history }, Cmd.none )
+                                    let
+                                        updateHistory =
+                                            { history | snapshots = List.map mapJsonSnapshot history.snapshots }
+                                    in
+                                    ( authed <| Valid <| { viewModel | history = Loaded updateHistory }, Cmd.none )
 
                                 _ ->
                                     noOp
@@ -213,7 +246,11 @@ update msg m =
                             in
                             case viewModel.history of
                                 Loaded history ->
-                                    ( authed <| Valid <| { viewModel | history = Loaded <| List.map mapJsonSnapshot history }, Cmd.none )
+                                    let
+                                        updateHistory =
+                                            { history | snapshots = List.map mapJsonSnapshot history.snapshots }
+                                    in
+                                    ( authed <| Valid <| { viewModel | history = Loaded updateHistory }, Cmd.none )
 
                                 _ ->
                                     noOp
@@ -256,7 +293,7 @@ historyDecoder =
 
 snapshotMapper : List AggregateSnapshot -> History
 snapshotMapper snapshots =
-    List.map (\v -> ( v, Accordion.initialState )) snapshots
+    History (List.map (\v -> ( v, Accordion.initialState )) snapshots) Accordion.initialState
 
 
 snapshotDecoder : D.Decoder AggregateSnapshot
@@ -342,30 +379,59 @@ viewPage resp page =
 
 viewHistory : History -> Html LocalMsg
 viewHistory history =
-    div fillParent [ ListGroup.ul (List.map (\( snapshot, state ) -> ListGroup.li [] [ viewSnapshot snapshot state ]) history) ]
+    div fillParent
+        [ Accordion.config AccordionAggregateMsg
+            --|> Accordion.withAnimation
+            |> Accordion.cards
+                (List.map (\( k, v ) -> viewSnapshot history.aggregateView k v) history.snapshots)
+            |> Accordion.view history.aggregateView
+        ]
 
 
-viewSnapshot : AggregateSnapshot -> Accordion.State -> Html LocalMsg
-viewSnapshot snapshot state =
-    div []
-        [ viewSnapshotName snapshot
-        , div [ flex, Flex.row, mediumMargin ]
-            [ div [ flex, Flex.col, style "width" "50%" ]
-                [ div largeCentered [ text "State" ]
-                , viewJsonTree snapshot.aggregate.payload |> Html.map (AggregateDataJson snapshot)
-                ]
-            , div [ flex, Flex.col, style "width" "50%" ]
-                [ div largeCentered [ text "Command" ]
-                , Accordion.config (AccordionMsg snapshot)
-                    |> Accordion.withAnimation
-                    |> Accordion.cards
-                        ([ viewCommandData snapshot snapshot.lastCommand ]
-                            ++ List.map (viewSnapshotEvent snapshot) snapshot.events
-                        )
-                    |> Accordion.view state
+viewSnapshot : Accordion.State -> AggregateSnapshot -> Accordion.State -> Accordion.Card LocalMsg
+viewSnapshot baseState snapshot state =
+    let
+        id =
+            snapshot.lastCommand.metadata.id
+    in
+    Accordion.card
+        { id = id
+        , options = [ Card.outlineDark, Card.align Text.alignXsCenter ]
+        , header =
+            Accordion.header [] <| Accordion.toggle [] [ viewSnapshotName snapshot ]
+        , blocks =
+            [ Accordion.block []
+                [ Block.custom <|
+                    div []
+                        [ div [ flex, Flex.row, mediumMargin ]
+                            [ div [ flex, Flex.col, style "width" "50%" ]
+                                [ div largeCentered [ text "State" ]
+                                , viewJsonTree snapshot.aggregate.payload |> Html.map (AggregateDataJson snapshot)
+                                ]
+                            , div [ flex, Flex.col, style "width" "50%" ]
+                                [ div largeCentered [ text "Command" ]
+                                , Accordion.config (AccordionSnapshotMsg snapshot)
+                                    -- |> Accordion.withAnimation
+                                    |> Accordion.cards
+                                        ([ viewCommandData snapshot snapshot.lastCommand ]
+                                            ++ List.map (viewSnapshotEvent snapshot) snapshot.events
+                                        )
+                                    |> Accordion.view state
+                                ]
+                            ]
+                        ]
                 ]
             ]
-        ]
+        }
+
+
+blockStyle : String -> Accordion.State -> List (Html.Attribute msg)
+blockStyle id state =
+    if Accordion.isOpen id state then
+        Debug.log "openAboba" [ style "height" "0px" ]
+
+    else
+        Debug.log "NotopenAboba" [ style "height" "100% !important" ]
 
 
 viewSnapshotName : AggregateSnapshot -> Html msg
@@ -460,8 +526,13 @@ subscriptions model =
                 Valid v ->
                     case v.history of
                         Loaded history ->
-                            history
-                                |> List.map (\( agg, state ) -> Accordion.subscriptions state (\st -> Main <| AccordionMsg agg st))
+                            let
+                                snapshotSubs =
+                                    history.snapshots
+                                        |> List.map (\( agg, state ) -> Accordion.subscriptions state (\st -> Main <| AccordionSnapshotMsg agg st))
+                            in
+                            snapshotSubs
+                                ++ [ Accordion.subscriptions history.aggregateView (\st -> Main <| AccordionAggregateMsg st) ]
                                 |> Sub.batch
 
                         _ ->
@@ -472,13 +543,6 @@ subscriptions model =
 
         _ ->
             Sub.none
-
-
-
---Accordion.subscriptions model.accordionState AccordionMsg
---Sub.batch [
---  List.map (\val -> Accordion.subscriptions state (AccordionMsg agg) state)
---]
 
 
 main : Program D.Value Model Msg

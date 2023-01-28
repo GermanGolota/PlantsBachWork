@@ -1,5 +1,4 @@
-import React from "react";
-import ReactDOM from "react-dom";
+import React from "react";import ReactDOM from "react-dom";
 import { Route, BrowserRouter, Routes, useParams } from "react-router-dom";
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
@@ -34,6 +33,50 @@ const HistoryPage = () => {
         name,
       };
     },
+    additional: (flags) => {
+      flags.resizeAggregates.subscribe(() => {
+        const accordions = document.getElementsByClassName("accordion");
+        for (let index = 0; index < accordions.length; index++) {
+          const accordion = accordions[index];
+          if (accordion) {
+            for (let index = 0; index < accordion.childNodes.length; index++) {
+              const cards = accordion.childNodes[index];
+              for (let index2 = 0; index2 < cards.childNodes.length; index2++) {
+                const body = cards.childNodes[index2];
+                if (body instanceof HTMLElement && body.id) {
+                  console.log("child", body);
+                  if (body.style.height == "0px") {
+                    //element.style.removeProperty("height");
+                    //element.style.height = "0%";
+                  } else {
+                    body.style.removeProperty("height");
+                    body.style.height = "100%";
+                  }
+                }
+              }
+            }
+          }
+        }
+        /*const elements = data.ids.map((id) => document.getElementById(id));
+        for (let index = 0; index < elements.length; index++) {
+          const element = elements[index];
+          if (element) {
+            const parents = getParents(element);
+            console.log(element);
+            console.log(parents);
+
+            if (element.style.height == "0px") {
+              //element.style.removeProperty("height");
+              //element.style.height = "0%";
+            } else {
+              element.style.removeProperty("height");
+              element.style.height = "100%";
+            }
+          }
+        }
+        */
+      });
+    },
   });
 
   return (
@@ -42,6 +85,21 @@ const HistoryPage = () => {
     </div>
   );
 };
+
+function getParents(elem: HTMLElement | null) {
+  var parents: HTMLElement[] = [];
+  if (elem) {
+    while (
+      elem.parentElement &&
+      elem.parentElement.nodeName.toLowerCase() != "body"
+    ) {
+      elem = elem.parentElement;
+      parents.push(elem);
+    }
+  }
+
+  return parents;
+}
 
 const SearchPage = () => {
   const { name, id } = useParams();

@@ -18,6 +18,9 @@ export namespace Elm {
         editorChanged: {
           send(data: string): void
         }
+        resizeAggregates: {
+          subscribe(callback: (data: null) => void): void
+        }
         notifyLoggedIn: {
           subscribe(callback: (data: unknown) => void): void
         }
