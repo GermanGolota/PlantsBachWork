@@ -9,13 +9,14 @@ import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
 import Endpoints exposing (getAuthedQuery)
 import Html exposing (Html, div, text)
+import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as D exposing (errorToString, field)
 import Json.Decode.Pipeline exposing (custom, required, requiredAt)
-import JsonViewer exposing (initJsonTree, updateJsonTree, viewJsonTree)
+import JsonViewer exposing (initJsonTree, initJsonTreeCollapsed, jsonTreeDecoder, updateJsonTree, viewJsonTree)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (plantsLink, viewNav)
-import Utils exposing (buildQuery, fillParent, humanizePascalCase)
+import Utils exposing (buildQuery, fillParent, flex, flexCenter, humanizePascalCase, largeCentered, mediumMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -80,15 +81,14 @@ type alias EventMetadata =
 
 type alias AggregateData =
     { metadata : D.Value
-    , payload : D.Value
+    , payload : JsonViewer.Model
     }
 
 
 type alias CommandData =
     { isLocal : Bool
     , metadata : CommandMetadata
-    , payload : D.Value
-    , payloadView : JsonViewer.Model
+    , payload : JsonViewer.Model
     }
 
 
@@ -109,6 +109,7 @@ type LocalMsg
     | GotAggregate (Result Http.Error History)
     | AccordionMsg AggregateSnapshot Accordion.State
     | CommandDataJson AggregateSnapshot JsonViewer.Msg
+    | AggregateDataJson AggregateSnapshot JsonViewer.Msg
 
 
 type alias Msg =
@@ -156,15 +157,39 @@ update msg m =
                                     noOp
 
                         GotAggregate (Err err) ->
-                            ( authed <| Valid <| { viewModel | history = Debug.log (errorToString err) Error }, Cmd.none )
+                            ( authed <| Valid <| { viewModel | history = Error }, Cmd.none )
 
                         GotAggregate (Ok history) ->
                             ( authed <| Valid <| { viewModel | history = Loaded history }, Cmd.none )
 
-                        CommandDataJson aggregate json ->
+                        CommandDataJson changed json ->
+                            let
+                                mapJsonSnapshot ( snapshot, state ) =
+                                    if snapshot == changed then
+                                        ( { snapshot | lastCommand = updateJsonCommand snapshot.lastCommand json }, state )
+
+                                    else
+                                        ( snapshot, state )
+                            in
                             case viewModel.history of
                                 Loaded history ->
-                                    ( authed <| Valid <| { viewModel | history = Loaded <| List.map (mapJsonSnapshot aggregate json) history }, Cmd.none )
+                                    ( authed <| Valid <| { viewModel | history = Loaded <| List.map mapJsonSnapshot history }, Cmd.none )
+
+                                _ ->
+                                    noOp
+
+                        AggregateDataJson changed json ->
+                            let
+                                mapJsonSnapshot ( snapshot, state ) =
+                                    if snapshot == changed then
+                                        ( { snapshot | aggregate = updateJsonAggregate snapshot.aggregate json }, state )
+
+                                    else
+                                        ( snapshot, state )
+                            in
+                            case viewModel.history of
+                                Loaded history ->
+                                    ( authed <| Valid <| { viewModel | history = Loaded <| List.map mapJsonSnapshot history }, Cmd.none )
 
                                 _ ->
                                     noOp
@@ -173,43 +198,14 @@ update msg m =
             ( m, Cmd.none )
 
 
-mapJsonSnapshot : AggregateSnapshot -> JsonViewer.Msg -> ( AggregateSnapshot, Accordion.State ) -> ( AggregateSnapshot, Accordion.State )
-mapJsonSnapshot changed json ( snapshot, state ) =
-    if snapshot == changed then
-        ( { snapshot | lastCommand = updateJson snapshot.lastCommand json }, state )
-
-    else
-        ( snapshot, state )
+updateJsonCommand : CommandData -> JsonViewer.Msg -> CommandData
+updateJsonCommand command json =
+    { command | payload = updateJsonTree json command.payload }
 
 
-updateJson : CommandData -> JsonViewer.Msg -> CommandData
-updateJson command json =
-    { command | payloadView = updateJsonTree json command.payloadView }
-
-
-errorToString : Http.Error -> String
-errorToString error =
-    case error of
-        Http.BadUrl url ->
-            "The URL " ++ url ++ " was invalid"
-
-        Http.Timeout ->
-            "Unable to reach the server, try again"
-
-        Http.NetworkError ->
-            "Unable to reach the server, check your network connection"
-
-        Http.BadStatus 500 ->
-            "The server had a problem, try again later"
-
-        Http.BadStatus 400 ->
-            "Verify your information and try again"
-
-        Http.BadStatus _ ->
-            "Unknown error"
-
-        Http.BadBody errorMessage ->
-            errorMessage
+updateJsonAggregate : AggregateData -> JsonViewer.Msg -> AggregateData
+updateJsonAggregate aggregate json =
+    { aggregate | payload = updateJsonTree json aggregate.payload }
 
 
 
@@ -239,10 +235,6 @@ snapshotMapper snapshots =
     List.map (\v -> ( v, Accordion.initialState )) snapshots
 
 
-
---Dict.fromList <| List.map (\v -> ( v, Accordion.initialState ) snapshots
-
-
 snapshotDecoder : D.Decoder AggregateSnapshot
 snapshotDecoder =
     let
@@ -270,7 +262,7 @@ aggregateDecoder : D.Decoder AggregateData
 aggregateDecoder =
     D.succeed AggregateData
         |> required "metadata" D.value
-        |> required "payload" D.value
+        |> custom (D.map initJsonTreeCollapsed (D.field "payload" D.value))
 
 
 eventDecoder : D.Decoder EventData
@@ -290,11 +282,10 @@ eventMetadataDecoder =
 
 commandDecoder : D.Decoder CommandData
 commandDecoder =
-    D.map3 buildCommandData (field "isLocal" D.bool) (field "metadata" commandMetadataDecoder) (field "payload" D.value)
-
-
-buildCommandData local meta payload =
-    CommandData local meta payload (initJsonTree payload)
+    D.succeed CommandData
+        |> required "isLocal" D.bool
+        |> required "metadata" commandMetadataDecoder
+        |> custom (D.map initJsonTree (D.field "payload" D.value))
 
 
 commandMetadataDecoder : D.Decoder CommandMetadata
@@ -337,27 +328,64 @@ viewSnapshot snapshot state =
             snapshot.lastCommand.metadata
     in
     div []
-        [ text ("\"" ++ commandMeta.userName ++ "\"" ++ " executed " ++ "\"" ++ humanizePascalCase commandMeta.name ++ "\"" ++ " " ++ snapshot.displayTime)
-        , Accordion.config (AccordionMsg snapshot)
-            |> Accordion.withAnimation
-            |> Accordion.cards
-                ([ viewCommandData snapshot snapshot.lastCommand ]
-                    ++ List.map viewSnapshotEvent snapshot.events
-                )
-            |> Accordion.view state
+        [ viewSnapshotName snapshot
+        , div [ flex, Flex.row, mediumMargin ]
+            [ div [ flex, Flex.col, style "width" "50%" ]
+                [ viewJsonTree snapshot.aggregate.payload |> Html.map (AggregateDataJson snapshot)
+                ]
+            , div [ flex, Flex.col, style "width" "50%" ]
+                [ Accordion.config (AccordionMsg snapshot)
+                    |> Accordion.withAnimation
+                    |> Accordion.cards
+                        ([ viewCommandData snapshot snapshot.lastCommand ]
+                            ++ List.map viewSnapshotEvent snapshot.events
+                        )
+                    |> Accordion.view state
+                ]
+            ]
         ]
+
+
+viewSnapshotName snapshot =
+    let
+        isLocal =
+            snapshot.lastCommand.isLocal
+
+        textColor =
+            if isLocal then
+                "text-primary"
+
+            else
+                "text-secondary"
+
+        actionName =
+            if isLocal then
+                " executed "
+
+            else
+                " received "
+    in
+    div (largeCentered ++ [ class textColor ]) [ text ("\"" ++ snapshot.lastCommand.metadata.userName ++ "\"" ++ actionName ++ "\"" ++ humanizePascalCase snapshot.lastCommand.metadata.name ++ "\"" ++ " " ++ snapshot.displayTime) ]
 
 
 viewCommandData : AggregateSnapshot -> CommandData -> Accordion.Card LocalMsg
 viewCommandData snapshot command =
+    let
+        outline =
+            if command.isLocal then
+                Card.outlineSuccess
+
+            else
+                Card.outlineSecondary
+    in
     Accordion.card
         { id = command.metadata.id
-        , options = [ Card.outlineSuccess, Card.align Text.alignXsCenter ]
+        , options = [ outline, Card.align Text.alignXsCenter ]
         , header =
             Accordion.header [] <| Accordion.toggle [] [ text <| "Data" ]
         , blocks =
             [ Accordion.block []
-                [ Block.custom <| (viewJsonTree command.payloadView |> Html.map (CommandDataJson snapshot)) ]
+                [ Block.custom <| (viewJsonTree command.payload |> Html.map (CommandDataJson snapshot)) ]
             ]
         }
 
@@ -366,7 +394,7 @@ viewSnapshotEvent : EventData -> Accordion.Card msg
 viewSnapshotEvent event =
     Accordion.card
         { id = event.metadata.id
-        , options = []
+        , options = [ Card.outlineSecondary, Card.align Text.alignXsCenter ]
         , header =
             Accordion.header [] <| Accordion.toggle [] [ text <| humanizePascalCase event.metadata.name ]
         , blocks =

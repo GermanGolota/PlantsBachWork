@@ -16,6 +16,7 @@ type Msg
 type alias Model =
     { state : JsonTree.State
     , parseResult : Result D.Error JsonTree.Node
+    , value : D.Value
     }
 
 
@@ -47,8 +48,31 @@ viewJsonTree model =
 
 initJsonTree : D.Value -> Model
 initJsonTree json =
-    { state = JsonTree.defaultState
-    , parseResult = JsonTree.parseValue json
+    baseInitJsonTree False json
+
+
+initJsonTreeCollapsed : D.Value -> Model
+initJsonTreeCollapsed json =
+    baseInitJsonTree True json
+
+
+baseInitJsonTree : Bool -> D.Value -> Model
+baseInitJsonTree collapse json =
+    let
+        result =
+            JsonTree.parseValue json
+
+        jsonState =
+            case ( result, collapse ) of
+                ( Ok rootNode, True ) ->
+                    JsonTree.collapseToDepth 1 rootNode JsonTree.defaultState
+
+                _ ->
+                    JsonTree.defaultState
+    in
+    { state = jsonState
+    , parseResult = result
+    , value = json
     }
 
 
@@ -68,3 +92,8 @@ updateJsonTree msg model =
 
                 Err _ ->
                     model
+
+
+jsonTreeDecoder : D.Decoder D.Value -> D.Decoder Model
+jsonTreeDecoder decoder =
+    D.map initJsonTree decoder
