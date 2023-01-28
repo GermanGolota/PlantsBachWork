@@ -3,9 +3,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
 
-namespace Plants.Initializer.HealthCheck;
+namespace Plants.Aggregates.Infrastructure.HealthCheck;
 
-internal class HealthChecker
+internal class HealthChecker : IHealthChecker
 {
     private readonly HealthCheckService _health;
     private readonly ILogger<HealthChecker> _logger;
