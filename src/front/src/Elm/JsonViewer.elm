@@ -1,8 +1,7 @@
 module JsonViewer exposing (..)
 
-import Html exposing (Html, button, div, h3, input, label, pre, text)
-import Html.Attributes exposing (checked, type_)
-import Html.Events exposing (onCheck, onClick)
+import Html exposing (Html, button, div, pre, text)
+import Html.Events exposing (onClick)
 import Json.Decode as D
 import JsonTree exposing (defaultColors)
 
