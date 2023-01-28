@@ -4,6 +4,7 @@ import Html exposing (Html, button, div, pre, text)
 import Html.Events exposing (onClick)
 import Json.Decode as D
 import JsonTree exposing (defaultColors)
+import Utils exposing (AlignDirection(..), textAlign)
 
 
 type Msg
@@ -33,7 +34,7 @@ viewJsonTree model =
             , toMsg = SetTreeViewState
             }
     in
-    div []
+    div [ textAlign Left ]
         [ toolbar
         , case model.parseResult of
             Ok rootNode ->

@@ -90,7 +90,7 @@ viewNavBase username roles currentLink baseView =
     div fillScreen
         [ div ([ flex, Flex.row ] ++ fillParent)
             [ navBar username roles currentLink
-            , div [ style "flex" "3", style "margin-left" "25vw" ] [ baseView ]
+            , div [ style "flex" "3", style "margin-left" "25vw", style "max-width" "75vw" ] [ baseView ]
             ]
         ]
 

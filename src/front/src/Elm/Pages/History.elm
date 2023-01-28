@@ -1,8 +1,10 @@
 module Pages.History exposing (..)
 
 import Bootstrap.Accordion as Accordion
+import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.ListGroup as ListGroup
+import Bootstrap.Text as Text
 import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
 import Endpoints exposing (getAuthedQuery)
@@ -13,7 +15,7 @@ import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import JsonViewer exposing (initJsonTree, updateJsonTree, viewJsonTree)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (plantsLink, viewNav)
-import Utils exposing (buildQuery, humanizePascalCase)
+import Utils exposing (buildQuery, fillParent, humanizePascalCase)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -325,7 +327,7 @@ viewPage resp page =
 
 viewHistory : History -> Html LocalMsg
 viewHistory history =
-    ListGroup.ul (List.map (\( snapshot, state ) -> ListGroup.li [] [ viewSnapshot snapshot state ]) history)
+    div fillParent [ ListGroup.ul (List.map (\( snapshot, state ) -> ListGroup.li [] [ viewSnapshot snapshot state ]) history) ]
 
 
 viewSnapshot : AggregateSnapshot -> Accordion.State -> Html LocalMsg
@@ -350,7 +352,7 @@ viewCommandData : AggregateSnapshot -> CommandData -> Accordion.Card LocalMsg
 viewCommandData snapshot command =
     Accordion.card
         { id = command.metadata.id
-        , options = []
+        , options = [ Card.outlineSuccess, Card.align Text.alignXsCenter ]
         , header =
             Accordion.header [] <| Accordion.toggle [] [ text <| "Data" ]
         , blocks =
