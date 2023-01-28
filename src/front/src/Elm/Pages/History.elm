@@ -8,8 +8,9 @@ import Dict exposing (Dict)
 import Endpoints exposing (getAuthedQuery)
 import Html exposing (Html, div, text)
 import Http
-import Json.Decode as D exposing (errorToString)
+import Json.Decode as D exposing (errorToString, field)
 import Json.Decode.Pipeline exposing (custom, required, requiredAt)
+import JsonViewer exposing (initJsonTree, updateJsonTree, viewJsonTree)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (plantsLink, viewNav)
 import Utils exposing (buildQuery, humanizePascalCase)
@@ -70,6 +71,7 @@ type alias EventData =
 
 type alias EventMetadata =
     { name : String
+    , id : String
     , fullMetadata : D.Value
     }
 
@@ -84,12 +86,14 @@ type alias CommandData =
     { isLocal : Bool
     , metadata : CommandMetadata
     , payload : D.Value
+    , payloadView : JsonViewer.Model
     }
 
 
 type alias CommandMetadata =
     { userName : String
     , name : String
+    , id : String
     , fullMetadata : D.Value
     }
 
@@ -102,6 +106,7 @@ type LocalMsg
     = NoOp
     | GotAggregate (Result Http.Error History)
     | AccordionMsg AggregateSnapshot Accordion.State
+    | CommandDataJson AggregateSnapshot JsonViewer.Msg
 
 
 type alias Msg =
@@ -154,8 +159,30 @@ update msg m =
                         GotAggregate (Ok history) ->
                             ( authed <| Valid <| { viewModel | history = Loaded history }, Cmd.none )
 
+                        CommandDataJson aggregate json ->
+                            case viewModel.history of
+                                Loaded history ->
+                                    ( authed <| Valid <| { viewModel | history = Loaded <| List.map (mapJsonSnapshot aggregate json) history }, Cmd.none )
+
+                                _ ->
+                                    noOp
+
         _ ->
             ( m, Cmd.none )
+
+
+mapJsonSnapshot : AggregateSnapshot -> JsonViewer.Msg -> ( AggregateSnapshot, Accordion.State ) -> ( AggregateSnapshot, Accordion.State )
+mapJsonSnapshot changed json ( snapshot, state ) =
+    if snapshot == changed then
+        ( { snapshot | lastCommand = updateJson snapshot.lastCommand json }, state )
+
+    else
+        ( snapshot, state )
+
+
+updateJson : CommandData -> JsonViewer.Msg -> CommandData
+updateJson command json =
+    { command | payloadView = updateJsonTree json command.payloadView }
 
 
 errorToString : Http.Error -> String
@@ -255,15 +282,17 @@ eventMetadataDecoder : D.Decoder EventMetadata
 eventMetadataDecoder =
     D.succeed EventMetadata
         |> required "name" D.string
+        |> required "id" D.string
         |> custom D.value
 
 
 commandDecoder : D.Decoder CommandData
 commandDecoder =
-    D.succeed CommandData
-        |> required "isLocal" D.bool
-        |> required "metadata" commandMetadataDecoder
-        |> required "payload" D.value
+    D.map3 buildCommandData (field "isLocal" D.bool) (field "metadata" commandMetadataDecoder) (field "payload" D.value)
+
+
+buildCommandData local meta payload =
+    CommandData local meta payload (initJsonTree payload)
 
 
 commandMetadataDecoder : D.Decoder CommandMetadata
@@ -271,6 +300,7 @@ commandMetadataDecoder =
     D.succeed CommandMetadata
         |> required "userName" D.string
         |> required "name" D.string
+        |> required "id" D.string
         |> custom D.value
 
 
@@ -308,15 +338,32 @@ viewSnapshot snapshot state =
         [ text ("\"" ++ commandMeta.userName ++ "\"" ++ " executed " ++ "\"" ++ humanizePascalCase commandMeta.name ++ "\"" ++ " " ++ snapshot.displayTime)
         , Accordion.config (AccordionMsg snapshot)
             |> Accordion.withAnimation
-            |> Accordion.cards (List.map viewSnapshotEvent snapshot.events)
+            |> Accordion.cards
+                ([ viewCommandData snapshot snapshot.lastCommand ]
+                    ++ List.map viewSnapshotEvent snapshot.events
+                )
             |> Accordion.view state
         ]
+
+
+viewCommandData : AggregateSnapshot -> CommandData -> Accordion.Card LocalMsg
+viewCommandData snapshot command =
+    Accordion.card
+        { id = command.metadata.id
+        , options = []
+        , header =
+            Accordion.header [] <| Accordion.toggle [] [ text <| "Data" ]
+        , blocks =
+            [ Accordion.block []
+                [ Block.custom <| (viewJsonTree command.payloadView |> Html.map (CommandDataJson snapshot)) ]
+            ]
+        }
 
 
 viewSnapshotEvent : EventData -> Accordion.Card msg
 viewSnapshotEvent event =
     Accordion.card
-        { id = event.metadata.name
+        { id = event.metadata.id
         , options = []
         , header =
             Accordion.header [] <| Accordion.toggle [] [ text <| humanizePascalCase event.metadata.name ]
