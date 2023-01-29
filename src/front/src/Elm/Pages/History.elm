@@ -18,7 +18,7 @@ import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import JsonViewer exposing (initJsonTree, initJsonTreeCollapsed, updateJsonTree, viewJsonTree)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (plantsLink, viewNav)
-import Utils exposing (buildQuery, fillParent, flex, humanizePascalCase, largeCentered, mediumMargin)
+import Utils exposing (buildQuery, fillParent, flex, humanizePascalCase, largeCentered, largeFont, mediumMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -449,10 +449,20 @@ viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     case page of
         Valid agg ->
-            viewWebdata agg.history viewHistory
+            div [ flex, Flex.col, mediumMargin ]
+                [ div [ flex, Flex.row ] (viewToolbar agg)
+                , div [ flex, Flex.row ] [ viewWebdata agg.history viewHistory ]
+                ]
 
         Invalid ->
             div [] [ text "Failed to load aggregate" ]
+
+
+viewToolbar agg =
+    [ div [ Flex.col, mediumMargin ]
+        [ Button.linkButton [ Button.outlineInfo, Button.onClick GoBack, Button.attrs largeCentered ] [ text "Go back" ]
+        ]
+    ]
 
 
 viewHistory : History -> Html Msg
