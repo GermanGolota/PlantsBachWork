@@ -18,6 +18,10 @@ allRoles =
     [ Producer, Consumer, Manager ]
 
 
+isAdmin auth =
+    List.any (\r -> r == Manager) auth.roles
+
+
 rolesDecoder : D.Decoder (List Int) -> D.Decoder (List UserRole)
 rolesDecoder idsDecoder =
     D.map convertRoles idsDecoder

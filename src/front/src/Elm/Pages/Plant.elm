@@ -11,7 +11,7 @@ import Http
 import ImageList as ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
 import Maybe exposing (map)
 import NavBar exposing (searchLink, viewNav)
 import PlantHelper exposing (PlantModel, plantDecoder, viewDesc, viewPlantBase, viewPlantLeft)
@@ -312,9 +312,6 @@ viewPage auth page =
     let
         allowOrder =
             List.member Consumer auth.roles
-
-        isAdmin =
-            List.any (\r -> r == Manager) auth.roles
     in
     case page of
         NoPlant ->
@@ -326,11 +323,11 @@ viewPage auth page =
                     viewPlantFull p.id
 
                 orderView =
-                    viewOrderFull isAdmin allowOrder p.id
+                    viewOrderFull (isAdmin auth) allowOrder p.id
             in
             case p.plantType of
                 JustPlant pl ->
-                    viewWebdata pl (plantView <| viewPlant isAdmin allowOrder)
+                    viewWebdata pl (plantView <| viewPlant (isAdmin auth) allowOrder)
 
                 Order { plant, addresses, selected, result } ->
                     viewWebdata plant (orderView selected addresses result)
@@ -553,7 +550,7 @@ interactionButtons isAdmin allowOrder isOrder id =
             if isOrder == False && isAdmin then
                 Button.linkButton
                     [ Button.outlinePrimary
-                    , Button.onClick <| Navigate <| historyUrl "PlantStock" id
+                    , Button.onClick <| Navigate <| historyUrl "PlantPost" id
                     , Button.attrs [ smallMargin, largeFont ]
                     ]
                     [ text "View history" ]

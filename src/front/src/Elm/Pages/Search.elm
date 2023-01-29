@@ -7,13 +7,13 @@ import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
-import Endpoints exposing (Endpoint(..), endpointToUrl, getAuthedQuery, imageIdToUrl, postAuthed)
+import Endpoints exposing (Endpoint(..), endpointToUrl, getAuthedQuery, historyUrl, imageIdToUrl, postAuthed)
 import Html exposing (Html, div, i, text)
 import Html.Attributes exposing (alt, class, src, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase, viewBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase, viewBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar exposing (viewNav)
 import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, largeFont, smallMargin, textCenter)
@@ -367,7 +367,7 @@ pageView : AuthResponse -> View -> Html Msg
 pageView resp viewType =
     let
         viewFunc =
-            resultsView (List.member Consumer resp.roles) (intersect [ Manager, Producer ] resp.roles) resp.token
+            resultsView (isAdmin resp) (List.member Consumer resp.roles) (intersect [ Manager, Producer ] resp.roles) resp.token
 
         result =
             case viewType.results of
@@ -407,17 +407,17 @@ viewAvailable av =
         ]
 
 
-resultsView : Bool -> Bool -> String -> List SearchResultItem -> Html Msg
-resultsView showOrder showDelete token items =
+resultsView : Bool -> Bool -> Bool -> String -> List SearchResultItem -> Html Msg
+resultsView isAdmin showOrder showDelete token items =
     let
         viewFunc =
-            resultView showOrder showDelete token
+            resultView isAdmin showOrder showDelete token
     in
     Utils.chunkedView 3 viewFunc items
 
 
-resultView : Bool -> Bool -> String -> SearchResultItem -> Html Msg
-resultView showOrder showDelete token item =
+resultView : Bool -> Bool -> Bool -> String -> SearchResultItem -> Html Msg
+resultView isAdmin showOrder showDelete token item =
     let
         url =
             imageIdToUrl token (Maybe.withDefault "-1" (List.head item.imageIds))
@@ -449,6 +449,18 @@ resultView showOrder showDelete token item =
 
             else
                 div [] []
+
+        historyBtn =
+            if isAdmin then
+                Button.linkButton
+                    [ Button.outlinePrimary
+                    , Button.onClick <| Navigate <| historyUrl "PlantPost" item.id
+                    , Button.attrs [ smallMargin ]
+                    ]
+                    [ text "View history" ]
+
+            else
+                div [] []
     in
     Card.config [ Card.attrs (fillParent ++ [ style "flex" "1" ]) ]
         |> Card.header [ class "text-center" ]
@@ -463,7 +475,13 @@ resultView showOrder showDelete token item =
                     , div [ flex, Flex.row ]
                         [ deleteBtn |> Html.map Main
                         , orderBtn
-                        , Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/plant/" ++ item.id), Button.attrs [ smallMargin ] ] [ text "Open" ]
+                        , Button.linkButton
+                            [ Button.primary
+                            , Button.onClick <| Navigate ("/plant/" ++ item.id)
+                            , Button.attrs [ smallMargin ]
+                            ]
+                            [ text "Open" ]
+                        , historyBtn
                         ]
                     ]
             ]
