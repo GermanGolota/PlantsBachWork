@@ -347,22 +347,27 @@ viewOrder isAdmin allowOrder selected del result id pl =
         resultView =
             case result of
                 Just res ->
-                    viewWebdata res viewResult
+                    case res of
+                        Loading ->
+                            [ viewWebdata res viewResult |> Html.map Main ]
+
+                        _ ->
+                            [ viewWebdata res viewResult |> Html.map Main, interactionButtons isAdmin allowOrder True id ]
 
                 Nothing ->
-                    div [] []
+                    [ interactionButtons isAdmin allowOrder True id ]
     in
     div (fillParent ++ [ flex, Flex.row ])
         [ viewPlantLeft (\msg -> Main <| Images msg) pl
         , div [ flex, Flex.col, flex1 ]
             (viewDesc False (\str -> Main NoOp) pl
-                ++ [ header "Payment methods"
-                   , customRadio True "Pay now" False
-                   , customRadio False "Pay on arrival" True
-                   , viewWebdata del (viewLocation selected) |> Html.map Main
-                   , resultView |> Html.map Main
-                   , interactionButtons isAdmin allowOrder True id
-                   ]
+                ++ ([ header "Payment methods"
+                    , customRadio True "Pay now" False
+                    , customRadio False "Pay on arrival" True
+                    , viewWebdata del (viewLocation selected) |> Html.map Main
+                    ]
+                        ++ resultView
+                   )
             )
         ]
 
