@@ -9,7 +9,7 @@ import Bootstrap.ListGroup as ListGroup
 import Bootstrap.Modal as Modal
 import Bootstrap.Text as Text
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (getAuthedQuery)
+import Endpoints exposing (getAuthedQuery, historyUrl)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, href, style)
 import Html.Events exposing (onClick)
@@ -561,7 +561,7 @@ viewSnapshot snapshot state advanced =
                             ListGroup.li [ ListGroup.dark ]
                                 [ Button.linkButton
                                     [ Button.outlinePrimary
-                                    , Button.attrs [ href <| "/history/" ++ rel.name ++ "/" ++ rel.id ]
+                                    , Button.attrs [ href <| historyUrl rel.name rel.id ]
                                     ]
                                     [ text rel.role ]
                                 ]
@@ -710,7 +710,7 @@ init resp flags =
                 Invalid ->
                     Cmd.none
     in
-    initBase [ Producer, Consumer, Manager ] initialState initialCmd resp
+    initBase [ Manager ] initialState initialCmd resp
 
 
 subscriptions : Model -> Sub Msg

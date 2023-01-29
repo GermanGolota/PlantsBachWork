@@ -4,7 +4,7 @@ import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder, postAuthed)
+import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, imagesDecoder, postAuthed)
 import Html exposing (Html, div, i, input, text)
 import Html.Attributes exposing (checked, class, disabled, href, style, type_, value)
 import Http
@@ -312,6 +312,9 @@ viewPage auth page =
     let
         allowOrder =
             List.member Consumer auth.roles
+
+        isAdmin =
+            List.any (\r -> r == Manager) auth.roles
     in
     case page of
         NoPlant ->
@@ -323,23 +326,23 @@ viewPage auth page =
                     viewPlantFull p.id
 
                 orderView =
-                    viewOrderFull allowOrder p.id
+                    viewOrderFull isAdmin allowOrder p.id
             in
             case p.plantType of
                 JustPlant pl ->
-                    viewWebdata pl (plantView <| viewPlant allowOrder)
+                    viewWebdata pl (plantView <| viewPlant isAdmin allowOrder)
 
                 Order { plant, addresses, selected, result } ->
                     viewWebdata plant (orderView selected addresses result)
 
 
-viewOrderFull : Bool -> String -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
-viewOrderFull allowOrder id selected del result p =
-    viewPlantFull id (viewOrder allowOrder selected del result) p
+viewOrderFull : Bool -> Bool -> String -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
+viewOrderFull isAdmin allowOrder id selected del result p =
+    viewPlantFull id (viewOrder isAdmin allowOrder selected del result) p
 
 
-viewOrder : Bool -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> String -> PlantModel -> Html Msg
-viewOrder allowOrder selected del result id pl =
+viewOrder : Bool -> Bool -> SelectedAddress -> WebData (List DeliveryAddress) -> Maybe (WebData SubmittedResult) -> String -> PlantModel -> Html Msg
+viewOrder isAdmin allowOrder selected del result id pl =
     let
         header textT =
             div largeCentered [ text textT ]
@@ -361,7 +364,7 @@ viewOrder allowOrder selected del result id pl =
                    , customRadio False "Pay on arrival" True
                    , viewWebdata del (viewLocation selected) |> Html.map Main
                    , resultView |> Html.map Main
-                   , interactionButtons allowOrder True id
+                   , interactionButtons isAdmin allowOrder True id
                    ]
             )
         ]
@@ -489,13 +492,13 @@ viewPlantFull id viewFunc p =
             div [] [ text "This plant is no longer available, sorry" ]
 
 
-viewPlant : Bool -> String -> PlantModel -> Html Msg
-viewPlant allowOrder id plant =
-    viewPlantBase False (\str -> Main NoOp) (\msg -> Main <| Images msg) (interactionButtons allowOrder False id) plant
+viewPlant : Bool -> Bool -> String -> PlantModel -> Html Msg
+viewPlant isAdmin allowOrder id plant =
+    viewPlantBase False (\str -> Main NoOp) (\msg -> Main <| Images msg) (interactionButtons isAdmin allowOrder False id) plant
 
 
-interactionButtons : Bool -> Bool -> String -> Html Msg
-interactionButtons allowOrder isOrder id =
+interactionButtons : Bool -> Bool -> Bool -> String -> Html Msg
+interactionButtons isAdmin allowOrder isOrder id =
     let
         backUrl =
             if isOrder then
@@ -545,10 +548,23 @@ interactionButtons allowOrder isOrder id =
 
             else
                 div [] []
+
+        historyBtn =
+            if isOrder == False && isAdmin then
+                Button.linkButton
+                    [ Button.outlinePrimary
+                    , Button.onClick <| Navigate <| historyUrl "PlantStock" id
+                    , Button.attrs [ smallMargin, largeFont ]
+                    ]
+                    [ text "View history" ]
+
+            else
+                div [] []
     in
     div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
         [ Button.linkButton ([ Button.primary, Button.attrs [ smallMargin, largeFont, href backUrl ] ] ++ backNavigate) [ text "Back" ]
         , orderBtn
+        , historyBtn
         ]
 
 
