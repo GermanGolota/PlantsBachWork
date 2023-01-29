@@ -10,7 +10,7 @@ public static class SubscriptionExtensions
          @event with { Metadata = @event.Metadata with { EventNumber = version } };
 
     public static Event TransposeSubscribedEvent(this AggregateBase subscribingAggregate, Event @event) =>
-         @event.ChangeTargetAggregate(subscribingAggregate.GetDescription()).ChangeVersion(subscribingAggregate.Version + 1);
+         @event.ChangeTargetAggregate(subscribingAggregate.GetDescription()).ChangeVersion(subscribingAggregate.Metadata.Version + 1);
 
     public static Command ChangeTargetAggregate(this Command command, AggregateDescription newAggregate)
     {

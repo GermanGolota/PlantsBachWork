@@ -64,10 +64,10 @@ internal class EventSubscriptionProcessor
                         var firstEventAggregate = firstEvent.Metadata.Aggregate;
                         var aggregate = await _caller.LoadAsync(firstEventAggregate, token);
                         var command = parentCommand.ChangeTargetAggregate(firstEventAggregate);
-                        if (aggregate.CommandsProcessedIds.Contains(command.Metadata.Id) is false)
+                        if (aggregate.Metadata.CommandsProcessedIds.Contains(command.Metadata.Id) is false)
                         {
                             _marker.MarkSubscribersCount(command.Metadata.InitialAggregate!, 1);
-                            var commandNumber = await _eventStore.AppendCommandAsync(command, aggregate.Version, token);
+                            var commandNumber = await _eventStore.AppendCommandAsync(command, aggregate.Metadata.Version, token);
                             await _eventStore.AppendEventsAsync(transposedEvents, commandNumber, command, token);
                         }
                     }

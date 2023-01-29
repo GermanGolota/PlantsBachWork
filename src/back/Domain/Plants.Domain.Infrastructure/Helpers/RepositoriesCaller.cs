@@ -31,7 +31,7 @@ internal class RepositoriesCaller
 
     public async Task InsertOrUpdateProjectionAsync(AggregateBase aggregate, CancellationToken token = default)
     {
-        var aggregateType = _aggregate.Aggregates.Get(aggregate.Name);
+        var aggregateType = _aggregate.Aggregates.Get(aggregate.Metadata.Name);
         var repositoryType = typeof(IProjectionRepository<>).MakeGenericType(aggregateType);
         var repository = _service.GetRequiredService(repositoryType);
         var method = typeof(ProjectionRepositoryExtensions).GetMethod(nameof(ProjectionRepositoryExtensions.InsertOrUpdateAsync));
@@ -41,7 +41,7 @@ internal class RepositoriesCaller
 
     public async Task IndexProjectionAsync(AggregateBase aggregate, CancellationToken token = default)
     {
-        var aggregateType = _aggregate.Aggregates.Get(aggregate.Name);
+        var aggregateType = _aggregate.Aggregates.Get(aggregate.Metadata.Name);
         var repositoryType = typeof(ISearchProjectionRepository<>).MakeGenericType(aggregateType);
         var repository = _service.GetRequiredService(repositoryType);
         var method = repository.GetType().GetMethod(nameof(ISearchProjectionRepository<AggregateBase>.IndexAsync));

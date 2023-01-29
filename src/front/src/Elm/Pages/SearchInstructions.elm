@@ -9,11 +9,11 @@ import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), instructioIdToCover)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (alt, class, href, src, style, value)
+import Html.Attributes exposing (alt, class, src, style, value)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import Multiselect as Multiselect
 import NavBar exposing (instructionsLink, viewNav)
 import Utils exposing (buildQuery, chunkedView, decodeId, fillParent, flex, flex1, intersect, largeCentered, mediumMargin, smallMargin)
@@ -50,7 +50,7 @@ type alias Instruction =
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | GotAvailable (Result Http.Error Available)
     | TitleChanged String
@@ -59,8 +59,16 @@ type Msg
     | GotSearch (Result Http.Error (List Instruction))
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+type alias Msg =
+    MsgBase LocalMsg
+
+
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -94,7 +102,7 @@ update msg m =
                 GroupChanged groupId ->
                     let
                         newModel =
-                            { model | selectedGroup = groupId }
+                            { model | selectedGroup = groupId, instructions = Loading }
                     in
                     ( authed newModel, triggerSearch newModel )
 
@@ -125,7 +133,7 @@ update msg m =
 
 getAvailable : String -> Cmd Msg
 getAvailable token =
-    Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing
+    Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing |> mapCmd
 
 
 search : String -> String -> String -> String -> Cmd Msg
@@ -137,7 +145,7 @@ search title description groupId token =
         queryParams =
             [ ( "GroupId", groupId ), ( "Title", title ), ( "Description", description ) ]
     in
-    Endpoints.getAuthedQuery (buildQuery queryParams) token FindInstructions expect Nothing
+    Endpoints.getAuthedQuery (buildQuery queryParams) token FindInstructions expect Nothing |> mapCmd
 
 
 searchDecoder : String -> D.Decoder (List Instruction)
@@ -186,20 +194,20 @@ viewMain isProducer page av =
     let
         btnView =
             if page.showAdd then
-                div [ flex, Flex.row, style "flex" "0.5", mediumMargin ] [ Button.linkButton [ Button.attrs [ href "/instructions/add" ], Button.primary ] [ text "Create" ] ]
+                div [ flex, Flex.row, style "flex" "0.5", mediumMargin ] [ Button.linkButton [ Button.primary, Button.onClick <| Navigate "/instructions/add" ] [ text "Create" ] ]
 
             else
                 div [] []
     in
     div ([ Flex.col, flex ] ++ fillParent)
         [ btnView
-        , div [ flex, Flex.row, flex1 ] (viewSelections page av)
+        , div [ flex, Flex.row, flex1 ] (viewSelections page av) |> Html.map Main
         , div [ flex, Flex.row, style "flex" "8" ]
             [ viewWebdata page.instructions (viewInstructions isProducer) ]
         ]
 
 
-viewSelections : View -> Available -> List (Html Msg)
+viewSelections : View -> Available -> List (Html LocalMsg)
 viewSelections page av =
     let
         groups =
@@ -238,7 +246,7 @@ viewInstruction isProducer ins =
     let
         editBtn =
             if isProducer then
-                Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ ins.id ++ "/edit", smallMargin ] ] [ text "Edit" ]
+                Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/instructions/" ++ ins.id ++ "/edit"), Button.attrs [ smallMargin ] ] [ text "Edit" ]
 
             else
                 div [] []
@@ -253,7 +261,7 @@ viewInstruction isProducer ins =
             , Block.custom <|
                 div [ flex, Flex.row, Flex.justifyEnd, Flex.alignItemsCenter ]
                     [ editBtn
-                    , Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ ins.id ] ] [ text "Open Full" ]
+                    , Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/instructions/" ++ ins.id) ] [ text "Open Full" ]
                     ]
             ]
         |> Card.view

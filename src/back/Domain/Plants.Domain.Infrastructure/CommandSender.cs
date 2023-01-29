@@ -122,8 +122,7 @@ internal class CommandSender : ICommandSender
     private async Task<OneOf<CommandAcceptedResult, CommandForbidden>> ExecuteCommand(Command command, AggregateDescription commandAggregate, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs, CancellationToken token = default)
     {
         var aggregate = await _caller.LoadAsync(commandAggregate, token);
-        var commandVersion = aggregate.Version;
-        commandVersion = await _eventStore.AppendCommandAsync(command, commandVersion, token);
+        var commandVersion = await _eventStore.AppendCommandAsync(command, aggregate.Metadata.Version, token);
 
         var checkResults = await PerformChecksAsync(command, handlePairs, token);
         var checkFailures = checkResults.Where(_ => _.CheckFailure.HasValue).Select(_ => _.CheckFailure!.Value);

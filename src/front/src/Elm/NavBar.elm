@@ -7,8 +7,9 @@ import Bootstrap.Grid.Row as Row
 import Bootstrap.Utilities.Flex as Flex
 import Color
 import Html exposing (Html, a, div, i, text)
-import Html.Attributes exposing (class, href, style)
-import Main exposing (AuthResponse, ModelBase, UserRole(..), viewBase)
+import Html.Attributes exposing (class, style)
+import Html.Events exposing (onClick)
+import Main exposing (AuthResponse, ModelBase, MsgBase(..), UserRole(..), viewBase)
 import TypedSvg.Types exposing (px)
 import Utils exposing (fillParent, fillScreen, flex, flex1, intersect, largeFont, smallMargin)
 
@@ -70,7 +71,7 @@ getLinksFor roles =
     List.filter roleIntersect allLinks
 
 
-viewNav : ModelBase model -> Maybe Link -> (AuthResponse -> model -> Html msg) -> Html msg
+viewNav : ModelBase model -> Maybe Link -> (AuthResponse -> model -> Html (MsgBase msg)) -> Html (MsgBase msg)
 viewNav model link pageView =
     let
         viewP =
@@ -79,19 +80,22 @@ viewNav model link pageView =
     viewBase viewP model
 
 
-viewMain : Maybe Link -> (AuthResponse -> model -> Html msg) -> AuthResponse -> model -> Html msg
+viewMain : Maybe Link -> (AuthResponse -> model -> Html (MsgBase msg)) -> AuthResponse -> model -> Html (MsgBase msg)
 viewMain link pageView resp model =
     viewNavBase resp.username resp.roles link (pageView resp model)
 
 
-viewNavBase : String -> List UserRole -> Maybe Link -> Html msg -> Html msg
+viewNavBase : String -> List UserRole -> Maybe Link -> Html (MsgBase msg) -> Html (MsgBase msg)
 viewNavBase username roles currentLink baseView =
     div fillScreen
-        [ div ([ flex, Flex.row ] ++ fillParent) [ navBar username roles currentLink, div [ style "flex" "3", style "margin-left" "25vw" ] [ baseView ] ]
+        [ div ([ flex, Flex.row ] ++ fillParent)
+            [ navBar username roles currentLink
+            , div [ style "flex" "3", style "margin-left" "25vw", style "max-width" "75vw" ] [ baseView ]
+            ]
         ]
 
 
-navBar : String -> List UserRole -> Maybe Link -> Html msg
+navBar : String -> List UserRole -> Maybe Link -> Html (MsgBase msg)
 navBar username roles currentLink =
     div
         [ flex1
@@ -113,7 +117,7 @@ navBar username roles currentLink =
         ]
 
 
-linksView : Maybe Link -> List Link -> Html msg
+linksView : Maybe Link -> List Link -> Html (MsgBase msg)
 linksView selected links =
     let
         isSelected link =
@@ -127,7 +131,7 @@ linksView selected links =
     div [ flex, Flex.col, style "border-top" "solid gray 1px", smallMargin ] (List.map (\link -> linkView (isSelected link) link) links)
 
 
-linkView : Bool -> Link -> Html msg
+linkView : Bool -> Link -> Html (MsgBase msg)
 linkView isSelected link =
     let
         backColor =
@@ -137,7 +141,7 @@ linkView isSelected link =
             else
                 ""
     in
-    a [ href link.url ]
+    a [ onClick <| Navigate link.url ]
         [ div [ class "nav-bar-item", flex, Flex.row, smallMargin, Flex.alignItemsCenter, largeFont, class ("btn " ++ backColor) ]
             [ i [ class link.icon, style "margin-right" "0.5em" ] []
             , text link.text
@@ -145,9 +149,9 @@ linkView isSelected link =
         ]
 
 
-userView : String -> Html msg
+userView : String -> Html (MsgBase msg)
 userView username =
     div [ flex, Flex.row, smallMargin, style "border-top" "solid gray 1px", Flex.alignItemsCenter, largeFont ]
         [ i [ class "fa-solid fa-user", style "margin-right" "2em", smallMargin ] []
-        , a [ href "/profile" ] [ text username ]
+        , a [ onClick <| Navigate "/profile" ] [ text username ]
         ]

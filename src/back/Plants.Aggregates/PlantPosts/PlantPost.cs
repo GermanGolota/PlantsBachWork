@@ -27,8 +27,8 @@ public class PlantPost : AggregateBase, IEventHandler<StockItemPostedEvent>,
 
     public void Handle(StockItemPostedEvent @event)
     {
-        Referenced.Add(new(@event.Metadata.Aggregate.Id, nameof(PlantStock)));
-        Referenced.Add(new(@event.SellerUsername.ToGuid(), nameof(User)));
+        Metadata.Referenced.Add(new(@event.Metadata.Aggregate.Id, nameof(PlantStock)));
+        Metadata.Referenced.Add(new(@event.SellerUsername.ToGuid(), nameof(User)));
         IsRemoved = false;
         IsOrdered = false;
         Price = @event.Price;

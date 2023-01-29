@@ -5,6 +5,7 @@ import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
+import Color exposing (Color, toCssString)
 import Dict
 import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder, postAuthed)
 import File exposing (File)
@@ -15,10 +16,11 @@ import Http
 import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import Multiselect
 import NavBar exposing (plantsLink, viewNav)
-import Utils exposing (createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, smallMargin)
+import Pages.Plant exposing (SelectedAddress(..))
+import Utils exposing (SubmittedResult(..), createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -44,7 +46,7 @@ type alias EditView =
     { available : WebData Available
     , plant : WebData PlantView
     , plantId : String
-    , result : Maybe (WebData Bool)
+    , result : Maybe (WebData SubmittedResult)
     , removedItems : ImageList.Model
     }
 
@@ -65,7 +67,7 @@ type alias PlantView =
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | Images ImageList.Msg
     | RemovedImages ImageList.Msg
@@ -81,11 +83,20 @@ type Msg
     | GotPlant (Result Http.Error (Maybe PlantView))
     | Submit
     | GotSubmitAdd (Result Http.Error String)
-    | GotSubmitEdit (Result Http.Error Bool)
+    | GotSubmitEdit (Result Http.Error SubmittedResult)
+
+
+type alias Msg =
+    MsgBase LocalMsg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -158,7 +169,7 @@ update msg m =
                         updatedRegion plant =
                             { plant | regions = subModel }
                     in
-                    ( authed <| Add <| { addView | plant = updatedRegion addView.plant }, Cmd.map RegionsMS subCmd )
+                    ( authed <| Add <| { addView | plant = updatedRegion addView.plant }, Cmd.map RegionsMS subCmd |> mapCmd )
 
                 ( RegionsMS msEvent, Edit editView ) ->
                     case editView.plant of
@@ -167,7 +178,7 @@ update msg m =
                                 ( subModel, subCmd, _ ) =
                                     Multiselect.update msEvent plantView.regions
                             in
-                            ( authed <| Edit <| { editView | plant = Loaded { plantView | regions = subModel } }, Cmd.map RegionsMS subCmd )
+                            ( authed <| Edit <| { editView | plant = Loaded { plantView | regions = subModel } }, Cmd.map RegionsMS subCmd |> mapCmd )
 
                         _ ->
                             noOp
@@ -340,12 +351,12 @@ update msg m =
                     ( setPlant { plant | created = date }, Cmd.none )
 
                 ( Submit, Add addView ) ->
-                    ( m, submitAddCommand auth.token addView.plant )
+                    ( authed <| Add <| { addView | result = Just Loading }, submitAddCommand auth.token addView.plant )
 
                 ( Submit, Edit editView ) ->
                     case editView.plant of
                         Loaded pl ->
-                            ( m, submitEditCommand auth.token editView.plantId pl (Dict.toList editView.removedItems.available |> List.map Tuple.first) )
+                            ( authed <| Edit <| { editView | result = Just Loading }, submitEditCommand auth.token editView.plantId pl (Dict.toList editView.removedItems.available |> List.map Tuple.first) )
 
                         _ ->
                             noOp
@@ -380,63 +391,114 @@ view model =
 
 viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
+    let
+        shouldShowActions =
+            case page of
+                BadEdit ->
+                    False
+
+                Edit e ->
+                    case e.result of
+                        Just result ->
+                            case result of
+                                Loading ->
+                                    False
+
+                                _ ->
+                                    True
+
+                        Nothing ->
+                            True
+
+                Add a ->
+                    case a.result of
+                        Just result ->
+                            case result of
+                                Loading ->
+                                    False
+
+                                _ ->
+                                    True
+
+                        Nothing ->
+                            True
+    in
     case page of
         BadEdit ->
             div [] [ text "There is no such plant" ]
 
         Edit editView ->
-            viewWebdata editView.plant (viewPlant editView.removedItems editView.available True (viewResultEdit editView.result))
+            viewWebdata editView.plant (viewPlant editView.removedItems editView.available True shouldShowActions (viewResultEdit editView.result))
 
         Add addView ->
-            viewPlant (ImageList.fromDict Dict.empty) addView.available False (viewResultAdd addView.result) addView.plant
+            viewPlant (ImageList.fromDict Dict.empty) addView.available False shouldShowActions (viewResultAdd addView.result) addView.plant
 
 
-viewResultEdit : Maybe (WebData Bool) -> Html msg
+viewResultEdit : Maybe (WebData SubmittedResult) -> Html msg
 viewResultEdit result =
     case result of
         Just web ->
+            let
+                textContent data =
+                    case data of
+                        SubmittedSuccess msg ->
+                            msg
+
+                        SubmittedFail msg ->
+                            msg
+
+                colorClass data =
+                    case data of
+                        SubmittedSuccess msg ->
+                            "text-primary"
+
+                        SubmittedFail msg ->
+                            "text-danger"
+            in
             viewWebdata web
                 (\data ->
-                    div ([ flex1, class "text-primary" ] ++ largeCentered) [ text "Successfully edited!" ]
+                    div ([ flex1, class <| colorClass data ] ++ largeCentered) [ text <| textContent data ]
                 )
 
         Nothing ->
             div [ flex1 ] []
 
 
-viewResultAdd : Maybe (WebData String) -> Html msg
+viewResultAdd : Maybe (WebData String) -> Html Msg
 viewResultAdd result =
     case result of
         Just web ->
-            viewWebdata web
-                (\data ->
-                    div [ flex1, flex, Flex.col, class "text-success", Flex.alignItemsCenter, Flex.justifyEnd ]
-                        [ div [] [ text ("Successfully created plant " ++ data) ]
-                        , div []
-                            [ Button.linkButton [ Button.primary, Button.attrs [ href ("/notPosted/" ++ data ++ "/edit") ] ] [ text "Go to edit" ]
-                            ]
-                        ]
-                )
+            viewWebdata web viewResultAddValue
 
         Nothing ->
             div [ flex1 ] []
 
 
-viewPlant : ImageList.Model -> WebData Available -> Bool -> Html Msg -> PlantView -> Html Msg
-viewPlant imgs av isEdit resultView plant =
-    viewWebdata av (viewPlantBase imgs isEdit plant resultView)
-
-
-viewPlantBase : ImageList.Model -> Bool -> PlantView -> Html Msg -> Available -> Html Msg
-viewPlantBase imgs isEdit plant resultView av =
-    div ([ flex, Flex.row ] ++ fillParent)
-        [ div [ Flex.col, flex1, flex ] (leftView isEdit plant av)
-        , div [ flex, Flex.col, flex1, Flex.justifyBetween, Flex.alignItemsCenter ] (rightView resultView isEdit imgs plant)
+viewResultAddValue : String -> Html Msg
+viewResultAddValue data =
+    div [ flex1, flex, Flex.col, class "text-success", Flex.alignItemsCenter, Flex.justifyEnd ]
+        [ div [] [ text ("Successfully created plant " ++ data) ]
+        , div []
+            [ Button.linkButton [ Button.primary, Button.attrs [ href ("/notPosted/" ++ data ++ "/edit") ] ] [ text "Go to edit" ]
+            ]
         ]
 
 
-rightView : Html Msg -> Bool -> ImageList.Model -> PlantView -> List (Html Msg)
-rightView resultView isEdit additionalImages plant =
+viewPlant : ImageList.Model -> WebData Available -> Bool -> Bool -> Html Msg -> PlantView -> Html Msg
+viewPlant imgs av isEdit shouldShowBtns resultView plant =
+    viewWebdata av (viewPlantBase imgs isEdit shouldShowBtns plant resultView)
+
+
+viewPlantBase : ImageList.Model -> Bool -> Bool -> PlantView -> Html Msg -> Available -> Html Msg
+viewPlantBase imgs isEdit shouldShowBtns plant resultView av =
+    div ([ flex, Flex.row ] ++ fillParent)
+        [ div [ Flex.col, flex1, flex ] (leftView isEdit plant av)
+        , div [ flex, Flex.col, flex1, Flex.justifyBetween, Flex.alignItemsCenter ] (rightView resultView isEdit shouldShowBtns imgs plant)
+        ]
+
+
+rightView : Html Msg -> Bool -> Bool -> ImageList.Model -> PlantView -> List (Html Msg)
+rightView resultView isEdit shouldShow additionalImages plant =
     let
         btnMsg =
             if isEdit then
@@ -446,14 +508,18 @@ rightView resultView isEdit additionalImages plant =
                 "Add"
 
         btnView =
-            div [ flex1 ]
-                [ Button.button
-                    [ Button.primary
-                    , Button.onClick Submit
-                    , Button.attrs ([ smallMargin ] ++ largeCentered)
+            if shouldShow then
+                div [ flex1 ]
+                    [ Button.button
+                        [ Button.primary
+                        , Button.onClick Submit
+                        , Button.attrs ([ smallMargin ] ++ largeCentered)
+                        ]
+                        [ text btnMsg ]
                     ]
-                    [ text btnMsg ]
-                ]
+
+            else
+                div [] []
 
         imgView event imgs =
             div [ style "flex" "2" ]
@@ -465,15 +531,15 @@ rightView resultView isEdit additionalImages plant =
     in
     if isEdit then
         [ imgText "Remaining"
-        , imgView Images plant.images
+        , imgView Images plant.images |> Html.map Main
         , imgText "Removed"
-        , imgView RemovedImages additionalImages
+        , imgView RemovedImages additionalImages |> Html.map Main
         , resultView
-        , btnView
+        , btnView |> Html.map Main
         ]
 
     else
-        [ resultView, btnView ]
+        [ resultView, btnView |> Html.map Main ]
 
 
 leftView : Bool -> PlantView -> Available -> List (Html Msg)
@@ -507,7 +573,7 @@ leftView isEdit plant av =
             else
                 Input.date [ Input.onInput DateUpdate, Input.value plant.created, Input.disabled isEdit ]
     in
-    viewInput "Name" (Input.text [ Input.onInput NameUpdate, Input.value plant.name ])
+    (viewInput "Name" (Input.text [ Input.onInput NameUpdate, Input.value plant.name ])
         ++ viewInput "Add Image"
             (div [ flex, Flex.row ]
                 [ Button.button
@@ -527,6 +593,8 @@ leftView isEdit plant av =
             )
         ++ viewInput "Description" (Input.text [ Input.onInput DescriptionUpdate, Input.value plant.description ])
         ++ viewInput "Created Date" dateInput
+    )
+        |> List.map (Html.map Main)
 
 
 viewInput : String -> Html msg -> List (Html msg)
@@ -592,12 +660,12 @@ subscriptions model =
 
 requestImages : Cmd Msg
 requestImages =
-    FileSelect.files [ "image/png", "image/jpg" ] ImagesLoaded
+    FileSelect.files [ "image/png", "image/jpg" ] ImagesLoaded |> mapCmd
 
 
 getAvailable : String -> Cmd Msg
 getAvailable token =
-    Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing
+    Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing |> mapCmd
 
 
 getPlantCommand : Available -> String -> String -> Cmd Msg
@@ -606,7 +674,7 @@ getPlantCommand av token plantId =
         expect =
             Http.expectJson GotPlant (plantDecoder av token)
     in
-    getAuthed token (NotPostedPlant plantId) expect Nothing
+    getAuthed token (NotPostedPlant plantId) expect Nothing |> mapCmd
 
 
 plantDecoder : Available -> String -> D.Decoder (Maybe PlantView)
@@ -661,9 +729,9 @@ submitEditCommand : String -> String -> PlantView -> List String -> Cmd Msg
 submitEditCommand token plantId plant removed =
     let
         expect =
-            Http.expectJson GotSubmitEdit (D.succeed True)
+            Http.expectJson GotSubmitEdit (submittedDecoder (D.field "success" D.bool) (D.field "message" D.string))
     in
-    postAuthed token (EditPlant plantId) (getEditBody plant removed) expect Nothing
+    postAuthed token (EditPlant plantId) (getEditBody plant removed) expect Nothing |> mapCmd
 
 
 submitAddCommand : String -> PlantView -> Cmd Msg
@@ -672,7 +740,7 @@ submitAddCommand token plant =
         expect =
             Http.expectJson GotSubmitAdd (D.field "id" decodeId)
     in
-    postAuthed token AddPlant (getAddBody plant) expect Nothing
+    postAuthed token AddPlant (getAddBody plant) expect Nothing |> mapCmd
 
 
 getEditBody : PlantView -> List String -> Http.Body
@@ -682,7 +750,6 @@ getEditBody plant removed =
          , Http.stringPart "PlantDescription" plant.description
          , Http.stringPart "SoilId" plant.soil
          , Http.stringPart "GroupId" plant.group
-         , Http.stringPart "Created" plant.created
          ]
             ++ regionsParts "RegionIds" plant.regions
             ++ filesParts plant.uploadedFiles

@@ -10,7 +10,7 @@ import Html.Attributes exposing (class, style, value)
 import Http
 import Json.Decode as D
 import Json.Encode as E
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, roleToNumber)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, roleToNumber, updateBase)
 import NavBar exposing (usersLink, viewNav)
 import UserRolesSelector exposing (userRolesBtns)
 import Utils exposing (SubmittedResult(..), fillParent, flex, flexCenter, largeCentered, mediumMargin, submittedDecoder)
@@ -46,7 +46,7 @@ type alias View =
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | FirstNameChanged String
     | LastNameChanged String
@@ -59,8 +59,17 @@ type Msg
     | GotSubmit (Result Http.Error SubmittedResult)
 
 
+type alias Msg =
+    MsgBase LocalMsg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -130,7 +139,7 @@ createUserCmd token page =
         expect =
             Http.expectJson GotSubmit (submittedDecoder (D.field "success" D.bool) (D.field "message" D.string))
     in
-    postAuthed token CreateUser (Http.jsonBody <| encodeBody page) expect Nothing
+    postAuthed token CreateUser (Http.jsonBody <| encodeBody page) expect Nothing |> mapCmd
 
 
 encodeBody : View -> E.Value
@@ -185,9 +194,10 @@ viewPage resp page =
                 [ viewBtn ]
             ]
         ]
+        |> Html.map Main
 
 
-viewInputs : View -> List (Html Msg)
+viewInputs : View -> List (Html LocalMsg)
 viewInputs page =
     [ div [ flex, Flex.col, mediumMargin ]
         (viewInput "First Name" page.firstName FirstNameChanged
@@ -199,7 +209,7 @@ viewInputs page =
     ]
 
 
-languagesSelector : Html Msg
+languagesSelector : Html LocalMsg
 languagesSelector =
     Select.select [ Select.onChange LanguageSelected ] <| List.map (\lang -> Select.item [ value lang ] [ text lang ]) languages
 

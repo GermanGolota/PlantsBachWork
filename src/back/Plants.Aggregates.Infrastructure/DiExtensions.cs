@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Plants.Aggregates.Infrastructure.Domain;
+using Plants.Aggregates.Infrastructure.HealthCheck;
 using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
 using Plants.Aggregates.Infrastructure.Services;
@@ -31,6 +32,7 @@ public static class DiExtensions
         services.AddScoped<IUserUpdater, UserUpdater>();
 
         services.AddSingleton<ILoggerInitializer, LoggerInitializer>();
+        services.AddSingleton<IHealthChecker, HealthChecker>();
 
         return services;
     }

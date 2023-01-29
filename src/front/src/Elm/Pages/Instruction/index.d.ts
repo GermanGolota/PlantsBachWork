@@ -6,11 +6,20 @@ export namespace Elm {
   namespace Pages.Instruction {
     export interface App {
       ports: {
+        navigate: {
+          subscribe(callback: (data: string) => void): void
+        }
+        goBack: {
+          subscribe(callback: (data: null) => void): void
+        }
         openEditor: {
           subscribe(callback: (data: string) => void): void
         }
         editorChanged: {
           send(data: string): void
+        }
+        resizeAggregates: {
+          subscribe(callback: (data: null) => void): void
         }
         notifyLoggedIn: {
           subscribe(callback: (data: unknown) => void): void

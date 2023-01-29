@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Plants.Aggregates.Infrastructure;
 using Plants.Aggregates.Infrastructure.Abstractions;
+using Plants.Aggregates.Infrastructure.HealthCheck;
 using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Initializer.Seeding;
 using Plants.Services.Infrastructure;
@@ -20,14 +21,13 @@ var host = Host.CreateDefaultBuilder(args)
                 .AddAggregatesInfrastructure();
 
             services.AddHealthChecks()
-                .AddDomain(ctx.Configuration);
+                .AddDomainHealthChecks(ctx.Configuration);
 
             services.AddSingleton<MongoRolesDbInitializer>()
                     .AddSingleton<ElasticSearchRolesInitializer>()
                     .AddSingleton<IIdentityProvider, ConfigIdentityProvider>()
                     .AddSingleton<AdminUserCreator>()
                     .AddSingleton<Initializer>()
-                    .AddSingleton<HealthChecker>()
                     .AddSingleton<Seeder>()
                     .AddSingleton<IFileProvider>(factory =>
                     {
@@ -53,7 +53,7 @@ var scopeFactory = host.Services.GetRequiredService<IServiceScopeFactory>();
 using (var scope = scopeFactory.CreateScope())
 {
     var provider = scope.ServiceProvider;
-    var check = provider.GetRequiredService<HealthChecker>();
+    var check = provider.GetRequiredService<IHealthChecker>();
     await check.WaitForServicesStartupOrTimeout(cts.Token);
     var sub = provider.GetRequiredService<IEventSubscription>();
     await sub.StartAsync(cts.Token);

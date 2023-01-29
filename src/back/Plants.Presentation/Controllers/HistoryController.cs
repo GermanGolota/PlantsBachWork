@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Humanizer;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Plants.Presentation.Controllers;
 
@@ -16,8 +17,16 @@ public class HistoryController : ControllerBase
     }
 
     [HttpGet()]
-    public async Task<ActionResult<HistoryModel>> GetHistory([FromQuery] string name, [FromQuery] Guid id, CancellationToken token)
+    public async Task<ActionResult<HistoryViewModel>> GetHistory(
+        [FromQuery] string name, 
+        [FromQuery] Guid id,
+        [FromQuery] OrderType order,
+        CancellationToken token)
     {
-        return await _history.GetAsync(new(id, name), token);
+        var model = await _history.GetAsync(new(id, name), order, token);
+        return new HistoryViewModel(model.Snapshots.Select(_ => new AggregateSnapshotViewModel(_, _.Time.Humanize(utcDate: true))).ToList());
     }
+
+    public record HistoryViewModel(List<AggregateSnapshotViewModel> Snapshots);
+    public record AggregateSnapshotViewModel(AggregateSnapshot Snapshot, string HumanTime);
 }

@@ -1,17 +1,9 @@
-import React, { useCallback, useState } from "react";import ReactDOM from "react-dom";
-import {
-  Route,
-  Link,
-  BrowserRouter,
-  Router,
-  Routes,
-  Navigate,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import React from "react";import ReactDOM from "react-dom";
+import { Route, BrowserRouter, Routes, useParams } from "react-router-dom";
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
 import { Elm as SearchElm } from "./Elm/Pages/Search";
+import { Elm as HistoryElm } from "./Elm/Pages/History";
 import { Elm as PlantElm } from "./Elm/Pages/Plant";
 import { Elm as NotPostedElm } from "./Elm/Pages/NotPosted";
 import { Elm as PostPlantElm } from "./Elm/Pages/PostPlant";
@@ -28,334 +20,330 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./main.css";
 import { AuthResponse, retrieve, store } from "./Store";
 import AddInstructionPage from "./editor";
+import { useElmApp } from "./hooks";
+
+const HistoryPage = () => {
+  const { name, id } = useParams();
+
+  const { elmRef } = useElmApp(HistoryElm.Pages.History.init, {
+    setFlags: (model) => {
+      return {
+        ...model,
+        id,
+        name,
+      };
+    },
+    additional: (flags) => {
+      flags.resizeAggregates.subscribe(() => {
+        const accordions = document.getElementsByClassName("accordion");
+        for (let index = 0; index < accordions.length; index++) {
+          const accordion = accordions[index];
+          if (accordion) {
+            for (let index = 0; index < accordion.childNodes.length; index++) {
+              const cards = accordion.childNodes[index];
+              for (let index2 = 0; index2 < cards.childNodes.length; index2++) {
+                const body = cards.childNodes[index2];
+                if (body instanceof HTMLElement && body.id) {
+                  console.log("child", body);
+                  if (body.style.height == "0px") {
+                    //element.style.removeProperty("height");
+                    //element.style.height = "0%";
+                  } else {
+                    body.style.removeProperty("height");
+                    body.style.height = "100%";
+                  }
+                }
+              }
+            }
+          }
+        }
+        /*const elements = data.ids.map((id) => document.getElementById(id));
+        for (let index = 0; index < elements.length; index++) {
+          const element = elements[index];
+          if (element) {
+            const parents = getParents(element);
+            console.log(element);
+            console.log(parents);
+
+            if (element.style.height == "0px") {
+              //element.style.removeProperty("height");
+              //element.style.height = "0%";
+            } else {
+              element.style.removeProperty("height");
+              element.style.height = "100%";
+            }
+          }
+        }
+        */
+      });
+    },
+  });
+
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
+};
+
+function getParents(elem: HTMLElement | null) {
+  var parents: HTMLElement[] = [];
+  if (elem) {
+    while (
+      elem.parentElement &&
+      elem.parentElement.nodeName.toLowerCase() != "body"
+    ) {
+      elem = elem.parentElement;
+      parents.push(elem);
+    }
+  }
+
+  return parents;
+}
 
 const SearchPage = () => {
-  const [app, setApp] = React.useState<
-    SearchElm.Pages.Search.App | undefined
-  >();
-  const elmRef = React.useRef(null);
+  const { name, id } = useParams();
+  const { elmRef } = useElmApp(SearchElm.Pages.Search.init, {
+    setFlags: (model) => {
+      return { ...model, name, id };
+    },
+  });
 
-  const elmApp = () => {
-    let model = retrieve();
-
-    return SearchElm.Pages.Search.init({
-      node: elmRef.current,
-      flags: model,
-    });
-  };
-
-  React.useEffect(() => {
-    setApp(elmApp());
-  }, []);
-
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const InstructionPage = () => {
-  const [app, setApp] = React.useState<
-    InstructionElm.Pages.Instruction.App | undefined
-  >();
-  const elmRef = React.useRef(null);
-
   const { id } = useParams();
 
-  const elmApp = () => {
-    let model = retrieve();
+  const { elmRef } = useElmApp<InstructionElm.Pages.Instruction.App>(
+    InstructionElm.Pages.Instruction.init,
+    {
+      setFlags: (model) => {
+        return {
+          ...model,
+          id: id,
+        };
+      },
+    }
+  );
 
-    let final = {
-      ...model,
-      id: id,
-    };
-
-    return InstructionElm.Pages.Instruction.init({
-      node: elmRef.current,
-      flags: final,
-    });
-  };
-
-  React.useEffect(() => {
-    setApp(elmApp());
-  }, []);
-
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const SearchInstructionsPage = () => {
-  const [app, setApp] = React.useState<
-    SearchInstructionsElm.Pages.SearchInstructions.App | undefined
-  >();
-  const elmRef = React.useRef(null);
+  const { elmRef } =
+    useElmApp<SearchInstructionsElm.Pages.SearchInstructions.App>(
+      SearchInstructionsElm.Pages.SearchInstructions.init,
+      {}
+    );
 
-  const elmApp = () => {
-    let model = retrieve();
-
-    return SearchInstructionsElm.Pages.SearchInstructions.init({
-      node: elmRef.current,
-      flags: model,
-    });
-  };
-
-  React.useEffect(() => {
-    setApp(elmApp());
-  }, []);
-
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const ProfilePage = () => {
-  const [app, setApp] = React.useState<
-    ProfileElm.Pages.Profile.App | undefined
-  >();
-  const elmRef = React.useRef(null);
+  const { elmRef } = useElmApp<ProfileElm.Pages.Profile.App>(
+    ProfileElm.Pages.Profile.init,
+    {}
+  );
 
-  const elmApp = () => {
-    let model = retrieve();
-
-    return ProfileElm.Pages.Profile.init({
-      node: elmRef.current,
-      flags: model,
-    });
-  };
-
-  React.useEffect(() => {
-    setApp(elmApp());
-  }, []);
-
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const UsersPage = () => {
-  const [app, setApp] = React.useState<UsersElm.Pages.Users.App | undefined>();
-  const elmRef = React.useRef(null);
+  const { elmRef } = useElmApp<UsersElm.Pages.Users.App>(
+    UsersElm.Pages.Users.init,
+    {}
+  );
 
-  const elmApp = () => {
-    let model = retrieve();
-
-    return UsersElm.Pages.Users.init({
-      node: elmRef.current,
-      flags: model,
-    });
-  };
-
-  React.useEffect(() => {
-    setApp(elmApp());
-  }, []);
-
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const AddUserPage = () => {
-  const [app, setApp] = React.useState<
-    AddUserElm.Pages.AddUser.App | undefined
-  >();
-  const elmRef = React.useRef(null);
+  const { elmRef } = useElmApp<AddUserElm.Pages.AddUser.App>(
+    AddUserElm.Pages.AddUser.init,
+    {}
+  );
 
-  const elmApp = () => {
-    let model = retrieve();
-
-    return AddUserElm.Pages.AddUser.init({
-      node: elmRef.current,
-      flags: model,
-    });
-  };
-
-  React.useEffect(() => {
-    setApp(elmApp());
-  }, []);
-
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const NotPostedPage = () => {
-  const [app, setApp] = React.useState<
-    NotPostedElm.Pages.NotPosted.App | undefined
-  >();
-  const elmRef = React.useRef(null);
+  const { elmRef } = useElmApp<NotPostedElm.Pages.NotPosted.App>(
+    NotPostedElm.Pages.NotPosted.init,
+    {}
+  );
 
-  const elmApp = () => {
-    let model = retrieve();
-
-    return NotPostedElm.Pages.NotPosted.init({
-      node: elmRef.current,
-      flags: model,
-    });
-  };
-
-  React.useEffect(() => {
-    setApp(elmApp());
-  }, []);
-
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const AddEditPage = (props: { isEdit: boolean }) => {
-  const [app, setApp] = React.useState<
-    AddEditPlantElm.Pages.AddEditPlant.App | undefined
-  >();
-  const elmRef = React.useRef(null);
-
   const { plantId } = useParams();
 
-  const elmApp = () => {
-    let model = retrieve();
+  const { elmRef } = useElmApp<AddEditPlantElm.Pages.AddEditPlant.App>(
+    AddEditPlantElm.Pages.AddEditPlant.init,
+    {
+      setFlags: (model) => {
+        return {
+          ...model,
+          plantId: plantId,
+          isEdit: props.isEdit,
+        };
+      },
+    }
+  );
 
-    let finalResult = {
-      ...model,
-      plantId: plantId,
-      isEdit: props.isEdit,
-    };
-    return AddEditPlantElm.Pages.AddEditPlant.init({
-      node: elmRef.current,
-      flags: finalResult,
-    });
-  };
-
-  React.useEffect(() => {
-    setApp(elmApp());
-  }, []);
-
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const OrdersPage = (props: { isEmployee: boolean }) => {
-  const [app, setApp] = React.useState<
-    OrdersElm.Pages.Orders.App | undefined
-  >();
-  const elmRef = React.useRef(null);
-  const elmApp = () => {
-    let model = retrieve();
+  const { elmRef } = useElmApp<OrdersElm.Pages.Orders.App>(
+    OrdersElm.Pages.Orders.init,
+    {
+      setFlags: (model) => {
+        let isEmployeeFinal = props.isEmployee;
 
-    let isEmployeeFinal = props.isEmployee;
+        if (model.roles.length == 1 && model.roles[0] == "Consumer") {
+          isEmployeeFinal = false;
+        } else {
+          if (model.roles.some((a) => a == "Consumer") == false) {
+            isEmployeeFinal = true;
+          }
+        }
 
-    if (model.roles.length == 1 && model.roles[0] == "Consumer") {
-      isEmployeeFinal = false;
-    } else {
-      if (model.roles.some((a) => a == "Consumer") == false) {
-        isEmployeeFinal = true;
-      }
+        return {
+          ...model,
+          isEmployee: isEmployeeFinal,
+        };
+      },
     }
+  );
 
-    let finalResult = {
-      ...model,
-      isEmployee: isEmployeeFinal,
-    };
-    return OrdersElm.Pages.Orders.init({
-      node: elmRef.current,
-      flags: finalResult,
-    });
-  };
-
-  React.useEffect(() => {
-    setApp(elmApp());
-  }, []);
-
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const PlantPage = (props: { isOrder: boolean }) => {
-  const [app, setApp] = React.useState<PlantElm.Pages.Plant.App | undefined>();
-  const elmRef = React.useRef(null);
-
   const { plantId } = useParams();
 
-  const elmApp = () => {
-    let model = retrieve();
-    let finalResult = {
-      ...model,
-      plantId: plantId,
-      isOrder: props.isOrder,
-    };
-    return PlantElm.Pages.Plant.init({
-      node: elmRef.current,
-      flags: finalResult,
-    });
-  };
+  const { elmRef } = useElmApp<PlantElm.Pages.Plant.App>(
+    PlantElm.Pages.Plant.init,
+    {
+      setFlags: (model) => {
+        return {
+          ...model,
+          plantId: plantId,
+          isOrder: props.isOrder,
+        };
+      },
+    }
+  );
 
-  React.useEffect(() => {
-    setApp(elmApp());
-  }, []);
-
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const PostPlantPage = () => {
-  const [app, setApp] = React.useState<
-    PostPlantElm.Pages.PostPlant.App | undefined
-  >();
-  const elmRef = React.useRef(null);
-
   const { plantId } = useParams();
 
-  const elmApp = () => {
-    let model = retrieve();
-    let finalResult = {
-      ...model,
-      plantId: plantId,
-    };
-    return PostPlantElm.Pages.PostPlant.init({
-      node: elmRef.current,
-      flags: finalResult,
-    });
-  };
+  const { elmRef } = useElmApp<PostPlantElm.Pages.PostPlant.App>(
+    PostPlantElm.Pages.PostPlant.init,
+    {
+      setFlags: (model) => {
+        return {
+          ...model,
+          plantId: plantId,
+        };
+      },
+    }
+  );
 
-  React.useEffect(() => {
-    setApp(elmApp());
-  }, []);
-
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const StatsPage = () => {
-  const [app, setApp] = React.useState<StatsElm.Pages.Stats.App | undefined>();
-  const elmRef = React.useRef(null);
+  const { elmRef } = useElmApp<StatsElm.Pages.Stats.App>(
+    StatsElm.Pages.Stats.init,
+    {}
+  );
 
-  const elmApp = () => {
-    let model = retrieve();
-
-    return StatsElm.Pages.Stats.init({
-      node: elmRef.current,
-      flags: model,
-    });
-  };
-
-  React.useEffect(() => {
-    setApp(elmApp());
-  }, []);
-
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const LoginPage = (props: { isNew: boolean }) => {
-  const [app, setApp] = React.useState<LoginElm.Pages.Login.App | undefined>();
-  const elmRef = React.useRef(null);
-
-  const elmApp = () =>
-    LoginElm.Pages.Login.init({
-      node: elmRef.current,
-      flags: null,
-    });
-
-  React.useEffect(() => {
-    if (retrieve()) {
-      if (props.isNew) {
-        localStorage.clear();
-      } else {
-        window.location.replace("/search");
-      }
+  const { elmRef } = useElmApp<LoginElm.Pages.Login.App>(
+    LoginElm.Pages.Login.init,
+    {
+      onSetApp: () => {
+        if (retrieve()) {
+          if (props.isNew) {
+            localStorage.clear();
+          } else {
+            window.location.replace("/search");
+          }
+        }
+      },
+      setFlags: (_) => null,
+      additional: (ports) => {
+        ports.notifyLoggedIn.subscribe((userModel) => {
+          let model = userModel as AuthResponse;
+          store(model);
+          window.location.replace("/search");
+        });
+      },
     }
-    setApp(elmApp());
-  }, []);
-  // Subscribe to state changes from Elm
-  React.useEffect(() => {
-    app &&
-      app.ports.notifyLoggedIn.subscribe((userModel) => {
-        let model = userModel as AuthResponse;
-        store(model);
-        window.location.replace("/search");
-      });
-  }, [app]);
+  );
 
-  return <div ref={elmRef}></div>;
+  return (
+    <div>
+      <div ref={elmRef}></div>
+    </div>
+  );
 };
 
 const NotFound = () => {
@@ -404,6 +392,7 @@ const App = () => (
       />
       <Route path="/instructions/:id" element={<InstructionPage />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/history/:name/:id" element={<HistoryPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>

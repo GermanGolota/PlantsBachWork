@@ -14,7 +14,7 @@ import Http
 import Iso8601 exposing (toTime)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase, viewBase)
 import NavBar exposing (statsLink, viewNav)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Time
@@ -26,7 +26,7 @@ import Webdata exposing (WebData(..), viewWebdata)
 --update
 
 
-type Msg
+type LocalMsg
     = PieEvent PieChart.Msg
     | Switched
     | DateLeftSelected String
@@ -35,8 +35,16 @@ type Msg
     | GotTotals (Result Http.Error (List TotalsPieItem))
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+type alias Msg =
+    MsgBase LocalMsg
+
+
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg model =
     let
         switchView viewType token =
             case viewType of
@@ -208,7 +216,6 @@ viewRow key value =
         ]
 
 
-view : Model -> Html.Html Msg
 view model =
     viewNav model (Just statsLink) viewMain
 
@@ -237,9 +244,10 @@ viewMain resp model =
         , h1 [ textCenter ] [ text localizedTitle ]
         , localizedView
         ]
+        |> Html.map Main
 
 
-viewFinancials : FinancialViewType -> Html Msg
+viewFinancials : FinancialViewType -> Html LocalMsg
 viewFinancials fin =
     let
         bodyView =
@@ -260,7 +268,7 @@ viewFinancials fin =
         [ div [] [ datesRow, bodyView ] ]
 
 
-viewFinancialsMain : FinancialView -> Html Msg
+viewFinancialsMain : FinancialView -> Html LocalMsg
 viewFinancialsMain fin =
     let
         items =
@@ -277,7 +285,7 @@ viewFinancialsMain fin =
         ]
 
 
-getSwitchButtonFor : View -> Html Msg
+getSwitchButtonFor : View -> Html LocalMsg
 getSwitchButtonFor viewType =
     let
         buttonText =
@@ -311,7 +319,7 @@ getSwitchButtonFor viewType =
         ]
 
 
-viewTotalsMain : TotalsView -> Html Msg
+viewTotalsMain : TotalsView -> Html LocalMsg
 viewTotalsMain model =
     let
         items =
@@ -346,7 +354,7 @@ viewSelectedBase item selectTable =
         ]
 
 
-datesRow : Html Msg
+datesRow : Html LocalMsg
 datesRow =
     let
         leftSelected str =
@@ -373,7 +381,7 @@ datesRow =
         ]
 
 
-convertToEvent : PieChart.Msg -> Msg
+convertToEvent : PieChart.Msg -> LocalMsg
 convertToEvent msg =
     PieEvent msg
 
@@ -508,7 +516,7 @@ init response _ =
 
 getTotals : String -> Cmd Msg
 getTotals token =
-    Endpoints.getAuthed token StatsTotal (Http.expectJson GotTotals totalsDecoder) Nothing
+    Endpoints.getAuthed token StatsTotal (Http.expectJson GotTotals totalsDecoder) Nothing |> mapCmd
 
 
 
@@ -517,7 +525,7 @@ getTotals token =
 
 getFin : String -> String -> String -> Cmd Msg
 getFin from to token =
-    Endpoints.getAuthedQuery ("?from=" ++ from ++ "&to=" ++ to) token StatsFinancial (Http.expectJson GotFinancial financialDecoder) Nothing
+    Endpoints.getAuthedQuery ("?from=" ++ from ++ "&to=" ++ to) token StatsFinancial (Http.expectJson GotFinancial financialDecoder) Nothing |> mapCmd
 
 
 subscriptions : Model -> Sub Msg

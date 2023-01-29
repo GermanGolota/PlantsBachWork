@@ -11,7 +11,7 @@ import Http
 import ImageList as ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import Maybe exposing (map)
 import NavBar exposing (searchLink, viewNav)
 import PlantHelper exposing (PlantModel, plantDecoder, viewDesc, viewPlantBase, viewPlantLeft)
@@ -68,7 +68,7 @@ type alias DeliveryAddress =
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | GotPlant (Result Http.Error (Maybe PlantModel))
     | GotAddresses (Result Http.Error (List DeliveryAddress))
@@ -80,8 +80,17 @@ type Msg
     | GotSubmit (Result Http.Error SubmittedResult)
 
 
+type alias Msg =
+    MsgBase LocalMsg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+update =
+    updateBase localUpdate
+
+
+localUpdate : LocalMsg -> Model -> ( Model, Cmd Msg )
+localUpdate msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -256,7 +265,7 @@ submitCmd token plantId city mailNumber =
         expect =
             Http.expectJson GotSubmit (submittedDecoder (D.field "successfull" D.bool) (D.field "message" D.string))
     in
-    postAuthed token (OrderPost plantId city mailNumber) Http.emptyBody expect Nothing
+    postAuthed token (OrderPost plantId city mailNumber) Http.emptyBody expect Nothing |> mapCmd
 
 
 getAddressesCommand : String -> Cmd Msg
@@ -265,7 +274,7 @@ getAddressesCommand token =
         expect =
             Http.expectJson GotAddresses addressesDecoder
     in
-    getAuthed token Addresses expect Nothing
+    getAuthed token Addresses expect Nothing |> mapCmd
 
 
 addressesDecoder : D.Decoder (List DeliveryAddress)
@@ -286,7 +295,7 @@ getPlantCommand token plantId =
         expect =
             Http.expectJson GotPlant (plantDecoder Nothing token)
     in
-    getAuthed token (Post plantId) expect Nothing
+    getAuthed token (Post plantId) expect Nothing |> mapCmd
 
 
 
@@ -306,7 +315,7 @@ viewPage auth page =
     in
     case page of
         NoPlant ->
-            div [] [ text "Please select a plant", Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href "/search" ] ] [ text "Return to search" ] ]
+            div [] [ text "Please select a plant", Button.linkButton [ Button.primary, Button.onClick <| Navigate "/search", Button.attrs [ smallMargin ] ] [ text "Return to search" ] ]
 
         Plant p ->
             let
@@ -344,20 +353,21 @@ viewOrder allowOrder selected del result id pl =
                     div [] []
     in
     div (fillParent ++ [ flex, Flex.row ])
-        [ viewPlantLeft Images pl
+        [ viewPlantLeft (\msg -> Main <| Images msg) pl
         , div [ flex, Flex.col, flex1 ]
-            (viewDesc False (\str -> NoOp) pl
+            (viewDesc False (\str -> Main NoOp) pl
                 ++ [ header "Payment methods"
                    , customRadio True "Pay now" False
                    , customRadio False "Pay on arrival" True
-                   , viewWebdata del (viewLocation selected)
-                   , resultView
+                   , viewWebdata del (viewLocation selected) |> Html.map Main
+                   , resultView |> Html.map Main
                    , interactionButtons allowOrder True id
                    ]
             )
         ]
 
 
+customRadio : Bool -> String -> Bool -> Html msg
 customRadio isDisabled msg isChecked =
     div [ flex1, flex, Flex.row, Flex.alignItemsCenter ]
         [ input [ type_ "radio", disabled isDisabled, checked isChecked ] []
@@ -365,7 +375,7 @@ customRadio isDisabled msg isChecked =
         ]
 
 
-viewResult : SubmittedResult -> Html Msg
+viewResult : SubmittedResult -> Html LocalMsg
 viewResult result =
     let
         baseView className message =
@@ -379,7 +389,7 @@ viewResult result =
             baseView "bg-warning" msg
 
 
-viewLocation : SelectedAddress -> List DeliveryAddress -> Html Msg
+viewLocation : SelectedAddress -> List DeliveryAddress -> Html LocalMsg
 viewLocation sel dels =
     let
         valSep =
@@ -426,7 +436,7 @@ locationToString location =
     String.fromInt location ++ ", Nova Poshta Delivery Address"
 
 
-viewSelected : SelectedAddress -> List (Html Msg)
+viewSelected : SelectedAddress -> List (Html LocalMsg)
 viewSelected selected =
     let
         cityText =
@@ -481,7 +491,7 @@ viewPlantFull id viewFunc p =
 
 viewPlant : Bool -> String -> PlantModel -> Html Msg
 viewPlant allowOrder id plant =
-    viewPlantBase False (\str -> NoOp) Images (interactionButtons allowOrder False id) plant
+    viewPlantBase False (\str -> Main NoOp) (\msg -> Main <| Images msg) (interactionButtons allowOrder False id) plant
 
 
 interactionButtons : Bool -> Bool -> String -> Html Msg
@@ -493,6 +503,13 @@ interactionButtons allowOrder isOrder id =
 
             else
                 "/search"
+
+        backNavigate =
+            if isOrder then
+                []
+
+            else
+                [ Button.onClick <| Navigate backUrl ]
 
         orderText =
             if isOrder then
@@ -510,17 +527,19 @@ interactionButtons allowOrder isOrder id =
 
         orderOnClick =
             if isOrder then
-                Button.onClick Submit
+                Button.onClick <| Main Submit
 
             else
+                --fix issue with plants component not reloading
                 Button.attrs []
 
+        --Button.onClick <| Navigate orderUrl
         orderBtn =
             if allowOrder then
                 Button.linkButton
                     [ Button.primary
-                    , Button.attrs [ smallMargin, href orderUrl, largeFont ]
                     , orderOnClick
+                    , Button.attrs [ smallMargin, largeFont, href orderUrl ]
                     ]
                     [ text orderText ]
 
@@ -528,7 +547,7 @@ interactionButtons allowOrder isOrder id =
                 div [] []
     in
     div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
-        [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href backUrl, largeFont ] ] [ text "Back" ]
+        [ Button.linkButton ([ Button.primary, Button.attrs [ smallMargin, largeFont, href backUrl ] ] ++ backNavigate) [ text "Back" ]
         , orderBtn
         ]
 

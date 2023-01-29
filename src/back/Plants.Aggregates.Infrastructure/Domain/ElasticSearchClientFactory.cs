@@ -32,7 +32,9 @@ internal class ElasticSearchClientFactory : IElasticSearchClientFactory
         var pool = new SingleNodeConnectionPool(uri);
         var settings =
             new ConnectionSettings(pool,
-                 sourceSerializer: (builtin, settings) => new CustomJsonSerializer(builtin, settings));
+                 sourceSerializer: (builtin, settings) => new CustomJsonSerializer(builtin, settings))
+            .BasicAuthentication(identity.UserName, _encrypter.Decrypt(identity.Hash))
+            ;
 
 
         settings.DisableDirectStreaming();

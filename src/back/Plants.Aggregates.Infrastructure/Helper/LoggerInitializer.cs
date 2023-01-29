@@ -37,12 +37,16 @@ internal sealed class LoggerInitializer : ILoggerInitializer
             .Destructure.ToMaximumStringLength(500)
             .WriteTo.Console(LogEventLevel.Information, theme: AnsiConsoleTheme.Code)
             .WriteTo.File("Logs/log.txt", restrictedToMinimumLevel: LogEventLevel.Information, rollingInterval: RollingInterval.Hour, fileSizeLimitBytes: 1024L * 1024 * 1024 * 10)
-            .WriteTo.Elasticsearch(elasticUrl,
-                indexFormat: $"{_environment.EnvironmentName}-{_environment.ApplicationName}-{{0:yyyy.MM.dd}}".ToLower(),
-                restrictedToMinimumLevel: LogEventLevel.Information,
-                deadLetterIndexName: $"{_environment.EnvironmentName}-deadletter-{{0:yyyy.MM.dd}}",
-                typeName: null,
-                autoRegisterTemplateVersion: AutoRegisterTemplateVersion.ESv7)
+            .WriteTo.Elasticsearch(
+               new ElasticsearchSinkOptions(new Uri(elasticUrl))
+               {
+                   IndexFormat = $"{_environment.EnvironmentName}-{_environment.ApplicationName}-{{0:yyyy.MM.dd}}".ToLower(),
+                   MinimumLogEventLevel = LogEventLevel.Information,
+                   DeadLetterIndexName = $"{_environment.EnvironmentName}-deadletter-{{0:yyyy.MM.dd}}",
+                   TypeName = null,
+                   AutoRegisterTemplateVersion = AutoRegisterTemplateVersion.ESv7,
+                   ModifyConnectionSettings = x => x.BasicAuthentication(elasticCreds.Username, elasticCreds.Password)
+               })
             .ReadFrom.Configuration(_configuration)
             .CreateLogger();
 

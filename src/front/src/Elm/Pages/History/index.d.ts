@@ -3,7 +3,7 @@
 // Type definitions for Elm ports
 
 export namespace Elm {
-  namespace Pages.Login {
+  namespace Pages.History {
     export interface App {
       ports: {
         navigate: {
@@ -29,6 +29,6 @@ export namespace Elm {
     export function init(options: {
       node?: HTMLElement | null;
       flags: any;
-    }): Elm.Pages.Login.App;
+    }): Elm.Pages.History.App;
   }
 }

@@ -9,11 +9,11 @@ import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
 import Endpoints exposing (Endpoint(..), endpointToUrl, getAuthedQuery, imageIdToUrl, postAuthed)
 import Html exposing (Html, div, i, text)
-import Html.Attributes exposing (alt, class, href, src, style)
+import Html.Attributes exposing (alt, class, src, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase, viewBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase, viewBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar exposing (viewNav)
 import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, largeFont, smallMargin, textCenter)
@@ -49,7 +49,7 @@ type alias SearchResultItem =
 --update
 
 
-type Msg
+type LocalMsg
     = SetQuery String String
     | GotSearch (Result Http.Error (List SearchResultItem))
     | GotAvailable (Result Http.Error Available)
@@ -60,8 +60,16 @@ type Msg
     | GotDeletePost String (Result Http.Error Bool)
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+type alias Msg =
+    MsgBase LocalMsg
+
+
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     case m of
         Authorized auth model ->
             let
@@ -130,7 +138,7 @@ update msg m =
                             else
                                 Cmd.none
                     in
-                    ( authed updatedView, Cmd.batch [ Cmd.map RegionsMS subCmd, searchCmd ] )
+                    ( authed updatedView, Cmd.batch [ Cmd.map RegionsMS subCmd |> mapCmd, searchCmd ] )
 
                 ( SoilMS sub, Loaded val ) ->
                     let
@@ -160,7 +168,7 @@ update msg m =
                             else
                                 Cmd.none
                     in
-                    ( authed updatedView, Cmd.batch [ Cmd.map SoilMS subCmd, searchCmd ] )
+                    ( authed updatedView, Cmd.batch [ Cmd.map SoilMS subCmd |> mapCmd, searchCmd ] )
 
                 ( GroupMS sub, Loaded val ) ->
                     let
@@ -190,7 +198,7 @@ update msg m =
                             else
                                 Cmd.none
                     in
-                    ( authed updatedView, Cmd.batch [ Cmd.map GroupMS subCmd, searchCmd ] )
+                    ( authed updatedView, Cmd.batch [ Cmd.map GroupMS subCmd |> mapCmd, searchCmd ] )
 
                 ( SelectedDeletePost id, Loaded val ) ->
                     let
@@ -309,7 +317,7 @@ setQuery key value viewType =
 
 deletePlant : String -> String -> Cmd Msg
 deletePlant token id =
-    postAuthed token (DeletePost id) Http.emptyBody (Http.expectJson (GotDeletePost id) deletedDecoder) Nothing
+    postAuthed token (DeletePost id) Http.emptyBody (Http.expectJson (GotDeletePost id) deletedDecoder) Nothing |> mapCmd
 
 
 deletedDecoder =
@@ -318,12 +326,12 @@ deletedDecoder =
 
 getAvailable : String -> Cmd Msg
 getAvailable token =
-    Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing
+    Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing |> mapCmd
 
 
 search : List ( String, String ) -> String -> Cmd Msg
 search items token =
-    Endpoints.getAuthedQuery (buildQuery items) token Search (Http.expectJson GotSearch searchResultsDecoder) Nothing
+    Endpoints.getAuthedQuery (buildQuery items) token Search (Http.expectJson GotSearch searchResultsDecoder) Nothing |> mapCmd
 
 
 searchResultsDecoder : D.Decoder (List SearchResultItem)
@@ -351,7 +359,6 @@ convertIds ids =
 --view
 
 
-view : Model -> Html Msg
 view model =
     viewNav model (Just NavBar.searchLink) pageView
 
@@ -371,7 +378,7 @@ pageView resp viewType =
                     div [] [ text "No search is selected" ]
     in
     div ([ flex, Flex.col ] ++ fillParent)
-        [ viewWebdata viewType.availableValues viewAvailable
+        [ viewWebdata viewType.availableValues viewAvailable |> Html.map Main
         , div [ Flex.row, flex ]
             [ viewInput "Plant Name" <| Input.text [ Input.onInput (\val -> SetQuery "PlantName" val) ]
             , viewInput "Price" <|
@@ -382,11 +389,12 @@ pageView resp viewType =
                     ]
             , viewInput "Created Before" <| Input.date [ Input.onInput (\val -> SetQuery "LastDate" val) ]
             ]
+            |> Html.map Main
         , div [ style "overflow-y" "scroll" ] [ result ]
         ]
 
 
-viewAvailable : Available -> Html Msg
+viewAvailable : Available -> Html LocalMsg
 viewAvailable av =
     let
         viewMultiselectInput text convert model =
@@ -415,7 +423,7 @@ resultView showOrder showDelete token item =
             imageIdToUrl token (Maybe.withDefault "-1" (List.head item.imageIds))
 
         orderBtn =
-            Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ item.id ++ "/order" ], Button.disabled (not showOrder) ] [ text "Order" ]
+            Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/plant/" ++ item.id ++ "/order"), Button.attrs [ smallMargin ], Button.disabled (not showOrder) ] [ text "Order" ]
 
         msgText val =
             if val then
@@ -453,16 +461,16 @@ resultView showOrder showDelete token item =
                 div [ flex, Flex.row, style "justify-content" "space-between", Flex.alignItemsCenter ]
                     [ div [ largeFont ] [ text <| formatPrice item.price ]
                     , div [ flex, Flex.row ]
-                        [ deleteBtn
+                        [ deleteBtn |> Html.map Main
                         , orderBtn
-                        , Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href <| "/plant/" ++ item.id ] ] [ text "Open" ]
+                        , Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/plant/" ++ item.id), Button.attrs [ smallMargin ] ] [ text "Open" ]
                         ]
                     ]
             ]
         |> Card.view
 
 
-viewInput : String -> Html Msg -> Html Msg
+viewInput : String -> Html LocalMsg -> Html LocalMsg
 viewInput title input =
     div [ Flex.col, style "flex" "1", smallMargin ] [ div [ textCenter ] [ text title ], input ]
 

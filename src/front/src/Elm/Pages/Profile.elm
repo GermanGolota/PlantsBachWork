@@ -6,15 +6,14 @@ import Bootstrap.ListGroup as ListGroup
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), postAuthed)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, href, style)
+import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as D
 import Json.Encode as E
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, roleToStr, updateBase)
 import NavBar exposing (viewNav)
 import Utils exposing (SubmittedResult(..), fillParent, flex, flexCenter, largeCentered, mediumMargin, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
-import Main exposing (roleToStr)
 
 
 
@@ -35,15 +34,24 @@ type alias View =
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | NewPasswordChanged String
     | ChangePass
     | GotChangePass (Result Http.Error SubmittedResult)
 
 
+type alias Msg =
+    MsgBase LocalMsg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -93,7 +101,7 @@ submitCommand token pass =
         body =
             Http.jsonBody (E.object [ ( "password", E.string pass ) ])
     in
-    postAuthed token ChangePassword body expect Nothing
+    postAuthed token ChangePassword body expect Nothing |> mapCmd
 
 
 
@@ -108,9 +116,6 @@ view model =
 viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     let
-        btnAttr add =
-            Button.attrs ([ mediumMargin ] ++ add)
-
         shouldDisableInput =
             case page.result of
                 Just Loading ->
@@ -133,8 +138,9 @@ viewPage resp page =
                     ]
                 , Input.disabled shouldDisableInput
                 ]
-            , buttonView page
-            , Button.linkButton [ Button.danger, btnAttr [ href "/login/new" ] ] [ text "Logout" ]
+                |> Html.map Main
+            , buttonView page |> Html.map Main
+            , Button.linkButton [ Button.danger, Button.onClick <| Navigate "/login/new", Button.attrs [ mediumMargin ] ] [ text "Logout" ]
             ]
         ]
 

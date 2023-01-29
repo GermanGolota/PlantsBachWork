@@ -10,11 +10,12 @@ import Color exposing (Color, rgba)
 import Dict exposing (Dict)
 import FormatNumber exposing (format)
 import FormatNumber.Locales exposing (usLocale)
-import Html exposing (Attribute, Html, a, div)
+import Html exposing (Attribute, Html, a, div, p, text)
 import Html.Attributes exposing (attribute, style)
 import Html.Parser
 import Html.Parser.Util
 import Json.Decode as D
+import Regex
 
 
 type AlignDirection
@@ -233,9 +234,13 @@ chunkedView size viewFunc items =
                 )
     in
     Grid.container []
-        (List.indexedMap
-            buildRow
-            chunks
+        (if List.length chunks == 0 then
+            [ div (largeCentered ++ fillParent ++ flexCenter ++ [ flex ]) [ p [] [ text "No items were found" ] ] ]
+
+         else
+            List.indexedMap
+                buildRow
+                chunks
         )
 
 
@@ -292,6 +297,21 @@ createdDecoder =
 buildQuery : List ( String, String ) -> String
 buildQuery items =
     List.foldl addQuery "?" items
+
+
+humanizePascalCase : String -> String
+humanizePascalCase =
+    regexReplace "(?!^)([A-Z])" (\m -> " " ++ m.match)
+
+
+regexReplace : String -> (Regex.Match -> String) -> String -> String
+regexReplace userRegex replacer string =
+    case Regex.fromString userRegex of
+        Nothing ->
+            string
+
+        Just regex ->
+            Regex.replace regex replacer string
 
 
 addQuery : ( String, String ) -> String -> String

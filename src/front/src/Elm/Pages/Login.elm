@@ -18,7 +18,7 @@ import Http as Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
 import Json.Encode as E
-import Main exposing (AuthResponse, UserRole(..), baseApplication, roleToStr, rolesDecoder)
+import Main exposing (AuthResponse, MsgBase(..), UserRole(..), baseApplication, mapCmd, roleToStr, rolesDecoder, updateBase)
 import Svg exposing (Svg, image, svg)
 import Svg.Attributes exposing (height, width)
 import TypedSvg.Types exposing (px)
@@ -70,6 +70,7 @@ submit model =
         , body = body
         , expect = Http.expectJson SubmitRequest submitSuccessDecoder
         }
+        |> mapCmd
 
 
 type CredsStatus
@@ -84,11 +85,43 @@ type alias Model =
     }
 
 
-type Msg
+type LocalMsg
     = UsernameUpdated String
     | PasswordUpdate String
     | Submitted
     | SubmitRequest (Result Http.Error AuthResponse)
+
+
+type alias Msg =
+    MsgBase LocalMsg
+
+
+
+-- update
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg model =
+    case msg of
+        UsernameUpdated login ->
+            ( { model | username = login, status = Nothing }, Cmd.none )
+
+        PasswordUpdate pass ->
+            ( { model | password = pass, status = Nothing }, Cmd.none )
+
+        Submitted ->
+            ( { model | status = Just Loading }, submit model )
+
+        SubmitRequest (Ok response) ->
+            ( { model | status = Just <| Loaded GoodCredentials }, notifyLoggedIn <| encodeResponse response )
+
+        SubmitRequest (Err err) ->
+            ( { model | status = Just <| Loaded BadCredentials }, Cmd.none )
 
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
@@ -103,6 +136,11 @@ greenColor opacity =
 
 view : Model -> Html Msg
 view model =
+    viewLocal model |> Html.map Main
+
+
+viewLocal : Model -> Html LocalMsg
+viewLocal model =
     Grid.containerFluid [ style "height" "100vh" ]
         [ Grid.row [ Row.attrs (fillParent ++ flexCenter) ]
             [ Grid.col [] []
@@ -130,7 +168,7 @@ viewBackground =
                 ]
 
 
-viewForm : Model -> Html Msg
+viewForm : Model -> Html LocalMsg
 viewForm model =
     Card.config [ Card.attrs [ style "width" "100%", style "opacity" "0.66" ] ]
         |> Card.header [ textCenter ]
@@ -142,7 +180,7 @@ viewForm model =
         |> Card.view
 
 
-viewFormMain : Model -> Html Msg
+viewFormMain : Model -> Html LocalMsg
 viewFormMain model =
     let
         updatePass pass =
@@ -213,25 +251,6 @@ displayFromCredStatus status =
 
         GoodCredentials ->
             ( Color.green, "Those credentials are valid! You would be redirected shortly" )
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        UsernameUpdated login ->
-            ( { model | username = login, status = Nothing }, Cmd.none )
-
-        PasswordUpdate pass ->
-            ( { model | password = pass, status = Nothing }, Cmd.none )
-
-        Submitted ->
-            ( { model | status = Just Loading }, submit model )
-
-        SubmitRequest (Ok response) ->
-            ( { model | status = Just <| Loaded GoodCredentials }, notifyLoggedIn <| encodeResponse response )
-
-        SubmitRequest (Err err) ->
-            ( { model | status = Just <| Loaded BadCredentials }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg

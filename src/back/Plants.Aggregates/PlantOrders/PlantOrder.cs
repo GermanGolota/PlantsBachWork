@@ -34,8 +34,8 @@ public class PlantOrder : AggregateBase, IEventHandler<PostOrderedEvent>,
         Address = @event.Address;
         OrderTime = @event.Metadata.Time;
         Status = OrderStatus.Created;
-        Referenced.Add(new(@event.Metadata.Aggregate.Id, nameof(PlantPost)));
-        Referenced.Add(new(@event.BuyerUsername.ToGuid(), nameof(User)));
+        Metadata.Referenced.Add(new(@event.Metadata.Aggregate.Id, nameof(PlantPost)));
+        Metadata.Referenced.Add(new(@event.BuyerUsername.ToGuid(), nameof(User)));
     }
 
     public CommandForbidden? ShouldForbid(StartOrderDeliveryCommand command, IUserIdentity user) =>

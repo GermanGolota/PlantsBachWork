@@ -9,11 +9,11 @@ import Endpoints exposing (Endpoint(..), postAuthed)
 import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (href, style, value)
+import Html.Attributes exposing (style, value)
 import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, mapSub, updateBase)
 import Multiselect
 import NavBar exposing (instructionsLink, viewNav)
 import Transition exposing (constant)
@@ -60,7 +60,7 @@ type alias View =
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | GotInstruction (Result Http.Error (Maybe InstructionView))
     | EditorTextUpdated String
@@ -75,8 +75,17 @@ type Msg
     | Submit
 
 
+type alias Msg =
+    MsgBase LocalMsg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -201,7 +210,7 @@ submitAddCommand token page =
         expect =
             Http.expectJson GotSubmit (D.field "id" decodeId)
     in
-    postAuthed token CreateInstruction (bodyEncoder page) expect Nothing
+    postAuthed token CreateInstruction (bodyEncoder page) expect Nothing |> mapCmd
 
 
 submitEditCommand : String -> String -> View -> Cmd Msg
@@ -210,7 +219,7 @@ submitEditCommand token id page =
         expect =
             Http.expectJson GotSubmit (D.field "instructionId" decodeId)
     in
-    postAuthed token (EditInstruction id) (bodyEncoder page) expect Nothing
+    postAuthed token (EditInstruction id) (bodyEncoder page) expect Nothing |> mapCmd
 
 
 bodyEncoder : View -> Http.Body
@@ -236,12 +245,12 @@ bodyEncoder page =
 
 getAvailable : String -> Cmd Msg
 getAvailable token =
-    Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing
+    Endpoints.getAuthed token Dicts (Http.expectJson GotAvailable availableDecoder) Nothing |> mapCmd
 
 
 requestImages : Cmd Msg
 requestImages =
-    FileSelect.files [ "image/png", "image/jpg" ] ImagesLoaded
+    FileSelect.files [ "image/png", "image/jpg" ] ImagesLoaded |> mapCmd
 
 
 
@@ -300,7 +309,7 @@ viewMain isEdit page av =
             viewRow
                 [ viewCol
                     [ div largeCentered [ text resultText ]
-                    , Button.linkButton [ Button.primary, Button.attrs [ href <| "/instructions/" ++ result ] ] [ text "Open Instruction" ]
+                    , Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/instructions/" ++ result) ] [ text "Open Instruction" ]
                     ]
                 ]
 
@@ -323,28 +332,28 @@ viewMain isEdit page av =
         [ viewRow
             [ viewCol
                 [ div largeCentered [ text "Group" ]
-                , Select.select [ Select.onChange GroupSelected ] (List.map viewGroup groups)
+                , Select.select [ Select.onChange (\str -> Main <| GroupSelected str) ] (List.map viewGroup groups)
                 ]
             ]
         , viewRow
             [ viewCol
                 [ div largeCentered [ text "Title" ]
-                , Input.text [ Input.value page.selectedTitle, Input.onInput TitleChanged ]
+                , Input.text [ Input.value page.selectedTitle, Input.onInput (\str -> Main <| TitleChanged str) ]
                 ]
             , viewCol
                 [ div largeCentered [ text "Description" ]
-                , Input.text [ Input.value page.selectedDescription, Input.onInput DescriptionChanged ]
+                , Input.text [ Input.value page.selectedDescription, Input.onInput (\str -> Main <| DescriptionChanged str) ]
                 ]
             ]
         , viewRow
             [ Button.button
-                [ Button.primary, Button.onClick StartUpload, Button.attrs [ flex1 ] ]
+                [ Button.primary, Button.onClick <| Main StartUpload, Button.attrs [ flex1 ] ]
                 [ text "Upload" ]
             , viewCol [ div largeCentered [ text fileStr ] ]
             ]
         , viewRow
             [ Button.button
-                [ Button.primary, Button.onClick OpenEditor, Button.attrs [ flex1 ] ]
+                [ Button.primary, Button.onClick <| Main OpenEditor, Button.attrs [ flex1 ] ]
                 [ text "Edit text" ]
             ]
         , div [ flex, Flex.row, style "flex" "4" ]
@@ -356,7 +365,7 @@ viewMain isEdit page av =
         , resultRow
         , viewRow
             [ Button.button
-                [ Button.primary, Button.onClick Submit, Button.attrs [ flex1, mediumMargin ] ]
+                [ Button.primary, Button.onClick <| Main Submit, Button.attrs [ flex1, mediumMargin ] ]
                 [ text createText ]
             ]
         ]
@@ -388,7 +397,7 @@ init resp flags =
         initialCmd res =
             case initialModel of
                 Edit id _ ->
-                    getInstruction GotInstruction res.token id
+                    getInstruction GotInstruction res.token id |> mapCmd
 
                 Add _ ->
                     getAvailable res.token
@@ -405,7 +414,7 @@ init resp flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    editorChanged EditorTextUpdated
+    editorChanged EditorTextUpdated |> mapSub
 
 
 main : Program D.Value Model Msg

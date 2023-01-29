@@ -4,11 +4,11 @@ import Bootstrap.Button as Button
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), getAuthed, postAuthed)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, href, style)
+import Html.Attributes exposing (class, style)
 import Http
 import ImageList
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (plantsLink, viewNav)
 import PlantHelper exposing (PlantModel, plantDecoder, viewPlantBase)
 import Utils exposing (SubmittedResult(..), flex, flex1, largeFont, smallMargin, submittedDecoder)
@@ -36,7 +36,7 @@ type alias PlantView =
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | GotPlant (Result Http.Error (Maybe PlantModel))
     | Images ImageList.Msg
@@ -45,8 +45,17 @@ type Msg
     | GotResult (Result Http.Error SubmittedResult)
 
 
+type alias Msg =
+    MsgBase LocalMsg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -120,7 +129,7 @@ getPlantCommand token plantId =
         expect =
             Http.expectJson GotPlant (plantDecoder (Just 0) token)
     in
-    getAuthed token (PreparedPlant plantId) expect Nothing
+    getAuthed token (PreparedPlant plantId) expect Nothing |> mapCmd
 
 
 submitCommand : String -> String -> Float -> Cmd Msg
@@ -132,7 +141,7 @@ submitCommand token plantId price =
         expect =
             Http.expectJson GotResult decoder
     in
-    postAuthed token (PostPlant plantId price) Http.emptyBody expect Nothing
+    postAuthed token (PostPlant plantId price) Http.emptyBody expect Nothing |> mapCmd
 
 
 
@@ -158,23 +167,23 @@ viewPage resp page =
             viewWebdata plantWeb.plant (viewPlant noplant id plantWeb.postResult)
 
 
-viewPlant : Html Msg -> String -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
+viewPlant : Html LocalMsg -> String -> Maybe (WebData SubmittedResult) -> Maybe PlantModel -> Html Msg
 viewPlant noplant id res plant =
     let
         plantUpdate str =
             case String.toFloat str of
                 Just val ->
-                    UpdatePrice val
+                    Main <| UpdatePrice val
 
                 Nothing ->
-                    NoOp
+                    Main NoOp
     in
     case plant of
         Just plantView ->
-            viewPlantBase True plantUpdate Images (viewButtons res id) plantView
+            viewPlantBase True plantUpdate (\msg -> Main <| Images msg) (viewButtons res id) plantView
 
         Nothing ->
-            noplant
+            noplant |> Html.map Main
 
 
 viewButtons : Maybe (WebData SubmittedResult) -> String -> Html Msg
@@ -189,16 +198,16 @@ viewButtons result id =
                     div [] []
 
         postOnClick =
-            Button.onClick Submit
+            Button.onClick <| Main Submit
     in
     div [ flex, style "flex" "2", Flex.col ]
-        [ resultView
+        [ resultView |> Html.map Main
         , div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
             [ Button.linkButton
                 [ Button.primary
+                , Button.onClick <| Navigate ("/notPosted/" ++ id ++ "/edit")
                 , Button.attrs
                     [ smallMargin
-                    , href ("/notPosted/" ++ id ++ "/edit")
                     , largeFont
                     ]
                 ]
@@ -216,7 +225,7 @@ viewButtons result id =
         ]
 
 
-viewRes : SubmittedResult -> Html Msg
+viewRes : SubmittedResult -> Html LocalMsg
 viewRes res =
     let
         baseView className message =

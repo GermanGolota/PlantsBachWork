@@ -12,7 +12,7 @@ import Http
 import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (ordersLink, viewNav)
 import Utils exposing (bgTeal, decodeId, fillParent, flex, flex1, formatPrice, mediumCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -89,7 +89,7 @@ type Order
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | GotOrders (Result Http.Error (List Order))
     | HideFullfilledChecked Bool
@@ -103,8 +103,17 @@ type Msg
     | GotReject String (Result Http.Error Bool)
 
 
+type alias Msg =
+    MsgBase LocalMsg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -219,7 +228,7 @@ getPostId o =
 
 rejectOrder : String -> String -> Cmd Msg
 rejectOrder token orderId =
-    postAuthed token (RejectOrder orderId) Http.emptyBody (Http.expectJson (GotReject orderId) (D.field "success" D.bool)) Nothing
+    postAuthed token (RejectOrder orderId) Http.emptyBody (Http.expectJson (GotReject orderId) (D.field "success" D.bool)) Nothing |> mapCmd
 
 
 confirmDelivery : String -> String -> Cmd Msg
@@ -228,7 +237,7 @@ confirmDelivery token orderId =
         expect =
             Http.expectJson (GotConfirmReceived orderId) (D.field "successfull" D.bool)
     in
-    postAuthed token (ReceivedOrder orderId) Http.emptyBody expect Nothing
+    postAuthed token (ReceivedOrder orderId) Http.emptyBody expect Nothing |> mapCmd
 
 
 startDelivery : String -> String -> String -> Cmd Msg
@@ -237,7 +246,7 @@ startDelivery token orderId ttn =
         expect =
             Http.expectJson (GotConfirmSend orderId) (D.field "successfull" D.bool)
     in
-    postAuthed token (SendOrder orderId ttn) Http.emptyBody expect Nothing
+    postAuthed token (SendOrder orderId ttn) Http.emptyBody expect Nothing |> mapCmd
 
 
 getOrders : String -> Bool -> Cmd Msg
@@ -246,7 +255,7 @@ getOrders token onlyMine =
         expect =
             Http.expectJson GotOrders (ordersDecoder token)
     in
-    getAuthed token (AllOrders onlyMine) expect Nothing
+    getAuthed token (AllOrders onlyMine) expect Nothing |> mapCmd
 
 
 ordersDecoder : String -> D.Decoder (List Order)
@@ -356,7 +365,7 @@ viewPage resp page =
                 ConsumerView ->
                     "To Producer View"
 
-        switchViewHref =
+        viewLocation =
             case page.viewType of
                 ProducerView ->
                     "/orders"
@@ -372,7 +381,7 @@ viewPage resp page =
                 [ Checkbox.checkbox [ Checkbox.checked True, Checkbox.disabled True, checkAttrs ] ""
                 , Checkbox.checkbox
                     [ Checkbox.checked page.hideFulfilled
-                    , Checkbox.onCheck HideFullfilledChecked
+                    , Checkbox.onCheck (\check -> Main <| HideFullfilledChecked check)
                     , checkAttrs
                     ]
                     "Hide delivered"
@@ -381,7 +390,7 @@ viewPage resp page =
         topViewItems =
             if page.showAdditional then
                 [ checksView
-                , div [] [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href switchViewHref ] ] [ text switchViewMessage ] ]
+                , div [] [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href viewLocation ] ] [ text switchViewMessage ] ]
                 ]
 
             else
@@ -393,11 +402,11 @@ viewPage resp page =
     in
     div ([ flex, Flex.col ] ++ fillParent)
         [ topView
-        , viewWebdata page.data (mainView page.rejected page.selectedTtns page.viewType page.hideFulfilled)
+        , viewWebdata page.data (mainView page.rejected page.selectedTtns page.viewType page.hideFulfilled) |> Html.map Main
         ]
 
 
-mainView : Dict String (WebData Bool) -> Dict String String -> ViewType -> Bool -> List Order -> Html Msg
+mainView : Dict String (WebData Bool) -> Dict String String -> ViewType -> Bool -> List Order -> Html LocalMsg
 mainView rejected ttns viewType hide orders =
     let
         isNotDelivered order =
@@ -418,7 +427,7 @@ mainView rejected ttns viewType hide orders =
     div [ flex, Flex.col, style "flex" "8", style "overflow-y" "scroll" ] (List.map (viewOrder rejected ttns viewType) fOrders)
 
 
-viewOrder : Dict String (WebData Bool) -> Dict String String -> ViewType -> Order -> Html Msg
+viewOrder : Dict String (WebData Bool) -> Dict String String -> ViewType -> Order -> Html LocalMsg
 viewOrder rejected ttns viewType order =
     let
         ttn =
@@ -492,12 +501,12 @@ viewOrder rejected ttns viewType order =
             viewOrderBase True del (\a -> viewDelivering viewDelivered a) (div [] [])
 
 
-viewDelivered : DeliveredView -> Html Msg
+viewDelivered : DeliveredView -> Html LocalMsg
 viewDelivered del =
     viewInfoRow "Shipped" del.shipped
 
 
-viewDelivering : (a -> Html Msg) -> DeliveringView a -> List (Html Msg)
+viewDelivering : (a -> Html LocalMsg) -> DeliveringView a -> List (Html LocalMsg)
 viewDelivering add order =
     [ viewInfoRow "Delivery Started" order.deliveryStartedDate
     , viewInfoRow "Tracking Number" order.deliveryTrackingNumber
@@ -505,7 +514,7 @@ viewDelivering add order =
     ]
 
 
-viewOrderBase : Bool -> OrderBase a -> (a -> List (Html Msg)) -> Html Msg -> Html Msg
+viewOrderBase : Bool -> OrderBase a -> (a -> List (Html LocalMsg)) -> Html LocalMsg -> Html LocalMsg
 viewOrderBase fill order viewAdd btnView =
     let
         imgCol =
@@ -527,7 +536,7 @@ viewOrderBase fill order viewAdd btnView =
         ]
 
 
-infoCol : OrderBase a -> (a -> List (Html Msg)) -> Html Msg -> Html Msg
+infoCol : OrderBase a -> (a -> List (Html LocalMsg)) -> Html LocalMsg -> Html LocalMsg
 infoCol order viewAdd btnView =
     div [ flex, Flex.col, flex1 ]
         ([ viewInfoRow "Status" order.status

@@ -4,12 +4,12 @@ import Bootstrap.Button as Button
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), getAuthed, instructioIdToCover)
 import Html exposing (Html, div, img, text)
-import Html.Attributes exposing (alt, href, src, style)
+import Html.Attributes exposing (alt, src, style)
 import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), UserRole(..), baseApplication, initBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (instructionsLink, viewNav)
 import Utils exposing (decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, textCenter, textHtml)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -32,13 +32,22 @@ type View
 --update
 
 
-type Msg
+type LocalMsg
     = NoOp
     | GotInstruction (Result Http.Error (Maybe InstructionView))
 
 
+type alias Msg =
+    MsgBase LocalMsg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg m =
+update =
+    updateBase updateLocal
+
+
+updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
+updateLocal msg m =
     let
         noOp =
             ( m, Cmd.none )
@@ -116,7 +125,7 @@ viewInstruction ins =
                 [ Html.p [] (textHtml ins.text) ]
             ]
         , div [ style "flex" "0.5", flex, Flex.row, Flex.justifyCenter, smallMargin ]
-            [ Button.linkButton [ Button.outlinePrimary, Button.attrs [ href "/instructions" ] ] [ text "Go back" ]
+            [ Button.linkButton [ Button.outlinePrimary, Button.onClick <| Navigate "/instructions" ] [ text "Go back" ]
             ]
         ]
 
@@ -142,7 +151,7 @@ init resp flags =
         initialCmd res =
             case insId of
                 Ok id ->
-                    getInstruction GotInstruction res.token id
+                    getInstruction GotInstruction res.token id |> mapCmd
 
                 Err _ ->
                     Cmd.none
