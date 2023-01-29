@@ -18,7 +18,7 @@ internal class HistoryService : IHistoryService
         _helper = helper;
     }
 
-    public async Task<HistoryModel> GetAsync(AggregateDescription desc, CancellationToken token)
+    public async Task<HistoryModel> GetAsync(AggregateDescription desc, OrderType order, CancellationToken token)
     {
         var results = await _store.ReadEventsAsync(desc, token);
         var aggregate = _applyer.ConstructAggregate(desc);
@@ -38,6 +38,15 @@ internal class HistoryService : IHistoryService
                     .ToList(),
                 aggregate.Metadata.Referenced.Select(reference => GetReferenced(desc, reference)).ToList()
                 ));
+        }
+        switch (order)
+        {
+            case OrderType.Historical:
+                snapshots= snapshots.OrderBy(_ => _.Time).ToList();
+                break;
+            case OrderType.ReverseHistorical:
+                snapshots = snapshots.OrderByDescending(_ => _.Time).ToList();
+                break;
         }
         return new(snapshots);
     }

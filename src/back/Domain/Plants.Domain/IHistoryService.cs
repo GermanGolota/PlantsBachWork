@@ -2,7 +2,13 @@
 
 public interface IHistoryService
 {
-    Task<HistoryModel> GetAsync(AggregateDescription aggregate, CancellationToken token);
+    Task<HistoryModel> GetAsync(AggregateDescription aggregate, OrderType order, CancellationToken token);
+}
+
+public enum OrderType
+{
+    Historical = 0,
+    ReverseHistorical = 1
 }
 
 public record HistoryModel(List<AggregateSnapshot> Snapshots);

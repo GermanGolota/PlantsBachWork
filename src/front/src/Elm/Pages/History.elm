@@ -4,6 +4,7 @@ import Bootstrap.Accordion as Accordion exposing (State(..))
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
+import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.ListGroup as ListGroup
 import Bootstrap.Modal as Modal
 import Bootstrap.Text as Text
@@ -44,8 +45,14 @@ type View
 
 type alias ViewValue =
     { aggregate : AggregateDescription
+    , orderType : OrderType
     , history : WebData History
     }
+
+
+type OrderType
+    = Historical
+    | ReverseHistorical
 
 
 type alias AggregateDescription =
@@ -134,6 +141,7 @@ type LocalMsg
     | CloseMetadataModal
     | ShowMetadataModal JsonViewer.Model
     | AnimateMetadataModal Modal.Visibility
+    | ChangeOrderType Bool
 
 
 type alias Msg =
@@ -333,6 +341,17 @@ update msg m =
                                 _ ->
                                     noOp
 
+                        ChangeOrderType checked ->
+                            let
+                                oType =
+                                    if checked then
+                                        ReverseHistorical
+
+                                    else
+                                        Historical
+                            in
+                            ( authed <| Valid <| { viewModel | orderType = oType, history = Loading }, loadHistoryCmd auth.token oType viewModel.aggregate )
+
         _ ->
             ( m, Cmd.none )
 
@@ -351,14 +370,22 @@ updateJsonAggregate aggregate json =
 --commands
 
 
-loadHistoryCmd : String -> AggregateDescription -> Cmd Msg
-loadHistoryCmd token aggregate =
+loadHistoryCmd : String -> OrderType -> AggregateDescription -> Cmd Msg
+loadHistoryCmd token order aggregate =
     let
         expect =
             Http.expectJson GotAggregate historyDecoder
 
+        orderValue =
+            case order of
+                Historical ->
+                    0
+
+                ReverseHistorical ->
+                    1
+
         query =
-            buildQuery [ ( "name", aggregate.name ), ( "id", aggregate.id ) ]
+            buildQuery [ ( "name", aggregate.name ), ( "id", aggregate.id ), ( "order", String.fromInt orderValue ) ]
     in
     getAuthedQuery query token Endpoints.History expect Nothing |> mapCmd
 
@@ -450,7 +477,7 @@ viewPage resp page =
     case page of
         Valid agg ->
             div [ flex, Flex.col, mediumMargin ]
-                [ div [ flex, Flex.row ] (viewToolbar agg)
+                [ div [ flex, Flex.row, Flex.alignItemsCenter ] (viewToolbar agg)
                 , div [ flex, Flex.row ] [ viewWebdata agg.history viewHistory ]
                 ]
 
@@ -459,8 +486,20 @@ viewPage resp page =
 
 
 viewToolbar agg =
+    let
+        isReverse =
+            case agg.orderType of
+                Historical ->
+                    False
+
+                ReverseHistorical ->
+                    True
+    in
     [ div [ Flex.col, mediumMargin ]
         [ Button.linkButton [ Button.outlineInfo, Button.onClick GoBack, Button.attrs largeCentered ] [ text "Go back" ]
+        ]
+    , div (largeCentered ++ [ Flex.col ])
+        [ Checkbox.checkbox [ Checkbox.onCheck (\val -> Main <| ChangeOrderType val), Checkbox.checked isReverse ] "Use Reverse order"
         ]
     ]
 
@@ -646,7 +685,7 @@ init resp flags =
         initialState =
             case getAggregate of
                 Ok agg ->
-                    Valid { aggregate = agg, history = Loading }
+                    Valid { aggregate = agg, history = Loading, orderType = Historical }
 
                 Err err ->
                     Invalid
@@ -654,7 +693,7 @@ init resp flags =
         initialCmd res =
             case initialState of
                 Valid agg ->
-                    loadHistoryCmd res.token agg.aggregate
+                    loadHistoryCmd res.token agg.orderType agg.aggregate
 
                 Invalid ->
                     Cmd.none

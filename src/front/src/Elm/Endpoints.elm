@@ -46,7 +46,6 @@ type Endpoint
     | ChangePassword
     | History
 
-
 endpointToUrl : Endpoint -> String
 endpointToUrl endpoint =
     case endpoint of
