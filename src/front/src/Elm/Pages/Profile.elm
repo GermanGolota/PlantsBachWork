@@ -4,13 +4,13 @@ import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
 import Bootstrap.ListGroup as ListGroup
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), postAuthed)
+import Endpoints exposing (Endpoint(..), IdType(..), getAuthed, historyUrl, postAuthed)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as D
 import Json.Encode as E
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, roleToStr, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, roleToStr, updateBase)
 import NavBar exposing (viewNav)
 import Utils exposing (SubmittedResult(..), fillParent, flex, flexCenter, largeCentered, mediumMargin, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -27,6 +27,7 @@ type alias Model =
 type alias View =
     { password : String
     , result : Maybe (WebData SubmittedResult)
+    , id : WebData String
     }
 
 
@@ -39,6 +40,7 @@ type LocalMsg
     | NewPasswordChanged String
     | ChangePass
     | GotChangePass (Result Http.Error SubmittedResult)
+    | GotId (Result Http.Error String)
 
 
 type alias Msg =
@@ -78,6 +80,18 @@ updateLocal msg m =
                 GotChangePass (Err res) ->
                     updateModel { model | result = Just Error }
 
+                GotId id ->
+                    let
+                        getId =
+                            case id of
+                                Ok res ->
+                                    Loaded res
+
+                                Err err ->
+                                    Error
+                    in
+                    updateModel { model | id = getId }
+
                 NoOp ->
                     noOp
 
@@ -87,6 +101,15 @@ updateLocal msg m =
 
 
 --commands
+
+
+getUserId : String -> String -> Cmd Msg
+getUserId token login =
+    let
+        expect =
+            Http.expectJson GotId D.string
+    in
+    getAuthed token (ConvertId <| StringId login) expect Nothing |> mapCmd
 
 
 submitCommand : String -> String -> Cmd Msg
@@ -123,6 +146,22 @@ viewPage resp page =
 
                 _ ->
                     False
+
+        historyBtn =
+            if isAdmin resp then
+                viewWebdata
+                    page.id
+                    (\id ->
+                        Button.linkButton
+                            [ Button.outlinePrimary
+                            , Button.onClick <| Navigate <| historyUrl "User" id
+                            , Button.attrs [ smallMargin ]
+                            ]
+                            [ text "View history" ]
+                    )
+
+            else
+                div [] []
     in
     div ([ flex, Flex.row, mediumMargin ] ++ fillParent ++ flexCenter)
         [ div [ flex, Flex.col, class "modal__container" ]
@@ -141,6 +180,7 @@ viewPage resp page =
                 |> Html.map Main
             , buttonView page |> Html.map Main
             , Button.linkButton [ Button.danger, Button.onClick <| Navigate "/login/new", Button.attrs [ mediumMargin ] ] [ text "Logout" ]
+            , historyBtn
             ]
         ]
 
@@ -168,7 +208,7 @@ viewResult res =
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init resp flags =
-    initBase [ Producer, Consumer, Manager ] (View "" Nothing) (\res -> Cmd.none) resp
+    initBase [ Producer, Consumer, Manager ] (View "" Nothing Loading) (\res -> getUserId res.token res.username) resp
 
 
 subscriptions : Model -> Sub Msg

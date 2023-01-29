@@ -7,17 +7,17 @@ import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
 import Debug exposing (log)
-import Endpoints exposing (Endpoint(..), getAuthedQuery, postAuthed)
+import Endpoints exposing (Endpoint(..), IdType(..), getAuthed, getAuthedQuery, historyUrl, postAuthed)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), allRoles, baseApplication, convertRole, initBase, mapCmd, roleToNumber, roleToStr, rolesDecoder, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), allRoles, baseApplication, convertRole, initBase, isAdmin, mapCmd, roleToNumber, roleToStr, rolesDecoder, updateBase)
 import Multiselect as Multiselect
 import NavBar exposing (usersLink, viewNav)
 import UserRolesSelector exposing (userRolesBtns)
-import Utils exposing (buildQuery, chunkedView, fillParent, flatten, flex, flex1, largeCentered, mediumMargin, smallMargin, unique)
+import Utils exposing (buildQuery, chunkedView, fillParent, flatten, flex, flex1, flexCenter, largeCentered, mediumMargin, smallMargin, unique)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -43,6 +43,7 @@ type alias User =
     , roles : List UserRole
     , login : String
     , alteringResult : Maybe (WebData String)
+    , id : WebData String
     }
 
 
@@ -59,6 +60,7 @@ type LocalMsg
     | CheckedRole UserRole String
     | GotRemoveRole String (Result Http.Error Bool)
     | GotAddRole String (Result Http.Error Bool)
+    | GotIdConversion String (Result Http.Error String) -- username to id
 
 
 type alias Msg =
@@ -100,7 +102,7 @@ updateLocal msg m =
             in
             case msg of
                 GotUsers (Ok res) ->
-                    ( authed <| { model | users = Loaded res }, Cmd.none )
+                    ( authed <| { model | users = Loaded res }, getUserIds auth.token <| List.map .login res )
 
                 GotUsers (Err err) ->
                     let
@@ -142,7 +144,7 @@ updateLocal msg m =
                         Loaded users ->
                             let
                                 selectedUser =
-                                    Maybe.withDefault (User "" "" [] "" Nothing) <| List.head <| List.filter (\user -> user.login == login) users
+                                    Maybe.withDefault (User "" "" [] "" Nothing Loading) <| List.head <| List.filter (\user -> user.login == login) users
 
                                 isRemove =
                                     List.member role selectedUser.roles
@@ -214,6 +216,27 @@ updateLocal msg m =
                         _ ->
                             noOp
 
+                GotIdConversion login id ->
+                    case model.users of
+                        Loaded users ->
+                            let
+                                updateUser user =
+                                    if user.login == login then
+                                        case id of
+                                            Err err ->
+                                                { user | id = Error }
+
+                                            Ok res ->
+                                                { user | id = Loaded res }
+
+                                    else
+                                        user
+                            in
+                            ( authed { model | users = Loaded (List.map updateUser users) }, Cmd.none )
+
+                        _ ->
+                            noOp
+
                 NoOp ->
                     noOp
 
@@ -242,15 +265,30 @@ viewPage resp page =
             ]
             |> Html.map Main
         , div [ flex, Flex.row, style "flex" "16", style "overflow-y" "scroll" ]
-            [ viewWebdata page.users (chunkedView 3 <| viewUser resp.roles)
+            [ viewWebdata page.users (chunkedView 3 <| viewUser (isAdmin resp) resp.roles)
             ]
-            |> Html.map Main
         ]
 
 
-viewUser : List UserRole -> User -> Html LocalMsg
-viewUser viewerRoles user =
+viewUser : Bool -> List UserRole -> User -> Html Msg
+viewUser isAdmin viewerRoles user =
     let
+        historyBtn =
+            if isAdmin then
+                viewWebdata
+                    user.id
+                    (\id ->
+                        Button.linkButton
+                            [ Button.outlinePrimary
+                            , Button.onClick <| Navigate <| historyUrl "User" id
+                            , Button.attrs [ smallMargin ]
+                            ]
+                            [ text "View history" ]
+                    )
+
+            else
+                div [] []
+
         btnViewBase =
             userRolesBtns (\role -> CheckedRole role user.login) user.roles viewerRoles
 
@@ -276,7 +314,7 @@ viewUser viewerRoles user =
             [ Block.titleH4 largeCentered [ text user.login ]
             , Block.titleH4 largeCentered [ text user.contact ]
             , Block.custom <|
-                btnsView
+                div (flexCenter ++ [ flex ]) [ btnsView |> Html.map Main, historyBtn ]
             ]
         |> Card.view
 
@@ -326,6 +364,15 @@ init resp flags =
 
 
 --cmds
+
+
+getUserIds : String -> List String -> Cmd Msg
+getUserIds token logins =
+    let
+        expect login =
+            Http.expectJson (GotIdConversion login) D.string
+    in
+    List.map (\login -> getAuthed token (ConvertId <| StringId login) (expect login) Nothing) logins |> Cmd.batch |> mapCmd
 
 
 removeRole : String -> UserRole -> String -> Cmd Msg
@@ -385,6 +432,7 @@ userDecoder =
         |> custom (rolesDecoder (D.field "roleCodes" <| D.list D.int))
         |> required "login" D.string
         |> hardcoded Nothing
+        |> hardcoded Loading
 
 
 justOrEmpty : String -> Maybe a -> List ( String, a )
