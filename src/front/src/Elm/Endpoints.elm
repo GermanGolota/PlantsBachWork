@@ -1,4 +1,4 @@
-module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, imagesDecoder, instructioIdToCover, postAuthed, postAuthedQuery)
+module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, imagesDecoder, instructioIdToCover, postAuthed, postAuthedQuery, historyUrl)
 
 import Dict
 import Http exposing (header, request)
@@ -45,6 +45,7 @@ type Endpoint
     | RejectOrder String
     | ChangePassword
     | History
+
 
 endpointToUrl : Endpoint -> String
 endpointToUrl endpoint =
@@ -210,3 +211,7 @@ baseRequest method token url body expect timeout tracker =
         , timeout = timeout
         , tracker = tracker
         }
+
+
+historyUrl name id =
+    "/history/" ++ name ++ "/" ++ id

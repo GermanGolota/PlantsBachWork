@@ -57,24 +57,6 @@ const HistoryPage = () => {
             }
           }
         }
-        /*const elements = data.ids.map((id) => document.getElementById(id));
-        for (let index = 0; index < elements.length; index++) {
-          const element = elements[index];
-          if (element) {
-            const parents = getParents(element);
-            console.log(element);
-            console.log(parents);
-
-            if (element.style.height == "0px") {
-              //element.style.removeProperty("height");
-              //element.style.height = "0%";
-            } else {
-              element.style.removeProperty("height");
-              element.style.height = "100%";
-            }
-          }
-        }
-        */
       });
     },
   });
