@@ -1,4 +1,4 @@
-module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, imagesDecoder, instructioIdToCover, postAuthed, postAuthedQuery, historyUrl)
+module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, historyUrl, imageIdToUrl, imagesDecoder, instructioIdToCover, postAuthed, postAuthedQuery)
 
 import Dict
 import Http exposing (header, request)
@@ -149,7 +149,7 @@ endpointToUrl endpoint =
             baseUrl ++ "users/changePass"
 
         History ->
-            baseUrl ++ "history"
+            baseUrl ++ "eventsourcing/history"
 
 
 imageIdToUrl : String -> String -> String

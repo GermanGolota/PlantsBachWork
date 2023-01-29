@@ -4,19 +4,19 @@ using Microsoft.AspNetCore.Mvc;
 namespace Plants.Presentation.Controllers;
 
 [ApiController]
-[Route("v2/history")]
+[Route("v2/eventsourcing")]
 [ApiVersion("2")]
 [ApiExplorerSettings(GroupName = "v2")]
-public class HistoryController : ControllerBase
+public class EventSourcingController : ControllerBase
 {
     private readonly IHistoryService _history;
 
-    public HistoryController(IHistoryService history)
+    public EventSourcingController(IHistoryService history)
     {
         _history = history;
     }
 
-    [HttpGet()]
+    [HttpGet("history")]
     public async Task<ActionResult<HistoryViewModel>> GetHistory(
         [FromQuery] string name, 
         [FromQuery] Guid id,
