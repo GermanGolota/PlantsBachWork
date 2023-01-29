@@ -16,7 +16,7 @@ import Json.Decode.Pipeline exposing (hardcoded, required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase, viewBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar exposing (viewNav)
-import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, largeFont, smallMargin, textCenter)
+import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, largeFont, mediumFont, smallMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -423,7 +423,9 @@ resultView isAdmin showOrder showDelete token item =
             imageIdToUrl token (Maybe.withDefault "-1" (List.head item.imageIds))
 
         orderBtn =
-            Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/plant/" ++ item.id ++ "/order"), Button.attrs [ smallMargin ], Button.disabled (not showOrder) ] [ text "Order" ]
+            div [ flex, Flex.col, flex1 ]
+                [ Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/plant/" ++ item.id ++ "/order"), Button.attrs [ smallMargin ], Button.disabled (not showOrder) ] [ text "Order" ]
+                ]
 
         msgText val =
             if val then
@@ -452,12 +454,14 @@ resultView isAdmin showOrder showDelete token item =
 
         historyBtn =
             if isAdmin then
-                Button.linkButton
-                    [ Button.outlinePrimary
-                    , Button.onClick <| Navigate <| historyUrl "PlantPost" item.id
-                    , Button.attrs [ smallMargin ]
+                div [ flex, Flex.col, flex1 ]
+                    [ Button.linkButton
+                        [ Button.outlinePrimary
+                        , Button.onClick <| Navigate <| historyUrl "PlantPost" item.id
+                        , Button.attrs [ smallMargin ]
+                        ]
+                        [ text "View history" ]
                     ]
-                    [ text "View history" ]
 
             else
                 div [] []
@@ -470,18 +474,24 @@ resultView isAdmin showOrder showDelete token item =
             [ Block.titleH4 [] [ text item.name ]
             , Block.text [] [ text item.description ]
             , Block.custom <|
-                div [ flex, Flex.row, style "justify-content" "space-between", Flex.alignItemsCenter ]
-                    [ div [ largeFont ] [ text <| formatPrice item.price ]
-                    , div [ flex, Flex.row ]
-                        [ deleteBtn |> Html.map Main
-                        , orderBtn
-                        , Button.linkButton
-                            [ Button.primary
-                            , Button.onClick <| Navigate ("/plant/" ++ item.id)
-                            , Button.attrs [ smallMargin ]
+                div [ flex, Flex.row, Flex.alignItemsCenter ]
+                    [ div [ flex, Flex.col, flex1 ]
+                        [ div [ mediumFont ] [ text <| formatPrice item.price ]
+                        ]
+                    , div [ flex, Flex.col, flex1, smallMargin, style "width" "75%" ]
+                        [ div [ flex, Flex.row, Flex.alignItemsCenter ]
+                            [ deleteBtn |> Html.map Main
+                            , orderBtn
+                            , div [ flex, Flex.col, flex1 ]
+                                [ Button.linkButton
+                                    [ Button.primary
+                                    , Button.onClick <| Navigate ("/plant/" ++ item.id)
+                                    , Button.attrs [ smallMargin ]
+                                    ]
+                                    [ text "Open" ]
+                                ]
+                            , historyBtn
                             ]
-                            [ text "Open" ]
-                        , historyBtn
                         ]
                     ]
             ]
