@@ -46,6 +46,7 @@ type View
 type alias ViewValue =
     { aggregate : AggregateDescription
     , orderType : OrderType
+    , useAdvanced : Bool
     , history : WebData History
     }
 
@@ -142,6 +143,7 @@ type LocalMsg
     | ShowMetadataModal JsonViewer.Model
     | AnimateMetadataModal Modal.Visibility
     | ChangeOrderType Bool
+    | ChangeToAdvanced Bool
 
 
 type alias Msg =
@@ -352,6 +354,9 @@ update msg m =
                             in
                             ( authed <| Valid <| { viewModel | orderType = oType, history = Loading }, loadHistoryCmd auth.token oType viewModel.aggregate )
 
+                        ChangeToAdvanced checked ->
+                            ( authed <| Valid <| { viewModel | useAdvanced = checked, history = Loading }, loadHistoryCmd auth.token viewModel.orderType viewModel.aggregate )
+
         _ ->
             ( m, Cmd.none )
 
@@ -478,7 +483,7 @@ viewPage resp page =
         Valid agg ->
             div [ flex, Flex.col, mediumMargin ]
                 [ div [ flex, Flex.row, Flex.alignItemsCenter ] (viewToolbar agg)
-                , div [ flex, Flex.row ] [ viewWebdata agg.history viewHistory ]
+                , div [ flex, Flex.row ] [ viewWebdata agg.history <| viewHistory agg.useAdvanced ]
                 ]
 
         Invalid ->
@@ -499,18 +504,21 @@ viewToolbar agg =
         [ Button.linkButton [ Button.outlineInfo, Button.onClick GoBack, Button.attrs largeCentered ] [ text "Go back" ]
         ]
     , div (largeCentered ++ [ Flex.col ])
-        [ Checkbox.checkbox [ Checkbox.onCheck (\val -> Main <| ChangeOrderType val), Checkbox.checked isReverse ] "Use Reverse order"
+        [ Checkbox.checkbox [ Checkbox.onCheck (\val -> Main <| ChangeOrderType val), Checkbox.checked isReverse ] "Reverse order"
+        ]
+    , div (largeCentered ++ [ Flex.col, mediumMargin ])
+        [ Checkbox.checkbox [ Checkbox.onCheck (\val -> Main <| ChangeToAdvanced val), Checkbox.checked agg.useAdvanced ] "Advanced"
         ]
     ]
 
 
-viewHistory : History -> Html Msg
-viewHistory history =
+viewHistory : Bool -> History -> Html Msg
+viewHistory advanced history =
     div fillParent
         [ Accordion.config (\v -> Main <| AccordionAggregateMsg v)
             --|> Accordion.withAnimation
             |> Accordion.cards
-                (List.map (\( k, v ) -> viewSnapshot k v) history.snapshots)
+                (List.map (\( k, v ) -> viewSnapshot k v advanced) history.snapshots)
             |> Accordion.view history.aggregateView
         , case history.metadataModal.metadata of
             Just meta ->
@@ -535,8 +543,8 @@ viewHistory history =
         ]
 
 
-viewSnapshot : AggregateSnapshot -> Accordion.State -> Accordion.Card Msg
-viewSnapshot snapshot state =
+viewSnapshot : AggregateSnapshot -> Accordion.State -> Bool -> Accordion.Card Msg
+viewSnapshot snapshot state advanced =
     let
         id =
             snapshot.lastCommand.metadata.id
@@ -575,7 +583,7 @@ viewSnapshot snapshot state =
                             [ div [ flex, Flex.col, style "width" "50%" ]
                                 ([ div largeCentered [ text "State" ]
                                  , viewJsonTree snapshot.aggregate.payload |> Html.map (\v -> Main <| AggregateDataJson snapshot v)
-                                 , viewMetaBtn snapshot.aggregate.metadata
+                                 , viewMetaBtn snapshot.aggregate.metadata advanced
                                     |> Html.map Main
                                  ]
                                     ++ related
@@ -585,8 +593,8 @@ viewSnapshot snapshot state =
                                 , Accordion.config (AccordionSnapshotMsg snapshot)
                                     -- |> Accordion.withAnimation
                                     |> Accordion.cards
-                                        ([ viewCommandData snapshot snapshot.lastCommand ]
-                                            ++ List.map (viewSnapshotEvent snapshot) snapshot.events
+                                        ([ viewCommandData snapshot snapshot.lastCommand advanced ]
+                                            ++ List.map (viewSnapshotEvent snapshot advanced) snapshot.events
                                         )
                                     |> Accordion.view state
                                     |> Html.map Main
@@ -598,13 +606,17 @@ viewSnapshot snapshot state =
         }
 
 
-viewMetaBtn : D.Value -> Html LocalMsg
-viewMetaBtn meta =
-    Button.button
-        [ Button.secondary
-        , Button.onClick <| ShowMetadataModal <| JsonViewer.initJsonTree meta
-        ]
-        [ text "Metadata" ]
+viewMetaBtn : D.Value -> Bool -> Html LocalMsg
+viewMetaBtn meta advanced =
+    if advanced then
+        Button.button
+            [ Button.secondary
+            , Button.onClick <| ShowMetadataModal <| JsonViewer.initJsonTree meta
+            ]
+            [ text "Metadata" ]
+
+    else
+        div [] []
 
 
 viewSnapshotName : AggregateSnapshot -> Html msg
@@ -630,8 +642,8 @@ viewSnapshotName snapshot =
     div (largeCentered ++ [ class textColor ]) [ text ("\"" ++ snapshot.lastCommand.metadata.userName ++ "\"" ++ actionName ++ "\"" ++ humanizePascalCase snapshot.lastCommand.metadata.name ++ "\"" ++ " " ++ snapshot.displayTime) ]
 
 
-viewCommandData : AggregateSnapshot -> CommandData -> Accordion.Card LocalMsg
-viewCommandData snapshot command =
+viewCommandData : AggregateSnapshot -> CommandData -> Bool -> Accordion.Card LocalMsg
+viewCommandData snapshot command advanced =
     let
         outline =
             if command.isLocal then
@@ -650,15 +662,15 @@ viewCommandData snapshot command =
                 [ Block.custom <|
                     div []
                         [ viewJsonTree command.payload |> Html.map (CommandDataJson snapshot)
-                        , viewMetaBtn command.metadata.fullMetadata
+                        , viewMetaBtn command.metadata.fullMetadata advanced
                         ]
                 ]
             ]
         }
 
 
-viewSnapshotEvent : AggregateSnapshot -> EventData -> Accordion.Card LocalMsg
-viewSnapshotEvent snapshot event =
+viewSnapshotEvent : AggregateSnapshot -> Bool -> EventData -> Accordion.Card LocalMsg
+viewSnapshotEvent snapshot advanced event =
     Accordion.card
         { id = event.metadata.id
         , options = [ Card.outlineSecondary, Card.align Text.alignXsCenter ]
@@ -669,7 +681,7 @@ viewSnapshotEvent snapshot event =
                 [ Block.custom <|
                     div []
                         [ viewJsonTree event.payload |> Html.map (EventDataJson snapshot event)
-                        , viewMetaBtn event.metadata.fullMetadata
+                        , viewMetaBtn event.metadata.fullMetadata advanced
                         ]
                 ]
             ]
@@ -685,7 +697,7 @@ init resp flags =
         initialState =
             case getAggregate of
                 Ok agg ->
-                    Valid { aggregate = agg, history = Loading, orderType = Historical }
+                    Valid { aggregate = agg, history = Loading, orderType = Historical, useAdvanced = False }
 
                 Err err ->
                     Invalid
