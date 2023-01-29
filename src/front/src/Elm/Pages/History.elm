@@ -355,7 +355,7 @@ update msg m =
                             ( authed <| Valid <| { viewModel | orderType = oType, history = Loading }, loadHistoryCmd auth.token oType viewModel.aggregate )
 
                         ChangeToAdvanced checked ->
-                            ( authed <| Valid <| { viewModel | useAdvanced = checked, history = Loading }, loadHistoryCmd auth.token viewModel.orderType viewModel.aggregate )
+                            ( authed <| Valid <| { viewModel | useAdvanced = checked }, Cmd.none )
 
         _ ->
             ( m, Cmd.none )

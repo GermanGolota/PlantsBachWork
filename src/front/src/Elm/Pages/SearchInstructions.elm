@@ -7,13 +7,13 @@ import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), instructioIdToCover)
+import Endpoints exposing (Endpoint(..), historyUrl, instructioIdToCover)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (alt, class, src, style, value)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
 import Multiselect as Multiselect
 import NavBar exposing (instructionsLink, viewNav)
 import Utils exposing (buildQuery, chunkedView, decodeId, fillParent, flex, flex1, intersect, largeCentered, mediumMargin, smallMargin)
@@ -186,11 +186,11 @@ view model =
 
 viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
-    viewWebdata page.available (viewMain (intersect [ Producer, Manager ] resp.roles) page)
+    viewWebdata page.available (viewMain (intersect [ Producer, Manager ] resp.roles) (isAdmin resp) page)
 
 
-viewMain : Bool -> View -> Available -> Html Msg
-viewMain isProducer page av =
+viewMain : Bool -> Bool -> View -> Available -> Html Msg
+viewMain isAdmin isProducer page av =
     let
         btnView =
             if page.showAdd then
@@ -203,7 +203,7 @@ viewMain isProducer page av =
         [ btnView
         , div [ flex, Flex.row, flex1 ] (viewSelections page av) |> Html.map Main
         , div [ flex, Flex.row, style "flex" "8" ]
-            [ viewWebdata page.instructions (viewInstructions isProducer) ]
+            [ viewWebdata page.instructions (viewInstructions isAdmin isProducer) ]
         ]
 
 
@@ -236,14 +236,26 @@ viewSelections page av =
     ]
 
 
-viewInstructions : Bool -> List Instruction -> Html Msg
-viewInstructions isProducer ins =
-    chunkedView 3 (viewInstruction isProducer) ins
+viewInstructions : Bool -> Bool -> List Instruction -> Html Msg
+viewInstructions isAdmin isProducer ins =
+    chunkedView 3 (viewInstruction isAdmin isProducer) ins
 
 
-viewInstruction : Bool -> Instruction -> Html Msg
-viewInstruction isProducer ins =
+viewInstruction : Bool -> Bool -> Instruction -> Html Msg
+viewInstruction isAdmin isProducer ins =
     let
+        historyBtn =
+            if isAdmin then
+                Button.linkButton
+                    [ Button.outlinePrimary
+                    , Button.onClick <| Navigate <| historyUrl "PlantInstruction" ins.id
+                    , Button.attrs [ smallMargin ]
+                    ]
+                    [ text "View history" ]
+
+            else
+                div [] []
+
         editBtn =
             if isProducer then
                 Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/instructions/" ++ ins.id ++ "/edit"), Button.attrs [ smallMargin ] ] [ text "Edit" ]
@@ -262,6 +274,7 @@ viewInstruction isProducer ins =
                 div [ flex, Flex.row, Flex.justifyEnd, Flex.alignItemsCenter ]
                     [ editBtn
                     , Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/instructions/" ++ ins.id) ] [ text "Open Full" ]
+                    , historyBtn
                     ]
             ]
         |> Card.view
