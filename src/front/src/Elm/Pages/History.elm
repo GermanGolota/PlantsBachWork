@@ -1,13 +1,16 @@
 port module Pages.History exposing (..)
 
 import Bootstrap.Accordion as Accordion exposing (State(..))
+import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
+import Bootstrap.Modal as Modal
 import Bootstrap.Text as Text
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (getAuthedQuery)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, style)
+import Html.Events exposing (onClick)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required, requiredAt)
@@ -53,6 +56,13 @@ type alias AggregateDescription =
 type alias History =
     { snapshots : List ( AggregateSnapshot, Accordion.State )
     , aggregateView : Accordion.State
+    , metadataModal : MetadataView
+    }
+
+
+type alias MetadataView =
+    { metadata : Maybe JsonViewer.Model
+    , view : Modal.Visibility
     }
 
 
@@ -119,6 +129,10 @@ type LocalMsg
     | CommandDataJson AggregateSnapshot JsonViewer.Msg
     | EventDataJson AggregateSnapshot EventData JsonViewer.Msg
     | AggregateDataJson AggregateSnapshot JsonViewer.Msg
+    | MetadataJson JsonViewer.Msg
+    | CloseMetadataModal
+    | ShowMetadataModal JsonViewer.Model
+    | AnimateMetadataModal Modal.Visibility
 
 
 type alias Msg =
@@ -253,6 +267,71 @@ update msg m =
                                 _ ->
                                     noOp
 
+                        CloseMetadataModal ->
+                            case viewModel.history of
+                                Loaded history ->
+                                    let
+                                        updateModal modal =
+                                            { modal | view = Modal.hidden, metadata = Nothing }
+
+                                        updateMeta =
+                                            { history | metadataModal = updateModal history.metadataModal }
+                                    in
+                                    ( authed <| Valid <| { viewModel | history = Loaded updateMeta }, Cmd.none )
+
+                                _ ->
+                                    noOp
+
+                        ShowMetadataModal state ->
+                            case viewModel.history of
+                                Loaded history ->
+                                    let
+                                        updateModal modal =
+                                            { modal | view = Modal.shown, metadata = Just state }
+
+                                        updateMeta =
+                                            { history | metadataModal = updateModal history.metadataModal }
+                                    in
+                                    ( authed <| Valid <| { viewModel | history = Loaded updateMeta }, Cmd.none )
+
+                                _ ->
+                                    noOp
+
+                        AnimateMetadataModal state ->
+                            case viewModel.history of
+                                Loaded history ->
+                                    let
+                                        updateModal modal =
+                                            { modal | view = state }
+
+                                        updateMeta =
+                                            { history | metadataModal = updateModal history.metadataModal }
+                                    in
+                                    ( authed <| Valid <| { viewModel | history = Loaded updateMeta }, Cmd.none )
+
+                                _ ->
+                                    noOp
+
+                        MetadataJson state ->
+                            case viewModel.history of
+                                Loaded history ->
+                                    let
+                                        updateModal modal meta =
+                                            { modal | metadata = Just <| updateJsonTree state meta }
+
+                                        updateMeta meta =
+                                            { history | metadataModal = updateModal history.metadataModal meta }
+                                    in
+                                    case history.metadataModal.metadata of
+                                        Just meta ->
+                                            ( authed <| Valid <| { viewModel | history = Loaded <| updateMeta meta }, Cmd.none )
+
+                                        Nothing ->
+                                            noOp
+
+                                _ ->
+                                    noOp
+
         _ ->
             ( m, Cmd.none )
 
@@ -291,7 +370,7 @@ historyDecoder =
 
 snapshotMapper : List AggregateSnapshot -> History
 snapshotMapper snapshots =
-    History (List.map (\v -> ( v, Accordion.initialState )) snapshots) Accordion.initialState
+    History (List.map (\v -> ( v, Accordion.initialState )) snapshots) Accordion.initialState <| MetadataView Nothing Modal.hidden
 
 
 snapshotDecoder : D.Decoder AggregateSnapshot
@@ -369,25 +448,46 @@ viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     case page of
         Valid agg ->
-            viewWebdata agg.history viewHistory |> Html.map Main
+            viewWebdata agg.history viewHistory
 
         Invalid ->
             div [] [ text "Failed to load aggregate" ]
 
 
-viewHistory : History -> Html LocalMsg
+viewHistory : History -> Html Msg
 viewHistory history =
     div fillParent
         [ Accordion.config AccordionAggregateMsg
             --|> Accordion.withAnimation
             |> Accordion.cards
-                (List.map (\( k, v ) -> viewSnapshot history.aggregateView k v) history.snapshots)
+                (List.map (\( k, v ) -> viewSnapshot k v) history.snapshots)
             |> Accordion.view history.aggregateView
+            |> Html.map Main
+        , case history.metadataModal.metadata of
+            Just meta ->
+                Modal.config CloseMetadataModal
+                    -- Configure the modal to use animations providing the new AnimateModal msg
+                    |> Modal.withAnimation AnimateMetadataModal
+                    |> Modal.large
+                    |> Modal.h3 [] [ text "Metadata" ]
+                    |> Modal.body [] [ JsonViewer.viewJsonTree meta |> Html.map MetadataJson ]
+                    |> Modal.footer []
+                        [ Button.button
+                            [ Button.outlinePrimary
+                            , Button.attrs [ onClick <| AnimateMetadataModal Modal.hiddenAnimated ]
+                            ]
+                            [ text "Close" ]
+                        ]
+                    |> Modal.view history.metadataModal.view
+                    |> Html.map Main
+
+            Nothing ->
+                div [] []
         ]
 
 
-viewSnapshot : Accordion.State -> AggregateSnapshot -> Accordion.State -> Accordion.Card LocalMsg
-viewSnapshot baseState snapshot state =
+viewSnapshot : AggregateSnapshot -> Accordion.State -> Accordion.Card LocalMsg
+viewSnapshot snapshot state =
     let
         id =
             snapshot.lastCommand.metadata.id
@@ -405,6 +505,7 @@ viewSnapshot baseState snapshot state =
                             [ div [ flex, Flex.col, style "width" "50%" ]
                                 [ div largeCentered [ text "State" ]
                                 , viewJsonTree snapshot.aggregate.payload |> Html.map (AggregateDataJson snapshot)
+                                , viewMetaBtn snapshot.aggregate.metadata
                                 ]
                             , div [ flex, Flex.col, style "width" "50%" ]
                                 [ div largeCentered [ text "Command" ]
@@ -423,13 +524,13 @@ viewSnapshot baseState snapshot state =
         }
 
 
-blockStyle : String -> Accordion.State -> List (Html.Attribute msg)
-blockStyle id state =
-    if Accordion.isOpen id state then
-        Debug.log "openAboba" [ style "height" "0px" ]
-
-    else
-        Debug.log "NotopenAboba" [ style "height" "100% !important" ]
+viewMetaBtn : D.Value -> Html LocalMsg
+viewMetaBtn meta =
+    Button.button
+        [ Button.secondary
+        , Button.onClick <| ShowMetadataModal <| JsonViewer.initJsonTree meta
+        ]
+        [ text "Metadata" ]
 
 
 viewSnapshotName : AggregateSnapshot -> Html msg
@@ -472,7 +573,12 @@ viewCommandData snapshot command =
             Accordion.header [] <| Accordion.toggle [] [ text <| "Command Data" ]
         , blocks =
             [ Accordion.block []
-                [ Block.custom <| (viewJsonTree command.payload |> Html.map (CommandDataJson snapshot)) ]
+                [ Block.custom <|
+                    div []
+                        [ viewJsonTree command.payload |> Html.map (CommandDataJson snapshot)
+                        , viewMetaBtn command.metadata.fullMetadata
+                        ]
+                ]
             ]
         }
 
@@ -486,7 +592,12 @@ viewSnapshotEvent snapshot event =
             Accordion.header [] <| Accordion.toggle [] [ text <| ("Event \"" ++ humanizePascalCase event.metadata.name ++ "\"") ]
         , blocks =
             [ Accordion.block []
-                [ Block.custom <| (viewJsonTree event.payload |> Html.map (EventDataJson snapshot event)) ]
+                [ Block.custom <|
+                    div []
+                        [ viewJsonTree event.payload |> Html.map (EventDataJson snapshot event)
+                        , viewMetaBtn event.metadata.fullMetadata
+                        ]
+                ]
             ]
         }
 
@@ -530,7 +641,9 @@ subscriptions model =
                                         |> List.map (\( agg, state ) -> Accordion.subscriptions state (\st -> Main <| AccordionSnapshotMsg agg st))
                             in
                             snapshotSubs
-                                ++ [ Accordion.subscriptions history.aggregateView (\st -> Main <| AccordionAggregateMsg st) ]
+                                ++ [ Accordion.subscriptions history.aggregateView (\st -> Main <| AccordionAggregateMsg st)
+                                   , Modal.subscriptions history.metadataModal.view (\vis -> Main <| AnimateMetadataModal vis)
+                                   ]
                                 |> Sub.batch
 
                         _ ->
