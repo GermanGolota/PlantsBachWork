@@ -442,7 +442,7 @@ commandMetadataDecoder =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just plantsLink) viewPage
+    viewNav model Nothing viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
