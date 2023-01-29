@@ -5,7 +5,7 @@ import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), postAuthed)
+import Endpoints exposing (Endpoint(..), historyUrl, postAuthed)
 import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
@@ -266,17 +266,26 @@ viewPage : AuthResponse -> ViewType -> Html Msg
 viewPage resp page =
     case page of
         Add add ->
-            viewWebdata add.available (viewMain False add)
+            viewWebdata add.available (viewMain (div [] []) False add)
 
         Edit id edit ->
-            viewWebdata edit (\editLoaded -> viewWebdata editLoaded.available (viewMain True editLoaded))
+            let
+                btn =
+                    Button.linkButton
+                        [ Button.outlinePrimary
+                        , Button.onClick <| Navigate <| historyUrl "PlantInstruction" id
+                        , Button.attrs [ smallMargin ]
+                        ]
+                        [ text "View history" ]
+            in
+            viewWebdata edit (\editLoaded -> viewWebdata editLoaded.available (viewMain btn True editLoaded))
 
         BadEdit ->
             div largeCentered [ text "There is not such instruction!" ]
 
 
-viewMain : Bool -> View -> Available -> Html Msg
-viewMain isEdit page av =
+viewMain : Html Msg -> Bool -> View -> Available -> Html Msg
+viewMain historyBtn isEdit page av =
     let
         viewRow =
             div [ flex, Flex.row, flex1, smallMargin ]
@@ -367,6 +376,7 @@ viewMain isEdit page av =
             [ Button.button
                 [ Button.primary, Button.onClick <| Main Submit, Button.attrs [ flex1, mediumMargin ] ]
                 [ text createText ]
+            , historyBtn
             ]
         ]
 

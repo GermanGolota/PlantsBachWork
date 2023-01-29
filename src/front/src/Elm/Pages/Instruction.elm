@@ -2,16 +2,16 @@ module Pages.Instruction exposing (..)
 
 import Bootstrap.Button as Button
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), getAuthed, instructioIdToCover)
+import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, instructioIdToCover)
 import Html exposing (Html, div, img, text)
 import Html.Attributes exposing (alt, src, style)
 import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
 import NavBar exposing (instructionsLink, viewNav)
-import Utils exposing (decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, textCenter, textHtml)
+import Utils exposing (decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin, textCenter, textHtml)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -94,11 +94,29 @@ viewPage resp page =
             div largeCentered [ text "There is no such instruction" ]
 
         Instruction ins ->
-            viewWebdata ins viewInstruction
+            let
+                historyBtn =
+                    if isAdmin resp then
+                        case ins of
+                            Loaded i ->
+                                Button.linkButton
+                                    [ Button.outlinePrimary
+                                    , Button.onClick <| Navigate <| historyUrl "PlantInstruction" i.id
+                                    , Button.attrs [ smallMargin ]
+                                    ]
+                                    [ text "View history" ]
+
+                            _ ->
+                                div [] []
+
+                    else
+                        div [] []
+            in
+            viewWebdata ins (viewInstruction historyBtn)
 
 
-viewInstruction : InstructionView -> Html Msg
-viewInstruction ins =
+viewInstruction : Html Msg -> InstructionView -> Html Msg
+viewInstruction historyBtn ins =
     let
         viewDesc txt =
             div largeCentered [ text txt ]
@@ -126,6 +144,7 @@ viewInstruction ins =
             ]
         , div [ style "flex" "0.5", flex, Flex.row, Flex.justifyCenter, smallMargin ]
             [ Button.linkButton [ Button.outlinePrimary, Button.onClick <| Navigate "/instructions" ] [ text "Go back" ]
+            , historyBtn
             ]
         ]
 

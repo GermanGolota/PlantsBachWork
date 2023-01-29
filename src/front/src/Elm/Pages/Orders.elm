@@ -5,14 +5,14 @@ import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
-import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder, postAuthed)
+import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, imagesDecoder, postAuthed)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, href, style)
 import Http
 import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
 import NavBar exposing (ordersLink, viewNav)
 import Utils exposing (bgTeal, decodeId, fillParent, flex, flex1, formatPrice, mediumCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -402,12 +402,12 @@ viewPage resp page =
     in
     div ([ flex, Flex.col ] ++ fillParent)
         [ topView
-        , viewWebdata page.data (mainView page.rejected page.selectedTtns page.viewType page.hideFulfilled) |> Html.map Main
+        , viewWebdata page.data (mainView (isAdmin resp) page.rejected page.selectedTtns page.viewType page.hideFulfilled)
         ]
 
 
-mainView : Dict String (WebData Bool) -> Dict String String -> ViewType -> Bool -> List Order -> Html LocalMsg
-mainView rejected ttns viewType hide orders =
+mainView : Bool -> Dict String (WebData Bool) -> Dict String String -> ViewType -> Bool -> List Order -> Html Msg
+mainView isAdmin rejected ttns viewType hide orders =
     let
         isNotDelivered order =
             case order of
@@ -424,11 +424,11 @@ mainView rejected ttns viewType hide orders =
             else
                 orders
     in
-    div [ flex, Flex.col, style "flex" "8", style "overflow-y" "scroll" ] (List.map (viewOrder rejected ttns viewType) fOrders)
+    div [ flex, Flex.col, style "flex" "8", style "overflow-y" "scroll" ] (List.map (viewOrder isAdmin rejected ttns viewType) fOrders)
 
 
-viewOrder : Dict String (WebData Bool) -> Dict String String -> ViewType -> Order -> Html LocalMsg
-viewOrder rejected ttns viewType order =
+viewOrder : Bool -> Dict String (WebData Bool) -> Dict String String -> ViewType -> Order -> Html Msg
+viewOrder isAdmin rejected ttns viewType order =
     let
         ttn =
             Maybe.withDefault "" <| Dict.get (getPostId order) ttns
@@ -456,6 +456,18 @@ viewOrder rejected ttns viewType order =
                 [ rejectRes
                 , Button.button [ Button.danger, Button.onClick <| Reject orderId, Button.attrs fillParent ] [ text "Reject" ]
                 ]
+
+        historyBtn =
+            if isAdmin then
+                Button.linkButton
+                    [ Button.outlinePrimary
+                    , Button.onClick <| Navigate <| historyUrl "PlantOrder" orderId
+                    , Button.attrs [ smallMargin ]
+                    ]
+                    [ text "View history" ]
+
+            else
+                div [] []
     in
     case order of
         Created cr ->
@@ -465,17 +477,20 @@ viewOrder rejected ttns viewType order =
                         ProducerView ->
                             div [ flex, Flex.col, Flex.alignItemsCenter ]
                                 [ div [ flex, Flex.row, flex1 ]
-                                    [ rejectBtn
+                                    [ rejectBtn |> Html.map Main
                                     , div (mediumCentered ++ [ smallMargin ]) [ text "Tracking Number" ]
-                                    , Input.text [ Input.onInput (SelectedTtn (getPostId order)), Input.value ttn ]
+                                    , Input.text [ Input.onInput <| SelectedTtn (getPostId order), Input.value ttn ] |> Html.map Main
                                     , Button.button
-                                        [ Button.primary, Button.onClick <| ConfirmSend (getPostId order), Button.attrs [ smallMargin ] ]
+                                        [ Button.primary, Button.onClick <| Main <| ConfirmSend (getPostId order), Button.attrs [ smallMargin ] ]
                                         [ text "Confirm Send" ]
                                     ]
+                                , historyBtn
                                 ]
 
                         ConsumerView ->
-                            div [] []
+                            div []
+                                [ historyBtn
+                                ]
             in
             viewOrderBase False cr (\a -> []) btns
 
@@ -490,15 +505,19 @@ viewOrder rejected ttns viewType order =
                                     , Button.primary
                                     ]
                                     [ text "Confirm Received" ]
+                                    |> Html.map Main
+                                , historyBtn
                                 ]
 
                         ProducerView ->
-                            div [] []
+                            div []
+                                [ historyBtn
+                                ]
             in
             viewOrderBase False del (\a -> viewDelivering (\b -> div [] []) a) btns
 
         Delivered del ->
-            viewOrderBase True del (\a -> viewDelivering viewDelivered a) (div [] [])
+            viewOrderBase True del (\a -> viewDelivering viewDelivered a) (div [] [ historyBtn ])
 
 
 viewDelivered : DeliveredView -> Html LocalMsg
@@ -514,7 +533,7 @@ viewDelivering add order =
     ]
 
 
-viewOrderBase : Bool -> OrderBase a -> (a -> List (Html LocalMsg)) -> Html LocalMsg -> Html LocalMsg
+viewOrderBase : Bool -> OrderBase a -> (a -> List (Html LocalMsg)) -> Html Msg -> Html Msg
 viewOrderBase fill order viewAdd btnView =
     let
         imgCol =
@@ -531,12 +550,12 @@ viewOrderBase fill order viewAdd btnView =
                 class ""
     in
     div [ flex, Flex.row, flex1, fillClass, style "margin-bottom" "1.5rem", style "border-bottom" "solid 1px black" ]
-        [ imgCol
+        [ imgCol |> Html.map Main
         , infoCol order viewAdd btnView
         ]
 
 
-infoCol : OrderBase a -> (a -> List (Html LocalMsg)) -> Html LocalMsg -> Html LocalMsg
+infoCol : OrderBase a -> (a -> List (Html LocalMsg)) -> Html Msg -> Html Msg
 infoCol order viewAdd btnView =
     div [ flex, Flex.col, flex1 ]
         ([ viewInfoRow "Status" order.status
@@ -545,7 +564,9 @@ infoCol order viewAdd btnView =
          , viewInfoRow "Vendor Contact" order.sellerContact
          , viewInfoRow "Cost" <| formatPrice order.price
          ]
-            ++ viewAdd order.additional
+            ++ (viewAdd order.additional
+                    |> List.map (Html.map Main)
+               )
             ++ [ div [ flex, Flex.row, Flex.alignItemsCenter, Flex.justifyCenter ]
                     [ btnView
                     ]
