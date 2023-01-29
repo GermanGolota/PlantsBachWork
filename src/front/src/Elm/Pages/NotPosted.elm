@@ -5,13 +5,13 @@ import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), getAuthed)
+import Endpoints exposing (Endpoint(..), getAuthed, historyUrl)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
 import NavBar exposing (plantsLink, viewNav)
 import Utils exposing (bgTeal, chunkedView, decodeId, fillParent, flex, flex1, largeFont, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -95,7 +95,7 @@ viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     let
         viewChunked items =
-            chunkedView 3 viewItem (List.filter (filterMine page.onlyMine) items)
+            chunkedView 3 (viewItem <| isAdmin resp) (List.filter (filterMine page.onlyMine) items)
     in
     div (fillParent ++ [ flex, Flex.col ])
         [ div [ flex, style "flex" "13", Flex.justifyBetween, Flex.row ]
@@ -125,7 +125,7 @@ filterMine onlyMine item =
     (onlyMine && item.isMine) || (onlyMine == False)
 
 
-viewItem item =
+viewItem isAdmin item =
     let
         bgFill =
             if item.isMine then
@@ -133,6 +133,18 @@ viewItem item =
 
             else
                 class ""
+
+        historyBtn =
+            if isAdmin then
+                Button.linkButton
+                    [ Button.outlinePrimary
+                    , Button.onClick <| Navigate <| historyUrl "PlantStock" item.id
+                    , Button.attrs [ smallMargin ]
+                    ]
+                    [ text "View history" ]
+
+            else
+                div [] []
     in
     Card.config [ Card.attrs (fillParent ++ [ flex1, bgFill ]) ]
         |> Card.header [ class "text-center" ]
@@ -142,8 +154,19 @@ viewItem item =
             [ Block.text [] [ text item.description ]
             , Block.custom <|
                 div [ flex, Flex.row, Flex.justifyEnd, Flex.alignItemsCenter ]
-                    [ Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/notPosted/" ++ item.id ++ "/edit"), Button.attrs [ smallMargin ] ] [ text "Edit" ]
-                    , Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/notPosted/" ++ item.id ++ "/post"), Button.attrs [ smallMargin ] ] [ text "Post" ]
+                    [ Button.linkButton
+                        [ Button.primary
+                        , Button.onClick <| Navigate ("/notPosted/" ++ item.id ++ "/edit")
+                        , Button.attrs [ smallMargin ]
+                        ]
+                        [ text "Edit" ]
+                    , Button.linkButton
+                        [ Button.primary
+                        , Button.onClick <| Navigate ("/notPosted/" ++ item.id ++ "/post")
+                        , Button.attrs [ smallMargin ]
+                        ]
+                        [ text "Post" ]
+                    , historyBtn
                     ]
             ]
         |> Card.view

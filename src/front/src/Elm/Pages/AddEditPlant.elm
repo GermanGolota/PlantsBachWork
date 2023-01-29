@@ -7,7 +7,7 @@ import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
 import Color exposing (Color, toCssString)
 import Dict
-import Endpoints exposing (Endpoint(..), getAuthed, imagesDecoder, postAuthed)
+import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, imagesDecoder, postAuthed)
 import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
@@ -16,11 +16,11 @@ import Http
 import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
 import Multiselect
 import NavBar exposing (plantsLink, viewNav)
 import Pages.Plant exposing (SelectedAddress(..))
-import Utils exposing (SubmittedResult(..), createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, smallMargin, submittedDecoder)
+import Utils exposing (SubmittedResult(..), createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, largeFont, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -392,6 +392,23 @@ view model =
 viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     let
+        historyBtn =
+            if isAdmin resp then
+                case page of
+                    Edit e ->
+                        Button.linkButton
+                            [ Button.outlinePrimary
+                            , Button.onClick <| Navigate <| historyUrl "PlantStock" e.plantId
+                            , Button.attrs [ smallMargin, largeFont ]
+                            ]
+                            [ text "View history" ]
+
+                    _ ->
+                        div [] []
+
+            else
+                div [] []
+
         shouldShowActions =
             case page of
                 BadEdit ->
@@ -428,10 +445,10 @@ viewPage resp page =
             div [] [ text "There is no such plant" ]
 
         Edit editView ->
-            viewWebdata editView.plant (viewPlant editView.removedItems editView.available True shouldShowActions (viewResultEdit editView.result))
+            viewWebdata editView.plant (viewPlant editView.removedItems editView.available historyBtn True shouldShowActions (viewResultEdit editView.result))
 
         Add addView ->
-            viewPlant (ImageList.fromDict Dict.empty) addView.available False shouldShowActions (viewResultAdd addView.result) addView.plant
+            viewPlant (ImageList.fromDict Dict.empty) addView.available historyBtn False shouldShowActions (viewResultAdd addView.result) addView.plant
 
 
 viewResultEdit : Maybe (WebData SubmittedResult) -> Html msg
@@ -484,21 +501,21 @@ viewResultAddValue data =
         ]
 
 
-viewPlant : ImageList.Model -> WebData Available -> Bool -> Bool -> Html Msg -> PlantView -> Html Msg
-viewPlant imgs av isEdit shouldShowBtns resultView plant =
-    viewWebdata av (viewPlantBase imgs isEdit shouldShowBtns plant resultView)
+viewPlant : ImageList.Model -> WebData Available -> Html Msg -> Bool -> Bool -> Html Msg -> PlantView -> Html Msg
+viewPlant imgs av isAdmin isEdit shouldShowBtns resultView plant =
+    viewWebdata av (viewPlantBase imgs isAdmin isEdit shouldShowBtns plant resultView)
 
 
-viewPlantBase : ImageList.Model -> Bool -> Bool -> PlantView -> Html Msg -> Available -> Html Msg
-viewPlantBase imgs isEdit shouldShowBtns plant resultView av =
+viewPlantBase : ImageList.Model -> Html Msg -> Bool -> Bool -> PlantView -> Html Msg -> Available -> Html Msg
+viewPlantBase imgs isAdmin isEdit shouldShowBtns plant resultView av =
     div ([ flex, Flex.row ] ++ fillParent)
         [ div [ Flex.col, flex1, flex ] (leftView isEdit plant av)
-        , div [ flex, Flex.col, flex1, Flex.justifyBetween, Flex.alignItemsCenter ] (rightView resultView isEdit shouldShowBtns imgs plant)
+        , div [ flex, Flex.col, flex1, Flex.justifyBetween, Flex.alignItemsCenter ] (rightView resultView isAdmin isEdit shouldShowBtns imgs plant)
         ]
 
 
-rightView : Html Msg -> Bool -> Bool -> ImageList.Model -> PlantView -> List (Html Msg)
-rightView resultView isEdit shouldShow additionalImages plant =
+rightView : Html Msg -> Html Msg -> Bool -> Bool -> ImageList.Model -> PlantView -> List (Html Msg)
+rightView resultView historyBtn isEdit shouldShow additionalImages plant =
     let
         btnMsg =
             if isEdit then
@@ -516,6 +533,8 @@ rightView resultView isEdit shouldShow additionalImages plant =
                         , Button.attrs ([ smallMargin ] ++ largeCentered)
                         ]
                         [ text btnMsg ]
+                        |> Html.map Main
+                    , historyBtn
                     ]
 
             else
@@ -535,11 +554,11 @@ rightView resultView isEdit shouldShow additionalImages plant =
         , imgText "Removed"
         , imgView RemovedImages additionalImages |> Html.map Main
         , resultView
-        , btnView |> Html.map Main
+        , btnView
         ]
 
     else
-        [ resultView, btnView |> Html.map Main ]
+        [ resultView, btnView ]
 
 
 leftView : Bool -> PlantView -> Available -> List (Html Msg)
