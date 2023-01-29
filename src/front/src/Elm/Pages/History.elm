@@ -4,12 +4,13 @@ import Bootstrap.Accordion as Accordion exposing (State(..))
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
+import Bootstrap.ListGroup as ListGroup
 import Bootstrap.Modal as Modal
 import Bootstrap.Text as Text
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (getAuthedQuery)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, style)
+import Html.Attributes exposing (class, href, style)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as D
@@ -457,12 +458,11 @@ viewPage resp page =
 viewHistory : History -> Html Msg
 viewHistory history =
     div fillParent
-        [ Accordion.config AccordionAggregateMsg
+        [ Accordion.config (\v -> Main <| AccordionAggregateMsg v)
             --|> Accordion.withAnimation
             |> Accordion.cards
                 (List.map (\( k, v ) -> viewSnapshot k v) history.snapshots)
             |> Accordion.view history.aggregateView
-            |> Html.map Main
         , case history.metadataModal.metadata of
             Just meta ->
                 Modal.config CloseMetadataModal
@@ -486,11 +486,32 @@ viewHistory history =
         ]
 
 
-viewSnapshot : AggregateSnapshot -> Accordion.State -> Accordion.Card LocalMsg
+viewSnapshot : AggregateSnapshot -> Accordion.State -> Accordion.Card Msg
 viewSnapshot snapshot state =
     let
         id =
             snapshot.lastCommand.metadata.id
+
+        related =
+            if List.length snapshot.related == 0 then
+                []
+
+            else
+                [ div largeCentered [ text "Related" ]
+                , ListGroup.ul
+                    (List.map
+                        (\rel ->
+                            ListGroup.li [ ListGroup.dark ]
+                                [ Button.linkButton
+                                    [ Button.outlinePrimary
+                                    , Button.attrs [ href <| "/history/" ++ rel.name ++ "/" ++ rel.id ]
+                                    ]
+                                    [ text rel.role ]
+                                ]
+                        )
+                        snapshot.related
+                    )
+                ]
     in
     Accordion.card
         { id = id
@@ -503,10 +524,13 @@ viewSnapshot snapshot state =
                     div []
                         [ div [ flex, Flex.row, mediumMargin ]
                             [ div [ flex, Flex.col, style "width" "50%" ]
-                                [ div largeCentered [ text "State" ]
-                                , viewJsonTree snapshot.aggregate.payload |> Html.map (AggregateDataJson snapshot)
-                                , viewMetaBtn snapshot.aggregate.metadata
-                                ]
+                                ([ div largeCentered [ text "State" ]
+                                 , viewJsonTree snapshot.aggregate.payload |> Html.map (\v -> Main <| AggregateDataJson snapshot v)
+                                 , viewMetaBtn snapshot.aggregate.metadata
+                                    |> Html.map Main
+                                 ]
+                                    ++ related
+                                )
                             , div [ flex, Flex.col, style "width" "50%" ]
                                 [ div largeCentered [ text "Command" ]
                                 , Accordion.config (AccordionSnapshotMsg snapshot)
@@ -516,6 +540,7 @@ viewSnapshot snapshot state =
                                             ++ List.map (viewSnapshotEvent snapshot) snapshot.events
                                         )
                                     |> Accordion.view state
+                                    |> Html.map Main
                                 ]
                             ]
                         ]
