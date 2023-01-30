@@ -424,7 +424,12 @@ resultView isAdmin showOrder showDelete token item =
 
         orderBtn =
             div [ flex, Flex.col, flex1 ]
-                [ Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/plant/" ++ item.id ++ "/order"), Button.attrs [ smallMargin ], Button.disabled (not showOrder) ] [ text "Order" ]
+                [ Button.linkButton
+                    [ Button.primary
+                    , Button.onClick <| Navigate ("/plant/" ++ item.id ++ "/order")
+                    , Button.disabled (not showOrder)
+                    ]
+                    [ text "Order" ]
                 ]
 
         msgText val =
@@ -454,7 +459,7 @@ resultView isAdmin showOrder showDelete token item =
 
         historyBtn =
             if isAdmin then
-                div [ flex, Flex.col, flex1 ]
+                div [ flex, Flex.row, flex1 ]
                     [ Button.linkButton
                         [ Button.outlinePrimary
                         , Button.onClick <| Navigate <| historyUrl "PlantPost" item.id
@@ -474,25 +479,17 @@ resultView isAdmin showOrder showDelete token item =
             [ Block.titleH4 [] [ text item.name ]
             , Block.text [] [ text item.description ]
             , Block.custom <|
-                div [ flex, Flex.row, Flex.alignItemsCenter ]
-                    [ div [ flex, Flex.col, flex1 ]
-                        [ div [ mediumFont ] [ text <| formatPrice item.price ]
-                        ]
-                    , div [ flex, Flex.col, flex1, smallMargin, style "width" "75%" ]
-                        [ div [ flex, Flex.row, Flex.alignItemsCenter ]
-                            [ deleteBtn |> Html.map Main
-                            , orderBtn
-                            , div [ flex, Flex.col, flex1 ]
-                                [ Button.linkButton
-                                    [ Button.primary
-                                    , Button.onClick <| Navigate ("/plant/" ++ item.id)
-                                    , Button.attrs [ smallMargin ]
-                                    ]
-                                    [ text "Open" ]
-                                ]
-                            , historyBtn
+                div [ flex, Flex.row, Flex.alignItemsCenter, Flex.justifyCenter ]
+                    [ div [ flex, Flex.col, flex1, mediumFont ] [ text <| formatPrice item.price ]
+                    , div [ flex, Flex.col, flex1 ] [ orderBtn ]
+                    , div [ flex, Flex.col, flex1 ]
+                        [ Button.linkButton
+                            [ Button.primary
+                            , Button.onClick <| Navigate ("/plant/" ++ item.id)
                             ]
+                            [ text "Open" ]
                         ]
+                    , div [ flex, Flex.col, flex1 ] [ div [ flex, Flex.row ] [ deleteBtn |> Html.map Main ], historyBtn ]
                     ]
             ]
         |> Card.view
