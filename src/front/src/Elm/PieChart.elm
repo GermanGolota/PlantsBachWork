@@ -4,6 +4,7 @@ import Array exposing (Array)
 import Color exposing (Color)
 import Html exposing (Html)
 import Html.Attributes exposing (style)
+import Murmur3 exposing (hashString)
 import Path
 import Shape exposing (defaultPieConfig)
 import Svg exposing (Svg)
@@ -39,6 +40,13 @@ colors =
         , Color.rgb255 159 92 85
         , Color.rgb255 208 116 60
         , Color.rgb255 255 96 0
+        , Color.rgb255 229 225 204
+        , Color.rgb255 255 99 71
+        , Color.rgb255 218 165 32
+        , Color.rgb255 138 43 226
+        , Color.rgb255 245 222 179
+        , Color.rgb255 210 105 30
+        , Color.rgb255 255 228 225
         ]
 
 
@@ -49,7 +57,7 @@ radius =
 
 pieSlice : String -> Shape.Arc -> Svg.Svg Msg
 pieSlice index datum =
-    Path.element (Shape.arc datum) [ createFill (String.length index), stroke (Paint Color.white), onClick <| ChartItemClicked index ]
+    Path.element (Shape.arc datum) [ createFill (hashString 1234 index), stroke (Paint Color.white), onClick <| ChartItemClicked index ]
 
 
 createFill : Int -> Svg.Attribute msg
@@ -83,7 +91,7 @@ pieChart : List String -> List Float -> List String -> Svg.Svg Msg
 pieChart ids values labels =
     let
         pieData =
-            values |> Shape.pie { defaultPieConfig | outerRadius = radius }
+            values |> List.filter (\v -> not (v == 0)) |> Shape.pie { defaultPieConfig | outerRadius = radius }
 
         idToPie =
             List.map2 Tuple.pair ids pieData
