@@ -370,3 +370,4 @@ dist
 #persist
 src/persist
 #web
+src/back/Plants.Presentation/wwwroot/UserInfo
