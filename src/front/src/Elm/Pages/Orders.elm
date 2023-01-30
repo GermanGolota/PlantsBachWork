@@ -33,6 +33,7 @@ type alias View =
     , hideFulfilled : Bool
     , selectedTtns : Dict String String
     , rejected : Dict String (WebData Bool)
+    , confirmed : Dict String (WebData Bool)
     }
 
 
@@ -454,7 +455,6 @@ viewOrder isAdmin rejected ttns viewType order =
         rejectBtn =
             div [ flex, Flex.col, flex1, smallMargin ]
                 [ rejectRes
-                , Button.button [ Button.danger, Button.onClick <| Reject orderId, Button.attrs fillParent ] [ text "Reject" ]
                 ]
 
         historyBtn =
@@ -468,6 +468,28 @@ viewOrder isAdmin rejected ttns viewType order =
 
             else
                 div [] []
+
+        producerViewBtns =
+            [ Button.button [ Button.danger, Button.onClick <| Main <| Reject orderId, Button.attrs fillParent ] [ text "Reject" ]
+            , div (mediumCentered ++ [ smallMargin ]) [ text "Tracking Number" ]
+            , Input.text [ Input.onInput <| SelectedTtn (getPostId order), Input.value ttn ] |> Html.map Main
+            , Button.button
+                [ Button.primary, Button.onClick <| Main <| ConfirmSend (getPostId order), Button.attrs [ smallMargin ] ]
+                [ text "Confirm Send" ]
+            ]
+
+        createdProducerView =
+            case Dict.get orderId rejected of
+                Just v ->
+                    case v of
+                        Loading ->
+                            [ rejectRes ]
+
+                        _ ->
+                            producerViewBtns ++ [ rejectRes ]
+
+                Nothing ->
+                    producerViewBtns
     in
     case order of
         Created cr ->
@@ -476,14 +498,7 @@ viewOrder isAdmin rejected ttns viewType order =
                     case viewType of
                         ProducerView ->
                             div [ flex, Flex.col, Flex.alignItemsCenter ]
-                                [ div [ flex, Flex.row, flex1 ]
-                                    [ rejectBtn |> Html.map Main
-                                    , div (mediumCentered ++ [ smallMargin ]) [ text "Tracking Number" ]
-                                    , Input.text [ Input.onInput <| SelectedTtn (getPostId order), Input.value ttn ] |> Html.map Main
-                                    , Button.button
-                                        [ Button.primary, Button.onClick <| Main <| ConfirmSend (getPostId order), Button.attrs [ smallMargin ] ]
-                                        [ text "Confirm Send" ]
-                                    ]
+                                [ div [ flex, Flex.row, flex1 ] createdProducerView
                                 , historyBtn
                                 ]
 
@@ -619,7 +634,7 @@ init resp flags =
         initialCmd res =
             getData res.token viewType
     in
-    initBase [ Producer, Consumer, Manager ] (View Loading viewType showAdditional False Dict.empty Dict.empty) initialCmd resp
+    initBase [ Producer, Consumer, Manager ] (View Loading viewType showAdditional False Dict.empty Dict.empty Dict.empty) initialCmd resp
 
 
 getData : String -> ViewType -> Cmd Msg
