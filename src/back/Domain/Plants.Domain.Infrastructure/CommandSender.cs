@@ -95,7 +95,7 @@ internal class CommandSender : ICommandSender
         await Task.Run(async () =>
         {
             var watch = Stopwatch.StartNew();
-            var delay = timeout.TotalSeconds < 10 ? timeout / 10 : TimeSpan.FromSeconds(10);
+            var delay = timeout.TotalSeconds < 10 ? timeout / 10 : TimeSpan.FromMilliseconds(250);
 
             _logger.LogInformation("Started waiting for subscription for '{@aggregate}'", aggregate);
             while (token.IsCancellationRequested is false)
