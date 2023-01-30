@@ -176,14 +176,25 @@ updateLocal msg m =
                     let
                         ttn =
                             Maybe.withDefault "" <| Dict.get orderId model.selectedTtns
+
+                        updatedView =
+                            Dict.union (Dict.fromList [ ( orderId, Loading ) ]) model.confirmed
                     in
-                    ( m, startDelivery auth.token orderId ttn )
+                    ( authed { model | confirmed = updatedView }, startDelivery auth.token orderId ttn )
 
                 GotConfirmSend orderId (Ok res) ->
-                    ( m, getData auth.token model.viewType )
+                    let
+                        updatedView =
+                            Dict.union (Dict.fromList [ ( orderId, Loaded res ) ]) model.confirmed
+                    in
+                    ( authed { model | confirmed = updatedView }, getData auth.token model.viewType )
 
                 GotConfirmSend orderId (Err err) ->
-                    noOp
+                    let
+                        updatedView =
+                            Dict.union (Dict.fromList [ ( orderId, Error ) ]) model.confirmed
+                    in
+                    ( authed { model | confirmed = updatedView }, Cmd.none )
 
                 ConfirmReceived orderId ->
                     ( m, confirmDelivery auth.token orderId )
@@ -451,11 +462,6 @@ viewOrder isAdmin rejected ttns viewType order =
 
                 Nothing ->
                     div [] []
-
-        rejectBtn =
-            div [ flex, Flex.col, flex1, smallMargin ]
-                [ rejectRes
-                ]
 
         historyBtn =
             if isAdmin then
