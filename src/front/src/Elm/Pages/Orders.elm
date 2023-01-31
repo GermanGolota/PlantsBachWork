@@ -187,7 +187,7 @@ updateLocal msg m =
                         updatedView =
                             Dict.union (Dict.fromList [ ( orderId, Loaded res ) ]) model.confirmed
                     in
-                    ( authed { model | confirmed = updatedView }, getData auth.token model.viewType )
+                    ( authed { model | confirmed = updatedView, data = Loading }, getData auth.token model.viewType )
 
                 GotConfirmSend orderId (Err err) ->
                     let
@@ -208,7 +208,7 @@ updateLocal msg m =
                         updatedView =
                             Dict.union (Dict.fromList [ ( orderId, Loaded res ) ]) model.confirmed
                     in
-                    ( authed { model | confirmed = updatedView }, getData auth.token model.viewType )
+                    ( authed { model | confirmed = updatedView, data = Loading }, getData auth.token model.viewType )
 
                 GotConfirmReceived orderId (Err err) ->
                     let
@@ -221,7 +221,7 @@ updateLocal msg m =
                     ( authed <| { model | rejected = Dict.insert orderId Loading model.rejected }, rejectOrder auth.token orderId )
 
                 GotReject orderId (Ok res) ->
-                    ( authed <| { model | rejected = Dict.insert orderId (Loaded res) model.rejected }, getData auth.token model.viewType )
+                    ( authed <| { model | rejected = Dict.insert orderId (Loaded res) model.rejected, data = Loading }, getData auth.token model.viewType )
 
                 GotReject orderId (Err err) ->
                     ( authed <| { model | rejected = Dict.insert orderId Error model.rejected }, Cmd.none )
@@ -500,7 +500,7 @@ viewOrder isAdmin confirmed rejected ttns viewType order =
                 confirmRes =
                     case Dict.get orderId confirmed of
                         Just val ->
-                            viewWebdata val (\succ -> div mediumCentered [ text <| rejectText succ ])
+                            viewWebdata val (\succ -> div mediumCentered [ text <| confirmText succ ])
 
                         Nothing ->
                             div [] []
