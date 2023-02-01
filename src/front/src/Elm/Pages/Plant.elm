@@ -349,10 +349,10 @@ viewOrder isAdmin allowOrder selected del result id pl =
                 Just res ->
                     case res of
                         Loading ->
-                            [ viewWebdata res viewResult |> Html.map Main ]
+                            [ viewWebdata res viewResult ]
 
                         _ ->
-                            [ viewWebdata res viewResult |> Html.map Main, interactionButtons isAdmin allowOrder True id ]
+                            [ viewWebdata res viewResult, interactionButtons isAdmin allowOrder True id ]
 
                 Nothing ->
                     [ interactionButtons isAdmin allowOrder True id ]
@@ -380,18 +380,34 @@ customRadio isDisabled msg isChecked =
         ]
 
 
-viewResult : SubmittedResult -> Html LocalMsg
+viewResult : SubmittedResult -> Html Msg
 viewResult result =
     let
         baseView className message =
             div [ flex1 ] [ div [ largeFont, class className ] [ text message ] ]
+
+        viewText =
+            case result of
+                SubmittedSuccess msg ->
+                    baseView "text-primary" msg
+
+                SubmittedFail msg ->
+                    baseView "text-warning" msg
     in
     case result of
         SubmittedSuccess msg ->
-            baseView "bg-primary" msg
+            div [ flex, Flex.col, flex1 ]
+                [ div [ Flex.row, flex1 ]
+                    [ viewText ]
+                , div [ Flex.row, flex1 ]
+                    [ Button.linkButton [ Button.onClick <| Navigate "/orders", Button.info, Button.attrs [ largeFont ] ] [ text "View my orders" ]
+                    ]
+                ]
 
         SubmittedFail msg ->
-            baseView "bg-warning" msg
+            div [ flex1 ]
+                [ viewText
+                ]
 
 
 viewLocation : SelectedAddress -> List DeliveryAddress -> Html LocalMsg
