@@ -16,7 +16,7 @@ import Json.Decode.Pipeline exposing (hardcoded, required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase, viewBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar exposing (viewNav)
-import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, largeFont, smallMargin, textCenter)
+import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, largeFont, mediumFont, smallMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -31,7 +31,7 @@ type alias Model =
 type alias View =
     { searchItems : Dict String String
     , availableValues : WebData Available
-    , results : Maybe (WebData (List SearchResultItem))
+    , results : WebData (List SearchResultItem)
     }
 
 
@@ -94,7 +94,7 @@ updateLocal msg m =
                             setQuery key value model
 
                         updatedView =
-                            { queried | results = Just Loading }
+                            { queried | results = Loading }
                     in
                     ( Authorized auth updatedView, searchFull updatedView.searchItems updatedView.availableValues auth.token )
 
@@ -126,7 +126,7 @@ updateLocal msg m =
 
                         updatedView =
                             if availableChanged then
-                                { setNew | results = Just Loading }
+                                { setNew | results = Loading }
 
                             else
                                 setNew
@@ -156,7 +156,7 @@ updateLocal msg m =
 
                         updatedView =
                             if availableChanged then
-                                { setNew | results = Just Loading }
+                                { setNew | results = Loading }
 
                             else
                                 setNew
@@ -186,7 +186,7 @@ updateLocal msg m =
 
                         updatedView =
                             if availableChanged then
-                                { setNew | results = Just Loading }
+                                { setNew | results = Loading }
 
                             else
                                 setNew
@@ -211,17 +211,17 @@ updateLocal msg m =
 
                         updatedList =
                             case model.results of
-                                Just (Loaded results) ->
+                                Loaded results ->
                                     List.map updateResult results
 
                                 _ ->
                                     []
                     in
-                    ( authed { model | results = Just <| Loaded updatedList }, deletePlant auth.token id )
+                    ( authed { model | results = Loaded updatedList }, deletePlant auth.token id )
 
                 ( GotDeletePost id (Err err), Loaded _ ) ->
                     case model.results of
-                        Just (Loaded vals) ->
+                        Loaded vals ->
                             let
                                 updateResult resultItem =
                                     if resultItem.id == id then
@@ -231,7 +231,7 @@ updateLocal msg m =
                                         resultItem
 
                                 updatedResults =
-                                    Just <| Loaded <| List.map updateResult vals
+                                    Loaded <| List.map updateResult vals
                             in
                             ( authed <| View model.searchItems model.availableValues updatedResults, Cmd.none )
 
@@ -244,7 +244,7 @@ updateLocal msg m =
 
                     else
                         case model.results of
-                            Just (Loaded vals) ->
+                            Loaded vals ->
                                 let
                                     updateResult resultItem =
                                         if resultItem.id == id then
@@ -254,7 +254,7 @@ updateLocal msg m =
                                             resultItem
 
                                     updatedResults =
-                                        Just <| Loaded <| List.map updateResult vals
+                                        Loaded <| List.map updateResult vals
                                 in
                                 ( authed <| View model.searchItems model.availableValues updatedResults, Cmd.none )
 
@@ -303,7 +303,7 @@ updateAvailableGroup av model =
 
 updateData : View -> AuthResponse -> WebData (List SearchResultItem) -> Model
 updateData model auth data =
-    Authorized auth <| View model.searchItems model.availableValues <| Just data
+    Authorized auth <| View model.searchItems model.availableValues <| data
 
 
 setQuery : String -> String -> View -> View
@@ -368,14 +368,6 @@ pageView resp viewType =
     let
         viewFunc =
             resultsView (isAdmin resp) (List.member Consumer resp.roles) (intersect [ Manager, Producer ] resp.roles) resp.token
-
-        result =
-            case viewType.results of
-                Just res ->
-                    viewWebdata res viewFunc
-
-                Nothing ->
-                    div [] [ text "No search is selected" ]
     in
     div ([ flex, Flex.col ] ++ fillParent)
         [ viewWebdata viewType.availableValues viewAvailable |> Html.map Main
@@ -390,7 +382,7 @@ pageView resp viewType =
             , viewInput "Created Before" <| Input.date [ Input.onInput (\val -> SetQuery "LastDate" val) ]
             ]
             |> Html.map Main
-        , div [ style "overflow-y" "scroll" ] [ result ]
+        , div [ style "overflow-y" "scroll" ] [ viewWebdata viewType.results viewFunc ]
         ]
 
 
@@ -423,7 +415,14 @@ resultView isAdmin showOrder showDelete token item =
             imageIdToUrl token (Maybe.withDefault "-1" (List.head item.imageIds))
 
         orderBtn =
-            Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/plant/" ++ item.id ++ "/order"), Button.attrs [ smallMargin ], Button.disabled (not showOrder) ] [ text "Order" ]
+            div [ flex, Flex.col, flex1 ]
+                [ Button.linkButton
+                    [ Button.primary
+                    , Button.onClick <| Navigate ("/plant/" ++ item.id ++ "/order")
+                    , Button.disabled (not showOrder)
+                    ]
+                    [ text "Order" ]
+                ]
 
         msgText val =
             if val then
@@ -452,12 +451,14 @@ resultView isAdmin showOrder showDelete token item =
 
         historyBtn =
             if isAdmin then
-                Button.linkButton
-                    [ Button.outlinePrimary
-                    , Button.onClick <| Navigate <| historyUrl "PlantPost" item.id
-                    , Button.attrs [ smallMargin ]
+                div [ flex, Flex.row, flex1 ]
+                    [ Button.linkButton
+                        [ Button.outlinePrimary
+                        , Button.onClick <| Navigate <| historyUrl "PlantPost" item.id
+                        , Button.attrs [ smallMargin ]
+                        ]
+                        [ text "View history" ]
                     ]
-                    [ text "View history" ]
 
             else
                 div [] []
@@ -470,19 +471,17 @@ resultView isAdmin showOrder showDelete token item =
             [ Block.titleH4 [] [ text item.name ]
             , Block.text [] [ text item.description ]
             , Block.custom <|
-                div [ flex, Flex.row, style "justify-content" "space-between", Flex.alignItemsCenter ]
-                    [ div [ largeFont ] [ text <| formatPrice item.price ]
-                    , div [ flex, Flex.row ]
-                        [ deleteBtn |> Html.map Main
-                        , orderBtn
-                        , Button.linkButton
+                div [ flex, Flex.row, Flex.alignItemsCenter, Flex.justifyCenter ]
+                    [ div [ flex, Flex.col, flex1, mediumFont ] [ text <| formatPrice item.price ]
+                    , div [ flex, Flex.col, flex1 ] [ orderBtn ]
+                    , div [ flex, Flex.col, flex1 ]
+                        [ Button.linkButton
                             [ Button.primary
                             , Button.onClick <| Navigate ("/plant/" ++ item.id)
-                            , Button.attrs [ smallMargin ]
                             ]
                             [ text "Open" ]
-                        , historyBtn
                         ]
+                    , div [ flex, Flex.col, flex1 ] [ div [ flex, Flex.row ] [ deleteBtn |> Html.map Main ], historyBtn ]
                     ]
             ]
         |> Card.view
@@ -504,7 +503,7 @@ init resp _ =
         cmds authResp =
             Cmd.batch [ getAvailable authResp.token, search [] authResp.token ]
     in
-    initBase [ Producer, Consumer, Manager ] (View (Dict.fromList []) Loading Nothing) cmds resp
+    initBase [ Producer, Consumer, Manager ] (View (Dict.fromList []) Loading Loading) cmds resp
 
 
 subscriptions : Model -> Sub Msg

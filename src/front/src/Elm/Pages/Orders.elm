@@ -33,6 +33,7 @@ type alias View =
     , hideFulfilled : Bool
     , selectedTtns : Dict String String
     , rejected : Dict String (WebData Bool)
+    , confirmed : Dict String (WebData Bool)
     }
 
 
@@ -175,29 +176,52 @@ updateLocal msg m =
                     let
                         ttn =
                             Maybe.withDefault "" <| Dict.get orderId model.selectedTtns
+
+                        updatedView =
+                            Dict.union (Dict.fromList [ ( orderId, Loading ) ]) model.confirmed
                     in
-                    ( m, startDelivery auth.token orderId ttn )
+                    ( authed { model | confirmed = updatedView }, startDelivery auth.token orderId ttn )
 
                 GotConfirmSend orderId (Ok res) ->
-                    ( m, getData auth.token model.viewType )
+                    let
+                        updatedView =
+                            Dict.union (Dict.fromList [ ( orderId, Loaded res ) ]) model.confirmed
+                    in
+                    ( authed { model | confirmed = updatedView, data = Loading }, getData auth.token model.viewType )
 
                 GotConfirmSend orderId (Err err) ->
-                    noOp
+                    let
+                        updatedView =
+                            Dict.union (Dict.fromList [ ( orderId, Error ) ]) model.confirmed
+                    in
+                    ( authed { model | confirmed = updatedView }, Cmd.none )
 
                 ConfirmReceived orderId ->
-                    ( m, confirmDelivery auth.token orderId )
+                    let
+                        updatedView =
+                            Dict.union (Dict.fromList [ ( orderId, Loading ) ]) model.confirmed
+                    in
+                    ( authed { model | confirmed = updatedView }, confirmDelivery auth.token orderId )
 
                 GotConfirmReceived orderId (Ok res) ->
-                    ( m, getData auth.token model.viewType )
+                    let
+                        updatedView =
+                            Dict.union (Dict.fromList [ ( orderId, Loaded res ) ]) model.confirmed
+                    in
+                    ( authed { model | confirmed = updatedView, data = Loading }, getData auth.token model.viewType )
 
                 GotConfirmReceived orderId (Err err) ->
-                    noOp
+                    let
+                        updatedView =
+                            Dict.union (Dict.fromList [ ( orderId, Error ) ]) model.confirmed
+                    in
+                    ( authed { model | confirmed = updatedView }, Cmd.none )
 
                 Reject orderId ->
                     ( authed <| { model | rejected = Dict.insert orderId Loading model.rejected }, rejectOrder auth.token orderId )
 
                 GotReject orderId (Ok res) ->
-                    ( authed <| { model | rejected = Dict.insert orderId (Loaded res) model.rejected }, getData auth.token model.viewType )
+                    ( authed <| { model | rejected = Dict.insert orderId (Loaded res) model.rejected, data = Loading }, getData auth.token model.viewType )
 
                 GotReject orderId (Err err) ->
                     ( authed <| { model | rejected = Dict.insert orderId Error model.rejected }, Cmd.none )
@@ -402,12 +426,12 @@ viewPage resp page =
     in
     div ([ flex, Flex.col ] ++ fillParent)
         [ topView
-        , viewWebdata page.data (mainView (isAdmin resp) page.rejected page.selectedTtns page.viewType page.hideFulfilled)
+        , viewWebdata page.data (mainView (isAdmin resp) page.confirmed page.rejected page.selectedTtns page.viewType page.hideFulfilled)
         ]
 
 
-mainView : Bool -> Dict String (WebData Bool) -> Dict String String -> ViewType -> Bool -> List Order -> Html Msg
-mainView isAdmin rejected ttns viewType hide orders =
+mainView : Bool -> Dict String (WebData Bool) -> Dict String (WebData Bool) -> Dict String String -> ViewType -> Bool -> List Order -> Html Msg
+mainView isAdmin confirmed rejected ttns viewType hide orders =
     let
         isNotDelivered order =
             case order of
@@ -424,38 +448,24 @@ mainView isAdmin rejected ttns viewType hide orders =
             else
                 orders
     in
-    div [ flex, Flex.col, style "flex" "8", style "overflow-y" "scroll" ] (List.map (viewOrder isAdmin rejected ttns viewType) fOrders)
+    div [ flex, Flex.col, style "flex" "8", style "overflow-y" "scroll" ] (List.map (viewOrder isAdmin confirmed rejected ttns viewType) fOrders)
 
 
-viewOrder : Bool -> Dict String (WebData Bool) -> Dict String String -> ViewType -> Order -> Html Msg
-viewOrder isAdmin rejected ttns viewType order =
+viewOrder : Bool -> Dict String (WebData Bool) -> Dict String (WebData Bool) -> Dict String String -> ViewType -> Order -> Html Msg
+viewOrder isAdmin confirmed rejected ttns viewType order =
     let
         ttn =
             Maybe.withDefault "" <| Dict.get (getPostId order) ttns
 
-        rejectText isSuccess =
-            if isSuccess then
-                "Successfully rejected!"
-
-            else
-                "Failed to reject!"
-
         orderId =
             getPostId order
 
-        rejectRes =
-            case Dict.get orderId rejected of
-                Just val ->
-                    viewWebdata val (\succ -> div mediumCentered [ text <| rejectText succ ])
+        confirmText isSuccess =
+            if isSuccess then
+                "Successfully confirmed!"
 
-                Nothing ->
-                    div [] []
-
-        rejectBtn =
-            div [ flex, Flex.col, flex1, smallMargin ]
-                [ rejectRes
-                , Button.button [ Button.danger, Button.onClick <| Reject orderId, Button.attrs fillParent ] [ text "Reject" ]
-                ]
+            else
+                "Failed to confirm!"
 
         historyBtn =
             if isAdmin then
@@ -472,18 +482,63 @@ viewOrder isAdmin rejected ttns viewType order =
     case order of
         Created cr ->
             let
+                rejectText isSuccess =
+                    if isSuccess then
+                        "Successfully rejected!"
+
+                    else
+                        "Failed to reject!"
+
+                rejectRes =
+                    case Dict.get orderId rejected of
+                        Just val ->
+                            viewWebdata val (\succ -> div mediumCentered [ text <| rejectText succ ])
+
+                        Nothing ->
+                            div [] []
+
+                confirmRes =
+                    case Dict.get orderId confirmed of
+                        Just val ->
+                            viewWebdata val (\succ -> div mediumCentered [ text <| confirmText succ ])
+
+                        Nothing ->
+                            div [] []
+
+                isNotLoading dict =
+                    case Dict.get orderId dict of
+                        Just data ->
+                            case data of
+                                Loading ->
+                                    False
+
+                                _ ->
+                                    True
+
+                        Nothing ->
+                            True
+
+                shouldShowButtons =
+                    isNotLoading rejected && isNotLoading confirmed
+
+                producerViewBtns =
+                    if shouldShowButtons then
+                        [ Button.button [ Button.danger, Button.onClick <| Main <| Reject orderId, Button.attrs fillParent ] [ text "Reject" ]
+                        , div (mediumCentered ++ [ smallMargin ]) [ text "Tracking Number" ]
+                        , Input.text [ Input.onInput <| SelectedTtn (getPostId order), Input.value ttn ] |> Html.map Main
+                        , Button.button
+                            [ Button.primary, Button.onClick <| Main <| ConfirmSend (getPostId order), Button.attrs [ smallMargin ] ]
+                            [ text "Confirm Send" ]
+                        ]
+
+                    else
+                        []
+
                 btns =
                     case viewType of
                         ProducerView ->
                             div [ flex, Flex.col, Flex.alignItemsCenter ]
-                                [ div [ flex, Flex.row, flex1 ]
-                                    [ rejectBtn |> Html.map Main
-                                    , div (mediumCentered ++ [ smallMargin ]) [ text "Tracking Number" ]
-                                    , Input.text [ Input.onInput <| SelectedTtn (getPostId order), Input.value ttn ] |> Html.map Main
-                                    , Button.button
-                                        [ Button.primary, Button.onClick <| Main <| ConfirmSend (getPostId order), Button.attrs [ smallMargin ] ]
-                                        [ text "Confirm Send" ]
-                                    ]
+                                [ div [ flex, Flex.row, flex1 ] ([ rejectRes, confirmRes ] ++ producerViewBtns)
                                 , historyBtn
                                 ]
 
@@ -496,18 +551,37 @@ viewOrder isAdmin rejected ttns viewType order =
 
         Delivering del ->
             let
+                resultView result =
+                    viewWebdata result (\succ -> div mediumCentered [ text <| confirmText succ ])
+
+                baseConsumerBtns =
+                    div [ flex, Flex.col, flex1, smallMargin ]
+                        [ Button.button
+                            [ Button.onClick (ConfirmReceived <| getPostId order)
+                            , Button.primary
+                            ]
+                            [ text "Confirm Received" ]
+                            |> Html.map Main
+                        , historyBtn
+                        ]
+
+                consumerBtns =
+                    case Dict.get orderId confirmed of
+                        Just data ->
+                            case data of
+                                Loading ->
+                                    [ resultView data ]
+
+                                _ ->
+                                    [ resultView data, baseConsumerBtns ]
+
+                        Nothing ->
+                            [ baseConsumerBtns ]
+
                 btns =
                     case viewType of
                         ConsumerView ->
-                            div [ flex, Flex.col, flex1, smallMargin ]
-                                [ Button.button
-                                    [ Button.onClick (ConfirmReceived <| getPostId order)
-                                    , Button.primary
-                                    ]
-                                    [ text "Confirm Received" ]
-                                    |> Html.map Main
-                                , historyBtn
-                                ]
+                            div [ flex, Flex.col, flex1, smallMargin ] consumerBtns
 
                         ProducerView ->
                             div []
@@ -619,7 +693,7 @@ init resp flags =
         initialCmd res =
             getData res.token viewType
     in
-    initBase [ Producer, Consumer, Manager ] (View Loading viewType showAdditional False Dict.empty Dict.empty) initialCmd resp
+    initBase [ Producer, Consumer, Manager ] (View Loading viewType showAdditional False Dict.empty Dict.empty Dict.empty) initialCmd resp
 
 
 getData : String -> ViewType -> Cmd Msg

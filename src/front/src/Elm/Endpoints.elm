@@ -1,4 +1,4 @@
-module Endpoints exposing (Endpoint(..), endpointToUrl, getAuthed, getAuthedQuery, imageIdToUrl, imagesDecoder, instructioIdToCover, postAuthed, postAuthedQuery, historyUrl)
+module Endpoints exposing (Endpoint(..), IdType(..), endpointToUrl, getAuthed, getAuthedQuery, historyUrl, imageIdToUrl, imagesDecoder, instructioIdToCover, postAuthed, postAuthedQuery)
 
 import Dict
 import Http exposing (header, request)
@@ -45,6 +45,13 @@ type Endpoint
     | RejectOrder String
     | ChangePassword
     | History
+    | ConvertId IdType
+
+
+type IdType
+    = LongId Int
+    | StringId String
+    | GuidId String
 
 
 endpointToUrl : Endpoint -> String
@@ -149,7 +156,23 @@ endpointToUrl endpoint =
             baseUrl ++ "users/changePass"
 
         History ->
-            baseUrl ++ "history"
+            baseUrl ++ "eventsourcing/history"
+
+        ConvertId id ->
+            baseUrl ++ "eventsourcing/convert/" ++ getPath id
+
+
+getPath : IdType -> String
+getPath id =
+    case id of
+        LongId int ->
+            "2/" ++ String.fromInt int
+
+        StringId str ->
+            "1/" ++ str
+
+        GuidId guid ->
+            "0/" ++ guid
 
 
 imageIdToUrl : String -> String -> String

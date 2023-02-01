@@ -31,11 +31,20 @@ public class ElasticSearchQueryService<TAggregate, TParams> : ISearchQueryServic
             throw new Exception($"Cannot search '{aggregateName}' with '{typeof(TParams).Name}' - no projector");
         }
 
+        var orderer = _provider.GetService<ISearchParamsOrderer<TAggregate, TParams>>();
+
         var result = await client.SearchAsync<TAggregate>(s =>
         {
             s.Index(aggregateName.ToIndexName());
             searchOption.Match(page => { s.From(page.StartFrom).Size(page.Size); }, all => { });
             projector.ProjectParams(parameters, s);
+
+            s.Sort(a =>
+            {
+                orderer?.OrderParams(parameters, a);
+                return a.Field(agg => agg.Field(_ => _.Metadata.LastUpdateTime).Descending());
+            });
+
             return s;
         }, ct: token);
 

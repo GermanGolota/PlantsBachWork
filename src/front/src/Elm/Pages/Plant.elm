@@ -347,22 +347,27 @@ viewOrder isAdmin allowOrder selected del result id pl =
         resultView =
             case result of
                 Just res ->
-                    viewWebdata res viewResult
+                    case res of
+                        Loading ->
+                            [ viewWebdata res viewResult ]
+
+                        _ ->
+                            [ viewWebdata res viewResult, interactionButtons isAdmin allowOrder True id ]
 
                 Nothing ->
-                    div [] []
+                    [ interactionButtons isAdmin allowOrder True id ]
     in
     div (fillParent ++ [ flex, Flex.row ])
         [ viewPlantLeft (\msg -> Main <| Images msg) pl
         , div [ flex, Flex.col, flex1 ]
             (viewDesc False (\str -> Main NoOp) pl
-                ++ [ header "Payment methods"
-                   , customRadio True "Pay now" False
-                   , customRadio False "Pay on arrival" True
-                   , viewWebdata del (viewLocation selected) |> Html.map Main
-                   , resultView |> Html.map Main
-                   , interactionButtons isAdmin allowOrder True id
-                   ]
+                ++ ([ header "Payment methods"
+                    , customRadio True "Pay now" False
+                    , customRadio False "Pay on arrival" True
+                    , viewWebdata del (viewLocation selected) |> Html.map Main
+                    ]
+                        ++ resultView
+                   )
             )
         ]
 
@@ -375,18 +380,34 @@ customRadio isDisabled msg isChecked =
         ]
 
 
-viewResult : SubmittedResult -> Html LocalMsg
+viewResult : SubmittedResult -> Html Msg
 viewResult result =
     let
         baseView className message =
             div [ flex1 ] [ div [ largeFont, class className ] [ text message ] ]
+
+        viewText =
+            case result of
+                SubmittedSuccess msg ->
+                    baseView "text-primary" msg
+
+                SubmittedFail msg ->
+                    baseView "text-warning" msg
     in
     case result of
         SubmittedSuccess msg ->
-            baseView "bg-primary" msg
+            div [ flex, Flex.col, flex1 ]
+                [ div [ Flex.row, flex1 ]
+                    [ viewText ]
+                , div [ Flex.row, flex1 ]
+                    [ Button.linkButton [ Button.onClick <| Navigate "/orders", Button.info, Button.attrs [ largeFont ] ] [ text "View my orders" ]
+                    ]
+                ]
 
         SubmittedFail msg ->
-            baseView "bg-warning" msg
+            div [ flex1 ]
+                [ viewText
+                ]
 
 
 viewLocation : SelectedAddress -> List DeliveryAddress -> Html LocalMsg

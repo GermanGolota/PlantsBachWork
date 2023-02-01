@@ -98,7 +98,7 @@ updateLocal msg m =
                         Submit ->
                             case plantView.plant of
                                 Loaded (Just pl) ->
-                                    ( m, submitCommand auth.token id pl.price )
+                                    ( authedPlant <| { plantView | postResult = Just Loading }, submitCommand auth.token id pl.price )
 
                                 _ ->
                                     noOp
@@ -189,43 +189,46 @@ viewPlant noplant id res plant =
 viewButtons : Maybe (WebData SubmittedResult) -> String -> Html Msg
 viewButtons result id =
     let
+        btns =
+            div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
+                [ Button.linkButton
+                    [ Button.primary
+                    , Button.onClick <| Navigate ("/notPosted/" ++ id ++ "/edit")
+                    , Button.attrs
+                        [ smallMargin
+                        , largeFont
+                        ]
+                    ]
+                    [ text "Edit" ]
+                , Button.button
+                    [ Button.primary
+                    , Button.attrs
+                        [ smallMargin
+                        , largeFont
+                        ]
+                    , Button.onClick <| Main Submit
+                    ]
+                    [ text "Post" ]
+                ]
+
         resultView =
             case result of
                 Just res ->
-                    viewWebdata res viewRes
+                    case res of
+                        Loading ->
+                            [ viewWebdata res viewRes ]
+
+                        _ ->
+                            [ viewWebdata res viewRes, btns ]
 
                 Nothing ->
-                    div [] []
-
-        postOnClick =
-            Button.onClick <| Main Submit
+                    [ btns ]
     in
     div [ flex, style "flex" "2", Flex.col ]
-        [ resultView |> Html.map Main
-        , div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
-            [ Button.linkButton
-                [ Button.primary
-                , Button.onClick <| Navigate ("/notPosted/" ++ id ++ "/edit")
-                , Button.attrs
-                    [ smallMargin
-                    , largeFont
-                    ]
-                ]
-                [ text "Edit" ]
-            , Button.button
-                [ Button.primary
-                , Button.attrs
-                    [ smallMargin
-                    , largeFont
-                    ]
-                , postOnClick
-                ]
-                [ text "Post" ]
-            ]
-        ]
+        resultView
 
 
-viewRes : SubmittedResult -> Html LocalMsg
+viewRes : SubmittedResult -> Html msg
 viewRes res =
     let
         baseView className message =

@@ -215,10 +215,10 @@ chunkedView size viewFunc items =
                     size - val
 
         emptyCol =
-            Grid.col [ Col.attrs [ style "flex" "1", smallMargin ] ] []
+            Grid.col [ Col.attrs [ style "flex" "1", style "max-width" <| String.fromFloat (100.0 / toFloat size) ++ "%" ] ] []
 
         toCol item =
-            Grid.col [ Col.attrs [ style "flex" "1", smallMargin ] ] [ viewFunc item ]
+            Grid.col [ Col.attrs [ style "flex" "1", style "max-width" <| String.fromFloat (100.0 / toFloat size) ++ "%" ] ] [ viewFunc item ]
 
         addRemainder index =
             if index == List.length chunks - 1 then

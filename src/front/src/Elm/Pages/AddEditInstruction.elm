@@ -325,10 +325,22 @@ viewMain historyBtn isEdit page av =
         resultRow =
             case page.result of
                 Just res ->
-                    viewWebdata res viewResult
+                    case res of
+                        Loading ->
+                            [ viewWebdata res viewResult ]
+
+                        _ ->
+                            [ viewWebdata res viewResult
+                            , viewRow [ Button.button [ Button.primary, Button.onClick <| Main Submit, Button.attrs [ flex1, mediumMargin ] ] [ text createText ] ]
+                            , historyBtn
+                            ]
 
                 Nothing ->
-                    div [] []
+                    [ viewRow
+                        [ Button.button [ Button.primary, Button.onClick <| Main Submit, Button.attrs [ flex1, mediumMargin ] ] [ text createText ]
+                        , historyBtn
+                        ]
+                    ]
 
         createText =
             if isEdit then
@@ -338,13 +350,13 @@ viewMain historyBtn isEdit page av =
                 "Create"
     in
     div ([ Flex.col, flex ] ++ fillParent)
-        [ viewRow
+        ([ viewRow
             [ viewCol
                 [ div largeCentered [ text "Group" ]
                 , Select.select [ Select.onChange (\str -> Main <| GroupSelected str) ] (List.map viewGroup groups)
                 ]
             ]
-        , viewRow
+         , viewRow
             [ viewCol
                 [ div largeCentered [ text "Title" ]
                 , Input.text [ Input.value page.selectedTitle, Input.onInput (\str -> Main <| TitleChanged str) ]
@@ -354,31 +366,26 @@ viewMain historyBtn isEdit page av =
                 , Input.text [ Input.value page.selectedDescription, Input.onInput (\str -> Main <| DescriptionChanged str) ]
                 ]
             ]
-        , viewRow
+         , viewRow
             [ Button.button
                 [ Button.primary, Button.onClick <| Main StartUpload, Button.attrs [ flex1 ] ]
                 [ text "Upload" ]
             , viewCol [ div largeCentered [ text fileStr ] ]
             ]
-        , viewRow
+         , viewRow
             [ Button.button
                 [ Button.primary, Button.onClick <| Main OpenEditor, Button.attrs [ flex1 ] ]
                 [ text "Edit text" ]
             ]
-        , div [ flex, Flex.row, style "flex" "4" ]
+         , div [ flex, Flex.row, style "flex" "4" ]
             [ viewCol
                 [ div largeCentered [ text "Instruction Content" ]
                 , div ([ style "border" "1px solid gray" ] ++ fillParent) [ Html.p [] (textHtml page.selectedText) ]
                 ]
             ]
-        , resultRow
-        , viewRow
-            [ Button.button
-                [ Button.primary, Button.onClick <| Main Submit, Button.attrs [ flex1, mediumMargin ] ]
-                [ text createText ]
-            , historyBtn
-            ]
-        ]
+         ]
+            ++ resultRow
+        )
 
 
 
