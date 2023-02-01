@@ -72,11 +72,4 @@ internal class AggregateEventSubscription
         }
     }
 
-    private class AggregateSubscriptionState
-    {
-        public List<Uuid> EventIds { get; set; } = new();
-        public Command? Command { get; set; } = null;
-        public List<Event> Events { get; set; } = new();
-    }
-
 }
