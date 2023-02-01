@@ -27,9 +27,12 @@ internal class EventSubscriptionProcessor
     {
         try
         {
-            await UpdateProjectionAsync(command.Metadata.Aggregate, token);
-
-            await UpdateSubscribersAsync(command, aggEvents, token);
+            var tasks = new[]
+            {
+                UpdateProjectionAsync(command.Metadata.Aggregate, token),
+                UpdateSubscribersAsync(command, aggEvents, token)
+            };
+            await Task.WhenAll(tasks);
         }
         finally
         {
