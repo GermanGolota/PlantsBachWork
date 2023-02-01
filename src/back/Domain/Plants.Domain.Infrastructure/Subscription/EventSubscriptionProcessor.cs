@@ -25,9 +25,16 @@ internal class EventSubscriptionProcessor
 
     public async Task ProcessCommandAsync(Command command, List<Event> aggEvents, CancellationToken token = default)
     {
-        await UpdateProjectionAsync(command.Metadata.Aggregate, token);
-        await UpdateSubscribersAsync(command, aggEvents, token);
-        _marker.MarkSubscriptionComplete(command.Metadata.InitialAggregate ?? command.Metadata.Aggregate);
+        try
+        {
+            await UpdateProjectionAsync(command.Metadata.Aggregate, token);
+
+            await UpdateSubscribersAsync(command, aggEvents, token);
+        }
+        finally
+        {
+            _marker.MarkSubscriptionComplete(command.Metadata.InitialAggregate ?? command.Metadata.Aggregate);
+        }
     }
 
     private async Task UpdateProjectionAsync(AggregateDescription desc, CancellationToken token = default)
