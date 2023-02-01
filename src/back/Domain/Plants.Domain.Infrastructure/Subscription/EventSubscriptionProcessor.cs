@@ -33,8 +33,6 @@ internal class EventSubscriptionProcessor
     private async Task UpdateProjectionAsync(AggregateDescription desc, CancellationToken token = default)
     {
         var aggregate = await _caller.LoadAsync(desc, token);
-        //would make sense for times in which we would load projection and apply events to it
-        //var newAggregate = _eventApplyer.ApplyEventsTo(aggregate, newEvents);
         await _caller.InsertOrUpdateProjectionAsync(aggregate, token);
         await _caller.IndexProjectionAsync(aggregate, token);
     }
