@@ -12,7 +12,7 @@ internal class TransposeApplyer<TIn> where TIn : AggregateBase
     public async Task<IEnumerable<Event>> CallTransposeAsync(AggregateLoadingTranspose<TIn> transpose, IEnumerable<Event> events, CancellationToken token = default)
     {
         var id = transpose.ExtractId(events.First());
-        var aggregate = await _repo.GetByIdAsync(id, token);
+        var aggregate = await _repo.GetByIdAsync(id, token: token);
         return transpose.Transpose(events, aggregate);
     }
 }
@@ -30,7 +30,7 @@ internal class TransposeApplyer<TIn, TEvent> where TIn : AggregateBase where TEv
     {
         var filteredEvents = events.OfType<TEvent>();
         var id = transpose.ExtractId(filteredEvents.First());
-        var aggregate = await _repo.GetByIdAsync(id, token);
+        var aggregate = await _repo.GetByIdAsync(id, token: token);
         return transpose.Transpose(filteredEvents, aggregate);
     }
 }

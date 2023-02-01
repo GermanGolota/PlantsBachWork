@@ -121,7 +121,7 @@ internal class CommandSender : ICommandSender
 
     private async Task<OneOf<CommandAcceptedResult, CommandForbidden>> ExecuteCommand(Command command, AggregateDescription commandAggregate, List<(MethodInfo Checker, MethodInfo Handler)> handlePairs, CancellationToken token = default)
     {
-        var aggregate = await _caller.LoadAsync(commandAggregate, token);
+        var aggregate = await _caller.LoadAsync(commandAggregate, token: token);
         var commandVersion = await _eventStore.AppendCommandAsync(command, aggregate.Metadata.Version, token);
 
         var checkResults = await PerformChecksAsync(command, handlePairs, token);
@@ -199,7 +199,7 @@ internal class CommandSender : ICommandSender
             else
             {
                 //aggregate command
-                var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate, token);
+                var aggregate = await _caller.LoadAsync(command.Metadata.Aggregate, token: token);
                 var checkResult = (CommandForbidden?)check.Invoke(aggregate, new object[] { command, identity });
                 var dependency = new OneOf<AggregateBase, object>(aggregate);
                 checkResults.Add((checkResult, handle, dependency));

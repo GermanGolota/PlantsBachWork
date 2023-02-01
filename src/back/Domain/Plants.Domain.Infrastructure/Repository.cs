@@ -16,12 +16,12 @@ internal class Repository<TAggregate> : IRepository<TAggregate> where TAggregate
         _aggregateHelper = aggregateHelper;
     }
 
-    public async Task<TAggregate> GetByIdAsync(Guid id, CancellationToken token = default)
+    public async Task<TAggregate> GetByIdAsync(Guid id, DateTime? asOf = null, CancellationToken token = default)
     {
         if (_aggregateHelper.Aggregates.TryGetFor(typeof(TAggregate), out var aggregateName))
         {
             var desc = new AggregateDescription(id, aggregateName);
-            var aggregate = await LoadAggregate(desc, token);
+            var aggregate = await LoadAggregate(desc, asOf, token);
             return (TAggregate)aggregate;
         }
         else
@@ -30,15 +30,15 @@ internal class Repository<TAggregate> : IRepository<TAggregate> where TAggregate
         }
     }
 
-    private async Task<AggregateBase> LoadAggregate(AggregateDescription desc, CancellationToken token = default)
+    private async Task<AggregateBase> LoadAggregate(AggregateDescription desc, DateTime? asOf, CancellationToken token = default)
     {
-        var events = await _store.ReadEventsAsync(desc, token: token);
+        var events = await _store.ReadEventsAsync(desc, asOf, token);
         var aggregate = _applyer.ApplyEvents(desc, events);
         var referencedFields = _aggregateHelper.ReferencedAggregates[desc.Name];
         foreach (var reference in aggregate.Metadata.Referenced)
         {
             var field = referencedFields[reference.Name];
-            var value = await LoadAggregate(reference, token);
+            var value = await LoadAggregate(reference, asOf, token);
             field.SetValue(aggregate, value);
         }
         return aggregate;

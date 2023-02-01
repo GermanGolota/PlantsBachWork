@@ -42,7 +42,7 @@ internal class EventSubscriptionProcessor
 
     private async Task UpdateProjectionAsync(AggregateDescription desc, CancellationToken token = default)
     {
-        var aggregate = await _caller.LoadAsync(desc, token);
+        var aggregate = await _caller.LoadAsync(desc, token: token);
         await _caller.InsertOrUpdateProjectionAsync(aggregate, token);
         await _caller.IndexProjectionAsync(aggregate, token);
     }
@@ -70,7 +70,7 @@ internal class EventSubscriptionProcessor
                     if (firstEvent != default)
                     {
                         var firstEventAggregate = firstEvent.Metadata.Aggregate;
-                        var aggregate = await _caller.LoadAsync(firstEventAggregate, token);
+                        var aggregate = await _caller.LoadAsync(firstEventAggregate, token: token);
                         var command = parentCommand.ChangeTargetAggregate(firstEventAggregate);
                         if (aggregate.Metadata.CommandsProcessedIds.Contains(command.Metadata.Id) is false)
                         {
