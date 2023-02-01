@@ -41,10 +41,7 @@ public class ElasticSearchQueryService<TAggregate, TParams> : ISearchQueryServic
 
             s.Sort(a =>
             {
-                if (orderer is not null)
-                {
-                    orderer.OrderParams(parameters, a);
-                }
+                orderer?.OrderParams(parameters, a);
                 return a.Field(agg => agg.Field(_ => _.Metadata.LastUpdateTime).Descending());
             });
 
