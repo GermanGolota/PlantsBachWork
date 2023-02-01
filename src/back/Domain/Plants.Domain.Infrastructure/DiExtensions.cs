@@ -73,7 +73,8 @@ public static class DiExtensions
         {
             services
                 .AddImplementationsOf(typeof(ICommandHandler<>), type)
-                .AddImplementationsOf(typeof(ISearchParamsProjector<,>), type);
+                .AddImplementationsOf(typeof(ISearchParamsProjector<,>), type)
+                .AddImplementationsOf(typeof(ISearchParamsOrderer<,>), type);
         }
         return services;
     }
