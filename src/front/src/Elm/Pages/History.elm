@@ -363,10 +363,10 @@ update msg m =
                             ( authed <| Valid <| { viewModel | useAdvanced = checked }, Cmd.none )
 
                         SelectedDate date ->
-                            ( authed <| Valid <| { viewModel | asOfDate = date }, loadHistoryCmd auth.token viewModel.orderType date viewModel.asOfTime viewModel.aggregate )
+                            ( authed <| Valid <| { viewModel | asOfDate = date, history = Loading }, loadHistoryCmd auth.token viewModel.orderType date viewModel.asOfTime viewModel.aggregate )
 
                         SelectedTime time ->
-                            ( authed <| Valid <| { viewModel | asOfTime = time }, loadHistoryCmd auth.token viewModel.orderType viewModel.asOfDate time viewModel.aggregate )
+                            ( authed <| Valid <| { viewModel | asOfTime = time, history = Loading }, loadHistoryCmd auth.token viewModel.orderType viewModel.asOfDate time viewModel.aggregate )
 
         _ ->
             ( m, Cmd.none )
@@ -401,12 +401,17 @@ loadHistoryCmd token order date time aggregate =
                     1
 
         dateTime =
-            case time of
+            case date of
                 "" ->
-                    date
+                    ""
 
                 _ ->
-                    date ++ "T" ++ time
+                    case time of
+                        "" ->
+                            date
+
+                        _ ->
+                            date ++ "T" ++ time
 
         timeTuple =
             case dateTime of

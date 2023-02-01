@@ -104,7 +104,7 @@ internal class EventStoreEventStore : IEventStore
 
             var readEvents = asOf is null
                 ? await readResult.ToListAsync(cancellationToken: token)
-                : await readResult.Where(_=>_.Event.Created < asOf).ToListAsync(cancellationToken: token);
+                : (await readResult.Where(_=>_.Event.Created < asOf).ToListAsync(cancellationToken: token)).Where(_ => _.Event.Created < asOf);
             
             readResult.ReadState.Dispose();
             foreach (var resolvedEvent in readEvents)
