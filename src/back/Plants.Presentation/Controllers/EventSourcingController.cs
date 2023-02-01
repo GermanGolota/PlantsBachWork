@@ -21,9 +21,10 @@ public class EventSourcingController : ControllerBase
         [FromQuery] string name,
         [FromQuery] Guid id,
         [FromQuery] OrderType order,
+        [FromQuery] DateTime? time = null,
         CancellationToken token = default)
     {
-        var model = await _history.GetAsync(new(id, name), order, token);
+        var model = await _history.GetAsync(new(id, name), order, time, token);
         return new HistoryViewModel(model.Snapshots.Select(_ => new AggregateSnapshotViewModel(_, _.Time.Humanize(utcDate: true))).ToList());
     }
 

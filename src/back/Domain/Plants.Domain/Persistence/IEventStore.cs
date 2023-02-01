@@ -2,7 +2,7 @@
 
 public interface IEventStore
 {
-    Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(AggregateDescription aggregate, CancellationToken token = default);
+    Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(AggregateDescription aggregate, DateTime? asOf = null, CancellationToken token = default);
 
     /// <returns>Next expected version</returns>
     Task<ulong> AppendEventAsync(Event @event, CancellationToken token = default);

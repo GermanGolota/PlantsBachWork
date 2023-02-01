@@ -82,7 +82,7 @@ internal class EventStoreEventStore : IEventStore
         }
     }
 
-    public async Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(AggregateDescription aggregate, CancellationToken token = default)
+    public async Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(AggregateDescription aggregate, DateTime? asOf = null, CancellationToken token = default)
     {
         try
         {
@@ -102,7 +102,10 @@ internal class EventStoreEventStore : IEventStore
                 return Array.Empty<CommandHandlingResult>();
             }
 
-            var readEvents = await readResult.ToListAsync(cancellationToken: token);
+            var readEvents = asOf is null
+                ? await readResult.ToListAsync(cancellationToken: token)
+                : await readResult.Where(_=>_.Event.Created < asOf).ToListAsync(cancellationToken: token);
+            
             readResult.ReadState.Dispose();
             foreach (var resolvedEvent in readEvents)
             {

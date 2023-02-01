@@ -2,7 +2,7 @@
 
 public interface IHistoryService
 {
-    Task<HistoryModel> GetAsync(AggregateDescription aggregate, OrderType order, CancellationToken token);
+    Task<HistoryModel> GetAsync(AggregateDescription aggregate, OrderType order, DateTime? asOf = null, CancellationToken token = default);
 }
 
 public enum OrderType
