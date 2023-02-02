@@ -1,6 +1,4 @@
-﻿using Plants.Infrastructure.Domain.Helpers;
-
-namespace Plants.Domain.Infrastructure.Helpers;
+﻿namespace Plants.Domain.Infrastructure;
 
 internal class AggregateEventApplyer
 {

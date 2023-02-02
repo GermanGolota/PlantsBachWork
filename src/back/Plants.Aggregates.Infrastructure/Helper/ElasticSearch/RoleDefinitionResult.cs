@@ -1,7 +1,7 @@
-﻿namespace Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
+﻿namespace Plants.Aggregates.Infrastructure;
 
 public class RoleDefinitionResult
 {
-    public CreationStatus Role { get; set; }
+    public CreationStatus Role { get; set; } = null!;
 
 }

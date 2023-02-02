@@ -1,6 +1,4 @@
-﻿using Plants.Aggregates.Services;
-
-namespace Plants.Aggregates.PlantStocks;
+﻿namespace Plants.Aggregates;
 
 public class FileUploader
 {
@@ -10,7 +8,7 @@ public class FileUploader
     private const string _coverImageDirectory = "InstructionCoverImages";
 
     public FileUploader(IFileRepository file)
-	{
+    {
         _file = file;
     }
 

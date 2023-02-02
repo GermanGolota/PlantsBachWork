@@ -1,6 +1,4 @@
-﻿using Plants.Aggregates.Users;
-
-namespace Plants.Aggregates.PlantStocks;
+﻿namespace Plants.Aggregates;
 
 [Allow(Consumer, Read)]
 [Allow(Producer, Read)]

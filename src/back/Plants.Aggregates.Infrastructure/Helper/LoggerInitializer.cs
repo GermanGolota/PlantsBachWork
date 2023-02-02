@@ -1,13 +1,12 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Plants.Domain.Infrastructure.Config;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.Elasticsearch;
 using Serilog.Sinks.SystemConsole.Themes;
 
-namespace Plants.Aggregates.Infrastructure.Helper;
+namespace Plants.Aggregates.Infrastructure;
 
 internal sealed class LoggerInitializer : ILoggerInitializer
 {

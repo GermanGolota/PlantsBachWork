@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
-using Plants.Aggregates.PlantInfos;
-using Plants.Aggregates.PlantInstructions;
 using Plants.Application.Contracts;
 
-namespace Plants.Presentation.Controllers;
+namespace Plants.Presentation;
 
 [ApiController]
 [Route("file")]
@@ -44,7 +42,7 @@ public class FileControllerV2 : ControllerBase
     private readonly IProjectionQueryService<PlantInstruction> _instructionQuery;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
 
-    public FileControllerV2(IFileProvider provider, 
+    public FileControllerV2(IFileProvider provider,
         IProjectionQueryService<PlantInstruction> instructionQuery,
         IProjectionQueryService<PlantInfo> infoQuery)
     {

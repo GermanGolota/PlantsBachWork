@@ -77,7 +77,7 @@ updateLocal msg m =
                             ( authedPlant { plantView | plant = Loaded res }, Cmd.none )
 
                         GotPlant (Err err) ->
-                            ( authedPlant { plantView | plant = Error }, Cmd.none )
+                            ( authedPlant { plantView | plant = Error err }, Cmd.none )
 
                         Images imgEvent ->
                             case plantView.plant of
@@ -107,7 +107,7 @@ updateLocal msg m =
                             ( authedPlant <| { plantView | postResult = Just <| Loaded res }, Cmd.none )
 
                         GotResult (Err err) ->
-                            ( authedPlant <| { plantView | postResult = Just Error }, Cmd.none )
+                            ( authedPlant <| { plantView | postResult = Just <| Error err }, Cmd.none )
 
                         NoOp ->
                             noOp

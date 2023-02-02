@@ -1,9 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Plants.Domain.Infrastructure.Helpers;
-using Plants.Infrastructure.Domain.Helpers;
 using System.Reflection;
 
-namespace Plants.Domain.Infrastructure.Subscription;
+namespace Plants.Domain.Infrastructure;
 
 internal class EventSubscriptionProcessor
 {
@@ -66,7 +64,7 @@ internal class EventSubscriptionProcessor
                 {
                     var applyerType = GetApplyerTypeFor(subscription);
                     var applyer = _provider.GetRequiredService(applyerType);
-                    var method = applyerType.GetMethod(nameof(TransposeApplyer<AggregateBase>.CallTransposeAsync), BindingFlags.Public | BindingFlags.Instance);
+                    var method = applyerType.GetMethod(nameof(TransposeApplyer<AggregateBase>.CallTransposeAsync), BindingFlags.Public | BindingFlags.Instance)!;
                     var transposedEvents = (IEnumerable<Event>)await (dynamic)method.Invoke(applyer, new[] { subscription.Transpose, eventsToHandle, token })!;
                     var firstEvent = transposedEvents.FirstOrDefault();
                     if (firstEvent != default)

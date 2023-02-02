@@ -1,8 +1,6 @@
 ﻿using EventStore.Client;
-using Plants.Domain.Infrastructure.Extensions;
-using Plants.Domain.Infrastructure.Services;
 
-namespace Plants.Domain.Infrastructure.Helpers;
+namespace Plants.Domain.Infrastructure;
 
 internal class EventStoreAccessGranter
 {

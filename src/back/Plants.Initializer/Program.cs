@@ -2,12 +2,7 @@
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Plants.Aggregates.Infrastructure;
-using Plants.Aggregates.Infrastructure.Abstractions;
-using Plants.Aggregates.Infrastructure.HealthCheck;
-using Plants.Aggregates.Infrastructure.Helper;
-using Plants.Initializer.Seeding;
-using Plants.Services.Infrastructure;
+using Plants.Initializer;
 using Serilog;
 
 var host = Host.CreateDefaultBuilder(args)

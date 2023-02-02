@@ -3,11 +3,8 @@ using Grpc.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Plants.Domain.Infrastructure.Config;
-using Plants.Domain.Infrastructure.Services;
-using Plants.Infrastructure.Domain.Helpers;
 
-namespace Plants.Domain.Infrastructure.Subscription;
+namespace Plants.Domain.Infrastructure;
 
 internal class EventSubscription : IEventSubscription
 {

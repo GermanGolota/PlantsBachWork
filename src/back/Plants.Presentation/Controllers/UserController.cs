@@ -1,12 +1,9 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Plants.Aggregates.Search;
-using Plants.Aggregates.Users;
 using Plants.Application.Commands;
 using Plants.Application.Requests;
-using Plants.Services.Infrastructure.Encryption;
 
-namespace Plants.Presentation.Controllers;
+namespace Plants.Presentation;
 
 [ApiController]
 [Route("users")]
@@ -120,8 +117,8 @@ public class UserControllerV2 : ControllerBase
         [FromBody] Plants.Application.Commands.CreateUserCommand command, CancellationToken token = default)
     {
         var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<Plants.Aggregates.Users.CreateUserCommand>(new(command.Login.ToGuid(), nameof(User))),
-            meta => new Plants.Aggregates.Users.CreateUserCommand(meta, new(command.FirstName, command.LastName, command.PhoneNumber, command.Login, command.Email, command.Language, command.Roles.ToArray())),
+            factory => factory.Create<Aggregates.CreateUserCommand>(new(command.Login.ToGuid(), nameof(User))),
+            meta => new Plants.Aggregates.CreateUserCommand(meta, new(command.FirstName, command.LastName, command.PhoneNumber, command.Login, command.Email, command.Language, command.Roles.ToArray())),
             token
             );
         return result.Match<CreateUserResult>(succ => new(true, "Sucessfull"),

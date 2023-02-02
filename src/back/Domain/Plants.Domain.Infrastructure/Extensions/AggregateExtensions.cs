@@ -1,4 +1,4 @@
-﻿namespace Plants.Domain.Infrastructure.Extensions;
+﻿namespace Plants.Domain.Infrastructure;
 
 public static class AggregateExtensions
 {

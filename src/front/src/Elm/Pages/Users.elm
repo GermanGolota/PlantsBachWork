@@ -1,7 +1,6 @@
 module Pages.Users exposing (..)
 
 import Bootstrap.Button as Button
-import Bootstrap.ButtonGroup as ButtonGroup exposing (CheckboxButtonItem)
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
@@ -13,7 +12,7 @@ import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), allRoles, baseApplication, convertRole, initBase, isAdmin, mapCmd, roleToNumber, roleToStr, rolesDecoder, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), allRoles, baseApplication, convertRole, initBase, isAdmin, mapCmd, roleToNumber, rolesDecoder, updateBase)
 import Multiselect as Multiselect
 import NavBar exposing (usersLink, viewNav)
 import UserRolesSelector exposing (userRolesBtns)
@@ -114,7 +113,7 @@ updateLocal msg m =
                                 _ ->
                                     ""
                     in
-                    ( log msg2 authed <| { model | users = Error }, Cmd.none )
+                    ( log msg2 authed <| { model | users = Error err }, Cmd.none )
 
                 SelectedRole roleMsg ->
                     let
@@ -224,7 +223,7 @@ updateLocal msg m =
                                     if user.login == login then
                                         case id of
                                             Err err ->
-                                                { user | id = Error }
+                                                { user | id = Error err }
 
                                             Ok res ->
                                                 { user | id = Loaded res }

@@ -1,4 +1,4 @@
-﻿namespace Plants.Domain.Infrastructure.Subscription;
+﻿namespace Plants.Domain.Infrastructure;
 
 public interface IProjectionsUpdater
 {

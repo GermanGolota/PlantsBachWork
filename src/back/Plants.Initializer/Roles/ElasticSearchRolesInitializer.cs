@@ -1,15 +1,9 @@
 ﻿using Microsoft.Extensions.Options;
-using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
-using Plants.Aggregates.Services;
-using Plants.Domain.Infrastructure.Extensions;
-using Plants.Domain.Infrastructure.Helpers;
-using Plants.Infrastructure.Domain.Helpers;
-using Plants.Services.Infrastructure.Encryption;
 using System.Data;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 
-namespace Plants.Initializer.Roles;
+namespace Plants.Initializer;
 
 internal class ElasticSearchRolesInitializer
 {
@@ -22,8 +16,8 @@ internal class ElasticSearchRolesInitializer
     private UserConfig _options;
 
     public ElasticSearchRolesInitializer(
-        ElasticSearchHelper helper, AccessesHelper accesses, 
-        IIdentityProvider identity, IIdentityHelper identityHelper, 
+        ElasticSearchHelper helper, AccessesHelper accesses,
+        IIdentityProvider identity, IIdentityHelper identityHelper,
         SymmetricEncrypter encrypter, IOptionsSnapshot<UserConfig> options,
         AggregateHelper aggregate)
     {
@@ -65,8 +59,8 @@ internal class ElasticSearchRolesInitializer
             var url = _helper.GetUrl(indexName);
             var result = await client.PutAsync(url, null, token);
 
-            await _helper.HandleCreationAsync<IndexCreationResult>("index", 
-                indexName, result, 
+            await _helper.HandleCreationAsync<IndexCreationResult>("index",
+                indexName, result,
                 _ => _.Acknowledged && _.ShardsAcknowledged, token);
         }
     }

@@ -1,12 +1,9 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Plants.Aggregates.PlantInfos;
-using Plants.Aggregates.PlantOrders;
-using Plants.Aggregates.Search;
 using Plants.Application.Commands;
 using Plants.Application.Requests;
 
-namespace Plants.Presentation.Controllers;
+namespace Plants.Presentation;
 
 [ApiController]
 [Route("orders")]
@@ -104,8 +101,8 @@ public class OrdersControllerV2 : ControllerBase
     public async Task<ActionResult<RejectOrderResult>> RejectOrder([FromRoute] Guid id, CancellationToken token)
     {
         var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<Plants.Aggregates.PlantOrders.RejectOrderCommand>(new(id, nameof(PlantOrder))),
-            meta => new Plants.Aggregates.PlantOrders.RejectOrderCommand(meta));
+            factory => factory.Create<Plants.Aggregates.RejectOrderCommand>(new(id, nameof(PlantOrder))),
+            meta => new Plants.Aggregates.RejectOrderCommand(meta));
         return result.Match<RejectOrderResult>(succ => new(true), fail => new(false));
     }
 
@@ -113,8 +110,8 @@ public class OrdersControllerV2 : ControllerBase
     public async Task<ActionResult<ConfirmDeliveryResult>> MarkAsDelivered([FromRoute] Guid id, CancellationToken token)
     {
         var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<Plants.Aggregates.PlantOrders.ConfirmDeliveryCommand>(new(id, nameof(PlantOrder))),
-            meta => new Plants.Aggregates.PlantOrders.ConfirmDeliveryCommand(meta),
+            factory => factory.Create<Plants.Aggregates.ConfirmDeliveryCommand>(new(id, nameof(PlantOrder))),
+            meta => new Plants.Aggregates.ConfirmDeliveryCommand(meta),
             token);
         return result.Match<ConfirmDeliveryResult>(succ => new(true), fail => new(false));
     }

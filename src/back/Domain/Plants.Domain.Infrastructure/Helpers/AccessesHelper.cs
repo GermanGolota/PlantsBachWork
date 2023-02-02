@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Plants.Domain.Infrastructure.Helpers;
+namespace Plants.Domain.Infrastructure;
 
 public class AccessesHelper
 {

@@ -1,6 +1,4 @@
-﻿using Plants.Aggregates.Infrastructure.Abstractions;
-
-namespace Plants.Presentation.Services;
+﻿namespace Plants.Presentation;
 
 public class HostingContext : IHostingContext
 {

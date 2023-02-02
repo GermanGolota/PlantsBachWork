@@ -4,13 +4,9 @@ using Nest;
 using Nest.JsonNetSerializer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Plants.Domain.Infrastructure.Config;
-using Plants.Domain.Infrastructure.Helpers;
-using Plants.Domain.Infrastructure.Services;
-using Plants.Services.Infrastructure.Encryption;
 using System.Reflection;
 
-namespace Plants.Aggregates.Infrastructure.Domain;
+namespace Plants.Aggregates.Infrastructure;
 
 internal class ElasticSearchClientFactory : IElasticSearchClientFactory
 {

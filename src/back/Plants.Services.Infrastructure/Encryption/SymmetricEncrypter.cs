@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
-using Plants.Services.Infrastructure.Config;
 
-namespace Plants.Services.Infrastructure.Encryption;
+namespace Plants.Services.Infrastructure;
 
 public class SymmetricEncrypter
 {

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
-using Plants.Domain.Config;
 
-namespace Plants.Domain.Services;
+namespace Plants.Domain;
 
 public class CommandHelper
 {

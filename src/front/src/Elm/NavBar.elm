@@ -1,9 +1,6 @@
 module NavBar exposing (..)
 
 import Assets exposing (treeIcon)
-import Bootstrap.Grid as Grid
-import Bootstrap.Grid.Col as Col
-import Bootstrap.Grid.Row as Row
 import Bootstrap.Utilities.Flex as Flex
 import Color
 import Html exposing (Html, a, div, i, text)

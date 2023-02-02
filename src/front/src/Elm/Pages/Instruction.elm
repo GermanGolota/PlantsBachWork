@@ -2,16 +2,15 @@ module Pages.Instruction exposing (..)
 
 import Bootstrap.Button as Button
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, instructioIdToCover)
+import Endpoints exposing (Endpoint(..), historyUrl)
 import Html exposing (Html, div, img, text)
 import Html.Attributes exposing (alt, src, style)
 import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (custom, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
 import NavBar exposing (instructionsLink, viewNav)
-import Utils exposing (decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin, textCenter, textHtml)
+import Utils exposing (decodeId, fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, textCenter, textHtml)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -69,7 +68,7 @@ updateLocal msg m =
                     updateModel <| NoInstruction
 
                 GotInstruction (Err err) ->
-                    updateModel <| Instruction <| Error
+                    updateModel <| Instruction <| Error err
 
                 NoOp ->
                     noOp

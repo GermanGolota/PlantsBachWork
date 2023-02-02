@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Plants.Domain.Infrastructure.Config;
+namespace Plants.Domain.Infrastructure;
 
 [ConfigSection(Section)]
 public class ConnectionConfig
@@ -38,13 +38,13 @@ public class MongoDbServiceConnection : ServiceConnection
 
 public class EventStoreServiceConnection : ServiceConnection
 {
-    [Range(1L, Int64.MaxValue)]
+    [Range(1L, long.MaxValue)]
     public long TimeoutInSeconds { get; set; } = 60;
 }
 
 public class ElasticSearchConnection : ServiceConnection
 {
-    [Range(1L, Int64.MaxValue)]
+    [Range(1L, long.MaxValue)]
     public long TimeoutInSeconds { get; set; } = 60 * 10;
 }
 

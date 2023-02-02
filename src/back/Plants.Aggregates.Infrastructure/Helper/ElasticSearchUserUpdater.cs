@@ -1,9 +1,7 @@
-﻿using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
-using Plants.Aggregates.Services;
-using System.Data;
+﻿using System.Data;
 using System.Net.Http.Json;
 
-namespace Plants.Aggregates.Infrastructure.Helper;
+namespace Plants.Aggregates.Infrastructure;
 
 public class ElasticSearchUserUpdater : IUserUpdater
 {
@@ -52,7 +50,7 @@ public class ElasticSearchUserUpdater : IUserUpdater
     public async Task UpdatePasswordAsync(string username, string oldPassword, string newPassword, CancellationToken token = default)
     {
         var client = _helper.GetClient();
-        var url = _identity.Identity!.UserName == username 
+        var url = _identity.Identity!.UserName == username
             ? _helper.GetUrl("/_security/user/_password")
             : _helper.GetUrl($"/_security/user/{username}/_password");
         var result = await client.PostAsJsonAsync(url, new

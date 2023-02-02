@@ -1,8 +1,6 @@
 ﻿using MongoDB.Bson;
-using Plants.Aggregates.Services;
-using Plants.Domain.Infrastructure.Services;
 
-namespace Plants.Aggregates.Infrastructure.Helper;
+namespace Plants.Aggregates.Infrastructure;
 
 internal class MongoDbUserUpdater : IUserUpdater
 {

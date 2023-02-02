@@ -1,4 +1,4 @@
-﻿namespace Plants.Domain.Config;
+﻿namespace Plants.Domain;
 
 [ConfigSection(Section)]
 public class CommandSenderOptions

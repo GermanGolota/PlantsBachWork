@@ -1,16 +1,14 @@
-﻿using Plants.Aggregates.Services;
-
-namespace Plants.Aggregates.PlantStocks;
+﻿namespace Plants.Aggregates;
 
 internal class AddToStockCommandHandler : ICommandHandler<AddToStockCommand>
 {
     private readonly FileUploader _uploader;
-    private readonly IRepository<PlantStock> _repo;
+    private readonly IQueryService<PlantStock> _repo;
     private PlantStock _stock = null;
 
     private const string _plantImageDirectory = "PlantImages";
 
-    public AddToStockCommandHandler(FileUploader uploader, IRepository<PlantStock> repo)
+    public AddToStockCommandHandler(FileUploader uploader, IQueryService<PlantStock> repo)
     {
         _uploader = uploader;
         _repo = repo;

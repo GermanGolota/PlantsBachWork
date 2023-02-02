@@ -14,12 +14,10 @@ internal class IdentityProvider : IIdentityProvider
             {
                 var claims = user.Claims;
                 var roleNames = Enum.GetNames<UserRole>();
-                _identity = new UserIdentity
-                {
-                    Hash = claims.First(x => x.Type == ClaimTypes.Hash).Value,
-                    Roles = claims.Select(_ => _.Type).Where(type => roleNames.Contains(type)).Select(Enum.Parse<UserRole>).ToArray(),
-                    UserName = claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value
-                };
+                _identity = new UserIdentity(
+                    claims.Select(_ => _.Type).Where(type => roleNames.Contains(type)).Select(Enum.Parse<UserRole>).ToArray(),
+                    claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value,
+                    claims.First(x => x.Type == ClaimTypes.Hash).Value);
             }
             else
             {
@@ -47,18 +45,20 @@ internal class IdentityProvider : IIdentityProvider
         }
         else
         {
-            _identity = new UserIdentity
-            {
-                Hash = newIdentity.Hash,
-                Roles = newIdentity.Roles,
-                UserName = newIdentity.UserName
-            };
+            _identity = new UserIdentity(newIdentity.Roles, newIdentity.UserName, newIdentity.Hash);
         }
     }
 }
 
 internal class UserIdentity : IUserIdentity
 {
+    public UserIdentity(UserRole[] roles, string userName, string hash)
+    {
+        Roles = roles;
+        UserName = userName;
+        Hash = hash;
+    }
+
     public UserRole[] Roles { get; set; }
     public string UserName { get; set; }
     public string Hash { get; set; }

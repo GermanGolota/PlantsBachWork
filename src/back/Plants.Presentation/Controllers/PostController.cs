@@ -1,11 +1,9 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Plants.Aggregates.PlantInfos;
-using Plants.Aggregates.PlantPosts;
 using Plants.Application.Commands;
 using Plants.Application.Requests;
 
-namespace Plants.Presentation.Controllers;
+namespace Plants.Presentation;
 
 [ApiController]
 [Route("post")]

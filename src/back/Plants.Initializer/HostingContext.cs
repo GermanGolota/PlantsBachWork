@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Options;
-using Plants.Aggregates.Infrastructure.Abstractions;
-using Plants.Initializer.Seeding;
 
 namespace Plants.Initializer;
 

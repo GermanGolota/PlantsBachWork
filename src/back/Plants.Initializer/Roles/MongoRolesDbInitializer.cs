@@ -1,11 +1,8 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Plants.Domain.Infrastructure.Config;
-using Plants.Domain.Infrastructure.Helpers;
-using Plants.Domain.Infrastructure.Services;
 
-namespace Plants.Initializer.Roles;
+namespace Plants.Initializer;
 
 internal class MongoRolesDbInitializer
 {
@@ -141,7 +138,7 @@ internal class MongoRolesDbInitializer
             "rolesInfo": [{{allRoles.QuoteDelimitList()}}]
         }
         """);
-        var rolesResult = await db.RunCommandAsync<BsonDocument>(getRolesCommand, cancellationToken: token);
-        return rolesResult!.GetElement("roles").Value.AsBsonArray.Select(x => x.AsBsonDocument.GetElement("role").Value.ToString());
+        var rolesResult = await db.RunCommandAsync<BsonDocument>(getRolesCommand, cancellationToken: token)!;
+        return rolesResult.GetElement("roles").Value.AsBsonArray.Select(x => x.AsBsonDocument.GetElement("role").Value.ToString()!);
     }
 }

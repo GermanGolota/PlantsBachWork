@@ -1,7 +1,4 @@
-﻿using Plants.Aggregates.PlantPosts;
-using Plants.Aggregates.Users;
-
-namespace Plants.Aggregates.PlantOrders;
+﻿namespace Plants.Aggregates;
 
 [Allow(Consumer, Read)]
 [Allow(Consumer, Write)]

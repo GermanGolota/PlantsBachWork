@@ -1,7 +1,4 @@
-﻿using Plants.Domain;
-using Plants.Shared;
-
-namespace Plants.Presentation.Dtos;
+﻿namespace Plants.Presentation;
 
 public record ResultDto(bool Success, string Message);
 
@@ -11,6 +8,6 @@ public static class ResultDtoExtensions
     {
         successMessage ??= "Successfull";
 
-        return cmdResult.Match(_ => new ResultDto(true, successMessage), fail => new ResultDto(false, String.Join('\n', fail.Reasons)));
+        return cmdResult.Match(_ => new ResultDto(true, successMessage), fail => new ResultDto(false, string.Join('\n', fail.Reasons)));
     }
 }

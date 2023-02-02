@@ -1,9 +1,4 @@
-﻿using Plants.Aggregates.PlantInstructions;
-using Plants.Aggregates.PlantOrders;
-using Plants.Aggregates.PlantPosts;
-using Plants.Aggregates.PlantStocks;
-
-namespace Plants.Aggregates.PlantStats;
+﻿namespace Plants.Aggregates;
 
 [Allow(Manager, Read)]
 [Allow(Manager, Write)]

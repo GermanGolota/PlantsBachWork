@@ -1,7 +1,6 @@
 ﻿using EventStore.Client;
-using Plants.Domain.Infrastructure.Services;
 
-namespace Plants.Aggregates.Infrastructure.Domain;
+namespace Plants.Aggregates.Infrastructure;
 
 internal class EventStorePersistentSubscriptionsClientFactory : IEventStorePersistentSubscriptionsClientFactory
 {

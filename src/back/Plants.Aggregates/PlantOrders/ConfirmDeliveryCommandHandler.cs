@@ -1,11 +1,11 @@
-﻿namespace Plants.Aggregates.PlantOrders;
+﻿namespace Plants.Aggregates;
 
 internal class ConfirmDeliveryCommandHandler : ICommandHandler<ConfirmDeliveryCommand>
 {
-    private readonly IRepository<PlantOrder> _repo;
+    private readonly IQueryService<PlantOrder> _repo;
     private PlantOrder _order;
 
-    public ConfirmDeliveryCommandHandler(IRepository<PlantOrder> repo)
+    public ConfirmDeliveryCommandHandler(IQueryService<PlantOrder> repo)
     {
         _repo = repo;
     }

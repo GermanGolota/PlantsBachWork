@@ -1,12 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
-using Plants.Domain.Infrastructure.Config;
-using Plants.Services.Infrastructure.Encryption;
 using System.Net.Http.Json;
 using System.Text;
 
-namespace Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
+namespace Plants.Aggregates.Infrastructure;
 
 public class ElasticSearchHelper
 {

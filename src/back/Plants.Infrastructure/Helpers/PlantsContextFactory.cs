@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Plants.Infrastructure.Config;
-using Plants.Services.Infrastructure.Encryption;
+using Plants.Services.Infrastructure;
 using System.Security.Claims;
 
 namespace Plants.Infrastructure.Helpers;

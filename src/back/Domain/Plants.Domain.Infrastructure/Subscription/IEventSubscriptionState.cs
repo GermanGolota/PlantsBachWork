@@ -1,6 +1,6 @@
 ﻿using EventStore.Client;
 
-namespace Plants.Domain.Infrastructure.Subscription;
+namespace Plants.Domain.Infrastructure;
 
 internal interface IEventSubscriptionState
 {

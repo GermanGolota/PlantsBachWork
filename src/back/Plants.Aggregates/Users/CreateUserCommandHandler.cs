@@ -1,7 +1,4 @@
-﻿using Plants.Aggregates.Services;
-using Plants.Services;
-
-namespace Plants.Aggregates.Users;
+﻿namespace Plants.Aggregates;
 
 internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
 {

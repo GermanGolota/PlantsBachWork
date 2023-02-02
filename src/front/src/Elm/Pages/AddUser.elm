@@ -6,7 +6,7 @@ import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), postAuthed)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, style, value)
+import Html.Attributes exposing (class, value)
 import Http
 import Json.Decode as D
 import Json.Encode as E
@@ -119,8 +119,8 @@ updateLocal msg m =
                 GotSubmit (Ok res) ->
                     updateModel { model | submitResult = Just (Loaded res) }
 
-                GotSubmit (Err _) ->
-                    updateModel { model | submitResult = Just Error }
+                GotSubmit (Err err) ->
+                    updateModel { model | submitResult = Just <| Error err }
 
                 NoOp ->
                     noOp
@@ -233,16 +233,16 @@ viewBtn =
 
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
-init resp flags =
+init resp _ =
     let
         initialLang =
             Maybe.withDefault "English" <| List.head languages
     in
-    initBase [ Producer, Consumer, Manager ] (View "" "" "" "" "" initialLang [] Nothing) (\res -> Cmd.none) resp
+    initBase [ Producer, Consumer, Manager ] (View "" "" "" "" "" initialLang [] Nothing) (\_ -> Cmd.none) resp
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 

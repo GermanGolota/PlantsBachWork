@@ -7,18 +7,18 @@ import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Table as Table
 import Dict exposing (Dict)
-import Endpoints exposing (Endpoint(..), getAuthed)
+import Endpoints exposing (Endpoint(..))
 import Html exposing (Html, div, h1, i, text)
 import Html.Attributes exposing (class, style)
 import Http
 import Iso8601 exposing (toTime)
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase, viewBase)
+import Json.Decode.Pipeline exposing (required)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (statsLink, viewNav)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Time
-import Utils exposing (AlignDirection(..), decodeId, fillParent, flatten, itself, largeFont, textAlign, textCenter, unique, viewLoading)
+import Utils exposing (AlignDirection(..), decodeId, fillParent, flatten, largeFont, textAlign, textCenter, unique)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -99,7 +99,7 @@ updateLocal msg model =
             ( Authorized token (Totals <| Loaded <| TotalsView res Nothing), Cmd.none )
 
         ( GotTotals (Err err), Authorized token (Totals _) ) ->
-            ( Authorized token (Totals <| Error), Cmd.none )
+            ( Authorized token (Totals <| Error err), Cmd.none )
 
         ( DateLeftSelected date, Authorized token (Financials NoDateSelected) ) ->
             ( Authorized token <| Financials <| OnlyLeftSelected date, Cmd.none )
@@ -123,7 +123,7 @@ updateLocal msg model =
             ( Authorized token <| Financials <| BothSelected left right <| ValidDates <| Loaded <| FinancialView res Nothing, Cmd.none )
 
         ( GotFinancial (Err err), Authorized token (Financials (BothSelected left right (ValidDates _))) ) ->
-            ( Authorized token <| Financials <| BothSelected left right <| ValidDates <| Error, Cmd.none )
+            ( Authorized token <| Financials <| BothSelected left right <| ValidDates <| Error err, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )

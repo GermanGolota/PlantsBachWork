@@ -1,4 +1,4 @@
-﻿namespace Plants.Aggregates.Infrastructure.Abstractions;
+﻿namespace Plants.Aggregates.Infrastructure;
 
 public interface IHostingContext
 {

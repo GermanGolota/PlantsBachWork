@@ -1,10 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Plants.Domain.Infrastructure.Extensions;
-using Plants.Domain.Infrastructure.Services;
-using Plants.Infrastructure.Domain.Helpers;
 
-namespace Plants.Domain.Infrastructure.Projection;
+namespace Plants.Domain.Infrastructure;
 
 public class ElasticSearchQueryService<TAggregate, TParams> : ISearchQueryService<TAggregate, TParams> where TAggregate : AggregateBase where TParams : ISearchParams
 {

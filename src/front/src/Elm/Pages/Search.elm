@@ -7,16 +7,16 @@ import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
-import Endpoints exposing (Endpoint(..), endpointToUrl, getAuthedQuery, historyUrl, imageIdToUrl, postAuthed)
+import Endpoints exposing (Endpoint(..), historyUrl, imageIdToUrl, postAuthed)
 import Html exposing (Html, div, i, text)
 import Html.Attributes exposing (alt, class, src, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase, viewBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar exposing (viewNav)
-import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, largeFont, mediumFont, smallMargin, textCenter)
+import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, mediumFont, smallMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -102,13 +102,13 @@ updateLocal msg m =
                     ( updateData model auth <| Loaded res, Cmd.none )
 
                 ( GotSearch (Err err), _ ) ->
-                    ( updateData model auth Error, Cmd.none )
+                    ( updateData model auth <| Error err, Cmd.none )
 
                 ( GotAvailable (Ok res), _ ) ->
                     ( authed { model | availableValues = Loaded res }, Cmd.none )
 
                 ( GotAvailable (Err err), _ ) ->
-                    ( authed { model | availableValues = Error }, Cmd.none )
+                    ( authed { model | availableValues = Error err }, Cmd.none )
 
                 ( RegionsMS sub, Loaded val ) ->
                     let
@@ -225,7 +225,7 @@ updateLocal msg m =
                             let
                                 updateResult resultItem =
                                     if resultItem.id == id then
-                                        { resultItem | wasAbleToDelete = Just Error }
+                                        { resultItem | wasAbleToDelete = Just <| Error err }
 
                                     else
                                         resultItem

@@ -2,7 +2,7 @@ module ImageList exposing (..)
 
 import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
-import Html exposing (Html, div, figure, i, text)
+import Html exposing (Html, div, i, text)
 import Html.Attributes exposing (alt, class, src, style)
 import Html.Events exposing (onClick)
 import Utils exposing (fillParent, flex, flex1, mediumMargin, smallMargin)

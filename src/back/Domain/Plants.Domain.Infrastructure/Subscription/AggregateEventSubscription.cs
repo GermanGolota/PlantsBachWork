@@ -1,8 +1,7 @@
 ﻿using EventStore.Client;
 using Microsoft.Extensions.Logging;
-using Plants.Domain.Infrastructure.Helpers;
 
-namespace Plants.Domain.Infrastructure.Subscription;
+namespace Plants.Domain.Infrastructure;
 
 internal class AggregateEventSubscription
 {
@@ -70,6 +69,13 @@ internal class AggregateEventSubscription
             _state.RemoveState(new(aggregateId, _aggregateName));
             _logger.LogInformation("Processed command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
         }
+    }
+
+    private class AggregateSubscriptionState
+    {
+        public List<Uuid> EventIds { get; set; } = new();
+        public Command? Command { get; set; } = null;
+        public List<Event> Events { get; set; } = new();
     }
 
 }

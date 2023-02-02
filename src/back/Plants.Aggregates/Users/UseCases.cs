@@ -1,4 +1,4 @@
-﻿namespace Plants.Aggregates.Users;
+﻿namespace Plants.Aggregates;
 
 public record UserCreationDto(string FirstName, string LastName, string PhoneNumber, string Login, string Email, string Language, UserRole[] Roles);
 

@@ -1,4 +1,4 @@
-﻿namespace Plants.Presentation.Extensions;
+﻿namespace Plants.Presentation;
 
 public static class FormFileExtensions
 {

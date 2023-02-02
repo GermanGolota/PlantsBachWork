@@ -1,12 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using Plants.Aggregates.PlantStocks;
-using Plants.Aggregates.Services;
-using Plants.Aggregates.Users;
-using Plants.Services.Infrastructure.Encryption;
 
-namespace Plants.Initializer.Seeding;
+namespace Plants.Initializer;
 
 internal class Seeder
 {

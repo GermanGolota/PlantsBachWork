@@ -1,8 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Plants.Domain.History;
-using Plants.Domain.Infrastructure.Helpers;
-using Plants.Domain.Infrastructure.Subscription;
-using Plants.Infrastructure.Domain.Helpers;
 
 namespace Plants.Domain.Infrastructure;
 
@@ -17,7 +13,6 @@ public static class DiExtensions
 
         return services;
     }
-
 
     private static IServiceCollection AddEventSourcing(this IServiceCollection services)
     {
@@ -38,7 +33,7 @@ public static class DiExtensions
         services.AddTransient<IHistoryService, HistoryService>();
         services.AddSubscriptions();
         services.AddTransient<IEventStore, EventStoreEventStore>();
-        services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+        services.AddTransient(typeof(IQueryService<>), typeof(QueryService<>));
         return services;
     }
 

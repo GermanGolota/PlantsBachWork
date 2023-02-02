@@ -1,9 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using Plants.Domain.Infrastructure.Extensions;
-using Plants.Domain.Infrastructure.Services;
-using Plants.Infrastructure.Domain.Helpers;
 
-namespace Plants.Domain.Infrastructure.Projection;
+namespace Plants.Domain.Infrastructure;
 
 internal class ElasticSearchProjectionRepository<T> : ISearchProjectionRepository<T> where T : AggregateBase
 {

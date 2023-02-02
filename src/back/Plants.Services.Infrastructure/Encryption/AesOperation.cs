@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Plants.Services.Infrastructure.Encryption;
+namespace Plants.Services.Infrastructure;
 
 internal static class AesOperation
 {

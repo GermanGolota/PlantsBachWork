@@ -2,7 +2,6 @@ module Utils exposing (..)
 
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
-import Bootstrap.Grid.Row as Row
 import Bootstrap.Spinner as Spinner
 import Bootstrap.Text as Text
 import Bootstrap.Utilities.Spacing as Spacing
@@ -11,7 +10,7 @@ import Dict exposing (Dict)
 import FormatNumber exposing (format)
 import FormatNumber.Locales exposing (usLocale)
 import Html exposing (Attribute, Html, a, div, p, text)
-import Html.Attributes exposing (attribute, style)
+import Html.Attributes exposing (style)
 import Html.Parser
 import Html.Parser.Util
 import Json.Decode as D
@@ -116,12 +115,11 @@ unique l =
     let
         incUnique : a -> List a -> List a
         incUnique elem lst =
-            case List.member elem lst of
-                True ->
-                    lst
+            if List.member elem lst then
+                lst
 
-                False ->
-                    elem :: lst
+            else
+                elem :: lst
     in
     List.foldr incUnique [] l
 
@@ -150,7 +148,7 @@ viewLoading =
         spiners =
             List.map spiner colors
     in
-    Html.div (fillParent ++ [ flex ] ++ flexCenter) spiners
+    Html.div (fillParent ++ flexCenter ++ [ flex ] ) spiners
 
 
 itself : a -> a
@@ -222,10 +220,10 @@ chunkedView size viewFunc items =
 
         addRemainder index =
             if index == List.length chunks - 1 then
-                List.map (\i -> emptyCol) (List.repeat remainder 0)
+                List.map (\_ -> emptyCol) (List.repeat remainder 0)
 
             else
-                List.map (\i -> emptyCol) []
+                List.map (\_ -> emptyCol) []
 
         buildRow index rowItems =
             Grid.row []

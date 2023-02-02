@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Options;
-using Plants.Services.Infrastructure.Encryption;
 
 namespace Plants.Initializer;
 
@@ -8,12 +7,7 @@ internal class ConfigIdentityProvider : IIdentityProvider
     public ConfigIdentityProvider(IOptionsSnapshot<UserConfig> options, SymmetricEncrypter encrypter)
     {
         var adminOptions = options.Get(UserConstrants.Admin);
-        _identity = new UserIdentity
-        {
-            Roles = Enum.GetValues<UserRole>(),
-            Hash = encrypter.Encrypt(adminOptions.Password),
-            UserName = adminOptions.Username
-        };
+        _identity = new UserIdentity(Enum.GetValues<UserRole>(), adminOptions.Username, encrypter.Encrypt(adminOptions.Password));
     }
 
     private readonly UserIdentity _identity;
@@ -28,6 +22,13 @@ internal class ConfigIdentityProvider : IIdentityProvider
 
     private class UserIdentity : IUserIdentity
     {
+        public UserIdentity(UserRole[] roles, string userName, string hash)
+        {
+            Roles = roles;
+            UserName = userName;
+            Hash = hash;
+        }
+
         public UserRole[] Roles { get; set; }
 
         public string UserName { get; set; }

@@ -4,18 +4,18 @@ import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, imagesDecoder, postAuthed)
+import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, postAuthed)
 import Html exposing (Html, div, i, input, text)
 import Html.Attributes exposing (checked, class, disabled, href, style, type_, value)
 import Http
 import ImageList as ImageList
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
+import Json.Decode.Pipeline exposing (required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
 import Maybe exposing (map)
 import NavBar exposing (searchLink, viewNav)
 import PlantHelper exposing (PlantModel, plantDecoder, viewDesc, viewPlantBase, viewPlantLeft)
-import Utils exposing (SubmittedResult(..), createdDecoder, existsDecoder, fillParent, flex, flex1, formatPrice, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin, submittedDecoder)
+import Utils exposing (SubmittedResult(..), fillParent, flex, flex1, largeCentered, largeFont, mediumMargin, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -116,13 +116,13 @@ localUpdate msg m =
                         Order orderView ->
                             ( authedPlant <| { p | plantType = Order { orderView | plant = Loaded res } }, Cmd.none )
 
-                ( GotPlant (Err res), Plant p ) ->
+                ( GotPlant (Err err), Plant p ) ->
                     case p.plantType of
                         JustPlant pWeb ->
-                            ( authedPlant <| { p | plantType = JustPlant <| Error }, Cmd.none )
+                            ( authedPlant <| { p | plantType = JustPlant <| Error err }, Cmd.none )
 
                         Order orderView ->
-                            ( authedPlant <| { p | plantType = Order { orderView | plant = Error } }, Cmd.none )
+                            ( authedPlant <| { p | plantType = Order { orderView | plant = Error err } }, Cmd.none )
 
                 ( GotAddresses (Ok res), Plant p ) ->
                     let
@@ -141,10 +141,10 @@ localUpdate msg m =
                         _ ->
                             noOp
 
-                ( GotAddresses (Err res), Plant p ) ->
+                ( GotAddresses (Err err), Plant p ) ->
                     case p.plantType of
                         Order orderView ->
-                            ( authedPlant <| { p | plantType = Order <| { orderView | plant = Error } }, Cmd.none )
+                            ( authedPlant <| { p | plantType = Order <| { orderView | plant = Error err } }, Cmd.none )
 
                         _ ->
                             noOp
@@ -240,10 +240,10 @@ localUpdate msg m =
                         _ ->
                             noOp
 
-                ( GotSubmit (Err res), Plant p ) ->
+                ( GotSubmit (Err err), Plant p ) ->
                     case p.plantType of
                         Order orderView ->
-                            ( authedOrder p <| Order { orderView | result = Just Error }, Cmd.none )
+                            ( authedOrder p <| Order { orderView | result = Just <| Error err }, Cmd.none )
 
                         _ ->
                             noOp

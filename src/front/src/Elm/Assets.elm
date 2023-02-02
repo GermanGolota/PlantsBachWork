@@ -2,10 +2,9 @@ module Assets exposing (..)
 
 import Color exposing (Color)
 import Html exposing (Html)
-import Html.Attributes exposing (style)
-import TypedSvg exposing (g, path, svg)
-import TypedSvg.Attributes exposing (d, fill, height, stroke, viewBox, width)
-import TypedSvg.Types exposing (Length(..), Paint(..), num, percent)
+import TypedSvg exposing (path, svg)
+import TypedSvg.Attributes exposing (d, fill, height, viewBox, width)
+import TypedSvg.Types exposing (Length(..), Paint(..))
 
 
 treeIcon : Length -> Color -> Html msg

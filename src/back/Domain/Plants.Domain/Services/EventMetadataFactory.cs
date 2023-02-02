@@ -1,4 +1,4 @@
-﻿namespace Plants.Domain.Services;
+﻿namespace Plants.Domain;
 
 public sealed class EventMetadataFactory
 {

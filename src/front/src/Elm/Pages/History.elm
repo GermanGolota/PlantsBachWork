@@ -19,8 +19,8 @@ import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import JsonViewer exposing (initJsonTree, initJsonTreeCollapsed, updateJsonTree, viewJsonTree)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
-import NavBar exposing (plantsLink, viewNav)
-import Utils exposing (buildQuery, fillParent, flex, humanizePascalCase, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin)
+import NavBar exposing (viewNav)
+import Utils exposing (buildQuery, fillParent, flex, humanizePascalCase, largeCentered, mediumFont, mediumMargin, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -211,7 +211,7 @@ update msg m =
                                     noOp
 
                         GotAggregate (Err err) ->
-                            ( authed <| Valid <| { viewModel | history = Error }, Cmd.none )
+                            ( authed <| Valid <| { viewModel | history = Error err }, Cmd.none )
 
                         GotAggregate (Ok history) ->
                             ( authed <| Valid <| { viewModel | history = Loaded history }, Cmd.none )

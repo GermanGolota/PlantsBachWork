@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
-namespace Plants.Presentation.Extensions;
+namespace Plants.Presentation;
 
 public static class ExceptionHandlingExtensions
 {

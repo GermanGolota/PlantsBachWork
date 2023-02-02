@@ -9,18 +9,15 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
-import Color exposing (Color, rgba, toCssString)
+import Color exposing (Color, toCssString)
 import Dict
 import Endpoints exposing (Endpoint(..), endpointToUrl)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (attribute, for, style)
+import Html.Attributes exposing (for, style)
 import Http as Http
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (hardcoded, required)
 import Json.Encode as E
 import Main exposing (AuthResponse, MsgBase(..), UserRole(..), baseApplication, mapCmd, roleToStr, rolesDecoder, updateBase)
-import Svg exposing (Svg, image, svg)
-import Svg.Attributes exposing (height, width)
 import TypedSvg.Types exposing (px)
 import Utils exposing (fillParent, filledBackground, flexCenter, mapStyles, rgba255, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -254,7 +251,7 @@ displayFromCredStatus status =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 

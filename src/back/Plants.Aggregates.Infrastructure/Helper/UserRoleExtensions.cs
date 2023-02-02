@@ -1,4 +1,4 @@
-﻿namespace Plants.Aggregates.Infrastructure.Helper;
+﻿namespace Plants.Aggregates.Infrastructure;
 
 internal static class UserRoleExtensions
 {

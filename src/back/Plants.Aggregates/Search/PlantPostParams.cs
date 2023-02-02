@@ -1,4 +1,4 @@
-﻿namespace Plants.Aggregates.Search;
+﻿namespace Plants.Aggregates;
 
 public record PlantPostParams(
     string PlantName,

@@ -1,14 +1,12 @@
-﻿using Plants.Aggregates.Services;
-
-namespace Plants.Aggregates.Users;
+﻿namespace Plants.Aggregates;
 
 internal class ChangeRoleCommandHandler : ICommandHandler<ChangeRoleCommand>
 {
     private readonly IUserUpdater _updater;
-    private readonly IRepository<User> _userRepo;
+    private readonly IQueryService<User> _userRepo;
     private User _user;
 
-    public ChangeRoleCommandHandler(IUserUpdater updater, IRepository<User> userRepo)
+    public ChangeRoleCommandHandler(IUserUpdater updater, IQueryService<User> userRepo)
     {
         _updater = updater;
         _userRepo = userRepo;

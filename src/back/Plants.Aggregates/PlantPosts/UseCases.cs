@@ -1,4 +1,4 @@
-﻿namespace Plants.Aggregates.PlantPosts;
+﻿namespace Plants.Aggregates;
 
 public record RemovePostCommand(CommandMetadata Metadata) : Command(Metadata);
 public record PostRemovedEvent(EventMetadata Metadata) : Event(Metadata);

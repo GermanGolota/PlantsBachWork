@@ -2,10 +2,8 @@
 using Grpc.Core.Interceptors;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Plants.Domain.Infrastructure.Config;
-using Plants.Services.Infrastructure.Encryption;
 
-namespace Plants.Aggregates.Infrastructure.Domain;
+namespace Plants.Aggregates.Infrastructure;
 
 internal class EventStoreClientSettingsFactory
 {

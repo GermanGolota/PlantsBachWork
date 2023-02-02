@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Plants.Infrastructure.Domain.Helpers;
+namespace Plants.Domain.Infrastructure;
 
 internal class CqrsHelper
 {

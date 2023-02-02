@@ -1,6 +1,4 @@
-﻿using Plants.Shared;
-
-namespace Plants.Services;
+﻿namespace Plants.Services;
 
 public interface IJWTokenManager
 {

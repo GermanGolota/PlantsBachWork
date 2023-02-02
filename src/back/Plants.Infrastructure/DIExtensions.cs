@@ -5,7 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Plants.Application.Contracts;
 using Plants.Infrastructure.Helpers;
 using Plants.Infrastructure.Services;
-using Plants.Services.Infrastructure.Config;
+using Plants.Services.Infrastructure;
 using System.Text;
 
 namespace Plants.Infrastructure;
