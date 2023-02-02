@@ -1,7 +1,7 @@
 ﻿using Plants.Domain.Infrastructure.Helpers;
 using Plants.Infrastructure.Domain.Helpers;
 
-namespace Plants.Domain.Infrastructure;
+namespace Plants.Domain.Infrastructure.Services;
 
 internal class Repository<TAggregate> : IRepository<TAggregate> where TAggregate : AggregateBase
 {

@@ -1,6 +1,6 @@
 ﻿using Plants.Infrastructure.Domain.Helpers;
 
-namespace Plants.Domain.Infrastructure;
+namespace Plants.Domain.Infrastructure.Helpers;
 
 internal static class InfrastructureHelpers
 {

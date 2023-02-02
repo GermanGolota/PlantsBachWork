@@ -1,4 +1,4 @@
-﻿namespace Plants.Domain.Infrastructure;
+﻿namespace Plants.Domain.Infrastructure.Subscription;
 
 public interface IEventSubscription
 {

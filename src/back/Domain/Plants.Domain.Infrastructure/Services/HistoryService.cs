@@ -2,7 +2,7 @@
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Infrastructure.Domain.Helpers;
 
-namespace Plants.Domain.History;
+namespace Plants.Domain.Infrastructure.Services;
 
 internal class HistoryService : IHistoryService
 {
@@ -41,7 +41,7 @@ internal class HistoryService : IHistoryService
         switch (order)
         {
             case OrderType.Historical:
-                snapshots= snapshots.OrderBy(_ => _.Time).ToList();
+                snapshots = snapshots.OrderBy(_ => _.Time).ToList();
                 break;
             case OrderType.ReverseHistorical:
                 snapshots = snapshots.OrderByDescending(_ => _.Time).ToList();

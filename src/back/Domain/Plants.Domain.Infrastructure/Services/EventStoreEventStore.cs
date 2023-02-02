@@ -2,12 +2,11 @@
 using Microsoft.Extensions.Logging;
 using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Infrastructure.Helpers;
-using Plants.Domain.Infrastructure.Services;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Shared.Model;
 using System.Text;
 
-namespace Plants.Domain.Infrastructure;
+namespace Plants.Domain.Infrastructure.Services;
 
 internal class EventStoreEventStore : IEventStore
 {

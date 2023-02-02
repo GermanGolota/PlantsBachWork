@@ -7,6 +7,7 @@ using Plants.Aggregates.Infrastructure.Abstractions;
 using Plants.Aggregates.Infrastructure.HealthCheck;
 using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Domain.Identity;
+using Plants.Domain.Infrastructure.Subscription;
 using Plants.Initializer.Seeding;
 using Plants.Services.Infrastructure;
 using Serilog;

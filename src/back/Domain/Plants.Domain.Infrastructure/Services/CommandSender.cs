@@ -8,7 +8,7 @@ using Plants.Shared.Model;
 using System.Diagnostics;
 using System.Reflection;
 
-namespace Plants.Domain.Infrastructure;
+namespace Plants.Domain.Infrastructure.Services;
 
 internal class CommandSender : ICommandSender
 {

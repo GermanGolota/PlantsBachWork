@@ -3,9 +3,9 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Serializers;
 
-namespace Plants.Domain.Infrastructure;
+namespace Plants.Domain.Infrastructure.Helpers;
 
-public static class BsonConfigurator
+internal static class BsonConfigurator
 {
     public static void Configure()
     {
