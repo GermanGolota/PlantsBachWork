@@ -6,9 +6,9 @@ namespace Plants.Aggregates.Users;
 internal class ChangePasswordCommandHandler : ICommandHandler<ChangePasswordCommand>
 {
     private readonly IUserUpdater _userUpdater;
-    private readonly IRepository<User> _repo;
+    private readonly IQueryService<User> _repo;
 
-    public ChangePasswordCommandHandler(IUserUpdater userUpdater, IRepository<User> projection)
+    public ChangePasswordCommandHandler(IUserUpdater userUpdater, IQueryService<User> projection)
     {
         _userUpdater = userUpdater;
         _repo = projection;

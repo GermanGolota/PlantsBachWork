@@ -20,9 +20,9 @@ internal class RepositoriesCaller
     {
         if (_aggregate.Aggregates.TryGetFor(aggregate.Name, out var aggregateType))
         {
-            var repositoryType = typeof(IRepository<>).MakeGenericType(aggregateType);
+            var repositoryType = typeof(IQueryService<>).MakeGenericType(aggregateType);
             var repository = _service.GetRequiredService(repositoryType);
-            var method = repository.GetType().GetMethod(nameof(IRepository<AggregateBase>.GetByIdAsync))!;
+            var method = repository.GetType().GetMethod(nameof(IQueryService<AggregateBase>.GetByIdAsync))!;
             var aggValue = await (dynamic)method.Invoke(repository, new object?[] { aggregate.Id, asOf, token })!;
             return (AggregateBase)aggValue;
         }

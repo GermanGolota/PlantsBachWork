@@ -38,7 +38,7 @@ public static class DiExtensions
         services.AddTransient<IHistoryService, HistoryService>();
         services.AddSubscriptions();
         services.AddTransient<IEventStore, EventStoreEventStore>();
-        services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+        services.AddTransient(typeof(IQueryService<>), typeof(QueryService<>));
         return services;
     }
 

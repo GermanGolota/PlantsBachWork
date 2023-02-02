@@ -2,10 +2,10 @@
 
 internal class EditStockItemCommandHandler : ICommandHandler<EditStockItemCommand>
 {
-    private readonly IRepository<PlantStock> _stockRepository;
+    private readonly IQueryService<PlantStock> _stockRepository;
     private readonly FileUploader _uploader;
 
-    public EditStockItemCommandHandler(IRepository<PlantStock> stockRepository, FileUploader uploader)
+    public EditStockItemCommandHandler(IQueryService<PlantStock> stockRepository, FileUploader uploader)
     {
         _stockRepository = stockRepository;
         _uploader = uploader;

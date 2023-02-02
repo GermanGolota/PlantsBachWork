@@ -3,13 +3,13 @@ using Plants.Infrastructure.Domain.Helpers;
 
 namespace Plants.Domain.Infrastructure.Services;
 
-internal class Repository<TAggregate> : IRepository<TAggregate> where TAggregate : AggregateBase
+internal class QueryService<TAggregate> : IQueryService<TAggregate> where TAggregate : AggregateBase
 {
     private readonly IEventStore _store;
     private readonly AggregateEventApplyer _applyer;
     private readonly AggregateHelper _aggregateHelper;
 
-    public Repository(IEventStore store, AggregateEventApplyer applyer, AggregateHelper aggregateHelper)
+    public QueryService(IEventStore store, AggregateEventApplyer applyer, AggregateHelper aggregateHelper)
     {
         _store = store;
         _applyer = applyer;

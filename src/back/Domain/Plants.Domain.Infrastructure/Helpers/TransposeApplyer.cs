@@ -2,9 +2,9 @@
 
 internal class TransposeApplyer<TIn> where TIn : AggregateBase
 {
-    private readonly IRepository<TIn> _repo;
+    private readonly IQueryService<TIn> _repo;
 
-    public TransposeApplyer(IRepository<TIn> repo)
+    public TransposeApplyer(IQueryService<TIn> repo)
     {
         _repo = repo;
     }
@@ -19,9 +19,9 @@ internal class TransposeApplyer<TIn> where TIn : AggregateBase
 
 internal class TransposeApplyer<TIn, TEvent> where TIn : AggregateBase where TEvent : Event
 {
-    private readonly IRepository<TIn> _repo;
+    private readonly IQueryService<TIn> _repo;
 
-    public TransposeApplyer(IRepository<TIn> repo)
+    public TransposeApplyer(IQueryService<TIn> repo)
     {
         _repo = repo;
     }
