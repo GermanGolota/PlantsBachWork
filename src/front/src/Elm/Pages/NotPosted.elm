@@ -71,8 +71,8 @@ updateLocal msg m =
                 GotPlants (Ok res) ->
                     ( authed <| { model | items = Loaded res }, Cmd.none )
 
-                GotPlants (Err res) ->
-                    ( authed <| { model | items = Error }, Cmd.none )
+                GotPlants (Err err) ->
+                    ( authed <| { model | items = Error err }, Cmd.none )
 
                 OnlyMineChecked val ->
                     ( authed <| { model | onlyMine = val }, Cmd.none )

@@ -102,13 +102,13 @@ updateLocal msg m =
                     ( updateData model auth <| Loaded res, Cmd.none )
 
                 ( GotSearch (Err err), _ ) ->
-                    ( updateData model auth Error, Cmd.none )
+                    ( updateData model auth <| Error err, Cmd.none )
 
                 ( GotAvailable (Ok res), _ ) ->
                     ( authed { model | availableValues = Loaded res }, Cmd.none )
 
                 ( GotAvailable (Err err), _ ) ->
-                    ( authed { model | availableValues = Error }, Cmd.none )
+                    ( authed { model | availableValues = Error err }, Cmd.none )
 
                 ( RegionsMS sub, Loaded val ) ->
                     let
@@ -225,7 +225,7 @@ updateLocal msg m =
                             let
                                 updateResult resultItem =
                                     if resultItem.id == id then
-                                        { resultItem | wasAbleToDelete = Just Error }
+                                        { resultItem | wasAbleToDelete = Just <| Error err }
 
                                     else
                                         resultItem

@@ -68,7 +68,7 @@ updateLocal msg m =
                     updateModel <| NoInstruction
 
                 GotInstruction (Err err) ->
-                    updateModel <| Instruction <| Error
+                    updateModel <| Instruction <| Error err
 
                 NoOp ->
                     noOp

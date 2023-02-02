@@ -77,8 +77,8 @@ updateLocal msg m =
                 GotChangePass (Ok res) ->
                     updateModel { model | result = Just <| Loaded res }
 
-                GotChangePass (Err res) ->
-                    updateModel { model | result = Just Error }
+                GotChangePass (Err err) ->
+                    updateModel { model | result = Just <| Error err }
 
                 GotId id ->
                     let
@@ -88,7 +88,7 @@ updateLocal msg m =
                                     Loaded res
 
                                 Err err ->
-                                    Error
+                                    Error err
                     in
                     updateModel { model | id = getId }
 

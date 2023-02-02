@@ -113,7 +113,7 @@ updateLocal msg m =
                                 _ ->
                                     ""
                     in
-                    ( log msg2 authed <| { model | users = Error }, Cmd.none )
+                    ( log msg2 authed <| { model | users = Error err }, Cmd.none )
 
                 SelectedRole roleMsg ->
                     let
@@ -223,7 +223,7 @@ updateLocal msg m =
                                     if user.login == login then
                                         case id of
                                             Err err ->
-                                                { user | id = Error }
+                                                { user | id = Error err }
 
                                             Ok res ->
                                                 { user | id = Loaded res }

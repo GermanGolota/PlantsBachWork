@@ -119,8 +119,8 @@ updateLocal msg m =
                 GotSubmit (Ok res) ->
                     updateModel { model | submitResult = Just (Loaded res) }
 
-                GotSubmit (Err _) ->
-                    updateModel { model | submitResult = Just Error }
+                GotSubmit (Err err) ->
+                    updateModel { model | submitResult = Just <| Error err }
 
                 NoOp ->
                     noOp

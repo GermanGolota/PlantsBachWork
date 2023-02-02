@@ -91,13 +91,13 @@ updateLocal msg m =
                     ( authed newModel, triggerSearch newModel )
 
                 GotAvailable (Err err) ->
-                    ( authed { model | available = Error }, Cmd.none )
+                    ( authed { model | available = Error err }, Cmd.none )
 
                 GotSearch (Ok res) ->
                     ( authed { model | instructions = Loaded res }, Cmd.none )
 
                 GotSearch (Err err) ->
-                    ( authed { model | instructions = Error }, Cmd.none )
+                    ( authed { model | instructions = Error err }, Cmd.none )
 
                 GroupChanged groupId ->
                     let

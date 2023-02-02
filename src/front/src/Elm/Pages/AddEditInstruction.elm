@@ -144,7 +144,7 @@ updateLocal msg m =
                 GotInstruction (Err err) ->
                     case model of
                         Edit id _ ->
-                            ( authed <| Edit id <| Error, Cmd.none )
+                            ( authed <| Edit id <| Error err, Cmd.none )
 
                         _ ->
                             noOp
@@ -165,7 +165,7 @@ updateLocal msg m =
                     updateModel { getMainView | available = Loaded res, selectedGroupId = res.groups |> Multiselect.getValues |> List.head |> Maybe.withDefault ( "", "" ) |> Tuple.first }
 
                 GotAvailable (Err err) ->
-                    updateModel { getMainView | available = Error }
+                    updateModel { getMainView | available = Error err }
 
                 Submit ->
                     let
@@ -186,7 +186,7 @@ updateLocal msg m =
                     updateModel { getMainView | result = Just (Loaded res) }
 
                 GotSubmit (Err err) ->
-                    updateModel { getMainView | result = Just Error }
+                    updateModel { getMainView | result = Just <| Error err }
 
                 NoOp ->
                     noOp
@@ -380,7 +380,7 @@ viewMain historyBtn isEdit page av =
          , div [ flex, Flex.row, style "flex" "4" ]
             [ viewCol
                 [ div largeCentered [ text "Instruction Content" ]
-                , div ([ style "border" "1px solid gray" ] ++ fillParent) [ Html.p [] (textHtml page.selectedText) ]
+                , div (fillParent ++ [ style "border" "1px solid gray" ]) [ Html.p [] (textHtml page.selectedText) ]
                 ]
             ]
          ]

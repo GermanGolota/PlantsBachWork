@@ -211,7 +211,7 @@ update msg m =
                                     noOp
 
                         GotAggregate (Err err) ->
-                            ( authed <| Valid <| { viewModel | history = Error }, Cmd.none )
+                            ( authed <| Valid <| { viewModel | history = Error err }, Cmd.none )
 
                         GotAggregate (Ok history) ->
                             ( authed <| Valid <| { viewModel | history = Loaded history }, Cmd.none )

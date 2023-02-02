@@ -99,7 +99,7 @@ updateLocal msg model =
             ( Authorized token (Totals <| Loaded <| TotalsView res Nothing), Cmd.none )
 
         ( GotTotals (Err err), Authorized token (Totals _) ) ->
-            ( Authorized token (Totals <| Error), Cmd.none )
+            ( Authorized token (Totals <| Error err), Cmd.none )
 
         ( DateLeftSelected date, Authorized token (Financials NoDateSelected) ) ->
             ( Authorized token <| Financials <| OnlyLeftSelected date, Cmd.none )
@@ -123,7 +123,7 @@ updateLocal msg model =
             ( Authorized token <| Financials <| BothSelected left right <| ValidDates <| Loaded <| FinancialView res Nothing, Cmd.none )
 
         ( GotFinancial (Err err), Authorized token (Financials (BothSelected left right (ValidDates _))) ) ->
-            ( Authorized token <| Financials <| BothSelected left right <| ValidDates <| Error, Cmd.none )
+            ( Authorized token <| Financials <| BothSelected left right <| ValidDates <| Error err, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )

@@ -130,7 +130,7 @@ updateLocal msg m =
                     ( authed <| Edit <| { editView | available = Loaded res }, getPlantCommand res auth.token editView.plantId )
 
                 ( GotAvailable (Err err), Edit editView ) ->
-                    ( authed <| Edit <| { editView | available = Error }, Cmd.none )
+                    ( authed <| Edit <| { editView | available = Error err }, Cmd.none )
 
                 ( GotAvailable (Ok res), Add addView ) ->
                     let
@@ -147,7 +147,7 @@ updateLocal msg m =
                     ( authed <| Add <| { addView | available = Loaded res, plant = updatePlant addView.plant }, Cmd.none )
 
                 ( GotAvailable (Err err), Add addView ) ->
-                    ( authed <| Add <| { addView | available = Error }, Cmd.none )
+                    ( authed <| Add <| { addView | available = Error err }, Cmd.none )
 
                 ( GotPlant (Ok res), Edit editView ) ->
                     case res of
@@ -364,13 +364,13 @@ updateLocal msg m =
                     ( authed <| Add <| { addView | result = Just (Loaded res) }, Cmd.none )
 
                 ( GotSubmitAdd (Err err), Add addView ) ->
-                    ( authed <| Add <| { addView | result = Just Error }, Cmd.none )
+                    ( authed <| Add <| { addView | result = Just <| Error err }, Cmd.none )
 
                 ( GotSubmitEdit (Ok res), Edit editView ) ->
                     ( authed <| Edit <| { editView | result = Just (Loaded res) }, Cmd.none )
 
                 ( GotSubmitEdit (Err err), Edit editView ) ->
-                    ( authed <| Edit <| { editView | result = Just Error }, Cmd.none )
+                    ( authed <| Edit <| { editView | result = Just <| Error err }, Cmd.none )
 
                 ( _, _ ) ->
                     noOp

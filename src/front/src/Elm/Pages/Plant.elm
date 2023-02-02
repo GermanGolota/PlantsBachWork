@@ -116,13 +116,13 @@ localUpdate msg m =
                         Order orderView ->
                             ( authedPlant <| { p | plantType = Order { orderView | plant = Loaded res } }, Cmd.none )
 
-                ( GotPlant (Err res), Plant p ) ->
+                ( GotPlant (Err err), Plant p ) ->
                     case p.plantType of
                         JustPlant pWeb ->
-                            ( authedPlant <| { p | plantType = JustPlant <| Error }, Cmd.none )
+                            ( authedPlant <| { p | plantType = JustPlant <| Error err }, Cmd.none )
 
                         Order orderView ->
-                            ( authedPlant <| { p | plantType = Order { orderView | plant = Error } }, Cmd.none )
+                            ( authedPlant <| { p | plantType = Order { orderView | plant = Error err } }, Cmd.none )
 
                 ( GotAddresses (Ok res), Plant p ) ->
                     let
@@ -141,10 +141,10 @@ localUpdate msg m =
                         _ ->
                             noOp
 
-                ( GotAddresses (Err res), Plant p ) ->
+                ( GotAddresses (Err err), Plant p ) ->
                     case p.plantType of
                         Order orderView ->
-                            ( authedPlant <| { p | plantType = Order <| { orderView | plant = Error } }, Cmd.none )
+                            ( authedPlant <| { p | plantType = Order <| { orderView | plant = Error err } }, Cmd.none )
 
                         _ ->
                             noOp
@@ -240,10 +240,10 @@ localUpdate msg m =
                         _ ->
                             noOp
 
-                ( GotSubmit (Err res), Plant p ) ->
+                ( GotSubmit (Err err), Plant p ) ->
                     case p.plantType of
                         Order orderView ->
-                            ( authedOrder p <| Order { orderView | result = Just Error }, Cmd.none )
+                            ( authedOrder p <| Order { orderView | result = Just <| Error err }, Cmd.none )
 
                         _ ->
                             noOp

@@ -129,8 +129,8 @@ updateLocal msg m =
                 GotOrders (Ok res) ->
                     ( authed { model | data = Loaded res }, Cmd.none )
 
-                GotOrders (Err res) ->
-                    ( authed { model | data = Error }, Cmd.none )
+                GotOrders (Err err) ->
+                    ( authed { model | data = Error err }, Cmd.none )
 
                 HideFullfilledChecked val ->
                     ( authed { model | hideFulfilled = val }, Cmd.none )
@@ -192,7 +192,7 @@ updateLocal msg m =
                 GotConfirmSend orderId (Err err) ->
                     let
                         updatedView =
-                            Dict.union (Dict.fromList [ ( orderId, Error ) ]) model.confirmed
+                            Dict.union (Dict.fromList [ ( orderId, Error err ) ]) model.confirmed
                     in
                     ( authed { model | confirmed = updatedView }, Cmd.none )
 
@@ -213,7 +213,7 @@ updateLocal msg m =
                 GotConfirmReceived orderId (Err err) ->
                     let
                         updatedView =
-                            Dict.union (Dict.fromList [ ( orderId, Error ) ]) model.confirmed
+                            Dict.union (Dict.fromList [ ( orderId, Error err ) ]) model.confirmed
                     in
                     ( authed { model | confirmed = updatedView }, Cmd.none )
 
@@ -224,7 +224,7 @@ updateLocal msg m =
                     ( authed <| { model | rejected = Dict.insert orderId (Loaded res) model.rejected, data = Loading }, getData auth.token model.viewType )
 
                 GotReject orderId (Err err) ->
-                    ( authed <| { model | rejected = Dict.insert orderId Error model.rejected }, Cmd.none )
+                    ( authed <| { model | rejected = Dict.insert orderId (Error err) model.rejected }, Cmd.none )
 
                 NoOp ->
                     noOp
