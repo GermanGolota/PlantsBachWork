@@ -54,7 +54,7 @@ public class Startup
 
             opt.AddPolicy(ProdPolicyName, options =>
             {
-                var config = Configuration["AllowedHosts"];
+                var config = Configuration["AllowedHosts"]!;
                 options.WithOrigins(config)
                                     .AllowAnyMethod()
                                     .AllowAnyHeader();

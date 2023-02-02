@@ -9,7 +9,7 @@ internal class ServiceIdentityProvider : IServiceIdentityProvider
     private readonly IIdentityProvider _identity;
 
     public ServiceIdentityProvider(IOptions<ConnectionConfig> options, SymmetricEncrypter encrypter, IIdentityProvider identity)
-	{
+    {
         _options = options.Value;
         _encrypter = encrypter;
         _identity = identity;
@@ -17,12 +17,7 @@ internal class ServiceIdentityProvider : IServiceIdentityProvider
 
     public void SetServiceIdentity()
     {
-        var serviceIdentity = new UserIdentity
-        {
-            Hash = _encrypter.Encrypt(_options.DefaultCreds.Password),
-            UserName = _options.DefaultCreds.Username,
-            Roles = Enum.GetValues<UserRole>()
-        };
+        var serviceIdentity = new UserIdentity(Enum.GetValues<UserRole>(), _options.DefaultCreds.Username, _encrypter.Encrypt(_options.DefaultCreds.Password));
         _identity.UpdateIdentity(serviceIdentity);
     }
 }

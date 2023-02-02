@@ -19,18 +19,25 @@ public class UrlAuthMiddleware
     {
         try
         {
-            var queryString = HttpUtility.ParseQueryString(context.Request.QueryString.Value);
-            var token = queryString.Get("token");
-            if (String.IsNullOrEmpty(token) == false)
+            var query = context.Request.QueryString.Value;
+            if (query is not null)
             {
-                var validationParameters = Infrastructure.DIExtensions.GetValidationParams(Infrastructure.DIExtensions.GetAuthKey(_config));
-
-                var validator = new JwtSecurityTokenHandler();
-
-                if (validator.CanReadToken(token))
+                var queryString = HttpUtility.ParseQueryString(query);
+                var token = queryString.Get("token");
+                if (String.IsNullOrEmpty(token) == false)
                 {
-                    var principal = validator.ValidateToken(token, validationParameters, out var validatedToken);
-                    context.User.AddIdentity((ClaimsIdentity)principal.Identity);
+                    var validationParameters = Infrastructure.DIExtensions.GetValidationParams(Infrastructure.DIExtensions.GetAuthKey(_config));
+
+                    var validator = new JwtSecurityTokenHandler();
+
+                    if (validator.CanReadToken(token))
+                    {
+                        var principal = validator.ValidateToken(token, validationParameters, out var validatedToken);
+                        if (principal.Identities is ClaimsIdentity claims)
+                        {
+                            context.User.AddIdentity(claims);
+                        }
+                    }
                 }
             }
         }

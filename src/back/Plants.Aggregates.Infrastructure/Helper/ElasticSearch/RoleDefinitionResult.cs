@@ -2,6 +2,6 @@
 
 public class RoleDefinitionResult
 {
-    public CreationStatus Role { get; set; }
+    public CreationStatus Role { get; set; } = null!;
 
 }

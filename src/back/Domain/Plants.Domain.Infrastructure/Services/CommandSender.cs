@@ -165,7 +165,7 @@ internal class CommandSender : ICommandSender
             var newEvents = await dependency.MatchAsync(
                 aggregate =>
                 {
-                    return Task.FromResult((IEnumerable<Event>)handle.Invoke(aggregate, new object[] { command }));
+                    return Task.FromResult((IEnumerable<Event>)handle.Invoke(aggregate, new object[] { command })!);
                 },
                 async service =>
                 {

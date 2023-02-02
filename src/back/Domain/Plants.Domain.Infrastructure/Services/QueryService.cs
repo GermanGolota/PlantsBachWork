@@ -17,7 +17,7 @@ internal class QueryService<TAggregate> : IQueryService<TAggregate> where TAggre
     {
         if (_aggregateHelper.Aggregates.TryGetFor(typeof(TAggregate), out var aggregateName))
         {
-            var desc = new AggregateDescription(id, aggregateName);
+            var desc = new AggregateDescription(id, aggregateName!);
             var aggregate = await LoadAggregate(desc, asOf, token);
             return (TAggregate)aggregate;
         }

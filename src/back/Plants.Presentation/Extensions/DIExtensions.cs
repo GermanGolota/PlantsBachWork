@@ -87,7 +87,9 @@ public static class DIExtensions
         public string? Read(HttpRequest request)
         {
             var url = new Uri(request.GetDisplayUrl());
-            var version = url.Segments.Select(TryGetVersion).Where(x => x.HasValue).Select(x => x.Value).FirstOrDefault();
+            var version = url.Segments.Select(TryGetVersion)
+                .Where(x => x is not null)
+                .FirstOrDefault();
             return version == default ? null : version.ToString();
         }
 

@@ -9,8 +9,8 @@ public class EventStoreHostedService : IHostedService
         _scopeFactory = scopeFactory;
     }
 
-    private IServiceScope _scope;
-    private IEventSubscription _worker;
+    private IServiceScope? _scope = null;
+    private IEventSubscription? _worker = null;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -21,8 +21,8 @@ public class EventStoreHostedService : IHostedService
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _worker.Stop();
-        _scope.Dispose();
+        _worker?.Stop();
+        _scope?.Dispose();
 
         return Task.CompletedTask;
     }

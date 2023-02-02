@@ -10,10 +10,5 @@ internal class IdentityHelper : IIdentityHelper
     }
 
     public IUserIdentity Build(string password, string username, UserRole[] roles) =>
-        new UserIdentity
-        {
-            Hash = _encrypter.Encrypt(password),
-            Roles = roles,
-            UserName = username
-        };
+        new UserIdentity(roles, username, _encrypter.Encrypt(password));
 }

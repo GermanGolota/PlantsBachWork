@@ -138,7 +138,7 @@ internal class MongoRolesDbInitializer
             "rolesInfo": [{{allRoles.QuoteDelimitList()}}]
         }
         """);
-        var rolesResult = await db.RunCommandAsync<BsonDocument>(getRolesCommand, cancellationToken: token);
-        return rolesResult!.GetElement("roles").Value.AsBsonArray.Select(x => x.AsBsonDocument.GetElement("role").Value.ToString());
+        var rolesResult = await db.RunCommandAsync<BsonDocument>(getRolesCommand, cancellationToken: token)!;
+        return rolesResult.GetElement("roles").Value.AsBsonArray.Select(x => x.AsBsonDocument.GetElement("role").Value.ToString()!);
     }
 }
