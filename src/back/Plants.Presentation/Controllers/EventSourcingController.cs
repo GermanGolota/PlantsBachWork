@@ -1,5 +1,6 @@
 ﻿using Humanizer;
 using Microsoft.AspNetCore.Mvc;
+using Nest;
 using Plants.Domain.Infrastructure.Subscription;
 
 namespace Plants.Presentation.Controllers;
@@ -12,11 +13,13 @@ public class EventSourcingController : ControllerBase
 {
     private readonly IHistoryService _history;
     private readonly IProjectionsUpdater _updater;
+    private readonly IEventStore _eventStore;
 
-    public EventSourcingController(IHistoryService history, IProjectionsUpdater updater)
+    public EventSourcingController(IHistoryService history, IProjectionsUpdater updater, IEventStore eventStore)
     {
         _history = history;
         _updater = updater;
+        _eventStore = eventStore;
     }
 
     [HttpGet("history")]
@@ -54,6 +57,22 @@ public class EventSourcingController : ControllerBase
     {
         var agg = await _updater.UpdateProjectionAsync(new(id, name), asOf, token);
         return Ok(agg);
+    }
+
+    [HttpPost("refreshAll")]
+    public async Task<IActionResult> RefreshAll(CancellationToken token)
+    {
+        var streams = await _eventStore.GetStreamsAsync(token);
+        var aggregates = streams.SelectMany(_ => _.Ids.Select(id => new AggregateDescription(id, _.AggregateName)));
+        await Parallel.ForEachAsync(aggregates, new ParallelOptions()
+        {
+            CancellationToken = token,
+            MaxDegreeOfParallelism = 10
+        }, async (aggregate, token) =>
+        {
+            await _updater.UpdateProjectionAsync(aggregate, token: token);
+        });
+        return Ok();
     }
 
     public record HistoryViewModel(List<AggregateSnapshotViewModel> Snapshots);
