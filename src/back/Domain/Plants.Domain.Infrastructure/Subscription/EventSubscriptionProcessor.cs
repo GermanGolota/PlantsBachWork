@@ -12,15 +12,17 @@ internal class EventSubscriptionProcessor
     private readonly IEventStore _eventStore;
     private readonly IServiceProvider _provider;
     private readonly ISubscriptionProcessingMarker _marker;
+    private readonly IProjectionsUpdater _updater;
 
     public EventSubscriptionProcessor(RepositoriesCaller caller, CqrsHelper cqrs, IEventStore eventStore,
-        IServiceProvider provider, ISubscriptionProcessingMarker marker)
+        IServiceProvider provider, ISubscriptionProcessingMarker marker, IProjectionsUpdater updater)
     {
         _caller = caller;
         _cqrs = cqrs;
         _eventStore = eventStore;
         _provider = provider;
         _marker = marker;
+        _updater = updater;
     }
 
     public async Task ProcessCommandAsync(Command command, List<Event> aggEvents, CancellationToken token = default)
@@ -29,7 +31,7 @@ internal class EventSubscriptionProcessor
         {
             var tasks = new[]
             {
-                UpdateProjectionAsync(command.Metadata.Aggregate, token),
+                _updater.UpdateProjectionAsync(command.Metadata.Aggregate, token: token),
                 UpdateSubscribersAsync(command, aggEvents, token)
             };
             await Task.WhenAll(tasks);

@@ -11,10 +11,11 @@ internal class ProjectionsUpdater : IProjectionsUpdater
         _caller = caller;
     }
 
-    public async Task UpdateProjectionAsync(AggregateDescription desc, DateTime? asOf = null, CancellationToken token = default)
+    public async Task<AggregateBase> UpdateProjectionAsync(AggregateDescription desc, DateTime? asOf = null, CancellationToken token = default)
     {
         var aggregate = await _caller.LoadAsync(desc, asOf, token);
         await _caller.InsertOrUpdateProjectionAsync(aggregate, token);
         await _caller.IndexProjectionAsync(aggregate, token);
+        return aggregate;
     }
 }

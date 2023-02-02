@@ -1,5 +1,6 @@
 ﻿using Humanizer;
 using Microsoft.AspNetCore.Mvc;
+using Plants.Domain.Infrastructure.Subscription;
 
 namespace Plants.Presentation.Controllers;
 
@@ -10,10 +11,12 @@ namespace Plants.Presentation.Controllers;
 public class EventSourcingController : ControllerBase
 {
     private readonly IHistoryService _history;
+    private readonly IProjectionsUpdater _updater;
 
-    public EventSourcingController(IHistoryService history)
+    public EventSourcingController(IHistoryService history, IProjectionsUpdater updater)
     {
         _history = history;
+        _updater = updater;
     }
 
     [HttpGet("history")]
@@ -40,6 +43,18 @@ public class EventSourcingController : ControllerBase
                 IdConversionType.Long => Int64.Parse(id).ToGuid(),
                 _ => throw new NotImplementedException(),
             });
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> RefreshAggregate(
+        [FromQuery] string name,
+        [FromQuery] Guid id,
+        [FromQuery] DateTime? asOf,
+        CancellationToken token
+        )
+    {
+        var agg = await _updater.UpdateProjectionAsync(new(id, name), asOf, token);
+        return Ok(agg);
+    }
 
     public record HistoryViewModel(List<AggregateSnapshotViewModel> Snapshots);
     public record AggregateSnapshotViewModel(AggregateSnapshot Snapshot, string HumanTime);

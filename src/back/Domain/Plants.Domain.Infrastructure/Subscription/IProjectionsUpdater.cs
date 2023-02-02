@@ -2,5 +2,5 @@
 
 public interface IProjectionsUpdater
 {
-    Task UpdateProjectionAsync(AggregateDescription desc, DateTime? asOf = null, CancellationToken token = default);
+    Task<AggregateBase> UpdateProjectionAsync(AggregateDescription desc, DateTime? asOf = null, CancellationToken token = default);
 }
