@@ -25,7 +25,6 @@ public static class DiExtensions
         services.AddSingleton<AccessesHelper>();
         services.AddScoped<EventStoreAccessGranter>();
         services.AddTransient<RepositoriesCaller>();
-        services.AddTransient<EventSubscriptionProcessor>();
         services.AddTransient<AggregateEventApplyer>();
         services.AddTransient(typeof(TransposeApplyer<>));
         services.AddTransient(typeof(TransposeApplyer<,>));
@@ -37,15 +36,23 @@ public static class DiExtensions
         services.AddTransient<ICommandSender, CommandSender>();
         services.AddSingleton<EventStoreConverter>();
         services.AddTransient<IHistoryService, HistoryService>();
-        //works with the service scope
+        services.AddSubscriptions();
+        services.AddTransient<IEventStore, EventStoreEventStore>();
+        services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+        return services;
+    }
+
+    private static IServiceCollection AddSubscriptions(this IServiceCollection services)
+    {
         services.AddScoped<IEventSubscription, EventSubscription>();
+        services.AddTransient<EventSubscriptionProcessor>();
         services.AddTransient<AggregateEventSubscription>();
         services.AddSingleton<EventSubscriptionState>();
         services.AddSingleton<ISubscriptionProcessingNotificator>(_ => _.GetRequiredService<EventSubscriptionState>());
         services.AddSingleton<ISubscriptionProcessingMarker>(_ => _.GetRequiredService<EventSubscriptionState>());
         services.AddSingleton<IEventSubscriptionState>(_ => _.GetRequiredService<EventSubscriptionState>());
-        services.AddTransient<IEventStore, EventStoreEventStore>();
-        services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+        services.AddTransient<IProjectionsUpdater, ProjectionsUpdater>();
+
         return services;
     }
 

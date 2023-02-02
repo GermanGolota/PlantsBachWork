@@ -15,14 +15,14 @@ internal class RepositoriesCaller
         _service = service;
     }
 
-    public async Task<AggregateBase> LoadAsync(AggregateDescription aggregate, CancellationToken token = default)
+    public async Task<AggregateBase> LoadAsync(AggregateDescription aggregate, DateTime? asOf = null, CancellationToken token = default)
     {
         if (_aggregate.Aggregates.TryGetFor(aggregate.Name, out var aggregateType))
         {
             var repositoryType = typeof(IRepository<>).MakeGenericType(aggregateType);
             var repository = _service.GetRequiredService(repositoryType);
-            var method = repository.GetType().GetMethod(nameof(IRepository<AggregateBase>.GetByIdAsync));
-            var aggValue = await (dynamic)method.Invoke(repository, new object[] { aggregate.Id, token })!;
+            var method = repository.GetType().GetMethod(nameof(IRepository<AggregateBase>.GetByIdAsync))!;
+            var aggValue = await (dynamic)method.Invoke(repository, new object?[] { aggregate.Id, asOf, token })!;
             return (AggregateBase)aggValue;
         }
 

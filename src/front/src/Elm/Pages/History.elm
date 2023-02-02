@@ -5,12 +5,13 @@ import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Checkbox as Checkbox
+import Bootstrap.Form.Input as Input
 import Bootstrap.ListGroup as ListGroup
 import Bootstrap.Modal as Modal
 import Bootstrap.Text as Text
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (getAuthedQuery, historyUrl)
-import Html exposing (Html, div, text)
+import Html exposing (Html, div, i, text)
 import Html.Attributes exposing (class, href, style)
 import Html.Events exposing (onClick)
 import Http
@@ -19,7 +20,7 @@ import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import JsonViewer exposing (initJsonTree, initJsonTreeCollapsed, updateJsonTree, viewJsonTree)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (plantsLink, viewNav)
-import Utils exposing (buildQuery, fillParent, flex, humanizePascalCase, largeCentered, largeFont, mediumMargin)
+import Utils exposing (buildQuery, fillParent, flex, humanizePascalCase, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -47,6 +48,8 @@ type alias ViewValue =
     { aggregate : AggregateDescription
     , orderType : OrderType
     , useAdvanced : Bool
+    , asOfDate : String
+    , asOfTime : String
     , history : WebData History
     }
 
@@ -144,6 +147,8 @@ type LocalMsg
     | AnimateMetadataModal Modal.Visibility
     | ChangeOrderType Bool
     | ChangeToAdvanced Bool
+    | SelectedDate String
+    | SelectedTime String
 
 
 type alias Msg =
@@ -352,10 +357,16 @@ update msg m =
                                     else
                                         Historical
                             in
-                            ( authed <| Valid <| { viewModel | orderType = oType, history = Loading }, loadHistoryCmd auth.token oType viewModel.aggregate )
+                            ( authed <| Valid <| { viewModel | orderType = oType, history = Loading }, loadHistoryCmd auth.token oType viewModel.asOfDate viewModel.asOfTime viewModel.aggregate )
 
                         ChangeToAdvanced checked ->
                             ( authed <| Valid <| { viewModel | useAdvanced = checked }, Cmd.none )
+
+                        SelectedDate date ->
+                            ( authed <| Valid <| { viewModel | asOfDate = date, history = Loading }, loadHistoryCmd auth.token viewModel.orderType date viewModel.asOfTime viewModel.aggregate )
+
+                        SelectedTime time ->
+                            ( authed <| Valid <| { viewModel | asOfTime = time, history = Loading }, loadHistoryCmd auth.token viewModel.orderType viewModel.asOfDate time viewModel.aggregate )
 
         _ ->
             ( m, Cmd.none )
@@ -375,8 +386,8 @@ updateJsonAggregate aggregate json =
 --commands
 
 
-loadHistoryCmd : String -> OrderType -> AggregateDescription -> Cmd Msg
-loadHistoryCmd token order aggregate =
+loadHistoryCmd : String -> OrderType -> String -> String -> AggregateDescription -> Cmd Msg
+loadHistoryCmd token order date time aggregate =
     let
         expect =
             Http.expectJson GotAggregate historyDecoder
@@ -389,8 +400,35 @@ loadHistoryCmd token order aggregate =
                 ReverseHistorical ->
                     1
 
+        dateTime =
+            case date of
+                "" ->
+                    ""
+
+                _ ->
+                    case time of
+                        "" ->
+                            date
+
+                        _ ->
+                            date ++ "T" ++ time
+
+        timeTuple =
+            case dateTime of
+                "" ->
+                    []
+
+                _ ->
+                    [ ( "time", dateTime ) ]
+
         query =
-            buildQuery [ ( "name", aggregate.name ), ( "id", aggregate.id ), ( "order", String.fromInt orderValue ) ]
+            buildQuery
+                ([ ( "name", aggregate.name )
+                 , ( "id", aggregate.id )
+                 , ( "order", String.fromInt orderValue )
+                 ]
+                    ++ timeTuple
+                )
     in
     getAuthedQuery query token Endpoints.History expect Nothing |> mapCmd
 
@@ -503,6 +541,20 @@ viewToolbar agg =
     [ div [ Flex.col, mediumMargin ]
         [ Button.linkButton [ Button.outlineInfo, Button.onClick GoBack, Button.attrs largeCentered ] [ text "Go back" ]
         ]
+    , div [ Flex.col, smallMargin ]
+        [ Input.date
+            [ Input.onInput (\val -> Main <| SelectedDate val)
+            , Input.value agg.asOfDate
+            ]
+        ]
+    , div [ Flex.col, smallMargin, style "margin-left" "0.25rem" ] [ i [ class "fa-solid fa-xmark", mediumFont, onClick (Main <| SelectedDate "") ] [] ]
+    , div [ Flex.col ]
+        [ Input.time
+            [ Input.onInput (\val -> Main <| SelectedTime val)
+            , Input.value agg.asOfTime
+            ]
+        ]
+    , div [ Flex.col, smallMargin, style "margin-left" "0.25rem" ] [ i [ class "fa-solid fa-xmark", mediumFont, onClick (Main <| SelectedTime "") ] [] ]
     , div (largeCentered ++ [ Flex.col ])
         [ Checkbox.checkbox [ Checkbox.onCheck (\val -> Main <| ChangeOrderType val), Checkbox.checked isReverse ] "Reverse order"
         ]
@@ -697,7 +749,7 @@ init resp flags =
         initialState =
             case getAggregate of
                 Ok agg ->
-                    Valid { aggregate = agg, history = Loading, orderType = Historical, useAdvanced = False }
+                    Valid { aggregate = agg, history = Loading, orderType = Historical, useAdvanced = False, asOfDate = "", asOfTime = "" }
 
                 Err err ->
                     Invalid
@@ -705,7 +757,7 @@ init resp flags =
         initialCmd res =
             case initialState of
                 Valid agg ->
-                    loadHistoryCmd res.token agg.orderType agg.aggregate
+                    loadHistoryCmd res.token agg.orderType agg.asOfDate agg.asOfTime agg.aggregate
 
                 Invalid ->
                     Cmd.none

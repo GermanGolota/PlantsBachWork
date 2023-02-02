@@ -12,29 +12,39 @@ internal class EventSubscriptionProcessor
     private readonly IEventStore _eventStore;
     private readonly IServiceProvider _provider;
     private readonly ISubscriptionProcessingMarker _marker;
+    private readonly IProjectionsUpdater _updater;
 
     public EventSubscriptionProcessor(RepositoriesCaller caller, CqrsHelper cqrs, IEventStore eventStore,
-        IServiceProvider provider, ISubscriptionProcessingMarker marker)
+        IServiceProvider provider, ISubscriptionProcessingMarker marker, IProjectionsUpdater updater)
     {
         _caller = caller;
         _cqrs = cqrs;
         _eventStore = eventStore;
         _provider = provider;
         _marker = marker;
+        _updater = updater;
     }
 
     public async Task ProcessCommandAsync(Command command, List<Event> aggEvents, CancellationToken token = default)
     {
-        await UpdateProjectionAsync(command.Metadata.Aggregate, token);
-        await UpdateSubscribersAsync(command, aggEvents, token);
-        _marker.MarkSubscriptionComplete(command.Metadata.InitialAggregate ?? command.Metadata.Aggregate);
+        try
+        {
+            var tasks = new[]
+            {
+                _updater.UpdateProjectionAsync(command.Metadata.Aggregate, token: token),
+                UpdateSubscribersAsync(command, aggEvents, token)
+            };
+            await Task.WhenAll(tasks);
+        }
+        finally
+        {
+            _marker.MarkSubscriptionComplete(command.Metadata.InitialAggregate ?? command.Metadata.Aggregate);
+        }
     }
 
     private async Task UpdateProjectionAsync(AggregateDescription desc, CancellationToken token = default)
     {
-        var aggregate = await _caller.LoadAsync(desc, token);
-        //would make sense for times in which we would load projection and apply events to it
-        //var newAggregate = _eventApplyer.ApplyEventsTo(aggregate, newEvents);
+        var aggregate = await _caller.LoadAsync(desc, token: token);
         await _caller.InsertOrUpdateProjectionAsync(aggregate, token);
         await _caller.IndexProjectionAsync(aggregate, token);
     }
@@ -62,7 +72,7 @@ internal class EventSubscriptionProcessor
                     if (firstEvent != default)
                     {
                         var firstEventAggregate = firstEvent.Metadata.Aggregate;
-                        var aggregate = await _caller.LoadAsync(firstEventAggregate, token);
+                        var aggregate = await _caller.LoadAsync(firstEventAggregate, token: token);
                         var command = parentCommand.ChangeTargetAggregate(firstEventAggregate);
                         if (aggregate.Metadata.CommandsProcessedIds.Contains(command.Metadata.Id) is false)
                         {

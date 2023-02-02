@@ -1,7 +1,6 @@
 ﻿using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Infrastructure.Domain.Helpers;
-using System.Linq;
 
 namespace Plants.Domain.History;
 
@@ -18,9 +17,9 @@ internal class HistoryService : IHistoryService
         _helper = helper;
     }
 
-    public async Task<HistoryModel> GetAsync(AggregateDescription desc, OrderType order, CancellationToken token)
+    public async Task<HistoryModel> GetAsync(AggregateDescription desc, OrderType order, DateTime? asOf = null, CancellationToken token = default)
     {
-        var results = await _store.ReadEventsAsync(desc, token);
+        var results = await _store.ReadEventsAsync(desc, asOf, token);
         var aggregate = _applyer.ConstructAggregate(desc);
 
         List<AggregateSnapshot> snapshots = new();

@@ -18,7 +18,7 @@ internal class AddToStockCommandHandler : ICommandHandler<AddToStockCommand>
 
     public async Task<IEnumerable<Event>> HandleAsync(AddToStockCommand command, CancellationToken token = default)
     {
-        _stock ??= await _repo.GetByIdAsync(command.Metadata.Aggregate.Id, token);
+        _stock ??= await _repo.GetByIdAsync(command.Metadata.Aggregate.Id, token: token);
         var urls = await _uploader.UploadPlantAsync(_stock.Id, command.Pictures, token);
         return new[]
         {
@@ -28,7 +28,7 @@ internal class AddToStockCommandHandler : ICommandHandler<AddToStockCommand>
 
     public async Task<CommandForbidden?> ShouldForbidAsync(AddToStockCommand command, IUserIdentity userIdentity, CancellationToken token = default)
     {
-        _stock ??= await _repo.GetByIdAsync(command.Metadata.Aggregate.Id, token);
+        _stock ??= await _repo.GetByIdAsync(command.Metadata.Aggregate.Id, token: token);
         return userIdentity.HasRole(Producer).And(_stock.RequireNew);
     }
 

@@ -20,7 +20,7 @@ public class ChangeOwnPasswordCommandHandler : ICommandHandler<ChangeOwnPassword
     public async Task<CommandForbidden?> ShouldForbidAsync(ChangeOwnPasswordCommand command, IUserIdentity userIdentity, CancellationToken token = default)
     {
         var passwordForbid = (command.OldPassword != command.NewPassword).ToForbidden("Can't change password to the same one");
-        var user = await _query.GetByIdAsync(command.Metadata.Aggregate.Id, token);
+        var user = await _query.GetByIdAsync(command.Metadata.Aggregate.Id, token: token);
         var loginForbid = (user.Login.CompareTo(userIdentity.UserName) == 0).ToForbidden("You cannot change someone elses password");
         return passwordForbid.And(loginForbid).And(UserPasswordValidator.Validate(command.NewPassword));
     }
@@ -31,7 +31,7 @@ public class ChangeOwnPasswordCommandHandler : ICommandHandler<ChangeOwnPassword
         await _userUpdater.UpdatePasswordAsync(identity.UserName, command.OldPassword, command.NewPassword, token);
         var newIdentity = _identityHelper.Build(command.NewPassword, identity.UserName, identity.Roles);
         _identity.UpdateIdentity(newIdentity);
-        var user = await _query.GetByIdAsync(command.Metadata.Aggregate.Id, token);
+        var user = await _query.GetByIdAsync(command.Metadata.Aggregate.Id, token: token);
         return new[]
         {
             new PasswordChangedEvent(EventFactory.Shared.Create<PasswordChangedEvent>(command))

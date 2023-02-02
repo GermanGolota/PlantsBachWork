@@ -16,7 +16,7 @@ internal class EventStoreEventStore : IEventStore
     private readonly EventStoreConverter _converter;
     private readonly ILogger<EventStoreEventStore> _logger;
 
-    public EventStoreEventStore(IEventStoreClientFactory client, AggregateHelper helper, 
+    public EventStoreEventStore(IEventStoreClientFactory client, AggregateHelper helper,
         EventStoreAccessGranter granter, EventStoreConverter converter, ILogger<EventStoreEventStore> logger)
     {
         _clientFactory = client;
@@ -82,7 +82,7 @@ internal class EventStoreEventStore : IEventStore
         }
     }
 
-    public async Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(AggregateDescription aggregate, CancellationToken token = default)
+    public async Task<IEnumerable<CommandHandlingResult>> ReadEventsAsync(AggregateDescription aggregate, DateTime? asOf = null, CancellationToken token = default)
     {
         try
         {
@@ -102,7 +102,10 @@ internal class EventStoreEventStore : IEventStore
                 return Array.Empty<CommandHandlingResult>();
             }
 
-            var readEvents = await readResult.ToListAsync(cancellationToken: token);
+            var readEvents = asOf is null
+                ? await readResult.ToListAsync(cancellationToken: token)
+                : (await readResult.Where(_ => _.Event.Created < asOf).ToListAsync(cancellationToken: token)).Where(_ => _.Event.Created < asOf);
+
             readResult.ReadState.Dispose();
             foreach (var resolvedEvent in readEvents)
             {
@@ -134,4 +137,38 @@ internal class EventStoreEventStore : IEventStore
             throw new EventStoreCommunicationException($"Error while reading events for aggregate {aggregate.Id}", ex);
         }
     }
+
+    public async Task<IEnumerable<(string AggregateName, List<Guid> Ids)>> GetStreamsAsync(CancellationToken token)
+    {
+        var readResult = _clientFactory.Create().ReadStreamAsync(
+                Direction.Forwards,
+                "$streams",
+                StreamPosition.Start,
+                cancellationToken: token
+            );
+
+        if (await readResult.ReadState == ReadState.StreamNotFound)
+        {
+            readResult.ReadState.Dispose();
+            return Array.Empty<(string AggregateName, List<Guid> Ids)>();
+        }
+
+        var streams = await readResult.ToListAsync(cancellationToken: token);
+        return streams.Select(_ => Encoding.UTF8.GetString(_.Event.Data.Span))
+            .Where(_ => _.Contains('_') && _.Contains('$'))
+            .Select(streamName =>
+            {
+                var indexSplit = streamName.IndexOf('_');
+                var indexName = streamName.LastIndexOf('$');
+                var idStr = streamName.Substring(indexSplit + 1);
+                Guid.TryParse(idStr, out Guid id);
+                var name = streamName.Substring(indexName + 1, indexSplit - indexName - 1);
+                return (name, id);
+            })
+            .Where(_ => _.id != default)
+            .GroupBy(_ => _.name)
+            .Select(_ => (AggregateName: _.Key, Ids: _.Select(_ => _.id).ToList()))
+            .ToList();
+    }
+
 }
