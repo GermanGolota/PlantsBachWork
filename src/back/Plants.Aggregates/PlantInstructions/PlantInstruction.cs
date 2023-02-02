@@ -1,4 +1,6 @@
-﻿namespace Plants.Aggregates.PlantInstructions;
+﻿using Plants.Domain.Aggregate;
+
+namespace Plants.Aggregates.PlantInstructions;
 
 [Allow(Consumer, Read)]
 [Allow(Producer, Read)]

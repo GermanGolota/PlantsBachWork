@@ -1,4 +1,6 @@
-﻿namespace Plants.Domain.Extensions;
+﻿using Plants.Domain.Abstractions;
+
+namespace Plants.Domain.Extensions;
 
 public static class CommandForbiddenExtensions
 {

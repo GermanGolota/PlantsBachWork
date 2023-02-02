@@ -1,18 +1,18 @@
 ﻿using Plants.Shared.Model;
 
-namespace Plants.Domain;
+namespace Plants.Domain.Aggregate;
 
 public abstract class AggregateBase
 {
     public AggregateBase(Guid id)
     {
         Id = id;
-        Metadata = new(this.GetType().Name, new());
+        Metadata = new(GetType().Name, new());
     }
 
     public Guid Id { get; }
- 
-    public AggregateMetadata Metadata { get; private set; } 
+
+    public AggregateMetadata Metadata { get; private set; }
 
     public void Record(OneOf<Command, Event> newRecord)
     {
@@ -24,7 +24,7 @@ public record AggregateMetadata(string Name, List<AggregateDescription> Referenc
 {
     public ulong CommandsProcessed { get; private set; } = 0;
     public List<Guid> CommandsProcessedIds { get; set; } = new();
-    public ulong Version { get; private set; } = UInt64.MaxValue;
+    public ulong Version { get; private set; } = ulong.MaxValue;
     public DateTime LastUpdateTime { get; private set; }
 
     public void Record(OneOf<Command, Event> newRecord)

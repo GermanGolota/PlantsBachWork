@@ -1,4 +1,6 @@
-﻿namespace Plants.Aggregates.Users;
+﻿using Plants.Domain.Abstractions;
+
+namespace Plants.Aggregates.Users;
 
 public static class UserPasswordValidator
 {

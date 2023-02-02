@@ -6,5 +6,5 @@ global using Plants.Domain.Services;
 global using Plants.Shared;
 global using Plants.Shared.Extensions;
 global using static Plants.Shared.Model.UserRole;
-global using static Plants.Domain.AllowType;
+global using static Plants.Domain.Aggregate.AllowType;
 

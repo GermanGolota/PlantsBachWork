@@ -1,4 +1,6 @@
 ﻿using Plants.Aggregates.Abstractions;
+using Plants.Domain.Abstractions;
+using Plants.Domain.Aggregate;
 using Plants.Domain.Identity;
 
 namespace Plants.Aggregates.Users;

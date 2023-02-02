@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Plants.Domain.Aggregate;
 using System.Collections.Concurrent;
 
 namespace Plants.Domain.Infrastructure.Subscription;

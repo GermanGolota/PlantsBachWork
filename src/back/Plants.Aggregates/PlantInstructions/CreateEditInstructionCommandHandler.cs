@@ -1,4 +1,6 @@
 ﻿using Plants.Aggregates.PlantStocks;
+using Plants.Domain.Abstractions;
+using Plants.Domain.Aggregate;
 
 namespace Plants.Aggregates.PlantInstructions;
 

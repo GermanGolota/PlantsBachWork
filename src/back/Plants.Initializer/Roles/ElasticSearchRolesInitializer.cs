@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Plants.Aggregates.Abstractions;
 using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
+using Plants.Domain.Aggregate;
 using Plants.Domain.Identity;
 using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Infrastructure.Helpers;

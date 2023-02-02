@@ -2,6 +2,7 @@
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Serializers;
+using Plants.Domain.Aggregate;
 
 namespace Plants.Domain.Infrastructure.Helpers;
 

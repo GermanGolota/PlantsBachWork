@@ -1,6 +1,6 @@
 ﻿using Plants.Shared.Model;
 
-namespace Plants.Domain;
+namespace Plants.Domain.Abstractions;
 
 public interface ICommandSender
 {

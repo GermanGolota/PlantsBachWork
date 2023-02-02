@@ -1,4 +1,4 @@
-﻿using Plants.Domain;
+﻿using Plants.Domain.Abstractions;
 using Plants.Shared.Model;
 
 namespace Plants.Presentation.Dtos;

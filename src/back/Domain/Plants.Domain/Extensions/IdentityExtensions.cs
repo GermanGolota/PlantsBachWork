@@ -1,4 +1,5 @@
-﻿using Plants.Shared.Model;
+﻿using Plants.Domain.Abstractions;
+using Plants.Shared.Model;
 
 namespace Plants.Domain.Extensions;
 

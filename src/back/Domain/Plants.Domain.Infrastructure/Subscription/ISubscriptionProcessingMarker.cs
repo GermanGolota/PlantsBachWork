@@ -1,4 +1,6 @@
-﻿namespace Plants.Domain.Infrastructure.Subscription;
+﻿using Plants.Domain.Aggregate;
+
+namespace Plants.Domain.Infrastructure.Subscription;
 
 public interface ISubscriptionProcessingNotificator
 { 

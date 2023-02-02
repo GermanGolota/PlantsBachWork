@@ -1,4 +1,6 @@
-﻿namespace Plants.Aggregates.PlantOrders;
+﻿using Plants.Domain.Aggregate;
+
+namespace Plants.Aggregates.PlantOrders;
 
 public record StartOrderDeliveryCommand(CommandMetadata Metadata, string TrackingNumber) : Command(Metadata);
 public record OrderDeliveryStartedEvent(EventMetadata Metadata, string TrackingNumber) : Event(Metadata);

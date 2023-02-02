@@ -1,6 +1,6 @@
 ﻿using Plants.Shared.Model;
 
-namespace Plants.Domain;
+namespace Plants.Domain.Aggregate;
 
 /// <typeparam name="TIn">Aggregate in which event is being transposed</typeparam>
 /// <typeparam name="TOut">Aggregate from which event has been send</typeparam>

@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Plants.Aggregates.Abstractions;
 using Plants.Aggregates.PlantStocks;
 using Plants.Aggregates.Users;
+using Plants.Domain.Abstractions;
 using Plants.Domain.Identity;
 using Plants.Services.Infrastructure.Encryption;
 using Plants.Shared.Model;

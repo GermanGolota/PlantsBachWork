@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Plants.Domain.Aggregate;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Shared.Model;

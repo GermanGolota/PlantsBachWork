@@ -1,4 +1,6 @@
-﻿namespace Plants.Domain.Persistence;
+﻿using Plants.Domain.Aggregate;
+
+namespace Plants.Domain.Persistence;
 
 public interface IEventStore
 {

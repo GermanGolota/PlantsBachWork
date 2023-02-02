@@ -1,4 +1,5 @@
-﻿using Plants.Shared.Model;
+﻿using Plants.Domain.Aggregate;
+using Plants.Shared.Model;
 
 namespace Plants.Domain.Projection;
 

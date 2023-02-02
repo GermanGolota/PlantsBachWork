@@ -1,4 +1,5 @@
 ﻿using EventStore.Client;
+using Plants.Domain.Aggregate;
 
 namespace Plants.Domain.Infrastructure.Subscription;
 

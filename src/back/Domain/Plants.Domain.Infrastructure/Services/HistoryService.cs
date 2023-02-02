@@ -1,4 +1,6 @@
-﻿using Plants.Domain.Infrastructure.Extensions;
+﻿using Plants.Domain.Abstractions;
+using Plants.Domain.Aggregate;
+using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Infrastructure.Domain.Helpers;
 

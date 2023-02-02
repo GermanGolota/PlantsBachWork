@@ -1,4 +1,4 @@
-﻿namespace Plants.Domain;
+﻿namespace Plants.Domain.Aggregate;
 
 /// <summary>
 /// This is supposed to be applied to the aggregate

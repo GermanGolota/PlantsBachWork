@@ -1,4 +1,6 @@
-﻿namespace Plants.Domain.Infrastructure.Helpers;
+﻿using Plants.Domain.Aggregate;
+
+namespace Plants.Domain.Infrastructure.Helpers;
 
 internal class TransposeApplyer<TIn> where TIn : AggregateBase
 {

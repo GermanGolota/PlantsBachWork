@@ -1,4 +1,5 @@
 ﻿using Nest;
+using Plants.Domain.Aggregate;
 
 namespace Plants.Domain.Infrastructure.Projection;
 

@@ -1,4 +1,7 @@
-﻿namespace Plants.Aggregates.PlantOrders;
+﻿using Plants.Domain.Abstractions;
+using Plants.Domain.Aggregate;
+
+namespace Plants.Aggregates.PlantOrders;
 
 internal class ConfirmDeliveryCommandHandler : ICommandHandler<ConfirmDeliveryCommand>
 {

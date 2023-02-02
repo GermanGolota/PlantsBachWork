@@ -1,6 +1,7 @@
 ﻿using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using Nest;
+using Plants.Domain.Abstractions;
 using Plants.Domain.Infrastructure.Subscription;
 
 namespace Plants.Presentation.Controllers;

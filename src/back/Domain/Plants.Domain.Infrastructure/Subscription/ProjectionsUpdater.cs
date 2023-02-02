@@ -1,4 +1,5 @@
-﻿using Plants.Domain.Infrastructure.Helpers;
+﻿using Plants.Domain.Aggregate;
+using Plants.Domain.Infrastructure.Helpers;
 
 namespace Plants.Domain.Infrastructure.Subscription;
 

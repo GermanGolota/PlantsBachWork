@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
+using Plants.Domain.Abstractions;
+using Plants.Domain.Aggregate;
 using Plants.Domain.Config;
 using Plants.Domain.Identity;
 using Plants.Shared.Model;

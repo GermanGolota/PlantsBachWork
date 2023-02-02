@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using Plants.Domain.Aggregate;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Services;
 using System.Linq.Expressions;

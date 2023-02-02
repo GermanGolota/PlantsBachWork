@@ -1,4 +1,4 @@
-﻿namespace Plants.Domain;
+﻿namespace Plants.Domain.Abstractions;
 
 public interface IHistoryService
 {
@@ -19,7 +19,7 @@ public record AggregateSnapshot(
     DateTime Time,
     ObjectWithMetadata<AggregateMetadata> Aggregate,
     CommandSnapshot LastCommand,
-    List<ObjectWithMetadata<EventMetadata>> Events, 
+    List<ObjectWithMetadata<EventMetadata>> Events,
     List<RelatedAggregate> Related
     );
 

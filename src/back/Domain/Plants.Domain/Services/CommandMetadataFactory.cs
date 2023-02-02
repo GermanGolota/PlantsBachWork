@@ -1,4 +1,5 @@
-﻿using Plants.Domain.Identity;
+﻿using Plants.Domain.Aggregate;
+using Plants.Domain.Identity;
 
 namespace Plants.Domain.Services;
 
