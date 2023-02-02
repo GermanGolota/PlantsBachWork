@@ -177,7 +177,7 @@ viewItem isAdmin item =
 
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
-init resp flags =
+init resp _ =
     initBase [ Producer, Consumer, Manager ] (View Loading False) (\res -> plantsCmd res.token) resp
 
 
@@ -207,7 +207,7 @@ plantDecoder =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 

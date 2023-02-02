@@ -3,15 +3,14 @@ module PieChart exposing (Msg(..), pieChart, pieChartWithLabel)
 import Array exposing (Array)
 import Color exposing (Color)
 import Html exposing (Html)
-import Html.Attributes exposing (style)
+import Html.Attributes
 import Murmur3 exposing (hashString)
 import Path
 import Shape exposing (defaultPieConfig)
-import Svg exposing (Svg)
+import Svg
 import TypedSvg exposing (g, svg, text_)
 import TypedSvg.Attributes exposing (dy, fill, fontFamily, fontSize, fontWeight, stroke, textAnchor, transform, viewBox)
-import TypedSvg.Attributes.InPx exposing (height, width)
-import TypedSvg.Core exposing (Svg, text)
+import TypedSvg.Core exposing (text)
 import TypedSvg.Events exposing (onClick)
 import TypedSvg.Types exposing (AnchorAlignment(..), FontWeight(..), Paint(..), Transform(..), em, rem)
 

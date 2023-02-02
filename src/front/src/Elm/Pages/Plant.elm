@@ -4,18 +4,18 @@ import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, imagesDecoder, postAuthed)
+import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, postAuthed)
 import Html exposing (Html, div, i, input, text)
 import Html.Attributes exposing (checked, class, disabled, href, style, type_, value)
 import Http
 import ImageList as ImageList
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
+import Json.Decode.Pipeline exposing (required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
 import Maybe exposing (map)
 import NavBar exposing (searchLink, viewNav)
 import PlantHelper exposing (PlantModel, plantDecoder, viewDesc, viewPlantBase, viewPlantLeft)
-import Utils exposing (SubmittedResult(..), createdDecoder, existsDecoder, fillParent, flex, flex1, formatPrice, largeCentered, largeFont, mediumFont, mediumMargin, smallMargin, submittedDecoder)
+import Utils exposing (SubmittedResult(..), fillParent, flex, flex1, largeCentered, largeFont, mediumMargin, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
 

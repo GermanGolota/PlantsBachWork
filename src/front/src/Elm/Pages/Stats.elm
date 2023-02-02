@@ -7,18 +7,18 @@ import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Table as Table
 import Dict exposing (Dict)
-import Endpoints exposing (Endpoint(..), getAuthed)
+import Endpoints exposing (Endpoint(..))
 import Html exposing (Html, div, h1, i, text)
 import Html.Attributes exposing (class, style)
 import Http
 import Iso8601 exposing (toTime)
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase, viewBase)
+import Json.Decode.Pipeline exposing (required)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
 import NavBar exposing (statsLink, viewNav)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Time
-import Utils exposing (AlignDirection(..), decodeId, fillParent, flatten, itself, largeFont, textAlign, textCenter, unique, viewLoading)
+import Utils exposing (AlignDirection(..), decodeId, fillParent, flatten, largeFont, textAlign, textCenter, unique)
 import Webdata exposing (WebData(..), viewWebdata)
 
 

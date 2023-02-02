@@ -5,7 +5,6 @@ import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
-import Color exposing (Color, toCssString)
 import Dict
 import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, imagesDecoder, postAuthed)
 import File exposing (File)
@@ -15,7 +14,7 @@ import Html.Attributes exposing (class, href, selected, style, value)
 import Http
 import ImageList
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (custom, hardcoded, required, requiredAt)
+import Json.Decode.Pipeline exposing (custom, hardcoded, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
 import Multiselect
 import NavBar exposing (plantsLink, viewNav)

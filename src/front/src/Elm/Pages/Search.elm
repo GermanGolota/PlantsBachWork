@@ -7,16 +7,16 @@ import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
-import Endpoints exposing (Endpoint(..), endpointToUrl, getAuthedQuery, historyUrl, imageIdToUrl, postAuthed)
+import Endpoints exposing (Endpoint(..), historyUrl, imageIdToUrl, postAuthed)
 import Html exposing (Html, div, i, text)
 import Html.Attributes exposing (alt, class, src, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase, viewBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar exposing (viewNav)
-import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, largeFont, mediumFont, smallMargin, textCenter)
+import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, mediumFont, smallMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
