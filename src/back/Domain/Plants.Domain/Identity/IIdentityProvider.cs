@@ -1,6 +1,4 @@
-﻿using Plants.Domain.Abstractions;
-
-namespace Plants.Domain.Identity;
+﻿namespace Plants.Domain;
 
 /// <summary>
 /// Gets the identity of the caller

@@ -1,11 +1,8 @@
-﻿using Nest.JsonNetSerializer;
-using Nest;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 
-namespace Plants.Domain.Infrastructure.Helpers;
+namespace Plants.Domain.Infrastructure;
 
 public static class JsonSerializerSettingsContext
 {

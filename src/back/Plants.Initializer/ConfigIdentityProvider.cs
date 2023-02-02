@@ -1,8 +1,4 @@
 ﻿using Microsoft.Extensions.Options;
-using Plants.Domain.Abstractions;
-using Plants.Domain.Identity;
-using Plants.Services.Infrastructure.Encryption;
-using Plants.Shared.Model;
 
 namespace Plants.Initializer;
 

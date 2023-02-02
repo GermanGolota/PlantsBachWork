@@ -1,10 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Plants.Domain.Abstractions;
-using Plants.Domain.Aggregate;
-using Plants.Domain.Infrastructure.Helpers;
-using Plants.Domain.Infrastructure.Services;
-using Plants.Domain.Infrastructure.Subscription;
-using Plants.Infrastructure.Domain.Helpers;
 
 namespace Plants.Domain.Infrastructure;
 
@@ -19,7 +13,6 @@ public static class DiExtensions
 
         return services;
     }
-
 
     private static IServiceCollection AddEventSourcing(this IServiceCollection services)
     {
@@ -78,7 +71,7 @@ public static class DiExtensions
 
     private static IServiceCollection AddImplementations(this IServiceCollection services)
     {
-        foreach (var type in Shared.Helper.Helpers.Type.Types)
+        foreach (var type in Shared.Helpers.Type.Types)
         {
             services
                 .AddImplementationsOf(typeof(ICommandHandler<>), type)

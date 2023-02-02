@@ -1,8 +1,4 @@
-﻿using Plants.Aggregates.Abstractions;
-using Plants.Domain.Abstractions;
-using Plants.Domain.Aggregate;
-
-namespace Plants.Aggregates.Users;
+﻿namespace Plants.Aggregates;
 
 internal class ChangeRoleCommandHandler : ICommandHandler<ChangeRoleCommand>
 {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Plants.Initializer.Seeding;
+namespace Plants.Initializer;
 
 [ConfigSection(Section)]
 internal class WebRootConfig

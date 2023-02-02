@@ -1,6 +1,4 @@
-﻿using Plants.Domain.Aggregate;
-
-namespace Plants.Domain.Services;
+﻿namespace Plants.Domain;
 
 public sealed class EventMetadataFactory
 {

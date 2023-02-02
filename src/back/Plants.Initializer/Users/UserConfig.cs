@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Plants.Initializer.Users;
+namespace Plants.Initializer;
 
 [ConfigSection(UserConstrants.Admin, UserConstrants.Admin)]
 [ConfigSection(UserConstrants.NewAdmin, UserConstrants.NewAdmin)]

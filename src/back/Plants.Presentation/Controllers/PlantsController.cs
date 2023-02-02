@@ -1,14 +1,9 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Plants.Aggregates.PlantInfos;
-using Plants.Aggregates.PlantStocks;
-using Plants.Aggregates.Search;
-using Plants.Aggregates.Users;
 using Plants.Application.Commands;
 using Plants.Application.Requests;
-using Plants.Presentation.Extensions;
 
-namespace Plants.Presentation.Controllers;
+namespace Plants.Presentation;
 
 [ApiController]
 [Route("plants")]

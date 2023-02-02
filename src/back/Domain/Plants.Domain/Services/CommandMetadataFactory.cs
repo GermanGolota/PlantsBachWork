@@ -1,7 +1,4 @@
-﻿using Plants.Domain.Aggregate;
-using Plants.Domain.Identity;
-
-namespace Plants.Domain.Services;
+﻿namespace Plants.Domain;
 
 public class CommandMetadataFactory
 {

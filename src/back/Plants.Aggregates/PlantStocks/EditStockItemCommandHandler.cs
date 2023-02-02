@@ -1,7 +1,4 @@
-﻿using Plants.Domain.Abstractions;
-using Plants.Domain.Aggregate;
-
-namespace Plants.Aggregates.PlantStocks;
+﻿namespace Plants.Aggregates;
 
 internal class EditStockItemCommandHandler : ICommandHandler<EditStockItemCommand>
 {

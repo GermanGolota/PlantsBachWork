@@ -1,6 +1,4 @@
-﻿using Plants.Shared.Model;
-
-namespace Plants.Aggregates.Abstractions;
+﻿namespace Plants.Aggregates;
 
 public interface IAuthorizer
 {

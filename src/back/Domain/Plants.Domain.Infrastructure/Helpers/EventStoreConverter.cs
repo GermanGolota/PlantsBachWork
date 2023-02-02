@@ -1,11 +1,8 @@
 ﻿using EventStore.Client;
 using Newtonsoft.Json;
-using Plants.Domain.Aggregate;
-using Plants.Infrastructure.Domain.Helpers;
-using Plants.Shared.Model;
 using System.Text;
 
-namespace Plants.Domain.Infrastructure.Helpers;
+namespace Plants.Domain.Infrastructure;
 
 internal class EventStoreConverter
 {

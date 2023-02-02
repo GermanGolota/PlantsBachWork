@@ -1,15 +1,7 @@
 using HealthChecks.UI.Client;
 using MediatR;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Plants.Aggregates.Infrastructure;
-using Plants.Aggregates.Infrastructure.Abstractions;
 using Plants.Infrastructure;
-using Plants.Presentation.Extensions;
-using Plants.Presentation.HostedServices;
-using Plants.Presentation.Middleware;
-using Plants.Presentation.Services;
-using Plants.Services.Infrastructure;
-using Plants.Shared.Model;
 
 namespace Plants.Presentation;
 

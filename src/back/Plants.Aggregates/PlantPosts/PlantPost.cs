@@ -1,10 +1,4 @@
-﻿using Plants.Aggregates.PlantOrders;
-using Plants.Aggregates.PlantStocks;
-using Plants.Aggregates.Users;
-using Plants.Domain.Abstractions;
-using Plants.Domain.Aggregate;
-
-namespace Plants.Aggregates.PlantPosts;
+﻿namespace Plants.Aggregates;
 
 [Allow(Consumer, Read)]
 [Allow(Consumer, Write)]

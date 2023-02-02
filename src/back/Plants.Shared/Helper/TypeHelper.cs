@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Plants.Shared.Helper;
+namespace Plants.Shared;
 
 public class TypeHelper
 {

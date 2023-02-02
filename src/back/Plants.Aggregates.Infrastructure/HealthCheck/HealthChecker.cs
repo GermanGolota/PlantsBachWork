@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
 
-namespace Plants.Aggregates.Infrastructure.HealthCheck;
+namespace Plants.Aggregates.Infrastructure;
 
 internal class HealthChecker : IHealthChecker
 {

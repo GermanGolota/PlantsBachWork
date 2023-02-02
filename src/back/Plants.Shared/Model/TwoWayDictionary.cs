@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace Plants.Shared.Model;
+namespace Plants.Shared;
 
 public interface ITwoWayDictionary<T0, T1> : IEnumerable<KeyValuePair<T0, T1>>
 {

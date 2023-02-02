@@ -1,10 +1,6 @@
 ﻿using Nest;
-using Plants.Aggregates.Search;
-using Plants.Aggregates.Users;
-using Plants.Domain.Identity;
-using Plants.Shared.Model;
 
-namespace Plants.Aggregates.Infrastructure.Search;
+namespace Plants.Aggregates.Infrastructure;
 
 internal class UserSearchParamsProjector : ISearchParamsProjector<User, UserSearchParams>
 {

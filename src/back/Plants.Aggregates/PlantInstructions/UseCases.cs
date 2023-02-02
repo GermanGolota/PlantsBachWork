@@ -1,6 +1,4 @@
-﻿using Plants.Domain.Aggregate;
-
-namespace Plants.Aggregates.PlantInstructions;
+﻿namespace Plants.Aggregates;
 
 public record CreateInstructionCommand(CommandMetadata Metadata, InstructionModel Instruction, byte[] CoverImage) : Command(Metadata);
 public record InstructionCreatedEvent(EventMetadata Metadata, InstructionModel Instruction, string CoverUrl, string WriterUsername, Guid InstructionId) : Event(Metadata);

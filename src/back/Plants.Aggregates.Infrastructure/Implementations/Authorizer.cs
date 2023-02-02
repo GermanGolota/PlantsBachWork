@@ -1,10 +1,6 @@
 ﻿using EventStore.Client;
-using Plants.Aggregates.Abstractions;
-using Plants.Domain.Infrastructure.Services;
-using Plants.Services;
-using Plants.Shared.Model;
 
-namespace Plants.Aggregates.Infrastructure.Implementations;
+namespace Plants.Aggregates.Infrastructure;
 
 internal class Authorizer : IAuthorizer
 {

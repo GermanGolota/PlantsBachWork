@@ -1,8 +1,4 @@
-﻿using Plants.Aggregates.Users;
-using Plants.Domain.Abstractions;
-using Plants.Domain.Aggregate;
-
-namespace Plants.Aggregates.PlantStocks;
+﻿namespace Plants.Aggregates;
 
 [Allow(Consumer, Read)]
 [Allow(Producer, Read)]

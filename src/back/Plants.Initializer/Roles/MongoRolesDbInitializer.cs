@@ -1,13 +1,8 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Plants.Domain.Aggregate;
-using Plants.Domain.Infrastructure.Config;
-using Plants.Domain.Infrastructure.Helpers;
-using Plants.Domain.Infrastructure.Services;
-using Plants.Shared.Model;
 
-namespace Plants.Initializer.Roles;
+namespace Plants.Initializer;
 
 internal class MongoRolesDbInitializer
 {

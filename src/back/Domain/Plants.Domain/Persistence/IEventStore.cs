@@ -1,6 +1,4 @@
-﻿using Plants.Domain.Aggregate;
-
-namespace Plants.Domain.Persistence;
+﻿namespace Plants.Domain;
 
 public interface IEventStore
 {

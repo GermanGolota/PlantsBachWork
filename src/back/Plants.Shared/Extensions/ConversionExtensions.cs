@@ -1,4 +1,4 @@
-﻿namespace Plants.Shared.Extensions;
+﻿namespace Plants.Shared;
 
 public static class ConversionExtensions
 {

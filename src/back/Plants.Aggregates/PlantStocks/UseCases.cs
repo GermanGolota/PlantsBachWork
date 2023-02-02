@@ -1,6 +1,4 @@
-﻿using Plants.Domain.Aggregate;
-
-namespace Plants.Aggregates.PlantStocks;
+﻿namespace Plants.Aggregates;
 
 public record AddToStockCommand(CommandMetadata Metadata, PlantInformation Plant, DateTime CreatedTime, byte[][] Pictures) : Command(Metadata);
 public record StockAddedEvent(EventMetadata Metadata, PlantInformation Plant, DateTime CreatedTime, string[] PictureUrls, string CaretakerUsername) : Event(Metadata);

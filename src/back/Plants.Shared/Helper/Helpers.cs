@@ -1,4 +1,4 @@
-﻿namespace Plants.Shared.Helper;
+﻿namespace Plants.Shared;
 
 public static class Helpers
 {

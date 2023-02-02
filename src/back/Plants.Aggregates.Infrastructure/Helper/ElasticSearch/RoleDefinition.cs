@@ -1,4 +1,4 @@
-﻿namespace Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
+﻿namespace Plants.Aggregates.Infrastructure;
 
 public class RoleDefinition
 {

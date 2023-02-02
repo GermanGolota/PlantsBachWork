@@ -1,4 +1,4 @@
-﻿namespace Plants.Domain.Aggregate;
+﻿namespace Plants.Domain;
 
 public abstract record Event(EventMetadata Metadata);
 public sealed record EventMetadata(Guid Id, AggregateDescription Aggregate, Guid CommandId, DateTime Time, string Name, ulong EventNumber = ulong.MaxValue);

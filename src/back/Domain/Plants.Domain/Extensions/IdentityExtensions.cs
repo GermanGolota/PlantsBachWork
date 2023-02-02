@@ -1,7 +1,4 @@
-﻿using Plants.Domain.Abstractions;
-using Plants.Shared.Model;
-
-namespace Plants.Domain.Extensions;
+﻿namespace Plants.Domain;
 
 public static class IdentityExtensions
 {

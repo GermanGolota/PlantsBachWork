@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using Plants.Shared.Model;
+using Plants.Shared;
 
 namespace Plants.Application.Requests;
 

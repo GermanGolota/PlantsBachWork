@@ -1,5 +1,3 @@
-using Plants.Aggregates.Infrastructure.HealthCheck;
-using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Presentation;
 using Serilog;
 

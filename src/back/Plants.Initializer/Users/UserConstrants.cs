@@ -1,4 +1,4 @@
-﻿namespace Plants.Initializer.Users;
+﻿namespace Plants.Initializer;
 
 public static class UserConstrants
 {

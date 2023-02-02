@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Plants.Services.Infrastructure.Encryption;
 
 namespace Plants.Services.Infrastructure;
 

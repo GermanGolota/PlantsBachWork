@@ -1,6 +1,6 @@
 ﻿using Nest;
 
-namespace Plants.Domain.Infrastructure.Services;
+namespace Plants.Domain.Infrastructure;
 
 public interface IElasticSearchClientFactory
 {

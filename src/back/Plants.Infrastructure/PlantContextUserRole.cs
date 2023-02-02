@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Plants.Core.Entities;
-using Plants.Shared.Model;
+using Plants.Shared;
 using System;
 
 namespace Plants.Infrastructure

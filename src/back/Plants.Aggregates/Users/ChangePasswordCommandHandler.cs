@@ -1,9 +1,4 @@
-﻿using Plants.Aggregates.Abstractions;
-using Plants.Domain.Abstractions;
-using Plants.Domain.Aggregate;
-using Plants.Shared.Model;
-
-namespace Plants.Aggregates.Users;
+﻿namespace Plants.Aggregates;
 
 internal class ChangePasswordCommandHandler : ICommandHandler<ChangePasswordCommand>
 {
@@ -17,7 +12,7 @@ internal class ChangePasswordCommandHandler : ICommandHandler<ChangePasswordComm
     }
 
     public Task<CommandForbidden?> ShouldForbidAsync(ChangePasswordCommand command, IUserIdentity userIdentity, CancellationToken token = default) =>
-        userIdentity.HasRole(UserRole.Manager).And(UserPasswordValidator.Validate(command.NewPassword)).ToResultTask();
+        userIdentity.HasRole(Manager).And(UserPasswordValidator.Validate(command.NewPassword)).ToResultTask();
 
     public async Task<IEnumerable<Event>> HandleAsync(ChangePasswordCommand command, CancellationToken token = default)
     {

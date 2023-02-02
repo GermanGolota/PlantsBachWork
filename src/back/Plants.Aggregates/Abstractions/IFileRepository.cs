@@ -1,4 +1,4 @@
-﻿namespace Plants.Aggregates.Abstractions;
+﻿namespace Plants.Aggregates;
 
 public interface IFileRepository
 {

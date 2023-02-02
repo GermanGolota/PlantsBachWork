@@ -1,8 +1,4 @@
-﻿using Plants.Aggregates.PlantStocks;
-using Plants.Domain.Abstractions;
-using Plants.Domain.Aggregate;
-
-namespace Plants.Aggregates.PlantInstructions;
+﻿namespace Plants.Aggregates;
 
 internal class CreateEditInstructionCommandHandler : ICommandHandler<CreateInstructionCommand>, ICommandHandler<EditInstructionCommand>
 {

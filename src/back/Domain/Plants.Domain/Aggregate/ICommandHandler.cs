@@ -1,6 +1,4 @@
-﻿using Plants.Domain.Abstractions;
-
-namespace Plants.Domain.Aggregate;
+﻿namespace Plants.Domain;
 
 public interface ICommandHandler<T> where T : Command
 {

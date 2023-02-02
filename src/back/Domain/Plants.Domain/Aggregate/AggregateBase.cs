@@ -1,6 +1,4 @@
-﻿using Plants.Shared.Model;
-
-namespace Plants.Domain.Aggregate;
+﻿namespace Plants.Domain;
 
 public abstract class AggregateBase
 {

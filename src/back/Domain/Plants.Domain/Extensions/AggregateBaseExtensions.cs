@@ -1,7 +1,4 @@
-﻿using Plants.Domain.Abstractions;
-using Plants.Domain.Aggregate;
-
-namespace Plants.Domain.Extensions;
+﻿namespace Plants.Domain;
 
 public static class AggregateBaseExtensions
 {

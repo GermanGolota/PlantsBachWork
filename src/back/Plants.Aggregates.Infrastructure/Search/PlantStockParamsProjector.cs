@@ -1,9 +1,6 @@
 ﻿using Nest;
-using Plants.Aggregates.PlantStocks;
-using Plants.Aggregates.Search;
-using Plants.Domain.Identity;
 
-namespace Plants.Aggregates.Infrastructure.Search;
+namespace Plants.Aggregates.Infrastructure;
 
 internal class PlantStockParamsProjector : ISearchParamsProjector<PlantStock, PlantStockParams>
 {

@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
-using Plants.Aggregates.Abstractions;
-using Plants.Aggregates.Infrastructure.Abstractions;
 
-namespace Plants.Aggregates.Infrastructure.Implementations;
+namespace Plants.Aggregates.Infrastructure;
 
 internal class FileRepository : IFileRepository
 {

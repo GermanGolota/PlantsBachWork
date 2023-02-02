@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.Dynamic;
 
-namespace Plants.Domain.Infrastructure.Extensions;
+namespace Plants.Domain.Infrastructure;
 
 internal static class ObjectExtensions
 {

@@ -1,7 +1,7 @@
 ﻿using Plants.Application.Commands;
 using Swashbuckle.AspNetCore.Filters;
 
-namespace Plants.Presentation.Examples;
+namespace Plants.Presentation;
 
 internal class LoginRequestExample : IExamplesProvider<LoginCommand>
 {

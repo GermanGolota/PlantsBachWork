@@ -1,13 +1,9 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Plants.Aggregates.PlantInfos;
-using Plants.Aggregates.PlantInstructions;
-using Plants.Aggregates.Search;
 using Plants.Application.Commands;
 using Plants.Application.Requests;
-using Plants.Presentation.Extensions;
 
-namespace Plants.Presentation.Controllers;
+namespace Plants.Presentation;
 
 [ApiController]
 [Route("instructions")]
@@ -119,8 +115,8 @@ public class InstructionsControllerV2 : ControllerBase
         var guid = new Random().GetRandomConvertableGuid();
         var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
         var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<Plants.Aggregates.PlantInstructions.CreateInstructionCommand>(new(guid, nameof(PlantInstruction))),
-            meta => new Plants.Aggregates.PlantInstructions.CreateInstructionCommand(meta, new(info.GroupNames[cmd.GroupId], cmd.Text, cmd.Title, cmd.Description), bytes),
+            factory => factory.Create<Plants.Aggregates.CreateInstructionCommand>(new(guid, nameof(PlantInstruction))),
+            meta => new Plants.Aggregates.CreateInstructionCommand(meta, new(info.GroupNames[cmd.GroupId], cmd.Text, cmd.Title, cmd.Description), bytes),
             token);
         return new CreateInstructionResult2(guid);
     }
@@ -134,9 +130,9 @@ public class InstructionsControllerV2 : ControllerBase
         var guid = new Random().GetRandomConvertableGuid();
         var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
         var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<Plants.Aggregates.PlantInstructions.EditInstructionCommand>(new(guid, nameof(PlantInstruction))),
-            meta => new Plants.Aggregates.PlantInstructions.EditInstructionCommand(meta, new(info.GroupNames[cmd.GroupId], cmd.Text, cmd.Title, cmd.Description), bytes),
-            token);
+            factory => factory.Create<Plants.Aggregates.EditInstructionCommand>(new(guid, nameof(PlantInstruction))),
+            meta => new Plants.Aggregates.EditInstructionCommand(meta, new(info.GroupNames[cmd.GroupId], cmd.Text, cmd.Title, cmd.Description), bytes),
+            token); 
         return new EditInstructionResult2(guid);
     }
 }

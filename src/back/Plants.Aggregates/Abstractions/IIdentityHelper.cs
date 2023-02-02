@@ -1,7 +1,4 @@
-﻿using Plants.Domain.Abstractions;
-using Plants.Shared.Model;
-
-namespace Plants.Aggregates.Abstractions;
+﻿namespace Plants.Aggregates;
 
 public interface IIdentityHelper
 {

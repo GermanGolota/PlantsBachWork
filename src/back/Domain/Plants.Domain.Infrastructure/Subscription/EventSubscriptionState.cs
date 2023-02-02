@@ -1,8 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
-using Plants.Domain.Aggregate;
 using System.Collections.Concurrent;
 
-namespace Plants.Domain.Infrastructure.Subscription;
+namespace Plants.Domain.Infrastructure;
 
 internal class EventSubscriptionState : ISubscriptionProcessingMarker, ISubscriptionProcessingNotificator, IEventSubscriptionState
 {

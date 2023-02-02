@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Plants.Shared.Helper;
+namespace Plants.Shared;
 
 public static class StringHelper
 {

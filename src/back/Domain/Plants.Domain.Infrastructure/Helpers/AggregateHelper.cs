@@ -1,9 +1,6 @@
 ﻿using System.Reflection;
-using Plants.Domain.Aggregate;
-using Plants.Shared.Helper;
-using Plants.Shared.Model;
 
-namespace Plants.Infrastructure.Domain.Helpers;
+namespace Plants.Domain.Infrastructure;
 
 public class AggregateHelper
 {

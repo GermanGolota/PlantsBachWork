@@ -1,10 +1,4 @@
-﻿using Plants.Aggregates.Abstractions;
-using Plants.Domain.Abstractions;
-using Plants.Domain.Aggregate;
-using Plants.Services;
-using Plants.Shared.Helper;
-
-namespace Plants.Aggregates.Users;
+﻿namespace Plants.Aggregates;
 
 internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
 {

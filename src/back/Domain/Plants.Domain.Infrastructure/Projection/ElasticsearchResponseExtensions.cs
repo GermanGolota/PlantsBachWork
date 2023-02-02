@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Nest;
 
-namespace Plants.Domain.Infrastructure.Projection;
+namespace Plants.Domain.Infrastructure;
 
 internal static class ElasticsearchResponseExtensions
 {

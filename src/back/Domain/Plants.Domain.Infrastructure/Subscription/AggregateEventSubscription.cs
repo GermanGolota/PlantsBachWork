@@ -1,9 +1,7 @@
 ﻿using EventStore.Client;
 using Microsoft.Extensions.Logging;
-using Plants.Domain.Aggregate;
-using Plants.Domain.Infrastructure.Helpers;
 
-namespace Plants.Domain.Infrastructure.Subscription;
+namespace Plants.Domain.Infrastructure;
 
 internal class AggregateEventSubscription
 {

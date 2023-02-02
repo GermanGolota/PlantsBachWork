@@ -1,9 +1,8 @@
-﻿using Plants.Infrastructure;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Web;
 
-namespace Plants.Presentation.Middleware;
+namespace Plants.Presentation;
 
 public class UrlAuthMiddleware
 {
@@ -24,7 +23,7 @@ public class UrlAuthMiddleware
             var token = queryString.Get("token");
             if (String.IsNullOrEmpty(token) == false)
             {
-                var validationParameters = DIExtensions.GetValidationParams(DIExtensions.GetAuthKey(_config));
+                var validationParameters = Infrastructure.DIExtensions.GetValidationParams(Infrastructure.DIExtensions.GetAuthKey(_config));
 
                 var validator = new JwtSecurityTokenHandler();
 

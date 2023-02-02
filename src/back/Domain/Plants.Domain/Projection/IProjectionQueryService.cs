@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Plants.Domain.Projection;
+namespace Plants.Domain;
 
 public interface IProjectionQueryService<T>
 {

@@ -1,11 +1,8 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using Plants.Domain.Aggregate;
-using Plants.Domain.Infrastructure.Config;
-using Plants.Domain.Infrastructure.Services;
 using System.Linq.Expressions;
 
-namespace Plants.Domain.Infrastructure.Projection;
+namespace Plants.Domain.Infrastructure;
 
 public class MongoDBRepository<T> : IProjectionQueryService<T>, IProjectionRepository<T> where T : AggregateBase
 {

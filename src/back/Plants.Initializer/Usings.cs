@@ -1,12 +1,7 @@
 ﻿global using Plants.Domain;
-global using Plants.Domain.Extensions;
-global using Plants.Domain.Persistence;
-global using Plants.Domain.Projection;
-global using Plants.Domain.Services;
 global using Plants.Domain.Infrastructure;
-global using Plants.Domain.Infrastructure.Projection;
 global using Plants.Shared;
-global using Plants.Shared.Extensions;
-global using Plants.Initializer;
-global using Plants.Initializer.Roles;
-global using Plants.Initializer.Users;
+global using Plants.Aggregates;
+global using Plants.Aggregates.Infrastructure;
+global using Plants.Services;
+global using Plants.Services.Infrastructure;

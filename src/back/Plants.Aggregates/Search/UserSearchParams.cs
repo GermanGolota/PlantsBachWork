@@ -1,5 +1,3 @@
-﻿using Plants.Shared.Model;
-
-namespace Plants.Aggregates.Search;
+﻿namespace Plants.Aggregates;
 
 public record UserSearchParams(string Name, string Phone, UserRole[] Roles) : ISearchParams;

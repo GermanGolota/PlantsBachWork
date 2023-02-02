@@ -1,4 +1,4 @@
-﻿namespace Plants.Aggregates.Infrastructure.HealthCheck;
+﻿namespace Plants.Aggregates.Infrastructure;
 
 public interface IHealthChecker
 {

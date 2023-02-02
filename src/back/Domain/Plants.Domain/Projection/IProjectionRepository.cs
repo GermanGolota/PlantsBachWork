@@ -1,6 +1,4 @@
-﻿using Plants.Domain.Aggregate;
-
-namespace Plants.Domain.Projection;
+﻿namespace Plants.Domain;
 
 public interface IProjectionRepository<T>
 {

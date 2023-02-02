@@ -1,4 +1,4 @@
-﻿namespace Plants.Domain.Infrastructure.Config;
+﻿namespace Plants.Domain.Infrastructure;
 
 [ConfigSection(SectionName)]
 internal class SubscriptionConfig

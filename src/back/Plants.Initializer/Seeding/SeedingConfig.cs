@@ -1,4 +1,4 @@
-﻿namespace Plants.Initializer.Seeding;
+﻿namespace Plants.Initializer;
 
 [ConfigSection(Section)]
 internal class SeedingConfig

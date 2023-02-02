@@ -1,4 +1,4 @@
-﻿namespace Plants.Domain.Abstractions;
+﻿namespace Plants.Domain;
 
 public interface IHistoryService
 {

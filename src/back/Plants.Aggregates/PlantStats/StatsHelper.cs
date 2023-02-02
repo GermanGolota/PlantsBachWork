@@ -1,9 +1,4 @@
-﻿using Plants.Aggregates.PlantInstructions;
-using Plants.Aggregates.PlantOrders;
-using Plants.Aggregates.PlantStocks;
-using Plants.Domain.Aggregate;
-
-namespace Plants.Aggregates.PlantStats;
+﻿namespace Plants.Aggregates;
 
 internal static class StatsHelper
 {

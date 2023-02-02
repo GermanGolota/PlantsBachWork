@@ -1,10 +1,7 @@
 ﻿using Humanizer;
 using Microsoft.AspNetCore.Mvc;
-using Nest;
-using Plants.Domain.Abstractions;
-using Plants.Domain.Infrastructure.Subscription;
 
-namespace Plants.Presentation.Controllers;
+namespace Plants.Presentation;
 
 [ApiController]
 [Route("v2/eventsourcing")]
@@ -44,7 +41,7 @@ public class EventSourcingController : ControllerBase
             {
                 IdConversionType.Guid => Guid.Parse(id),
                 IdConversionType.String => id.ToGuid(),
-                IdConversionType.Long => Int64.Parse(id).ToGuid(),
+                IdConversionType.Long => long.Parse(id).ToGuid(),
                 _ => throw new NotImplementedException(),
             });
 

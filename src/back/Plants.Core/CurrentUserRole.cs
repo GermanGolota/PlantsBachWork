@@ -1,4 +1,4 @@
-﻿using Plants.Shared.Model;
+﻿using Plants.Shared;
 
 namespace Plants.Core.Entities;
 

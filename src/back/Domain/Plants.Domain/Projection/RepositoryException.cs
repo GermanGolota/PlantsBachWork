@@ -1,4 +1,4 @@
-﻿namespace Plants.Domain.Projection;
+﻿namespace Plants.Domain;
 
 [Serializable]
 public class RepositoryException : Exception

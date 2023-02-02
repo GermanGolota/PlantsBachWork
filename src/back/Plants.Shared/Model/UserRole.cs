@@ -1,4 +1,4 @@
-﻿namespace Plants.Shared.Model;
+﻿namespace Plants.Shared;
 
 public enum UserRole
 {

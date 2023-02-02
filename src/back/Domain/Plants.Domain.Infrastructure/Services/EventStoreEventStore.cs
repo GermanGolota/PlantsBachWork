@@ -1,13 +1,8 @@
 ﻿using EventStore.Client;
 using Microsoft.Extensions.Logging;
-using Plants.Domain.Aggregate;
-using Plants.Domain.Infrastructure.Extensions;
-using Plants.Domain.Infrastructure.Helpers;
-using Plants.Infrastructure.Domain.Helpers;
-using Plants.Shared.Model;
 using System.Text;
 
-namespace Plants.Domain.Infrastructure.Services;
+namespace Plants.Domain.Infrastructure;
 
 internal class EventStoreEventStore : IEventStore
 {

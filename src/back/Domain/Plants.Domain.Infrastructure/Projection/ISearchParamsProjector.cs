@@ -1,7 +1,6 @@
 ﻿using Nest;
-using Plants.Domain.Aggregate;
 
-namespace Plants.Domain.Infrastructure.Projection;
+namespace Plants.Domain.Infrastructure;
 
 public interface ISearchParamsProjector<TAggregate, TParams> where TAggregate : AggregateBase where TParams : ISearchParams
 {

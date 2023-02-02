@@ -1,9 +1,4 @@
-﻿using Plants.Aggregates.Abstractions;
-using Plants.Domain.Abstractions;
-using Plants.Services.Infrastructure.Encryption;
-using Plants.Shared.Model;
-
-namespace Plants.Aggregates.Infrastructure.Implementations;
+﻿namespace Plants.Aggregates.Infrastructure;
 
 internal class IdentityHelper : IIdentityHelper
 {

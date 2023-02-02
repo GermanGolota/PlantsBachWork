@@ -1,8 +1,6 @@
-﻿using Plants.Aggregates.PlantStocks;
-using Plants.Domain.Aggregate;
-using System.Text;
+﻿using System.Text;
 
-namespace Plants.Aggregates.PlantInfos;
+namespace Plants.Aggregates;
 
 [Allow(Consumer, Read)]
 [Allow(Producer, Read)]

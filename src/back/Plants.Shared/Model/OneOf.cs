@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Plants.Shared.Model;
+namespace Plants.Shared;
 
 public class OneOf<T0, T1>
 {

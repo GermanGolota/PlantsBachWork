@@ -1,8 +1,6 @@
 ﻿using Nest;
-using Plants.Aggregates.PlantPosts;
-using Plants.Aggregates.Search;
 
-namespace Plants.Aggregates.Infrastructure.Search;
+namespace Plants.Aggregates.Infrastructure;
 
 internal class PlantPostParamsProjector : ISearchParamsProjector<PlantPost, PlantPostParams>
 {

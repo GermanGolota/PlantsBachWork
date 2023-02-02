@@ -1,6 +1,6 @@
 ﻿using Plants.Application.Commands;
 using Plants.Application.Requests;
-using Plants.Shared.Model;
+using Plants.Shared;
 
 namespace Plants.Application.Contracts;
 
