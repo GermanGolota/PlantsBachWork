@@ -1,5 +1,7 @@
-﻿using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
-using Plants.Aggregates.Services;
+﻿using Plants.Aggregates.Abstractions;
+using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
+using Plants.Domain.Identity;
+using Plants.Shared.Model;
 using System.Data;
 using System.Net.Http.Json;
 

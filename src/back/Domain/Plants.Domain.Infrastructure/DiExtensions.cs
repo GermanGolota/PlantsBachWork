@@ -76,7 +76,7 @@ public static class DiExtensions
 
     private static IServiceCollection AddImplementations(this IServiceCollection services)
     {
-        foreach (var type in Shared.Helpers.Type.Types)
+        foreach (var type in Shared.Helper.Helpers.Type.Types)
         {
             services
                 .AddImplementationsOf(typeof(ICommandHandler<>), type)

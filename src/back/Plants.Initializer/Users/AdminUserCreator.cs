@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Plants.Aggregates.Users;
+using Plants.Shared.Model;
 
 namespace Plants.Initializer.Users;
 

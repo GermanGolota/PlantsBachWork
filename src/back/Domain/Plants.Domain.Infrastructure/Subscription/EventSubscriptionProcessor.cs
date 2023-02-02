@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Infrastructure.Domain.Helpers;
+using Plants.Shared.Model;
 using System.Reflection;
 
 namespace Plants.Domain.Infrastructure.Subscription;

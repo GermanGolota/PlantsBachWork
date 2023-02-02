@@ -1,4 +1,4 @@
-﻿using Plants.Aggregates.Services;
+﻿using Plants.Aggregates.Abstractions;
 
 namespace Plants.Aggregates.PlantStocks;
 

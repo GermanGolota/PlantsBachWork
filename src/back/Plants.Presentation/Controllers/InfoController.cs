@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Plants.Aggregates.PlantInfos;
 using Plants.Aggregates.Users;
 using Plants.Application.Requests;
+using Plants.Domain.Identity;
 
 namespace Plants.Presentation.Controllers;
 

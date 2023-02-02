@@ -1,5 +1,5 @@
 ﻿using Plants.Domain;
-using Plants.Shared;
+using Plants.Shared.Model;
 
 namespace Plants.Presentation.Dtos;
 

@@ -1,4 +1,5 @@
-﻿using Plants.Aggregates.Services;
+﻿using Plants.Aggregates.Abstractions;
+using Plants.Shared.Model;
 
 namespace Plants.Aggregates.Users;
 

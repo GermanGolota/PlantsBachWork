@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Plants.Domain.Config;
+using Plants.Domain.Identity;
+using Plants.Shared.Model;
 
 namespace Plants.Domain.Services;
 

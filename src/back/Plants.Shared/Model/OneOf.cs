@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Plants.Shared;
+namespace Plants.Shared.Model;
 
 public class OneOf<T0, T1>
 {
@@ -46,7 +46,7 @@ public class OneOf<T0, T1>
     public static implicit operator OneOf<T0, T1>(T0 first) => new(first);
     public static implicit operator OneOf<T0, T1>(T1 second) => new(second);
 
-    public override string ToString() => 
+    public override string ToString() =>
         Match(_ => _?.ToString(), _ => _?.ToString()) ?? "";
 }
 

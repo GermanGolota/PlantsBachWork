@@ -2,10 +2,12 @@
 using EventStore.ClientAPI.Common.Log;
 using EventStore.ClientAPI.UserManagement;
 using Microsoft.Extensions.Options;
-using Plants.Aggregates.Services;
+using Plants.Aggregates.Abstractions;
+using Plants.Domain.Identity;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Services;
 using Plants.Services.Infrastructure.Encryption;
+using Plants.Shared.Model;
 using System.Net;
 
 namespace Plants.Aggregates.Infrastructure.Helper;

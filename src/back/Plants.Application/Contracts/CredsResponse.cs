@@ -1,4 +1,4 @@
-﻿using Plants.Shared;
+﻿using Plants.Shared.Model;
 
 namespace Plants.Application.Contracts;
 

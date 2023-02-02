@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Plants.Aggregates.Services;
+using Plants.Aggregates.Abstractions;
 using Plants.Application.Commands;
 using Plants.Presentation.Examples;
 using Swashbuckle.AspNetCore.Filters;

@@ -4,7 +4,7 @@ using Plants.Application.Commands;
 using Plants.Application.Contracts;
 using Plants.Application.Requests;
 using Plants.Infrastructure.Helpers;
-using Plants.Shared;
+using Plants.Shared.Model;
 
 namespace Plants.Infrastructure.Services;
 

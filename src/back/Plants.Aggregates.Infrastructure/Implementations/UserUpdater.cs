@@ -1,8 +1,9 @@
-﻿using Plants.Aggregates.Infrastructure.Helper;
-using Plants.Aggregates.Services;
+﻿using Plants.Aggregates.Abstractions;
+using Plants.Aggregates.Infrastructure.Helper;
+using Plants.Shared.Model;
 using System.Data;
 
-namespace Plants.Aggregates.Infrastructure.Services;
+namespace Plants.Aggregates.Infrastructure.Implementations;
 
 internal class UserUpdater : IUserUpdater
 {

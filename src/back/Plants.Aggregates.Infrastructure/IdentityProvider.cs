@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Plants.Domain.Identity;
+using Plants.Shared.Model;
 using System.Security.Claims;
 
 namespace Plants.Aggregates.Infrastructure;

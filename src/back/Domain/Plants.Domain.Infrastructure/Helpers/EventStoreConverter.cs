@@ -1,6 +1,7 @@
 ﻿using EventStore.Client;
 using Newtonsoft.Json;
 using Plants.Infrastructure.Domain.Helpers;
+using Plants.Shared.Model;
 using System.Text;
 
 namespace Plants.Domain.Infrastructure.Helpers;

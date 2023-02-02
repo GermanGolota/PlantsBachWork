@@ -1,4 +1,5 @@
-﻿using Plants.Aggregates.Services;
+﻿using Plants.Aggregates.Abstractions;
+using Plants.Domain.Identity;
 
 namespace Plants.Aggregates.Users;
 

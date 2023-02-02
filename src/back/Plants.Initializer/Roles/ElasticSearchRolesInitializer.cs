@@ -1,10 +1,12 @@
 ﻿using Microsoft.Extensions.Options;
+using Plants.Aggregates.Abstractions;
 using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
-using Plants.Aggregates.Services;
+using Plants.Domain.Identity;
 using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Infrastructure.Domain.Helpers;
 using Plants.Services.Infrastructure.Encryption;
+using Plants.Shared.Model;
 using System.Data;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;

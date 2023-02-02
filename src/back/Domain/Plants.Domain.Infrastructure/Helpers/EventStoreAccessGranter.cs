@@ -1,6 +1,7 @@
 ﻿using EventStore.Client;
 using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Infrastructure.Services;
+using Plants.Shared.Model;
 
 namespace Plants.Domain.Infrastructure.Helpers;
 

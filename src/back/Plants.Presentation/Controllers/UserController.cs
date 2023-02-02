@@ -5,6 +5,7 @@ using Plants.Aggregates.Users;
 using Plants.Application.Commands;
 using Plants.Application.Requests;
 using Plants.Services.Infrastructure.Encryption;
+using Plants.Shared.Model;
 
 namespace Plants.Presentation.Controllers;
 

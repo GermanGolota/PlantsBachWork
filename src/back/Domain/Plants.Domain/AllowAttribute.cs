@@ -1,4 +1,6 @@
-﻿namespace Plants.Domain;
+﻿using Plants.Shared.Model;
+
+namespace Plants.Domain;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
 /// <summary>

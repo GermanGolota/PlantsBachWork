@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Options;
+using Plants.Domain.Identity;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Services;
 using Plants.Services.Infrastructure.Encryption;
+using Plants.Shared.Model;
 
 namespace Plants.Aggregates.Infrastructure.Domain;
 

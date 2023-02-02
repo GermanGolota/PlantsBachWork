@@ -2,6 +2,7 @@
 using Plants.Aggregates.PlantOrders;
 using Plants.Aggregates.PlantPosts;
 using Plants.Aggregates.PlantStocks;
+using Plants.Shared.Model;
 
 namespace Plants.Aggregates.Users;
 

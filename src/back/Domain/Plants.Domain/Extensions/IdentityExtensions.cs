@@ -1,4 +1,6 @@
-﻿namespace Plants.Domain.Extensions;
+﻿using Plants.Shared.Model;
+
+namespace Plants.Domain.Extensions;
 
 public static class IdentityExtensions
 {

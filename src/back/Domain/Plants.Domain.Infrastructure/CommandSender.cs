@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Plants.Domain.Identity;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Subscription;
 using Plants.Infrastructure.Domain.Helpers;
+using Plants.Shared.Model;
 using System.Diagnostics;
 using System.Reflection;
 

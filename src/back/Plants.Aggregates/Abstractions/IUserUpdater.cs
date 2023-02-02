@@ -1,4 +1,6 @@
-﻿namespace Plants.Aggregates.Services;
+﻿using Plants.Shared.Model;
+
+namespace Plants.Aggregates.Abstractions;
 
 public interface IUserUpdater
 {

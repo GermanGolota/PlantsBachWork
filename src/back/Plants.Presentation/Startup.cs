@@ -9,6 +9,7 @@ using Plants.Presentation.HostedServices;
 using Plants.Presentation.Middleware;
 using Plants.Presentation.Services;
 using Plants.Services.Infrastructure;
+using Plants.Shared.Model;
 
 namespace Plants.Presentation;
 

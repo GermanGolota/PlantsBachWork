@@ -2,6 +2,7 @@
 using Plants.Domain.Infrastructure.Extensions;
 using Plants.Domain.Infrastructure.Services;
 using Plants.Infrastructure.Domain.Helpers;
+using Plants.Shared.Model;
 
 namespace Plants.Domain.Infrastructure.Projection;
 

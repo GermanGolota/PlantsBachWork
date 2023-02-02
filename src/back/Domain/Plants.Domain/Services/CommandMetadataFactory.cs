@@ -1,4 +1,6 @@
-﻿namespace Plants.Domain.Services;
+﻿using Plants.Domain.Identity;
+
+namespace Plants.Domain.Services;
 
 public class CommandMetadataFactory
 {

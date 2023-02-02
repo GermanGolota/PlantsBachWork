@@ -1,4 +1,6 @@
-﻿namespace Plants.Aggregates.Users;
+﻿using Plants.Shared.Model;
+
+namespace Plants.Aggregates.Users;
 
 public record UserCreationDto(string FirstName, string LastName, string PhoneNumber, string Login, string Email, string Language, UserRole[] Roles);
 

@@ -1,4 +1,6 @@
-﻿namespace Plants.Domain.Projection;
+﻿using Plants.Shared.Model;
+
+namespace Plants.Domain.Projection;
 
 public interface ISearchQueryService<TAggregate, TParams> where TAggregate : AggregateBase where TParams : ISearchParams
 {

@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Plants.Application.Contracts;
 using Plants.Services;
-using Plants.Shared;
+using Plants.Shared.Helper;
 
 namespace Plants.Application.Commands;
 

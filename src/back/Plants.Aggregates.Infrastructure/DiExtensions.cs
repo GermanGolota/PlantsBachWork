@@ -1,12 +1,13 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Plants.Aggregates.Abstractions;
 using Plants.Aggregates.Infrastructure.Domain;
 using Plants.Aggregates.Infrastructure.HealthCheck;
 using Plants.Aggregates.Infrastructure.Helper;
 using Plants.Aggregates.Infrastructure.Helper.ElasticSearch;
-using Plants.Aggregates.Infrastructure.Services;
+using Plants.Aggregates.Infrastructure.Implementations;
 using Plants.Aggregates.PlantStocks;
-using Plants.Aggregates.Services;
 using Plants.Aggregates.Users;
+using Plants.Domain.Identity;
 using Plants.Domain.Infrastructure.Services;
 
 namespace Plants.Aggregates.Infrastructure;

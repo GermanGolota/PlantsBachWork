@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
+using Plants.Domain.Identity;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Services.Infrastructure.Encryption;
 using System.Net.Http.Json;

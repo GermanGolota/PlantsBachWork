@@ -4,6 +4,7 @@ using MongoDB.Driver;
 using Plants.Domain.Infrastructure.Config;
 using Plants.Domain.Infrastructure.Helpers;
 using Plants.Domain.Infrastructure.Services;
+using Plants.Shared.Model;
 
 namespace Plants.Initializer.Roles;
 
