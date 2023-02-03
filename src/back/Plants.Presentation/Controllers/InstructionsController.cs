@@ -3,17 +3,15 @@
 namespace Plants.Presentation;
 
 [ApiController]
-[Route("v2/instructions")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class InstructionsControllerV2 : ControllerBase
+[Route("instructions")]
+public class InstructionsController : ControllerBase
 {
     private readonly CommandHelper _command;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
     private readonly IProjectionQueryService<PlantInstruction> _instructionQuery;
     private readonly ISearchQueryService<PlantInstruction, PlantInstructionParams> _instructionSearch;
 
-    public InstructionsControllerV2(CommandHelper command,
+    public InstructionsController(CommandHelper command,
         IProjectionQueryService<PlantInfo> infoQuery,
         IProjectionQueryService<PlantInstruction> instructionQuery,
         ISearchQueryService<PlantInstruction, PlantInstructionParams> instructionSearch)

@@ -3,10 +3,8 @@
 namespace Plants.Presentation;
 
 [ApiController]
-[Route("v2/plants")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class PlantsControllerV2 : ControllerBase
+[Route("plants")]
+public class PlantsController : ControllerBase
 {
     private readonly CommandHelper _command;
     private readonly ISearchQueryService<PlantStock, PlantStockParams> _search;
@@ -14,7 +12,7 @@ public class PlantsControllerV2 : ControllerBase
     private readonly IProjectionQueryService<PlantStock> _stockProjector;
     private readonly IProjectionQueryService<User> _userProjector;
 
-    public PlantsControllerV2(CommandHelper command,
+    public PlantsController(CommandHelper command,
         ISearchQueryService<PlantStock, PlantStockParams> search,
         IProjectionQueryService<PlantInfo> infoProjector,
         IProjectionQueryService<PlantStock> stockProjector,

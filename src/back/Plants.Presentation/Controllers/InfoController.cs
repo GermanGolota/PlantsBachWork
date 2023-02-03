@@ -3,16 +3,14 @@
 namespace Plants.Presentation;
 
 [ApiController]
-[Route("v2/info")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class InfoControllerV2 : ControllerBase
+[Route("info")]
+public class InfoController : ControllerBase
 {
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
     private readonly IProjectionQueryService<User> _userQuery;
     private readonly IIdentityProvider _identity;
 
-    public InfoControllerV2(IProjectionQueryService<PlantInfo> infoQuery, IProjectionQueryService<User> userQuery, IIdentityProvider identity)
+    public InfoController(IProjectionQueryService<PlantInfo> infoQuery, IProjectionQueryService<User> userQuery, IIdentityProvider identity)
     {
         _infoQuery = infoQuery;
         _userQuery = userQuery;

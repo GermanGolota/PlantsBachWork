@@ -4,16 +4,14 @@ using Microsoft.Extensions.FileProviders;
 namespace Plants.Presentation;
 
 [ApiController]
-[Route("v2/file")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class FileControllerV2 : ControllerBase
+[Route("file")]
+public class FileController : ControllerBase
 {
     private readonly IFileProvider _provider;
     private readonly IProjectionQueryService<PlantInstruction> _instructionQuery;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
 
-    public FileControllerV2(IFileProvider provider,
+    public FileController(IFileProvider provider,
         IProjectionQueryService<PlantInstruction> instructionQuery,
         IProjectionQueryService<PlantInfo> infoQuery)
     {

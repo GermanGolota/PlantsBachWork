@@ -10,7 +10,7 @@ import Utils exposing (decodeId)
 
 baseUrl : String
 baseUrl =
-    "https://localhost:5001/v2/"
+    "https://localhost:5001/"
 
 
 type Endpoint

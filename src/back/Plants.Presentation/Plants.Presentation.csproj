@@ -39,6 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Logs\" />
     <Folder Include="wwwroot\UserInfo\" />
   </ItemGroup>
 

@@ -3,15 +3,13 @@
 namespace Plants.Presentation;
 
 [ApiController]
-[Route("v2/search")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class SearchControllerV2 : ControllerBase
+[Route("search")]
+public class SearchController : ControllerBase
 {
     private readonly ISearchQueryService<PlantPost, PlantPostParams> _search;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
 
-    public SearchControllerV2(
+    public SearchController(
         ISearchQueryService<PlantPost, PlantPostParams> search,
         IProjectionQueryService<PlantInfo> infoQuery)
     {

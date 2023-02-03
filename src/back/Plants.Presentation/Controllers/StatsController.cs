@@ -3,16 +3,14 @@
 namespace Plants.Presentation;
 
 [ApiController]
-[Route("v2/stats")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class StatsControllerV2 : ControllerBase
+[Route("stats")]
+public class StatsController : ControllerBase
 {
     private readonly IProjectionQueryService<PlantTotalStat> _statQuery;
     private readonly IProjectionQueryService<PlantTimedStat> _timedStatQuery;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
 
-    public StatsControllerV2(IProjectionQueryService<PlantTotalStat> totalStatQuery,
+    public StatsController(IProjectionQueryService<PlantTotalStat> totalStatQuery,
         IProjectionQueryService<PlantTimedStat> timedStatQuery,
         IProjectionQueryService<PlantInfo> infoQuery)
     {

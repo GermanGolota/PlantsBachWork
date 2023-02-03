@@ -3,16 +3,14 @@
 namespace Plants.Presentation;
 
 [ApiController]
-[Route("v2/orders")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class OrdersControllerV2 : ControllerBase
+[Route("orders")]
+public class OrdersController : ControllerBase
 {
     private readonly CommandHelper _command;
     private readonly ISearchQueryService<PlantOrder, PlantOrderParams> _orderQuery;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
 
-    public OrdersControllerV2(CommandHelper command,
+    public OrdersController(CommandHelper command,
         ISearchQueryService<PlantOrder, PlantOrderParams> orderQuery,
         IProjectionQueryService<PlantInfo> infoQuery)
     {

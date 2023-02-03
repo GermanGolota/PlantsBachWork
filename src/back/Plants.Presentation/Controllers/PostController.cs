@@ -3,16 +3,14 @@
 namespace Plants.Presentation;
 
 [ApiController]
-[Route("v2/post")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class PostControllerV2 : ControllerBase
+[Route("post")]
+public class PostController : ControllerBase
 {
     private readonly IProjectionQueryService<PlantPost> _postQuery;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
     private readonly CommandHelper _command;
 
-    public PostControllerV2(
+    public PostController(
         IProjectionQueryService<PlantPost> postQuery,
         IProjectionQueryService<PlantInfo> infoQuery,
         CommandHelper command)

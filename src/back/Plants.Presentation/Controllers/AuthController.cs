@@ -4,20 +4,18 @@ using Swashbuckle.AspNetCore.Filters;
 namespace Plants.Presentation;
 
 [ApiController]
-[Route("v2/auth")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class AuthControllerV2 : ControllerBase
+[Route("auth")]
+public class AuthController : ControllerBase
 {
     private readonly IAuthorizer _authorizer;
 
-    public AuthControllerV2(IAuthorizer authorizer)
+    public AuthController(IAuthorizer authorizer)
     {
         _authorizer = authorizer;
     }
 
     [HttpPost("login")]
-    [SwaggerRequestExample(typeof(LoginCommand), typeof(LoginRequestExampleV2))]
+    [SwaggerRequestExample(typeof(LoginCommand), typeof(LoginRequestExample))]
     public async Task<ActionResult> Login(LoginCommand command, CancellationToken token)
     {
         var authorization = await _authorizer.AuthorizeAsync(command.Login, command.Password, token);

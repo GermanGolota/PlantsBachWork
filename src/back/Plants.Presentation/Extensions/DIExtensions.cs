@@ -40,10 +40,9 @@ public static class DIExtensions
 
     public static IServiceCollection AddPlantsSwagger(this IServiceCollection services)
     {
-        services.AddSwaggerExamplesFromAssemblyOf<LoginRequestExampleV2>();
+        services.AddSwaggerExamplesFromAssemblyOf<LoginRequestExample>();
         services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Plants", Version = "1" });
             c.SwaggerDoc("v2", new OpenApiInfo { Title = "Plants", Version = "2" });
             var securityScheme = new OpenApiSecurityScheme
             {
@@ -69,53 +68,7 @@ public static class DIExtensions
             c.ResolveConflictingActions(action => action.First());
         });
 
-        services.AddApiVersioning(opt =>
-        {
-            opt.AssumeDefaultVersionWhenUnspecified = true;
-            opt.DefaultApiVersion = new(1, 0);
-            opt.UseApiBehavior = false;
-            opt.ApiVersionReader = new PathApiVersionReader();
-        });
-
         return services;
-    }
-
-    private sealed class PathApiVersionReader : IApiVersionReader
-    {
-        public void AddParameters(IApiVersionParameterDescriptionContext context)
-        {
-        }
-
-        public string? Read(HttpRequest request)
-        {
-            var url = new Uri(request.GetDisplayUrl());
-            var version = url.Segments.Select(TryGetVersion)
-                .Where(x => x is not null)
-                .FirstOrDefault();
-            return version == default ? null : version.ToString();
-        }
-
-        private static int? TryGetVersion(string str)
-        {
-            int? result;
-            if (str.StartsWith('v'))
-            {
-                var versionStr = str.Substring(1).Replace("/", "");
-                if (Int32.TryParse(versionStr, out int parsed))
-                {
-                    result = parsed;
-                }
-                else
-                {
-                    result = null;
-                }
-            }
-            else
-            {
-                result = null;
-            }
-            return result;
-        }
     }
 
     public static IApplicationBuilder UsePlantsSwagger(this IApplicationBuilder app)
@@ -124,7 +77,6 @@ public static class DIExtensions
         app.UseSwaggerUI(c =>
         {
             c.SwaggerEndpoint("/swagger/v2/swagger.json", "Plants v2");
-            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Plants v1");
         });
 
         return app;

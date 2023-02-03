@@ -4,16 +4,14 @@ namespace Plants.Presentation;
 
 
 [ApiController]
-[Route("v2/users")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class UserControllerV2 : ControllerBase
+[Route("users")]
+public class UserController : ControllerBase
 {
     private readonly CommandHelper _command;
     private readonly SymmetricEncrypter _encrypter;
     private readonly ISearchQueryService<User, UserSearchParams> _search;
 
-    public UserControllerV2(CommandHelper command, SymmetricEncrypter encrypter, ISearchQueryService<User, UserSearchParams> search)
+    public UserController(CommandHelper command, SymmetricEncrypter encrypter, ISearchQueryService<User, UserSearchParams> search)
     {
         _command = command;
         _encrypter = encrypter;
