@@ -18,7 +18,6 @@ public class InfoControllerV2 : ControllerBase
         _userQuery = userQuery;
         _identity = identity;
     }
-    public record DictsResult2(Dictionary<string, string> Groups, Dictionary<string, string> Regions, Dictionary<string, string> Soils);
 
     [HttpGet("dicts")]
     public async Task<ActionResult<DictsResult2>> Dicts(CancellationToken token)
@@ -29,9 +28,6 @@ public class InfoControllerV2 : ControllerBase
 
     private static Dictionary<string, string> ConvertDict(Dictionary<long, string> dict) =>
         dict.ToDictionary(_ => _.Key.ToString(), _ => _.Value);
-
-    public record AddressResult(List<PersonAddress> Addresses);
-    public record PersonAddress(string City, long MailNumber);
 
     [HttpGet("addresses")]
     public async Task<ActionResult<AddressResult>> Addresses(CancellationToken token)

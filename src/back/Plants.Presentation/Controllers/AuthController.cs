@@ -1,6 +1,4 @@
-﻿using IdentityModel.OidcClient;
-using MediatR;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace Plants.Presentation;
@@ -17,8 +15,6 @@ public class AuthControllerV2 : ControllerBase
     {
         _authorizer = authorizer;
     }
-
-    public record LoginCommand(string Login, string Password) : IRequest<LoginResult>;
 
     [HttpPost("login")]
     [SwaggerRequestExample(typeof(LoginCommand), typeof(LoginRequestExampleV2))]

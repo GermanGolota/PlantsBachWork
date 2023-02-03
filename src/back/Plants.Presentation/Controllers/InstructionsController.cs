@@ -1,11 +1,6 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using static Plants.Presentation.InstructionsControllerV2;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace Plants.Presentation;
-
-public record CreateInstructionCommandDto(long GroupId, string Text,
-  string Title, string Description);
 
 [ApiController]
 [Route("v2/instructions")]
@@ -29,16 +24,6 @@ public class InstructionsControllerV2 : ControllerBase
         _instructionSearch = instructionSearch;
     }
 
-    public record FindInstructionsResult2(List<FindInstructionsResultItem2> Items);
-    public record FindInstructionsResultItem2(Guid Id, string Title, string Description, bool HasCover)
-    {
-        public FindInstructionsResultItem2() : this(Guid.NewGuid(), "", "", false)
-        {
-        }
-    }
-
-    public record FindInstructionsRequest(long GroupId, string? Title, string? Description);
-
     [HttpGet("find")]
     public async Task<ActionResult<FindInstructionsResult2>> Find([FromQuery] FindInstructionsRequest request, CancellationToken token)
     {
@@ -52,17 +37,6 @@ public class InstructionsControllerV2 : ControllerBase
             results.Select(result =>
                 new FindInstructionsResultItem2(result.Id, result.Information.Title, result.Information.Description, result.CoverUrl is not null))
             .ToList());
-    }
-
-    public record GetInstructionResult2(bool Exists, GetInstructionResultItem2 Item);
-    public record GetInstructionResultItem2(Guid Id, string Title, string Description,
-        string InstructionText, bool HasCover, string PlantGroupId)
-    {
-        //decoder
-        public GetInstructionResultItem2() : this(Guid.NewGuid(), "", "", "", false, "-1")
-        {
-
-        }
     }
 
     [HttpGet("{id}")]
@@ -84,8 +58,6 @@ public class InstructionsControllerV2 : ControllerBase
         return result;
     }
 
-    public record CreateInstructionResult2(Guid Id);
-
     [HttpPost("create")]
     public async Task<ActionResult<CreateInstructionResult2>> Create([FromForm] CreateInstructionCommandDto cmd, IFormFile? file, CancellationToken token)
     {
@@ -98,8 +70,6 @@ public class InstructionsControllerV2 : ControllerBase
             token);
         return new CreateInstructionResult2(guid);
     }
-
-    public record EditInstructionResult2(Guid InstructionId);
 
     [HttpPost("{id}/edit")]
     public async Task<ActionResult<EditInstructionResult2>> Edit(

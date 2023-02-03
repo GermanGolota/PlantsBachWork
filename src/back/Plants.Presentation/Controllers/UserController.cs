@@ -2,7 +2,6 @@
 
 namespace Plants.Presentation;
 
-public record PasswordChangeDto(string Password);
 
 [ApiController]
 [Route("v2/users")]
@@ -37,43 +36,6 @@ public class UserControllerV2 : ControllerBase
             );
     }
 
-    public record FindUsersResult(List<FindUsersResultItem> Items);
-    public record FindUsersResultItem(string FullName, string Mobile, string Login)
-    {
-        //for converter
-        public FindUsersResultItem() : this("", "", "")
-        {
-
-        }
-        private string[] roles;
-
-        public string[] Roles
-        {
-            get => roles;
-            set
-            {
-                roles = value;
-                RoleCodes = value.Select(To).ToArray();
-
-            }
-        }
-
-        private static UserRole To(string role)
-        {
-            return role switch
-            {
-                "consumer" => UserRole.Consumer,
-                "producer" => UserRole.Producer,
-                "manager" => UserRole.Manager,
-                _ => throw new ArgumentException("Bad role name", role)
-            };
-        }
-
-        public UserRole[] RoleCodes { get; set; }
-    }
-
-    public record AlterRoleResult(bool Successfull);
-
     [HttpPost("{login}/add/{role}")]
     public async Task<ActionResult<AlterRoleResult>> AddRole(
        [FromRoute] string login, [FromRoute] UserRole role, CancellationToken token)
@@ -97,12 +59,6 @@ public class UserControllerV2 : ControllerBase
     {
         return await ChangeRole(login, role, token);
     }
-    public record CreateUserResult(bool Success, string Message);
-
-
-    public record CreateUserCommandView(string Login, List<UserRole> Roles, string Email, string? Language,
-        string FirstName, string LastName, string PhoneNumber);
-
 
     [HttpPost("create")]
     public async Task<ActionResult<CreateUserResult>> CreateUser(
@@ -115,19 +71,6 @@ public class UserControllerV2 : ControllerBase
             );
         return result.Match<CreateUserResult>(succ => new(true, "Sucessfull"),
             fail => new(false, String.Join('\n', fail.Reasons)));
-    }
-
-    public record ChangePasswordResult(bool Success, string Message)
-    {
-        public ChangePasswordResult() : this(true, "")
-        {
-
-        }
-
-        public ChangePasswordResult(string msg) : this(false, msg)
-        {
-
-        }
     }
 
     [HttpPost("changePass")]

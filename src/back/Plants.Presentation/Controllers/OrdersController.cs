@@ -21,59 +21,6 @@ public class OrdersControllerV2 : ControllerBase
         _infoQuery = infoQuery;
     }
 
-    public record OrdersResult2(List<OrdersResultItem2> Items);
-
-    public record OrdersResultItem2(
-        int Status, Guid PostId, string City,
-        long MailNumber, string SellerName, string SellerContact,
-        decimal Price, string? DeliveryTrackingNumber, string[] Images)
-    {
-        //decoder
-        public OrdersResultItem2() : this(0, Guid.NewGuid(), "",
-            0, "", "", 0, null, Array.Empty<string>())
-        {
-
-        }
-
-        private DateTime ordered;
-        private DateTime? deliveryStarted;
-        private DateTime? shipped;
-
-        public DateTime Ordered
-        {
-            get => ordered;
-            set
-            {
-                ordered = value;
-                OrderedDate = ordered.ToShortDateString();
-            }
-        }
-
-        public DateTime? DeliveryStarted
-        {
-            get => deliveryStarted;
-            set
-            {
-                deliveryStarted = value;
-                DeliveryStartedDate = value?.ToString();
-            }
-        }
-
-        public DateTime? Shipped
-        {
-            get => shipped;
-            set
-            {
-                shipped = value;
-                ShippedDate = value?.ToString();
-            }
-        }
-
-        public string OrderedDate { get; set; }
-        public string? DeliveryStartedDate { get; set; }
-        public string? ShippedDate { get; set; }
-    }
-
     [HttpGet()]
     public async Task<ActionResult<OrdersResult2>> GetAll([FromQuery] bool onlyMine, CancellationToken token)
     {
@@ -95,8 +42,6 @@ public class OrdersControllerV2 : ControllerBase
         }
         )));
     }
-    public record ConfirmDeliveryResult(bool Successfull);
-    public record StartDeliveryResult(bool Successfull);
 
     [HttpPost("{id}/deliver")]
     public async Task<ActionResult<StartDeliveryResult>> StartDelivery([FromRoute] Guid id,
@@ -108,8 +53,6 @@ public class OrdersControllerV2 : ControllerBase
             token);
         return result.Match<StartDeliveryResult>(succ => new(true), fail => new(false));
     }
-
-    public record RejectOrderResult(bool Success);
 
     [HttpPost("{id}/reject")]
     public async Task<ActionResult<RejectOrderResult>> RejectOrder([FromRoute] Guid id, CancellationToken token)

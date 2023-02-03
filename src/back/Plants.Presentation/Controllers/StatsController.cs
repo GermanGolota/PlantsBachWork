@@ -21,16 +21,6 @@ public class StatsControllerV2 : ControllerBase
         _infoQuery = infoQuery;
     }
 
-    public record FinancialStatsResult2(IEnumerable<GroupFinancialStats2> Groups);
-    public class GroupFinancialStats2
-    {
-        public decimal Income { get; set; }
-        public string GroupId { get; set; }
-        public string GroupName { get; set; }
-        public long SoldCount { get; set; }
-        public double PercentSold { get; set; }
-    }
-
     [HttpGet("financial")]
     public async Task<ActionResult<FinancialStatsResult2>> Financial([FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken token)
     {
@@ -56,9 +46,6 @@ public class StatsControllerV2 : ControllerBase
 
     private bool IsInRange(DateTime time, DateTime? from, DateTime? to) =>
         (from is null || time > from) && (to is null || time < to);
-
-    public record TotalStatsResult2(IEnumerable<GroupTotalStats2> Groups);
-    public record GroupTotalStats2(string GroupId, string GroupName, decimal Income, long Instructions, long Popularity);
 
     [HttpGet("total")]
     public async Task<ActionResult<TotalStatsResult2>> Total(CancellationToken token)
