@@ -33,9 +33,9 @@ public class UrlAuthMiddleware
                     if (validator.CanReadToken(token))
                     {
                         var principal = validator.ValidateToken(token, validationParameters, out var validatedToken);
-                        if (principal.Identities is ClaimsIdentity claims)
+                        foreach (var identity in principal.Identities.OfType<ClaimsIdentity>())
                         {
-                            context.User.AddIdentity(claims);
+                            context.User.AddIdentity(identity);
                         }
                     }
                 }

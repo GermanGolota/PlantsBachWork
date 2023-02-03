@@ -1,5 +1,4 @@
 using HealthChecks.UI.Client;
-using MediatR;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 namespace Plants.Presentation;
