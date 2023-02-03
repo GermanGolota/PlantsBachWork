@@ -1,75 +1,7 @@
-﻿using MediatR;
+﻿using Humanizer;
 using Microsoft.AspNetCore.Mvc;
-using Plants.Application.Commands;
-using Plants.Application.Requests;
 
 namespace Plants.Presentation;
-
-[ApiController]
-[Route("plants")]
-[ApiVersion("1")]
-[ApiExplorerSettings(GroupName = "v1")]
-public class PlantsController : ControllerBase
-{
-    private readonly IMediator _mediator;
-
-    public PlantsController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    [HttpGet("notposted")]
-    public async Task<ActionResult<PlantsResult>> GetNotPosted(CancellationToken token)
-    {
-        return await _mediator.Send(new PlantsRequest(), token);
-    }
-
-    [HttpGet("notposted/{id}")]
-    public async Task<ActionResult<PlantResult>> GetNotPosted([FromRoute] long id, CancellationToken token)
-    {
-        return await _mediator.Send(new PlantRequest(id), token);
-    }
-
-    [HttpGet("prepared/{id}")]
-    public async Task<ActionResult<PreparedPostResult>> GetPrepared(int id, CancellationToken token)
-    {
-        return await _mediator.Send(new PreparedPostRequest(id), token);
-    }
-
-    [HttpPost("{id}/post")]
-    public async Task<ActionResult<CreatePostResult>> GetPrepared([FromRoute] long id,
-        [FromQuery] decimal price, CancellationToken token)
-    {
-        return await _mediator.Send(new CreatePostCommand(id, price), token);
-    }
-
-    [HttpPost("add")]
-    public async Task<ActionResult<AddPlantResult>> Create
-        ([FromForm] AddPlantDto body, IEnumerable<IFormFile> files, CancellationToken token)
-    {
-        var totalBytes = await ReadFilesAsync(files);
-
-        var request = new AddPlantCommand(body.Name, body.Description,
-            body.Regions, body.SoilId, body.GroupId, body.Created, totalBytes);
-
-        return await _mediator.Send(request, token);
-    }
-
-    [HttpPost("{id}/edit")]
-    public async Task<ActionResult<EditPlantResult>> Edit
-      ([FromRoute] long id, [FromForm] EditPlantDto plant, IEnumerable<IFormFile> files, CancellationToken token)
-    {
-        var totalBytes = await ReadFilesAsync(files);
-
-        var request = new EditPlantCommand(id, plant.PlantName, plant.PlantDescription,
-            plant.RegionIds, plant.SoilId, plant.GroupId, plant.RemovedImages ?? Array.Empty<long>(), totalBytes);
-        return await _mediator.Send(request, token);
-    }
-
-    private static async Task<byte[][]> ReadFilesAsync(IEnumerable<IFormFile> files) =>
-        await Task.WhenAll(files.Select(file => file.ReadBytesAsync()));
-
-}
 
 public record AddPlantDto(string Name, string Description, long[] Regions, long SoilId, long GroupId, DateTime Created);
 
@@ -111,6 +43,55 @@ public class PlantsControllerV2 : ControllerBase
                     .Select(stock => MapPlant(stock, username))
                     .ToList());
     }
+    public record PlantResult2(bool Exists, PlantResultDto2? Item)
+    {
+        public PlantResult2(PlantResultDto2 item) : this(true, item)
+        {
+
+        }
+
+        public PlantResult2() : this(false, null)
+        {
+
+        }
+    }
+
+    public record PlantsResult2(List<PlantResultItem2> Items);
+    public record PlantResultItem2(Guid Id, string PlantName, string Description, bool IsMine)
+    {
+        //for decoder
+        public PlantResultItem2() : this(Guid.NewGuid(), "", "", false)
+        {
+
+        }
+    }
+
+    public record PlantResultDto2(string PlantName, string Description, string GroupId,
+        string SoilId, string[] Images, string[] Regions)
+    {
+        //for decoder
+        public PlantResultDto2() : this("", "",
+            "", "", Array.Empty<string>(), Array.Empty<string>())
+        {
+
+        }
+
+        private DateTime created;
+        public DateTime Created
+        {
+            get { return created; }
+            set
+            {
+                created = value;
+                CreatedHumanDate = value.Humanize();
+                CreatedDate = value.ToShortDateString();
+            }
+        }
+        public string CreatedHumanDate { get; set; }
+        public string CreatedDate { get; set; }
+
+    }
+
 
     [HttpGet("notposted/{id}")]
     public async Task<ActionResult<PlantResult2>> GetNotPosted([FromRoute] Guid id, CancellationToken token)
@@ -138,6 +119,82 @@ public class PlantsControllerV2 : ControllerBase
             result = new PlantResult2();
         }
         return result;
+    }
+
+    public record PreparedPostRequest(long PlantId);
+
+    public record PreparedPostResult2(bool Exists, PreparedPostResultItem2 Item)
+    {
+        public PreparedPostResult2() : this(false, null)
+        {
+
+        }
+
+        public PreparedPostResult2(PreparedPostResultItem2 item) : this(true, item)
+        {
+
+        }
+    }
+
+    public class PreparedPostResultItem2
+    {
+        public Guid Id { get; set; }
+        public string PlantName { get; set; }
+        public string Description { get; set; }
+        public string SoilName { get; set; }
+        public string[] Regions { get; set; }
+        public string GroupName { get; set; }
+        private DateTime created;
+
+        public DateTime Created
+        {
+            get { return created; }
+            set
+            {
+                created = value;
+                CreatedHumanDate = value.Humanize();
+                CreatedDate = value.ToShortDateString();
+            }
+        }
+
+        public string SellerName { get; set; }
+        public string SellerPhone { get; set; }
+        public long SellerCared { get; set; }
+        public long SellerSold { get; set; }
+        public long SellerInstructions { get; set; }
+        public long CareTakerCared { get; set; }
+        public long CareTakerSold { get; set; }
+        public long CareTakerInstructions { get; set; }
+        public string[] Images { get; set; }
+        public PreparedPostResultItem2()
+        {
+
+        }
+
+        public PreparedPostResultItem2(Guid id, string plantName, string description,
+            string soilName, string[] regions, string groupName, DateTime created, string sellerName,
+            string sellerPhone, long sellerCared, long sellerSold, long sellerInstructions,
+            long careTakerCared, long careTakerSold, long careTakerInstructions, string[] images)
+        {
+            Id = id;
+            PlantName = plantName;
+            Description = description;
+            SoilName = soilName;
+            Regions = regions;
+            GroupName = groupName;
+            Created = created;
+            SellerName = sellerName;
+            SellerPhone = sellerPhone;
+            SellerCared = sellerCared;
+            SellerSold = sellerSold;
+            SellerInstructions = sellerInstructions;
+            CareTakerCared = careTakerCared;
+            CareTakerSold = careTakerSold;
+            CareTakerInstructions = careTakerInstructions;
+            Images = images;
+        }
+        public string CreatedHumanDate { get; set; }
+        public string CreatedDate { get; set; }
     }
 
     [HttpGet("prepared/{id}")]
@@ -168,6 +225,8 @@ public class PlantsControllerV2 : ControllerBase
         return result;
     }
 
+    public record CreatePostResult(bool Successfull, string Message);
+
     [HttpPost("{id}/post")]
     public async Task<ActionResult<CreatePostResult>> Post([FromRoute] Guid id,
         [FromQuery] decimal price, CancellationToken token)
@@ -180,6 +239,8 @@ public class PlantsControllerV2 : ControllerBase
             succ => new CreatePostResult(true, "Success"),
             fail => new CreatePostResult(false, String.Join('\n', fail.Reasons)));
     }
+
+    public record AddPlantResult2(Guid Id);
 
     [HttpPost("add")]
     [ApiVersion("2")]
@@ -223,6 +284,8 @@ public class PlantsControllerV2 : ControllerBase
             failure => BadRequest(failure.Reasons)
             );
     }
+
+    public record EditPlantResult(bool Success, string Message);
 
     [HttpPost("{id}/edit")]
     public async Task<ActionResult<EditPlantResult>> Edit

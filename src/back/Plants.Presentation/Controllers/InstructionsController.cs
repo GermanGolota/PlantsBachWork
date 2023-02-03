@@ -1,53 +1,8 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Plants.Application.Commands;
-using Plants.Application.Requests;
+using static Plants.Presentation.InstructionsControllerV2;
 
 namespace Plants.Presentation;
-
-[ApiController]
-[Route("instructions")]
-[ApiVersion("1")]
-[ApiExplorerSettings(GroupName = "v1")]
-public class InstructionsController : ControllerBase
-{
-    private readonly IMediator _mediator;
-
-    public InstructionsController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    [HttpGet("find")]
-    public async Task<ActionResult<FindInstructionsResult>> Find([FromQuery] FindInstructionsRequest request)
-    {
-        return await _mediator.Send(request);
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<GetInstructionResult>> Get([FromRoute] long id)
-    {
-        return await _mediator.Send(new GetInstructionRequest(id));
-    }
-
-    [HttpPost("create")]
-    public async Task<ActionResult<CreateInstructionResult>> Create([FromForm] CreateInstructionCommandDto cmd, IFormFile? file)
-    {
-        var bytes = await file.ReadBytesAsync();
-        var req = new Plants.Application.Commands.CreateInstructionCommand(cmd.GroupId, cmd.Text, cmd.Title, cmd.Description, bytes);
-        return await _mediator.Send(req);
-    }
-
-    [HttpPost("{id}/edit")]
-    public async Task<ActionResult<EditInstructionResult>> Edit(
-        [FromRoute] int id, [FromForm] CreateInstructionCommandDto cmd, IFormFile file
-        )
-    {
-        var bytes = await file.ReadBytesAsync();
-        var req = new Plants.Application.Commands.EditInstructionCommand(id, cmd.GroupId, cmd.Text, cmd.Title, cmd.Description, bytes);
-        return await _mediator.Send(req);
-    }
-}
 
 public record CreateInstructionCommandDto(long GroupId, string Text,
   string Title, string Description);
@@ -74,6 +29,16 @@ public class InstructionsControllerV2 : ControllerBase
         _instructionSearch = instructionSearch;
     }
 
+    public record FindInstructionsResult2(List<FindInstructionsResultItem2> Items);
+    public record FindInstructionsResultItem2(Guid Id, string Title, string Description, bool HasCover)
+    {
+        public FindInstructionsResultItem2() : this(Guid.NewGuid(), "", "", false)
+        {
+        }
+    }
+
+    public record FindInstructionsRequest(long GroupId, string? Title, string? Description);
+
     [HttpGet("find")]
     public async Task<ActionResult<FindInstructionsResult2>> Find([FromQuery] FindInstructionsRequest request, CancellationToken token)
     {
@@ -87,6 +52,17 @@ public class InstructionsControllerV2 : ControllerBase
             results.Select(result =>
                 new FindInstructionsResultItem2(result.Id, result.Information.Title, result.Information.Description, result.CoverUrl is not null))
             .ToList());
+    }
+
+    public record GetInstructionResult2(bool Exists, GetInstructionResultItem2 Item);
+    public record GetInstructionResultItem2(Guid Id, string Title, string Description,
+        string InstructionText, bool HasCover, string PlantGroupId)
+    {
+        //decoder
+        public GetInstructionResultItem2() : this(Guid.NewGuid(), "", "", "", false, "-1")
+        {
+
+        }
     }
 
     [HttpGet("{id}")]
@@ -108,6 +84,8 @@ public class InstructionsControllerV2 : ControllerBase
         return result;
     }
 
+    public record CreateInstructionResult2(Guid Id);
+
     [HttpPost("create")]
     public async Task<ActionResult<CreateInstructionResult2>> Create([FromForm] CreateInstructionCommandDto cmd, IFormFile? file, CancellationToken token)
     {
@@ -121,6 +99,8 @@ public class InstructionsControllerV2 : ControllerBase
         return new CreateInstructionResult2(guid);
     }
 
+    public record EditInstructionResult2(Guid InstructionId);
+
     [HttpPost("{id}/edit")]
     public async Task<ActionResult<EditInstructionResult2>> Edit(
         [FromRoute] long id, [FromForm] CreateInstructionCommandDto cmd, IFormFile? file, CancellationToken token
@@ -132,7 +112,7 @@ public class InstructionsControllerV2 : ControllerBase
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<Plants.Aggregates.EditInstructionCommand>(new(guid, nameof(PlantInstruction))),
             meta => new Plants.Aggregates.EditInstructionCommand(meta, new(info.GroupNames[cmd.GroupId], cmd.Text, cmd.Title, cmd.Description), bytes),
-            token); 
+            token);
         return new EditInstructionResult2(guid);
     }
 }

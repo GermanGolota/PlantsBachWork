@@ -1,43 +1,8 @@
-﻿using MediatR;
+﻿using Humanizer;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Plants.Application.Commands;
-using Plants.Application.Requests;
 
 namespace Plants.Presentation;
-
-[ApiController]
-[Route("post")]
-[ApiVersion("1")]
-[ApiExplorerSettings(GroupName = "v1")]
-public class PostController : ControllerBase
-{
-    private readonly IMediator _mediator;
-
-    public PostController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<PostResult>> GetPost([FromRoute] long id)
-    {
-        return Ok(await _mediator.Send(new PostRequest(id)));
-    }
-
-    [HttpPost("{id}/order")]
-    public async Task<ActionResult<PlaceOrderResult>> Order([FromRoute] long id, [FromQuery] string city, [FromQuery] int mailNumber)
-    {
-        return Ok(await _mediator.Send(new PlaceOrderCommand(id, city, mailNumber)));
-    }
-
-    [HttpPost("{id}/delete")]
-    public async Task<ActionResult<DeletePostResult>> Delete([FromRoute] long id)
-    {
-        return await _mediator.Send(new DeletePostCommand(id));
-    }
-}
-
-
 
 [ApiController]
 [Route("v2/post")]
@@ -57,6 +22,84 @@ public class PostControllerV2 : ControllerBase
         _postQuery = postQuery;
         _infoQuery = infoQuery;
         _command = command;
+    }
+
+
+
+    public record PostResult2(bool Exists, PostResultItem2 Item)
+    {
+        public PostResult2() : this(false, null)
+        {
+
+        }
+
+        public PostResult2(PostResultItem2 item) : this(true, item)
+        {
+
+        }
+    }
+
+    public class PostResultItem2
+    {
+        public Guid Id { get; set; }
+        public string PlantName { get; set; }
+        public string Description { get; set; }
+        public decimal Price { get; set; }
+        public string SoilName { get; set; }
+        public string[] Regions { get; set; }
+        public string GroupName { get; set; }
+        private DateTime created;
+
+        public DateTime Created
+        {
+            get { return created; }
+            set
+            {
+                created = value;
+                CreatedHumanDate = value.Humanize();
+                CreatedDate = value.ToShortDateString();
+            }
+        }
+
+        public string SellerName { get; set; }
+        public string SellerPhone { get; set; }
+        public long SellerCared { get; set; }
+        public long SellerSold { get; set; }
+        public long SellerInstructions { get; set; }
+        public long CareTakerCared { get; set; }
+        public long CareTakerSold { get; set; }
+        public long CareTakerInstructions { get; set; }
+        public string[] Images { get; set; }
+        public PostResultItem2()
+        {
+
+        }
+
+        public PostResultItem2(Guid id, string plantName, string description, decimal price,
+            string soilName, string[] regions, string groupName, DateTime created, string sellerName,
+            string sellerPhone, long sellerCared, long sellerSold, long sellerInstructions,
+            long careTakerCared, long careTakerSold, long careTakerInstructions, string[] images)
+        {
+            Id = id;
+            PlantName = plantName;
+            Description = description;
+            Price = price;
+            SoilName = soilName;
+            Regions = regions;
+            GroupName = groupName;
+            Created = created;
+            SellerName = sellerName;
+            SellerPhone = sellerPhone;
+            SellerCared = sellerCared;
+            SellerSold = sellerSold;
+            SellerInstructions = sellerInstructions;
+            CareTakerCared = careTakerCared;
+            CareTakerSold = careTakerSold;
+            CareTakerInstructions = careTakerInstructions;
+            Images = images;
+        }
+        public string CreatedHumanDate { get; set; }
+        public string CreatedDate { get; set; }
     }
 
     [HttpGet("{id}")]
@@ -90,6 +133,7 @@ public class PostControllerV2 : ControllerBase
         }
         return result;
     }
+    public record PlaceOrderResult(bool Successfull, string Message);
 
     [HttpPost("{id}/order")]
     public async Task<ActionResult<PlaceOrderResult>> Order([FromRoute] Guid id, [FromQuery] string city, [FromQuery] long mailNumber, CancellationToken token = default)
@@ -103,6 +147,8 @@ public class PostControllerV2 : ControllerBase
             succ => new(true, "Success"),
             fail => new(false, String.Join('\n', fail.Reasons)));
     }
+
+    public record DeletePostResult(bool Deleted);
 
     [HttpPost("{id}/delete")]
     public async Task<ActionResult<DeletePostResult>> Delete([FromRoute] Guid id, CancellationToken token = default)

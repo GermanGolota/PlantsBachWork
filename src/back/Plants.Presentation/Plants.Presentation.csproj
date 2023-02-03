@@ -28,7 +28,6 @@
     <ProjectReference Include="..\Domain\Plants.Domain.Infrastructure\Plants.Domain.Infrastructure.csproj" />
     <ProjectReference Include="..\Plants.Aggregates.Infrastructure\Plants.Aggregates.Infrastructure.csproj" />
     <ProjectReference Include="..\Plants.Aggregates\Plants.Aggregates.csproj" />
-    <ProjectReference Include="..\Plants.Application\Plants.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,38 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Plants.Application.Requests;
 
 namespace Plants.Presentation;
-
-[ApiController]
-[Route("info")]
-[ApiVersion("1")]
-[ApiExplorerSettings(GroupName = "v1")]
-public class InfoController : ControllerBase
-{
-    private readonly IMediator _mediator;
-
-    public InfoController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    [HttpGet("dicts")]
-    public async Task<ActionResult<DictsResult>> Dicts(CancellationToken token)
-    {
-        var req = new DictsRequest();
-        var res = await _mediator.Send(req, token);
-        return Ok(res);
-    }
-
-    [HttpGet("addresses")]
-    public async Task<ActionResult<AddressResult>> Addresses(CancellationToken token)
-    {
-        var req = new AddressRequest();
-        var res = await _mediator.Send(req, token);
-        return Ok(res);
-    }
-}
 
 [ApiController]
 [Route("v2/info")]
@@ -50,6 +19,7 @@ public class InfoControllerV2 : ControllerBase
         _userQuery = userQuery;
         _identity = identity;
     }
+    public record DictsResult2(Dictionary<string, string> Groups, Dictionary<string, string> Regions, Dictionary<string, string> Soils);
 
     [HttpGet("dicts")]
     public async Task<ActionResult<DictsResult2>> Dicts(CancellationToken token)
@@ -60,6 +30,9 @@ public class InfoControllerV2 : ControllerBase
 
     private static Dictionary<string, string> ConvertDict(Dictionary<long, string> dict) =>
         dict.ToDictionary(_ => _.Key.ToString(), _ => _.Value);
+
+    public record AddressResult(List<PersonAddress> Addresses);
+    public record PersonAddress(string City, long MailNumber);
 
     [HttpGet("addresses")]
     public async Task<ActionResult<AddressResult>> Addresses(CancellationToken token)

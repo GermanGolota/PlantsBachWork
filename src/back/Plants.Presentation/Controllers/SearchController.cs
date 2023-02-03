@@ -1,30 +1,8 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Plants.Application.Requests;
+using Microsoft.OpenApi.Services;
 
 namespace Plants.Presentation;
-
-[ApiController]
-[Route("search")]
-[ApiVersion("1")]
-[ApiExplorerSettings(GroupName = "v1")]
-public class SearchController : ControllerBase
-{
-    private readonly IMediator _mediator;
-
-    public SearchController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    [HttpGet("")]
-    public async Task<ActionResult<SearchResult>> Stats
-        ([FromQuery] SearchRequest request, CancellationToken token)
-    {
-        var res = await _mediator.Send(request, token);
-        return Ok(res);
-    }
-}
 
 [ApiController]
 [Route("v2/search")]
@@ -42,6 +20,24 @@ public class SearchControllerV2 : ControllerBase
         _search = search;
         _infoQuery = infoQuery;
     }
+
+    public record SearchResult2(List<SearchResultItem2> Items);
+    public record SearchResultItem2(Guid Id, string PlantName, string Description, string[] ImageIds, double Price)
+    {
+        //used by converter
+        public SearchResultItem2() : this(Guid.Empty, "", "", null, 0)
+        {
+
+        }
+    }
+
+    public record SearchRequest(string? PlantName,
+        decimal? LowerPrice,
+        decimal? TopPrice,
+        DateTime? LastDate,
+        long[]? GroupIds,
+        long[]? RegionIds,
+        long[]? SoilIds);
 
     [HttpGet("")]
     public async Task<ActionResult<SearchResult2>> Search

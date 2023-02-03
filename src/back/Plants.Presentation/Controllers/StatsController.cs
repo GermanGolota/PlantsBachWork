@@ -1,39 +1,6 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using Plants.Application.Requests;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace Plants.Presentation;
-
-[ApiController]
-[Route("stats")]
-[ApiVersion("1")]
-[ApiExplorerSettings(GroupName = "v1")]
-public class StatsController : ControllerBase
-{
-    private readonly IMediator _mediator;
-
-    public StatsController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    [HttpGet("financial")]
-    public async Task<ActionResult<FinancialStatsResult>> Financial([FromQuery] DateTime from, [FromQuery] DateTime to, CancellationToken token)
-    {
-        var req = new FinancialStatsRequest(from, to);
-        var res = await _mediator.Send(req, token);
-        return Ok(res);
-    }
-
-    [HttpGet("total")]
-    public async Task<ActionResult<TotalStatsResult>> Total(CancellationToken token)
-    {
-        var req = new TotalStatsRequest();
-        var res = await _mediator.Send(req, token);
-        return Ok(res);
-    }
-}
-
 
 [ApiController]
 [Route("v2/stats")]
@@ -54,12 +21,22 @@ public class StatsControllerV2 : ControllerBase
         _infoQuery = infoQuery;
     }
 
+    public record FinancialStatsResult2(IEnumerable<GroupFinancialStats2> Groups);
+    public class GroupFinancialStats2
+    {
+        public decimal Income { get; set; }
+        public string GroupId { get; set; }
+        public string GroupName { get; set; }
+        public long SoldCount { get; set; }
+        public double PercentSold { get; set; }
+    }
+
     [HttpGet("financial")]
     public async Task<ActionResult<FinancialStatsResult2>> Financial([FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken token)
     {
         var stats = await _timedStatQuery.FindAllAsync(_ => true, token);
         var groups = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token)).GroupNames.ToInverse();
-        List<GroupFinancialStats> results = new();
+        List<GroupFinancialStats2> results = new();
         return new FinancialStatsResult2(stats.Where(_ => IsInRange(_.Date, from, to)).GroupBy(stat => stat.GroupName)
             .Select(pair =>
             {
@@ -79,6 +56,9 @@ public class StatsControllerV2 : ControllerBase
 
     private bool IsInRange(DateTime time, DateTime? from, DateTime? to) =>
         (from is null || time > from) && (to is null || time < to);
+
+    public record TotalStatsResult2(IEnumerable<GroupTotalStats2> Groups);
+    public record GroupTotalStats2(string GroupId, string GroupName, decimal Income, long Instructions, long Popularity);
 
     [HttpGet("total")]
     public async Task<ActionResult<TotalStatsResult2>> Total(CancellationToken token)

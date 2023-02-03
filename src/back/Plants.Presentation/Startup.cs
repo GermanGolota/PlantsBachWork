@@ -18,7 +18,6 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddMediatR(typeof(Plants.Application.AssemblyTag).Assembly);
         services
             .AddSingleton<IHostingContext, HostingContext>()
             .AddPlantsConfiguration(Configuration)

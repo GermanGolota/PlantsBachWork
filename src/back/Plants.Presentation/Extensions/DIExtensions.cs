@@ -40,7 +40,7 @@ public static class DIExtensions
 
     public static IServiceCollection AddPlantsSwagger(this IServiceCollection services)
     {
-        services.AddSwaggerExamplesFromAssemblyOf<LoginRequestExample>();
+        services.AddSwaggerExamplesFromAssemblyOf<LoginRequestExampleV2>();
         services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "Plants", Version = "1" });
