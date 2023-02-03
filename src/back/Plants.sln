@@ -5,8 +5,6 @@ VisualStudioVersion = 17.3.32922.545
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Presentation", "Plants.Presentation\Plants.Presentation.csproj", "{680AE79E-3038-4255-AA03-1FBB897D807D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Core", "Plants.Core\Plants.Core.csproj", "{AEA26702-C215-4E43-AD40-482BE878F98F}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Domain", "Domain\Plants.Domain\Plants.Domain.csproj", "{93C3314F-2209-4322-9A74-DF909B174B5E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{265565B2-3883-40E9-88F8-BF6B9C7E1F29}"
@@ -26,8 +24,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Aggregates", "Aggregates", "{65E88B3F-B47A-44C7-AEF7-81A751FADC5C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Aggregates.Infrastructure", "Plants.Aggregates.Infrastructure\Plants.Aggregates.Infrastructure.csproj", "{585C566E-F43B-40EF-8085-F06B4C7EDBD0}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Old", "Old", "{7530FF2D-6392-4F85-A8EB-551A22948B17}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Initializer", "Plants.Initializer\Plants.Initializer.csproj", "{FF8D4914-753E-432D-A46F-EB1BDDB45DFA}"
 EndProject
@@ -54,10 +50,6 @@ Global
 		{680AE79E-3038-4255-AA03-1FBB897D807D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{680AE79E-3038-4255-AA03-1FBB897D807D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{680AE79E-3038-4255-AA03-1FBB897D807D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AEA26702-C215-4E43-AD40-482BE878F98F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AEA26702-C215-4E43-AD40-482BE878F98F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AEA26702-C215-4E43-AD40-482BE878F98F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AEA26702-C215-4E43-AD40-482BE878F98F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{93C3314F-2209-4322-9A74-DF909B174B5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{93C3314F-2209-4322-9A74-DF909B174B5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93C3314F-2209-4322-9A74-DF909B174B5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -103,7 +95,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{AEA26702-C215-4E43-AD40-482BE878F98F} = {7530FF2D-6392-4F85-A8EB-551A22948B17}
 		{93C3314F-2209-4322-9A74-DF909B174B5E} = {1DA048AE-2144-404A-B711-3768F13FC069}
 		{2AFD362A-2C83-4922-A92A-582838861F85} = {265565B2-3883-40E9-88F8-BF6B9C7E1F29}
 		{2CD777C2-70B0-41BF-A9F1-D0642468182E} = {1DA048AE-2144-404A-B711-3768F13FC069}
