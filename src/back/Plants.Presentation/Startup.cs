@@ -1,7 +1,6 @@
 using HealthChecks.UI.Client;
 using MediatR;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Plants.Infrastructure;
 
 namespace Plants.Presentation;
 
@@ -25,10 +24,10 @@ public class Startup
             .AddPlantsConfiguration(Configuration)
             .AddShared()
             .AddSharedServices()
-            .AddInfrastructure(Configuration)
             .AddDomainInfrastructure()
             .AddAggregatesInfrastructure()
             .AddHostedService<EventStoreHostedService>()
+            .AddJwtAuthorization(Configuration)
             .AddWebRootFileProvider()
             .AddPlantsSwagger()
             .AddControllers()

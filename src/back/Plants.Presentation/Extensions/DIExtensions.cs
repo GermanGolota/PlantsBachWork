@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
+using System.Text;
 
 namespace Plants.Presentation;
 
@@ -128,4 +130,39 @@ public static class DIExtensions
         return app;
     }
 
+    internal static IServiceCollection AddJwtAuthorization(this IServiceCollection services, IConfiguration config)
+    {
+        string key = GetAuthKey(config);
+        services.AddAuthentication(x =>
+        {
+            x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+       .AddJwtBearer(x =>
+       {
+           x.RequireHttpsMetadata = false;
+           x.SaveToken = true;
+           x.TokenValidationParameters = GetValidationParams(key);
+       });
+        return services;
+    }
+
+    internal static TokenValidationParameters GetValidationParams(string key)
+    {
+        return new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
+    }
+
+    internal static string GetAuthKey(IConfiguration config)
+    {
+        return config
+            .GetSection(AuthConfig.Section)!
+            .Get<AuthConfig>()!
+            .AuthKey;
+    }
 }
