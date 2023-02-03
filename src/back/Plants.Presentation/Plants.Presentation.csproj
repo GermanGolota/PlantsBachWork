@@ -12,7 +12,7 @@
     <PackageReference Include="AspNetCore.HealthChecks.UI" Version="6.0.5" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="6.0.5" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="6.0.5" />
-    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.7">
       <PrivateAssets>all</PrivateAssets>
@@ -27,8 +27,6 @@
     <ProjectReference Include="..\Domain\Plants.Domain.Infrastructure\Plants.Domain.Infrastructure.csproj" />
     <ProjectReference Include="..\Plants.Aggregates.Infrastructure\Plants.Aggregates.Infrastructure.csproj" />
     <ProjectReference Include="..\Plants.Aggregates\Plants.Aggregates.csproj" />
-    <ProjectReference Include="..\Plants.Application\Plants.Application.csproj" />
-    <ProjectReference Include="..\Plants.Infrastructure\Plants.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,6 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Logs\" />
     <Folder Include="wwwroot\UserInfo\" />
   </ItemGroup>
 

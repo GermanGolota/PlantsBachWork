@@ -1,86 +1,10 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using Plants.Application.Commands;
-using Plants.Application.Requests;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace Plants.Presentation;
 
 [ApiController]
 [Route("plants")]
-[ApiVersion("1")]
-[ApiExplorerSettings(GroupName = "v1")]
 public class PlantsController : ControllerBase
-{
-    private readonly IMediator _mediator;
-
-    public PlantsController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    [HttpGet("notposted")]
-    public async Task<ActionResult<PlantsResult>> GetNotPosted(CancellationToken token)
-    {
-        return await _mediator.Send(new PlantsRequest(), token);
-    }
-
-    [HttpGet("notposted/{id}")]
-    public async Task<ActionResult<PlantResult>> GetNotPosted([FromRoute] long id, CancellationToken token)
-    {
-        return await _mediator.Send(new PlantRequest(id), token);
-    }
-
-    [HttpGet("prepared/{id}")]
-    public async Task<ActionResult<PreparedPostResult>> GetPrepared(int id, CancellationToken token)
-    {
-        return await _mediator.Send(new PreparedPostRequest(id), token);
-    }
-
-    [HttpPost("{id}/post")]
-    public async Task<ActionResult<CreatePostResult>> GetPrepared([FromRoute] long id,
-        [FromQuery] decimal price, CancellationToken token)
-    {
-        return await _mediator.Send(new CreatePostCommand(id, price), token);
-    }
-
-    [HttpPost("add")]
-    public async Task<ActionResult<AddPlantResult>> Create
-        ([FromForm] AddPlantDto body, IEnumerable<IFormFile> files, CancellationToken token)
-    {
-        var totalBytes = await ReadFilesAsync(files);
-
-        var request = new AddPlantCommand(body.Name, body.Description,
-            body.Regions, body.SoilId, body.GroupId, body.Created, totalBytes);
-
-        return await _mediator.Send(request, token);
-    }
-
-    [HttpPost("{id}/edit")]
-    public async Task<ActionResult<EditPlantResult>> Edit
-      ([FromRoute] long id, [FromForm] EditPlantDto plant, IEnumerable<IFormFile> files, CancellationToken token)
-    {
-        var totalBytes = await ReadFilesAsync(files);
-
-        var request = new EditPlantCommand(id, plant.PlantName, plant.PlantDescription,
-            plant.RegionIds, plant.SoilId, plant.GroupId, plant.RemovedImages ?? Array.Empty<long>(), totalBytes);
-        return await _mediator.Send(request, token);
-    }
-
-    private static async Task<byte[][]> ReadFilesAsync(IEnumerable<IFormFile> files) =>
-        await Task.WhenAll(files.Select(file => file.ReadBytesAsync()));
-
-}
-
-public record AddPlantDto(string Name, string Description, long[] Regions, long SoilId, long GroupId, DateTime Created);
-
-public record EditPlantDto(string PlantName,
-  string PlantDescription, long[] RegionIds, long SoilId, long GroupId, long[]? RemovedImages);
-
-[ApiController]
-[Route("v2/plants")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class PlantsControllerV2 : ControllerBase
 {
     private readonly CommandHelper _command;
     private readonly ISearchQueryService<PlantStock, PlantStockParams> _search;
@@ -88,7 +12,7 @@ public class PlantsControllerV2 : ControllerBase
     private readonly IProjectionQueryService<PlantStock> _stockProjector;
     private readonly IProjectionQueryService<User> _userProjector;
 
-    public PlantsControllerV2(CommandHelper command,
+    public PlantsController(CommandHelper command,
         ISearchQueryService<PlantStock, PlantStockParams> search,
         IProjectionQueryService<PlantInfo> infoProjector,
         IProjectionQueryService<PlantStock> stockProjector,
@@ -111,6 +35,7 @@ public class PlantsControllerV2 : ControllerBase
                     .Select(stock => MapPlant(stock, username))
                     .ToList());
     }
+    
 
     [HttpGet("notposted/{id}")]
     public async Task<ActionResult<PlantResult2>> GetNotPosted([FromRoute] Guid id, CancellationToken token)

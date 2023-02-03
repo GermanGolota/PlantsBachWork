@@ -4,9 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Plants.Presentation;
 
 [ApiController]
-[Route("v2/eventsourcing")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
+[Route("eventsourcing")]
 public class EventSourcingController : ControllerBase
 {
     private readonly IHistoryService _history;

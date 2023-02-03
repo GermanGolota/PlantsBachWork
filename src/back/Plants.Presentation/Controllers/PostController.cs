@@ -1,55 +1,16 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using Plants.Application.Commands;
-using Plants.Application.Requests;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace Plants.Presentation;
 
 [ApiController]
 [Route("post")]
-[ApiVersion("1")]
-[ApiExplorerSettings(GroupName = "v1")]
 public class PostController : ControllerBase
-{
-    private readonly IMediator _mediator;
-
-    public PostController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<PostResult>> GetPost([FromRoute] long id)
-    {
-        return Ok(await _mediator.Send(new PostRequest(id)));
-    }
-
-    [HttpPost("{id}/order")]
-    public async Task<ActionResult<PlaceOrderResult>> Order([FromRoute] long id, [FromQuery] string city, [FromQuery] int mailNumber)
-    {
-        return Ok(await _mediator.Send(new PlaceOrderCommand(id, city, mailNumber)));
-    }
-
-    [HttpPost("{id}/delete")]
-    public async Task<ActionResult<DeletePostResult>> Delete([FromRoute] long id)
-    {
-        return await _mediator.Send(new DeletePostCommand(id));
-    }
-}
-
-
-
-[ApiController]
-[Route("v2/post")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class PostControllerV2 : ControllerBase
 {
     private readonly IProjectionQueryService<PlantPost> _postQuery;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
     private readonly CommandHelper _command;
 
-    public PostControllerV2(
+    public PostController(
         IProjectionQueryService<PlantPost> postQuery,
         IProjectionQueryService<PlantInfo> infoQuery,
         CommandHelper command)
@@ -58,6 +19,7 @@ public class PostControllerV2 : ControllerBase
         _infoQuery = infoQuery;
         _command = command;
     }
+
 
     [HttpGet("{id}")]
     public async Task<ActionResult<PostResult2>> GetPost([FromRoute] Guid id, CancellationToken token)

@@ -1,71 +1,17 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using Plants.Application.Commands;
-using Plants.Application.Requests;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace Plants.Presentation;
 
+
 [ApiController]
 [Route("users")]
-[ApiVersion("1")]
-[ApiExplorerSettings(GroupName = "v1")]
 public class UserController : ControllerBase
-{
-    private readonly IMediator _mediator;
-
-    public UserController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    [HttpGet("")]
-    public async Task<ActionResult<FindUsersResult>> Search(
-        [FromQuery] string? name, [FromQuery] string? phone, [FromQuery] UserRole[]? roles)
-    {
-        return await _mediator.Send(new FindUsersRequest(name, phone, roles));
-    }
-
-    [HttpPost("{login}/add/{role}")]
-    public async Task<ActionResult<AlterRoleResult>> AddRole(
-       [FromRoute] string login, [FromRoute] UserRole role)
-    {
-        return await _mediator.Send(new AlterRoleCommand(login, role, AlterType.Add));
-    }
-
-    [HttpPost("{login}/remove/{role}")]
-    public async Task<ActionResult<AlterRoleResult>> RemoveRole(
-       [FromRoute] string login, [FromRoute] UserRole role)
-    {
-        return await _mediator.Send(new AlterRoleCommand(login, role, AlterType.Remove));
-    }
-
-    [HttpPost("create")]
-    public async Task<ActionResult<CreateUserResult>> CreateUser(
-        [FromBody] Plants.Application.Commands.CreateUserCommand command)
-    {
-        return await _mediator.Send(command);
-    }
-
-    [HttpPost("changePass")]
-    public async Task<ActionResult<ChangePasswordResult>> ChangePassword([FromBody] PasswordChangeDto password)
-    {
-        return await _mediator.Send(new Plants.Application.Commands.ChangePasswordCommand(password.Password));
-    }
-}
-
-public record PasswordChangeDto(string Password);
-
-[ApiController]
-[Route("v2/users")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class UserControllerV2 : ControllerBase
 {
     private readonly CommandHelper _command;
     private readonly SymmetricEncrypter _encrypter;
     private readonly ISearchQueryService<User, UserSearchParams> _search;
 
-    public UserControllerV2(CommandHelper command, SymmetricEncrypter encrypter, ISearchQueryService<User, UserSearchParams> search)
+    public UserController(CommandHelper command, SymmetricEncrypter encrypter, ISearchQueryService<User, UserSearchParams> search)
     {
         _command = command;
         _encrypter = encrypter;
@@ -114,7 +60,7 @@ public class UserControllerV2 : ControllerBase
 
     [HttpPost("create")]
     public async Task<ActionResult<CreateUserResult>> CreateUser(
-        [FromBody] Plants.Application.Commands.CreateUserCommand command, CancellationToken token = default)
+        [FromBody] CreateUserCommandView command, CancellationToken token = default)
     {
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<Aggregates.CreateUserCommand>(new(command.Login.ToGuid(), nameof(User))),

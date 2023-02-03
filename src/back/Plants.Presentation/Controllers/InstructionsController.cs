@@ -1,69 +1,17 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using Plants.Application.Commands;
-using Plants.Application.Requests;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace Plants.Presentation;
 
 [ApiController]
 [Route("instructions")]
-[ApiVersion("1")]
-[ApiExplorerSettings(GroupName = "v1")]
 public class InstructionsController : ControllerBase
-{
-    private readonly IMediator _mediator;
-
-    public InstructionsController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    [HttpGet("find")]
-    public async Task<ActionResult<FindInstructionsResult>> Find([FromQuery] FindInstructionsRequest request)
-    {
-        return await _mediator.Send(request);
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<GetInstructionResult>> Get([FromRoute] long id)
-    {
-        return await _mediator.Send(new GetInstructionRequest(id));
-    }
-
-    [HttpPost("create")]
-    public async Task<ActionResult<CreateInstructionResult>> Create([FromForm] CreateInstructionCommandDto cmd, IFormFile? file)
-    {
-        var bytes = await file.ReadBytesAsync();
-        var req = new Plants.Application.Commands.CreateInstructionCommand(cmd.GroupId, cmd.Text, cmd.Title, cmd.Description, bytes);
-        return await _mediator.Send(req);
-    }
-
-    [HttpPost("{id}/edit")]
-    public async Task<ActionResult<EditInstructionResult>> Edit(
-        [FromRoute] int id, [FromForm] CreateInstructionCommandDto cmd, IFormFile file
-        )
-    {
-        var bytes = await file.ReadBytesAsync();
-        var req = new Plants.Application.Commands.EditInstructionCommand(id, cmd.GroupId, cmd.Text, cmd.Title, cmd.Description, bytes);
-        return await _mediator.Send(req);
-    }
-}
-
-public record CreateInstructionCommandDto(long GroupId, string Text,
-  string Title, string Description);
-
-[ApiController]
-[Route("v2/instructions")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class InstructionsControllerV2 : ControllerBase
 {
     private readonly CommandHelper _command;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
     private readonly IProjectionQueryService<PlantInstruction> _instructionQuery;
     private readonly ISearchQueryService<PlantInstruction, PlantInstructionParams> _instructionSearch;
 
-    public InstructionsControllerV2(CommandHelper command,
+    public InstructionsController(CommandHelper command,
         IProjectionQueryService<PlantInfo> infoQuery,
         IProjectionQueryService<PlantInstruction> instructionQuery,
         ISearchQueryService<PlantInstruction, PlantInstructionParams> instructionSearch)
@@ -132,7 +80,7 @@ public class InstructionsControllerV2 : ControllerBase
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<Plants.Aggregates.EditInstructionCommand>(new(guid, nameof(PlantInstruction))),
             meta => new Plants.Aggregates.EditInstructionCommand(meta, new(info.GroupNames[cmd.GroupId], cmd.Text, cmd.Title, cmd.Description), bytes),
-            token); 
+            token);
         return new EditInstructionResult2(guid);
     }
 }

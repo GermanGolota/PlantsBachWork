@@ -1,41 +1,15 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using Plants.Application.Requests;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace Plants.Presentation;
 
 [ApiController]
 [Route("search")]
-[ApiVersion("1")]
-[ApiExplorerSettings(GroupName = "v1")]
 public class SearchController : ControllerBase
-{
-    private readonly IMediator _mediator;
-
-    public SearchController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    [HttpGet("")]
-    public async Task<ActionResult<SearchResult>> Stats
-        ([FromQuery] SearchRequest request, CancellationToken token)
-    {
-        var res = await _mediator.Send(request, token);
-        return Ok(res);
-    }
-}
-
-[ApiController]
-[Route("v2/search")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class SearchControllerV2 : ControllerBase
 {
     private readonly ISearchQueryService<PlantPost, PlantPostParams> _search;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
 
-    public SearchControllerV2(
+    public SearchController(
         ISearchQueryService<PlantPost, PlantPostParams> search,
         IProjectionQueryService<PlantInfo> infoQuery)
     {

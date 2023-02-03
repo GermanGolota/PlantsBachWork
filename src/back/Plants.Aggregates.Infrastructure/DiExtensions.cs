@@ -11,6 +11,7 @@ public static class DiExtensions
         services.AddDomainDependencies();
         services.AddScoped<TempPasswordContext>();
         services.AddScoped<IAuthorizer, Authorizer>();
+        services.AddHttpContextAccessor();
         services.AddScoped<IIdentityProvider, IdentityProvider>();
         services.AddScoped<IIdentityHelper, IdentityHelper>();
         services.AddSingleton<IFileRepository, FileRepository>();

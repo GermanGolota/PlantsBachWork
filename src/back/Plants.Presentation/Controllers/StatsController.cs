@@ -1,51 +1,16 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using Plants.Application.Requests;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace Plants.Presentation;
 
 [ApiController]
 [Route("stats")]
-[ApiVersion("1")]
-[ApiExplorerSettings(GroupName = "v1")]
 public class StatsController : ControllerBase
-{
-    private readonly IMediator _mediator;
-
-    public StatsController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    [HttpGet("financial")]
-    public async Task<ActionResult<FinancialStatsResult>> Financial([FromQuery] DateTime from, [FromQuery] DateTime to, CancellationToken token)
-    {
-        var req = new FinancialStatsRequest(from, to);
-        var res = await _mediator.Send(req, token);
-        return Ok(res);
-    }
-
-    [HttpGet("total")]
-    public async Task<ActionResult<TotalStatsResult>> Total(CancellationToken token)
-    {
-        var req = new TotalStatsRequest();
-        var res = await _mediator.Send(req, token);
-        return Ok(res);
-    }
-}
-
-
-[ApiController]
-[Route("v2/stats")]
-[ApiVersion("2")]
-[ApiExplorerSettings(GroupName = "v2")]
-public class StatsControllerV2 : ControllerBase
 {
     private readonly IProjectionQueryService<PlantTotalStat> _statQuery;
     private readonly IProjectionQueryService<PlantTimedStat> _timedStatQuery;
     private readonly IProjectionQueryService<PlantInfo> _infoQuery;
 
-    public StatsControllerV2(IProjectionQueryService<PlantTotalStat> totalStatQuery,
+    public StatsController(IProjectionQueryService<PlantTotalStat> totalStatQuery,
         IProjectionQueryService<PlantTimedStat> timedStatQuery,
         IProjectionQueryService<PlantInfo> infoQuery)
     {
@@ -59,7 +24,7 @@ public class StatsControllerV2 : ControllerBase
     {
         var stats = await _timedStatQuery.FindAllAsync(_ => true, token);
         var groups = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token)).GroupNames.ToInverse();
-        List<GroupFinancialStats> results = new();
+        List<GroupFinancialStats2> results = new();
         return new FinancialStatsResult2(stats.Where(_ => IsInRange(_.Date, from, to)).GroupBy(stat => stat.GroupName)
             .Select(pair =>
             {

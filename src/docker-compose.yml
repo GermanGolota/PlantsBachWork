@@ -1,17 +1,5 @@
 version: "3.3"
 services:
-  db:
-    image: 'postgres:latest'
-    ports:
-      - 8000:5432
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password1!
-      POSTGRES_DB: plants
-      PGDATA: var/lib/postgresql/data
-    volumes:
-      - ./persist/db:/var/lib/postgresql/data
-
   eventstore:
     image: eventstore/eventstore:22.10.0-buster-slim
     environment:
@@ -102,7 +90,6 @@ services:
       - 8001:80
       - 5001:443
     environment:
-      DbConnectionTemplate: Host=db;Database=plants;Username={0};Password={1}
       AllowedHosts: "*"
       Auth:AuthKey: "Set this key in secure configuration storage in prod mode"
       Auth:TokenValidityHours: 5000

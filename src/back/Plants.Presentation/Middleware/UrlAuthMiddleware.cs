@@ -26,16 +26,16 @@ public class UrlAuthMiddleware
                 var token = queryString.Get("token");
                 if (String.IsNullOrEmpty(token) == false)
                 {
-                    var validationParameters = Infrastructure.DIExtensions.GetValidationParams(Infrastructure.DIExtensions.GetAuthKey(_config));
+                    var validationParameters = DIExtensions.GetValidationParams(DIExtensions.GetAuthKey(_config));
 
                     var validator = new JwtSecurityTokenHandler();
 
                     if (validator.CanReadToken(token))
                     {
                         var principal = validator.ValidateToken(token, validationParameters, out var validatedToken);
-                        if (principal.Identities is ClaimsIdentity claims)
+                        foreach (var identity in principal.Identities.OfType<ClaimsIdentity>())
                         {
-                            context.User.AddIdentity(claims);
+                            context.User.AddIdentity(identity);
                         }
                     }
                 }
