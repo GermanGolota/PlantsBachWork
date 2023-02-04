@@ -21,20 +21,19 @@ public class InstructionsController : ControllerBase
 
 
     public record FindInstructionsViewRequest(string GroupName, string? Title, string? Description);
-    public record FindInstructionsViewResult(List<FindInstructionsViewResultItem> Items);
     public record FindInstructionsViewResultItem(Guid Id, string Title, string Description, bool HasCover);
 
     [HttpGet("find")]
-    public async Task<ActionResult<FindInstructionsViewResult>> Find([FromQuery] FindInstructionsViewRequest request, CancellationToken token)
+    public async Task<ActionResult<ListViewResult<FindInstructionsViewResultItem>>> Find([FromQuery] FindInstructionsViewRequest request, CancellationToken token)
     {
         var param = new PlantInstructionParams(request.Title, request.Description);
         var results = await _instructionSearch.SearchAsync(param, new SearchAll(), token);
         //TODO: Fix group filtering not working with elastic
         results = results.Where(_ => _.Information.GroupName == request.GroupName);
-        return new FindInstructionsViewResult(
+        return new ListViewResult<FindInstructionsViewResultItem>(
             results.Select(result =>
                 new FindInstructionsViewResultItem(result.Id, result.Information.Title, result.Information.Description, result.CoverUrl is not null))
-            .ToList());
+            );
     }
 
     public record GetInstructionViewResultItem(Guid Id, string Title, string Description,
