@@ -119,32 +119,18 @@ public record PlantResult2(bool Exists, PlantResultDto2? Item)
 }
 
 public record PlantsResult2(List<PlantResultItem2> Items);
-public record PlantResultItem2(Guid Id, string PlantName, string Description, bool IsMine)
-{
-    //for decoder
-    public PlantResultItem2() : this(Guid.NewGuid(), "", "", false)
-    {
-
-    }
-}
+public record PlantResultItem2(Guid Id, string PlantName, string Description, bool IsMine);
 
 public record PlantResultDto2(string PlantName, string Description, string GroupId,
     string SoilId, string[] Images, string[] Regions)
 {
-    //for decoder
-    public PlantResultDto2() : this("", "",
-        "", "", Array.Empty<string>(), Array.Empty<string>())
-    {
-
-    }
-
-    private DateTime created;
+    private DateTime _created;
     public DateTime Created
     {
-        get { return created; }
+        get { return _created; }
         set
         {
-            created = value;
+            _created = value;
             CreatedHumanDate = value.Humanize();
             CreatedDate = value.ToShortDateString();
         }
