@@ -2,9 +2,6 @@
 
 namespace Plants.Presentation;
 
-//auth
-public record LoginCommand(string Login, string Password);
-
 //info
 public record DictsResult2(Dictionary<string, string> Groups, Dictionary<string, string> Regions, Dictionary<string, string> Soils);
 

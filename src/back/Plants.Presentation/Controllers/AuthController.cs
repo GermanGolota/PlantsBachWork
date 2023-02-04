@@ -31,3 +31,5 @@ public class AuthController : ControllerBase
         return result;
     }
 }
+
+public record LoginCommand(string Login, string Password);

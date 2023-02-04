@@ -63,8 +63,8 @@ public class UserController : ControllerBase
         [FromBody] CreateUserCommandView command, CancellationToken token = default)
     {
         var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<Aggregates.CreateUserCommand>(new(command.Login.ToGuid(), nameof(User))),
-            meta => new Plants.Aggregates.CreateUserCommand(meta, new(command.FirstName, command.LastName, command.PhoneNumber, command.Login, command.Email, command.Language, command.Roles.ToArray())),
+            factory => factory.Create<CreateUserCommand>(new(command.Login.ToGuid(), nameof(User))),
+            meta => new CreateUserCommand(meta, new(command.FirstName, command.LastName, command.PhoneNumber, command.Login, command.Email, command.Language, command.Roles.ToArray())),
             token
             );
         return result.Match<CreateUserResult>(succ => new(true, "Sucessfull"),
