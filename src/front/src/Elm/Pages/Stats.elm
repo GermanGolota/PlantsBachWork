@@ -473,12 +473,12 @@ type alias Model =
 
 totalsDecoder : D.Decoder (List TotalsPieItem)
 totalsDecoder =
-    D.field "groups" <| D.list totalItemDecoder
+    D.field "items" <| D.list totalItemDecoder
 
 
 financialDecoder : D.Decoder (List FinancialPieItem)
 financialDecoder =
-    D.field "groups" <| D.list financialItemDecoder
+    D.field "items" <| D.list financialItemDecoder
 
 
 totalItemDecoder : D.Decoder TotalsPieItem

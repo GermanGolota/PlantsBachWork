@@ -16,23 +16,19 @@ public class StatsController : ControllerBase
         _timedStatQuery = timedStatQuery;
     }
 
+    public record FinancialStatsViewResult(decimal Income, string GroupName, long SoldCount, long PercentSold);
+
     [HttpGet("financial")]
-    public async Task<ActionResult<FinancialStatsResult2>> Financial([FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken token)
+    public async Task<ActionResult<ListViewResult<FinancialStatsViewResult>>> Financial([FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken token)
     {
         var stats = await _timedStatQuery.FindAllAsync(_ => true, token);
-        List<GroupFinancialStats2> results = new();
-        return new FinancialStatsResult2(stats.Where(_ => IsInRange(_.Date, from, to)).GroupBy(stat => stat.GroupName)
+        List<FinancialStatsViewResult> results = new();
+        return new ListViewResult<FinancialStatsViewResult>(stats.Where(_ => IsInRange(_.Date, from, to)).GroupBy(stat => stat.GroupName)
             .Select(pair =>
             {
                 var sold = pair.Sum(_ => _.SoldCount);
                 var plants = pair.Sum(_ => _.PlantsCount);
-                return new GroupFinancialStats2
-                {
-                    GroupName = pair.Key,
-                    Income = pair.Sum(_ => _.Income),
-                    SoldCount = sold,
-                    PercentSold = plants is 0 ? 0 : sold / plants
-                };
+                return new FinancialStatsViewResult(pair.Sum(_ => _.Income), pair.Key, sold, plants is 0 ? 0 : sold / plants);
             })
             .ToList());
     }
@@ -40,10 +36,12 @@ public class StatsController : ControllerBase
     private bool IsInRange(DateTime time, DateTime? from, DateTime? to) =>
         (from is null || time > from) && (to is null || time < to);
 
+    public record TotalStatsViewResult(string GroupName, decimal Income, long Instructions, long Popularity);
+
     [HttpGet("total")]
-    public async Task<ActionResult<TotalStatsResult2>> Total(CancellationToken token)
+    public async Task<ActionResult<ListViewResult<TotalStatsViewResult>>> Total(CancellationToken token)
     {
         var stats = await _statQuery.FindAllAsync(_ => true, token);
-        return new TotalStatsResult2(stats.Select(stat => new GroupTotalStats2(stat.GroupName, stat.Income, stat.InstructionsCount, stat.PlantsCount)));
+        return new ListViewResult<TotalStatsViewResult>(stats.Select(stat => new TotalStatsViewResult(stat.GroupName, stat.Income, stat.InstructionsCount, stat.PlantsCount)));
     }
 }

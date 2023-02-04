@@ -1,19 +1,5 @@
 ﻿namespace Plants.Presentation;
 
-// stats
-
-public record FinancialStatsResult2(IEnumerable<GroupFinancialStats2> Groups);
-public class GroupFinancialStats2
-{
-    public decimal Income { get; set; }
-    public string GroupName { get; set; }
-    public long SoldCount { get; set; }
-    public double PercentSold { get; set; }
-}
-
-public record TotalStatsResult2(IEnumerable<GroupTotalStats2> Groups);
-public record GroupTotalStats2(string GroupName, decimal Income, long Instructions, long Popularity);
-
 // user
 
 public record FindUsersResult(List<FindUsersResultItem> Items);

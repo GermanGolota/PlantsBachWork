@@ -342,7 +342,7 @@ deletePlant token id =
 
 
 deletedDecoder =
-    D.field "deleted" D.bool
+    D.field "success" D.bool
 
 
 getAvailable : String -> Cmd Msg
