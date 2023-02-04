@@ -256,7 +256,7 @@ confirmDelivery : String -> String -> Cmd Msg
 confirmDelivery token orderId =
     let
         expect =
-            Http.expectJson (GotConfirmReceived orderId) (D.field "successfull" D.bool)
+            Http.expectJson (GotConfirmReceived orderId) (D.field "success" D.bool)
     in
     postAuthed token (ReceivedOrder orderId) Http.emptyBody expect Nothing |> mapCmd
 
@@ -265,7 +265,7 @@ startDelivery : String -> String -> String -> Cmd Msg
 startDelivery token orderId ttn =
     let
         expect =
-            Http.expectJson (GotConfirmSend orderId) (D.field "successfull" D.bool)
+            Http.expectJson (GotConfirmSend orderId) (D.field "success" D.bool)
     in
     postAuthed token (SendOrder orderId ttn) Http.emptyBody expect Nothing |> mapCmd
 

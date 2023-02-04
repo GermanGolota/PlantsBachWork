@@ -15,7 +15,7 @@ public record QueryViewResult<T>(bool Exists, T? Item)
 
 public static class QueryViewResultExtensions
 {
-    public static QueryViewResult<T> ToViewResult<T>(this T? result) =>
+    public static QueryViewResult<T> ToQueryResult<T>(this T? result) =>
         result is null
             ? new()
             : new(result);

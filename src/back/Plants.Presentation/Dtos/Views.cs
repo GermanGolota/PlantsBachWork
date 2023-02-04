@@ -4,63 +4,7 @@ namespace Plants.Presentation;
 
 //orders
 
-public record OrdersResult2(List<OrdersResultItem2> Items);
-
-public record OrdersResultItem2(
-    int Status, Guid PostId, string City,
-    long MailNumber, string SellerName, string SellerContact,
-    decimal Price, string? DeliveryTrackingNumber, Picture[] Images)
-{
-    //decoder
-    public OrdersResultItem2() : this(0, Guid.NewGuid(), "",
-        0, "", "", 0, null, Array.Empty<Picture>())
-    {
-
-    }
-
-    private DateTime ordered;
-    private DateTime? deliveryStarted;
-    private DateTime? shipped;
-
-    public DateTime Ordered
-    {
-        get => ordered;
-        set
-        {
-            ordered = value;
-            OrderedDate = ordered.ToShortDateString();
-        }
-    }
-
-    public DateTime? DeliveryStarted
-    {
-        get => deliveryStarted;
-        set
-        {
-            deliveryStarted = value;
-            DeliveryStartedDate = value?.ToString();
-        }
-    }
-
-    public DateTime? Shipped
-    {
-        get => shipped;
-        set
-        {
-            shipped = value;
-            ShippedDate = value?.ToString();
-        }
-    }
-
-    public string OrderedDate { get; set; }
-    public string? DeliveryStartedDate { get; set; }
-    public string? ShippedDate { get; set; }
-}
-
 public record ConfirmDeliveryResult(bool Successfull);
-public record StartDeliveryResult(bool Successfull);
-
-public record RejectOrderResult(bool Success);
 
 //plants
 

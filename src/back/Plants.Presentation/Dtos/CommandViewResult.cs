@@ -4,7 +4,7 @@ public record CommandViewResult(bool Success, string Message);
 
 public static class CommandViewResultExtensions
 {
-    public static CommandViewResult ToResult(this OneOf<CommandAcceptedResult, CommandForbidden> cmdResult, string? successMessage = null)
+    public static CommandViewResult ToCommandResult(this OneOf<CommandAcceptedResult, CommandForbidden> cmdResult, string? successMessage = null)
     {
         successMessage ??= "Successfull";
 
