@@ -756,7 +756,7 @@ submitAddCommand : String -> PlantView -> Cmd Msg
 submitAddCommand token plant =
     let
         expect =
-            Http.expectJson GotSubmitAdd (D.field "id" decodeId)
+            Http.expectJson GotSubmitAdd decodeId
     in
     postAuthed token AddPlant (getAddBody plant) expect Nothing |> mapCmd
 
