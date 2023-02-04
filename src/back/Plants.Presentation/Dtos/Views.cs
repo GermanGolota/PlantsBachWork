@@ -1,19 +1,5 @@
 ﻿namespace Plants.Presentation;
 
-//search
-
-public record SearchResult2(List<SearchResultItem2> Items);
-public record SearchResultItem2(Guid Id, string PlantName, string Description, Picture[] Images, double Price);
-
-public record SearchRequest(string? PlantName,
-    decimal? LowerPrice,
-    decimal? TopPrice,
-    DateTime? LastDate,
-    string[]? GroupNames,
-    string[]? RegionNames,
-    string[]? SoilNames);
-
-
 // stats
 
 public record FinancialStatsResult2(IEnumerable<GroupFinancialStats2> Groups);
