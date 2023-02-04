@@ -18,61 +18,64 @@ public class UserController : ControllerBase
         _search = search;
     }
 
+    public record FindUsersResultItem(string FullName, string Mobile, string Login, UserRole[] RoleCodes);
+
     [HttpGet("")]
-    public async Task<ActionResult<FindUsersResult>> Search(
+    public async Task<ActionResult<ListViewResult<FindUsersResultItem>>> Search(
        [FromQuery] string? name, [FromQuery] string? phone, [FromQuery] UserRole[]? roles, CancellationToken token)
     {
         var currentUserRoles = _command.IdentityProvider.Identity!.Roles;
         var allRoles = Enum.GetValues<UserRole>();
         var rolesToFetch = currentUserRoles.Intersect(roles ?? allRoles).ToArray();
         var results = await _search.SearchAsync(new(name, phone, roles), new SearchAll(), token);
-        return new FindUsersResult(
-            results.Select(user => new FindUsersResultItem(user.FullName, user.PhoneNumber, user.Login)
-            {
-                RoleCodes = user.Roles
-            }).ToList()
+        return new ListViewResult<FindUsersResultItem>(
+            results.Select(user => new FindUsersResultItem(user.FullName, user.PhoneNumber, user.Login, user.Roles))
             );
     }
 
     [HttpPost("{login}/add/{role}")]
-    public async Task<ActionResult<AlterRoleResult>> AddRole(
+    public async Task<ActionResult<CommandViewResult>> AddRole(
        [FromRoute] string login, [FromRoute] UserRole role, CancellationToken token)
     {
         return await ChangeRole(login, role, token);
     }
 
-    private async Task<ActionResult<AlterRoleResult>> ChangeRole(string login, UserRole role, CancellationToken token = default)
+    private async Task<ActionResult<CommandViewResult>> ChangeRole(string login, UserRole role, CancellationToken token = default)
     {
         var result = await _command.CreateAndSendAsync(
                     factory => factory.Create<ChangeRoleCommand>(new(login.ToGuid(), nameof(User))),
                     meta => new ChangeRoleCommand(meta, role),
                     token
                     );
-        return new AlterRoleResult(result.IsFirst());
+        return result.ToCommandResult();
     }
 
     [HttpPost("{login}/remove/{role}")]
-    public async Task<ActionResult<AlterRoleResult>> RemoveRole(
+    public async Task<ActionResult<CommandViewResult>> RemoveRole(
        [FromRoute] string login, [FromRoute] UserRole role, CancellationToken token)
     {
         return await ChangeRole(login, role, token);
     }
 
+    public record CreateUserViewRequest(string Login, List<UserRole> Roles, string Email, string? Language,
+        string FirstName, string LastName, string PhoneNumber);
+
     [HttpPost("create")]
-    public async Task<ActionResult<CreateUserResult>> CreateUser(
-        [FromBody] CreateUserCommandView command, CancellationToken token = default)
+    public async Task<ActionResult<CommandViewResult>> CreateUser(
+        [FromBody] CreateUserViewRequest command, CancellationToken token = default)
     {
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<CreateUserCommand>(new(command.Login.ToGuid(), nameof(User))),
             meta => new CreateUserCommand(meta, new(command.FirstName, command.LastName, command.PhoneNumber, command.Login, command.Email, command.Language, command.Roles.ToArray())),
             token
             );
-        return result.Match<CreateUserResult>(succ => new(true, "Sucessfull"),
-            fail => new(false, String.Join('\n', fail.Reasons)));
+        return result.ToCommandResult();
     }
 
+    public record ChangePasswordViewRequest(string Password);
+
     [HttpPost("changePass")]
-    public async Task<ActionResult<ChangePasswordResult>> ChangePassword([FromBody] PasswordChangeDto password, CancellationToken token)
+    public async Task<ActionResult<CommandViewResult>> ChangePassword([FromBody] ChangePasswordViewRequest password, CancellationToken token)
     {
         var oldPassword = _encrypter.Decrypt(_command.IdentityProvider.Identity!.Hash);
         var result = await _command.CreateAndSendAsync(
@@ -80,8 +83,7 @@ public class UserController : ControllerBase
             (meta, identity) => new ChangeOwnPasswordCommand(meta, oldPassword, password.Password),
             token
             );
-        return result.Match<ChangePasswordResult>(_ => new(),
-            fail => new(String.Join('\n', fail.Reasons)));
+        return result.ToCommandResult();
     }
 
 }

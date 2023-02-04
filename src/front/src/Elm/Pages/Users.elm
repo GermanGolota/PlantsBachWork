@@ -368,7 +368,7 @@ removeRole : String -> UserRole -> String -> Cmd Msg
 removeRole token role login =
     let
         expect =
-            Http.expectJson (GotRemoveRole login) (D.succeed True)
+            Http.expectJson (GotRemoveRole login) (D.field "success" D.bool)
     in
     postAuthed token (RemoveRole login role) Http.emptyBody expect Nothing |> mapCmd
 
@@ -377,7 +377,7 @@ addRole : String -> UserRole -> String -> Cmd Msg
 addRole token role login =
     let
         expect =
-            Http.expectJson (GotAddRole login) (D.succeed True)
+            Http.expectJson (GotAddRole login) (D.field "success" D.bool)
     in
     postAuthed token (AddRole login role) Http.emptyBody expect Nothing |> mapCmd
 
