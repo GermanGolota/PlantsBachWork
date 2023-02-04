@@ -721,13 +721,13 @@ plantDecoderBase av token =
                     ( "-1", "Unknown" )
 
         regIdsDecoder =
-            D.at [ "item", "regions" ] (D.list decodeId)
+            D.at [ "item", "regionNames" ] (D.list decodeId)
 
         selected ids =
             List.map getRegionFor ids
 
         reg ids =
-            Multiselect.populateValues (Multiselect.initModel regions "regions" Multiselect.Show) regions (selected ids)
+            Multiselect.populateValues (Multiselect.initModel regions "regionNames" Multiselect.Show) regions (selected ids)
 
         regDecoder =
             D.map reg regIdsDecoder
@@ -737,8 +737,8 @@ plantDecoderBase av token =
         |> itemRequired "description" D.string
         |> custom createdDecoder
         |> custom regDecoder
-        |> itemRequired "soilId" decodeId
-        |> itemRequired "groupId" decodeId
+        |> itemRequired "soilName" decodeId
+        |> itemRequired "groupName" decodeId
         |> custom (imagesDecoder token [ "item", "images" ])
         |> hardcoded []
 
@@ -766,10 +766,10 @@ getEditBody plant removed =
     Http.multipartBody
         ([ Http.stringPart "PlantName" plant.name
          , Http.stringPart "PlantDescription" plant.description
-         , Http.stringPart "SoilId" plant.soil
-         , Http.stringPart "GroupId" plant.group
+         , Http.stringPart "SoilName" plant.soil
+         , Http.stringPart "GroupName" plant.group
          ]
-            ++ regionsParts "RegionIds" plant.regions
+            ++ regionsParts "RegionNames" plant.regions
             ++ filesParts plant.uploadedFiles
             ++ removedParts removed
         )
@@ -780,11 +780,11 @@ getAddBody plant =
     Http.multipartBody
         ([ Http.stringPart "Name" plant.name
          , Http.stringPart "Description" plant.description
-         , Http.stringPart "SoilId" plant.soil
-         , Http.stringPart "GroupId" plant.group
+         , Http.stringPart "SoilName" plant.soil
+         , Http.stringPart "GroupName" plant.group
          , Http.stringPart "Created" plant.created
          ]
-            ++ regionsParts "Regions" plant.regions
+            ++ regionsParts "RegionNames" plant.regions
             ++ filesParts plant.uploadedFiles
         )
 

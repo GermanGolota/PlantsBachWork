@@ -70,25 +70,25 @@ updateLocal msg model =
     case ( msg, model ) of
         ( PieEvent pieEvent, Authorized token (Totals (Loaded viewType)) ) ->
             case pieEvent of
-                ChartItemClicked plantId ->
+                ChartItemClicked plantName ->
                     let
-                        getById id =
-                            List.head <| List.filter (\item -> item.id == id) viewType.items
+                        getByName =
+                            List.head <| List.filter (\item -> item.text == plantName) viewType.items
 
                         totals =
-                            Authorized token (Totals <| Loaded { viewType | selectedItem = getById plantId })
+                            Authorized token (Totals <| Loaded { viewType | selectedItem = getByName })
                     in
                     ( totals, Cmd.none )
 
         ( PieEvent pieEvent, Authorized token (Financials (BothSelected from to (ValidDates (Loaded fin)))) ) ->
             case pieEvent of
-                ChartItemClicked plantId ->
+                ChartItemClicked plantName ->
                     let
-                        getById id =
-                            List.head <| List.filter (\item -> item.id == id) fin.items
+                        getByName =
+                            List.head <| List.filter (\item -> item.text == plantName) fin.items
 
                         finA =
-                            Authorized token (Financials <| BothSelected from to <| ValidDates <| Loaded { fin | selectedItem = getById plantId })
+                            Authorized token (Financials <| BothSelected from to <| ValidDates <| Loaded { fin | selectedItem = getByName })
                     in
                     ( finA, Cmd.none )
 
@@ -400,7 +400,7 @@ getSlices : TotalsPieItem -> List PieSlice
 getSlices item =
     let
         base val text =
-            PieSlice item.id item.text val text
+            PieSlice item.text item.text val text
     in
     [ base item.income "Income", base item.instructions "Instructions", base item.popularity "Popularity" ]
 
@@ -409,7 +409,7 @@ getSlicesF : FinancialPieItem -> List PieSlice
 getSlicesF item =
     let
         base val text =
-            PieSlice item.id item.text val text
+            PieSlice item.text item.text val text
     in
     [ base item.income "Income", base item.percentSold "Sold %", base item.soldCount "Sold Count" ]
 
@@ -430,7 +430,7 @@ type alias TotalsView =
 
 
 type alias TotalsPieItem =
-    { id : String, text : String, income : Float, instructions : Float, popularity : Float }
+    { text : String, income : Float, instructions : Float, popularity : Float }
 
 
 type alias PieSlice =
@@ -460,7 +460,7 @@ type alias FinancialView =
 
 
 type alias FinancialPieItem =
-    { id : String, text : String, soldCount : Float, percentSold : Float, income : Float }
+    { text : String, soldCount : Float, percentSold : Float, income : Float }
 
 
 type alias Model =
@@ -484,7 +484,6 @@ financialDecoder =
 totalItemDecoder : D.Decoder TotalsPieItem
 totalItemDecoder =
     D.succeed TotalsPieItem
-        |> required "groupId" decodeId
         |> required "groupName" D.string
         |> required "income" D.float
         |> required "instructions" D.float
@@ -494,7 +493,6 @@ totalItemDecoder =
 financialItemDecoder : D.Decoder FinancialPieItem
 financialItemDecoder =
     D.succeed FinancialPieItem
-        |> required "groupId" decodeId
         |> required "groupName" D.string
         |> required "soldCount" D.float
         |> required "percentSold" D.float

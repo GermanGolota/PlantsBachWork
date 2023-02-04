@@ -139,9 +139,6 @@ updateLocal msg m =
                     case model.data of
                         Loaded orders ->
                             let
-                                order =
-                                    List.head (List.filter (\o -> getPostId o == postId) orders)
-
                                 updateOrder o =
                                     if getPostId o == postId then
                                         case o of
@@ -547,7 +544,7 @@ viewOrder isAdmin confirmed rejected ttns viewType order =
                                 [ historyBtn
                                 ]
             in
-            viewOrderBase False cr (\a -> []) btns
+            viewOrderBase False cr (\_ -> []) btns
 
         Delivering del ->
             let
@@ -588,7 +585,7 @@ viewOrder isAdmin confirmed rejected ttns viewType order =
                                 [ historyBtn
                                 ]
             in
-            viewOrderBase False del (\a -> viewDelivering (\b -> div [] []) a) btns
+            viewOrderBase False del (\a -> viewDelivering (\_ -> div [] []) a) btns
 
         Delivered del ->
             viewOrderBase True del (\a -> viewDelivering viewDelivered a) (div [] [ historyBtn ])
@@ -715,7 +712,7 @@ getData token viewType =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 

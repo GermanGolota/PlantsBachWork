@@ -7,16 +7,13 @@ namespace Plants.Presentation;
 public class PostController : ControllerBase
 {
     private readonly IProjectionQueryService<PlantPost> _postQuery;
-    private readonly IProjectionQueryService<PlantInfo> _infoQuery;
     private readonly CommandHelper _command;
 
     public PostController(
         IProjectionQueryService<PlantPost> postQuery,
-        IProjectionQueryService<PlantInfo> infoQuery,
         CommandHelper command)
     {
         _postQuery = postQuery;
-        _infoQuery = infoQuery;
         _command = command;
     }
 

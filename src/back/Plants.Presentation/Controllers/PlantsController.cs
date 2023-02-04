@@ -8,19 +8,16 @@ public class PlantsController : ControllerBase
 {
     private readonly CommandHelper _command;
     private readonly ISearchQueryService<PlantStock, PlantStockParams> _search;
-    private readonly IProjectionQueryService<PlantInfo> _infoProjector;
     private readonly IProjectionQueryService<PlantStock> _stockProjector;
     private readonly IProjectionQueryService<User> _userProjector;
 
     public PlantsController(CommandHelper command,
         ISearchQueryService<PlantStock, PlantStockParams> search,
-        IProjectionQueryService<PlantInfo> infoProjector,
         IProjectionQueryService<PlantStock> stockProjector,
         IProjectionQueryService<User> userProjector)
     {
         _command = command;
         _search = search;
-        _infoProjector = infoProjector;
         _stockProjector = stockProjector;
         _userProjector = userProjector;
     }
@@ -45,17 +42,11 @@ public class PlantsController : ControllerBase
         {
             var plant = await _stockProjector.GetByIdAsync(id, token);
             var info = plant.Information;
-            var dict = await _infoProjector.GetByIdAsync(PlantInfo.InfoId, token);
-            var groups = dict.GroupNames.ToInverse();
-            var soils = dict.SoilNames.ToInverse();
-            var regions = dict.RegionNames.ToInverse();
             result = new PlantResult2(new PlantResultDto2(info.PlantName, info.Description,
-                groups[info.GroupName].ToString(), soils[info.SoilName].ToString(),
+                info.GroupName, info.SoilName,
                 plant.Pictures,
-                info.RegionNames.Select(regionName => regions[regionName].ToString()).ToArray())
-            {
-                Created = plant.CreatedTime
-            });
+                info.RegionNames,
+                plant.CreatedTime));
         }
         else
         {
@@ -105,17 +96,12 @@ public class PlantsController : ControllerBase
     }
 
     [HttpPost("add")]
-    [ApiVersion("2")]
     public async Task<ActionResult<AddPlantResult2>> Create
         ([FromForm] AddPlantDto body, IEnumerable<IFormFile> files, CancellationToken token)
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
         var stockId = new Random().GetRandomConvertableGuid();
-        var info = await _infoProjector.GetByIdAsync(PlantInfo.InfoId, token);
-        var regions = body.Regions.Select(regionId => info.RegionNames[regionId]).ToArray();
-        var soil = info.SoilNames[body.SoilId];
-        var group = info.GroupNames[body.GroupId];
-        var plantInfo = new PlantInformation(body.Name, body.Description, regions, soil, group);
+        var plantInfo = new PlantInformation(body.Name, body.Description, body.RegionNames, body.SoilName, body.SoilName);
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
             meta => new AddToStockCommand(meta, plantInfo, body.Created, pictures),
@@ -129,7 +115,6 @@ public class PlantsController : ControllerBase
     }
 
     [HttpPost("add2")]
-    [ApiVersion("2")]
     public async Task<ActionResult<AddPlantResult2>> Create2
         ([FromForm] PlantInformation body, DateTime created, IEnumerable<IFormFile> files, CancellationToken token)
     {
@@ -152,11 +137,7 @@ public class PlantsController : ControllerBase
       ([FromRoute] Guid id, [FromForm] EditPlantDto plant, IEnumerable<IFormFile> files, CancellationToken token)
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
-        var info = await _infoProjector.GetByIdAsync(PlantInfo.InfoId, token);
-        var regions = plant.RegionIds.Select(regionId => info.RegionNames[regionId]).ToArray();
-        var soil = info.SoilNames[plant.SoilId];
-        var group = info.GroupNames[plant.GroupId];
-        var plantInfo = new PlantInformation(plant.PlantName, plant.PlantDescription, regions, soil, group);
+        var plantInfo = new PlantInformation(plant.PlantName, plant.PlantDescription, plant.RegionNames, plant.SoilName, plant.GroupName);
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<EditStockItemCommand>(new(id, nameof(PlantStock))),
             meta => new EditStockItemCommand(meta, plantInfo, pictures, plant.RemovedImages),

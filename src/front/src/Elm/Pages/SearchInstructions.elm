@@ -143,7 +143,7 @@ search title description groupId token =
             Http.expectJson GotSearch (searchDecoder token)
 
         queryParams =
-            [ ( "GroupId", groupId ), ( "Title", title ), ( "Description", description ) ]
+            [ ( "GroupName", groupId ), ( "Title", title ), ( "Description", description ) ]
     in
     Endpoints.getAuthedQuery (buildQuery queryParams) token FindInstructions expect Nothing |> mapCmd
 

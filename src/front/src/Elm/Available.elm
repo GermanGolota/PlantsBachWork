@@ -8,25 +8,25 @@ import Multiselect as Multiselect
 availableDecoder : D.Decoder Available
 availableDecoder =
     D.map3 Available
-        ((D.field "regions" <| D.dict D.string)
+        ((D.field "regions" <| D.list D.string)
             |> dictDecoder "region"
         )
-        ((D.field "soils" <| D.dict D.string)
+        ((D.field "soils" <| D.list D.string)
             |> dictDecoder "soil"
         )
-        (D.field "groups" (D.dict D.string)
+        (D.field "groups" (D.list D.string)
             |> dictDecoder "group"
         )
 
 
-dictDecoder : String -> D.Decoder (Dict String String) -> D.Decoder Multiselect.Model
+dictDecoder : String -> D.Decoder (List String) -> D.Decoder Multiselect.Model
 dictDecoder tag base =
     D.map (convertDict tag) base
 
 
-convertDict : String -> Dict String String -> Multiselect.Model
-convertDict tag dict =
-    Multiselect.initModel (Dict.toList dict) tag Multiselect.Show
+convertDict : String -> List String -> Multiselect.Model
+convertDict tag items =
+    Multiselect.initModel (List.map (\item -> Tuple.pair item item) items) tag Multiselect.Show
 
 
 type alias Available =

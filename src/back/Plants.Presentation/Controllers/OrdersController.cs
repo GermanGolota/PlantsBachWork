@@ -8,15 +8,12 @@ public class OrdersController : ControllerBase
 {
     private readonly CommandHelper _command;
     private readonly ISearchQueryService<PlantOrder, PlantOrderParams> _orderQuery;
-    private readonly IProjectionQueryService<PlantInfo> _infoQuery;
 
     public OrdersController(CommandHelper command,
-        ISearchQueryService<PlantOrder, PlantOrderParams> orderQuery,
-        IProjectionQueryService<PlantInfo> infoQuery)
+        ISearchQueryService<PlantOrder, PlantOrderParams> orderQuery)
     {
         _command = command;
         _orderQuery = orderQuery;
-        _infoQuery = infoQuery;
     }
 
     [HttpGet()]
@@ -54,8 +51,8 @@ public class OrdersController : ControllerBase
     public async Task<ActionResult<RejectOrderResult>> RejectOrder([FromRoute] Guid id, CancellationToken token)
     {
         var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<Plants.Aggregates.RejectOrderCommand>(new(id, nameof(PlantOrder))),
-            meta => new Plants.Aggregates.RejectOrderCommand(meta));
+            factory => factory.Create<RejectOrderCommand>(new(id, nameof(PlantOrder))),
+            meta => new RejectOrderCommand(meta));
         return result.Match<RejectOrderResult>(succ => new(true), fail => new(false));
     }
 
@@ -63,8 +60,8 @@ public class OrdersController : ControllerBase
     public async Task<ActionResult<ConfirmDeliveryResult>> MarkAsDelivered([FromRoute] Guid id, CancellationToken token)
     {
         var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<Plants.Aggregates.ConfirmDeliveryCommand>(new(id, nameof(PlantOrder))),
-            meta => new Plants.Aggregates.ConfirmDeliveryCommand(meta),
+            factory => factory.Create<ConfirmDeliveryCommand>(new(id, nameof(PlantOrder))),
+            meta => new ConfirmDeliveryCommand(meta),
             token);
         return result.Match<ConfirmDeliveryResult>(succ => new(true), fail => new(false));
     }

@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace Plants.Aggregates;
+﻿namespace Plants.Aggregates;
 
 [Allow(Consumer, Read)]
 [Allow(Producer, Read)]
@@ -19,39 +17,23 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>
         }
     }
 
-    public Dictionary<long, string> GroupNames { get; private set; } = new();
-    public Dictionary<long, string> RegionNames { get; private set; } = new();
-    public Dictionary<long, string> SoilNames { get; private set; } = new();
+    public HashSet<string> GroupNames { get; private set; } = new();
+    public HashSet<string> RegionNames { get; private set; } = new();
+    public HashSet<string> SoilNames { get; private set; } = new();
 
     public void Handle(StockAddedEvent @event)
     {
         var plant = @event.Plant;
-        GroupNames.CacheTransformation(plant.GroupName, ToLong);
-        SoilNames.CacheTransformation(plant.SoilName, ToLong);
+
+        GroupNames.Add(plant.GroupName);
+        SoilNames.Add(plant.SoilName);
         foreach (var regionName in plant.RegionNames)
         {
-            RegionNames.CacheTransformation(regionName, ToLong);
+            RegionNames.Add(regionName);
         }
 
     }
-
-    private long ToLong(string str)
-    {
-        var initialBytes = Encoding.UTF8.GetBytes(str);
-        var bytes = initialBytes.Reverse().Take(8).ToArray();
-        if (bytes.Length < 8)
-        {
-            var newBytes = new byte[8];
-            bytes.CopyTo(newBytes, 0);
-            for (int i = bytes.Length; i < 8; i++)
-            {
-                newBytes[i] = 0;
-            }
-            bytes = newBytes;
-        }
-        return BitConverter.ToInt64(bytes);
-    }
-
+    
     private class PlantStockSubscription : IAggregateSubscription<PlantInfo, PlantStock>
     {
         public IEnumerable<EventSubscriptionBase<PlantInfo, PlantStock>> Subscriptions => new EventSubscriptionBase<PlantInfo, PlantStock>[]

@@ -3,14 +3,14 @@
 namespace Plants.Presentation;
 
 //info
-public record DictsResult2(Dictionary<string, string> Groups, Dictionary<string, string> Regions, Dictionary<string, string> Soils);
+public record DictsResult2(HashSet<string> Groups, HashSet<string> Regions, HashSet<string> Soils);
 
 public record AddressResult(List<PersonAddress> Addresses);
 public record PersonAddress(string City, long MailNumber);
 
 //instructions
 
-public record CreateInstructionCommandDto(long GroupId, string Text,
+public record CreateInstructionCommandDto(string GroupName, string Text,
   string Title, string Description);
 
 public record FindInstructionsResult2(List<FindInstructionsResultItem2> Items);
@@ -21,11 +21,11 @@ public record FindInstructionsResultItem2(Guid Id, string Title, string Descript
     }
 }
 
-public record FindInstructionsRequest(long GroupId, string? Title, string? Description);
+public record FindInstructionsRequest(string GroupName, string? Title, string? Description);
 
 public record GetInstructionResult2(bool Exists, GetInstructionResultItem2 Item);
 public record GetInstructionResultItem2(Guid Id, string Title, string Description,
-    string InstructionText, bool HasCover, string PlantGroupId)
+    string InstructionText, bool HasCover, string PlantGroupName)
 {
     //decoder
     public GetInstructionResultItem2() : this(Guid.NewGuid(), "", "", "", false, "-1")
@@ -100,10 +100,10 @@ public record RejectOrderResult(bool Success);
 
 //plants
 
-public record AddPlantDto(string Name, string Description, long[] Regions, long SoilId, long GroupId, DateTime Created);
+public record AddPlantDto(string Name, string Description, string[] RegionNames, string SoilName, string GroupName, DateTime Created);
 
 public record EditPlantDto(string PlantName,
-  string PlantDescription, long[] RegionIds, long SoilId, long GroupId, Guid[]? RemovedImages);
+  string PlantDescription, string[] RegionNames, string SoilName, string GroupName, Guid[]? RemovedImages);
 
 public record PlantResult2(bool Exists, PlantResultDto2? Item)
 {
@@ -121,23 +121,11 @@ public record PlantResult2(bool Exists, PlantResultDto2? Item)
 public record PlantsResult2(List<PlantResultItem2> Items);
 public record PlantResultItem2(Guid Id, string PlantName, string Description, bool IsMine);
 
-public record PlantResultDto2(string PlantName, string Description, string GroupId,
-    string SoilId, Picture[] Images, string[] Regions)
+public record PlantResultDto2(string PlantName, string Description, string GroupName,
+    string SoilName, Picture[] Images, string[] RegionNames, DateTime Created)
 {
-    private DateTime _created;
-    public DateTime Created
-    {
-        get { return _created; }
-        set
-        {
-            _created = value;
-            CreatedHumanDate = value.Humanize();
-            CreatedDate = value.ToShortDateString();
-        }
-    }
-    public string CreatedHumanDate { get; set; }
-    public string CreatedDate { get; set; }
-
+    public string CreatedHumanDate => Created.Humanize();
+    public string CreatedDate => Created.ToShortDateString();
 }
 
 
@@ -160,7 +148,7 @@ public class PreparedPostResultItem2
     public string PlantName { get; set; }
     public string Description { get; set; }
     public string SoilName { get; set; }
-    public string[] Regions { get; set; }
+    public string[] RegionNames { get; set; }
     public string GroupName { get; set; }
     private DateTime created;
 
@@ -193,7 +181,7 @@ public class PreparedPostResultItem2
         PlantName = plantName;
         Description = description;
         SoilName = soilName;
-        Regions = regions;
+        RegionNames = regions;
         GroupName = groupName;
         Created = created;
         SellerName = sellerName;
@@ -240,7 +228,7 @@ public class PostResultItem2
     public string Description { get; set; }
     public decimal Price { get; set; }
     public string SoilName { get; set; }
-    public string[] Regions { get; set; }
+    public string[] RegionNames { get; set; }
     public string GroupName { get; set; }
     private DateTime created;
 
@@ -279,7 +267,7 @@ public class PostResultItem2
         Description = description;
         Price = price;
         SoilName = soilName;
-        Regions = regions;
+        RegionNames = regions;
         GroupName = groupName;
         Created = created;
         SellerName = sellerName;
@@ -309,9 +297,9 @@ public record SearchRequest(string? PlantName,
     decimal? LowerPrice,
     decimal? TopPrice,
     DateTime? LastDate,
-    long[]? GroupIds,
-    long[]? RegionIds,
-    long[]? SoilIds);
+    string[]? GroupNames,
+    string[]? RegionNames,
+    string[]? SoilNames);
 
 
 // stats
@@ -320,14 +308,13 @@ public record FinancialStatsResult2(IEnumerable<GroupFinancialStats2> Groups);
 public class GroupFinancialStats2
 {
     public decimal Income { get; set; }
-    public string GroupId { get; set; }
     public string GroupName { get; set; }
     public long SoldCount { get; set; }
     public double PercentSold { get; set; }
 }
 
 public record TotalStatsResult2(IEnumerable<GroupTotalStats2> Groups);
-public record GroupTotalStats2(string GroupId, string GroupName, decimal Income, long Instructions, long Popularity);
+public record GroupTotalStats2(string GroupName, decimal Income, long Instructions, long Popularity);
 
 // user
 

@@ -296,13 +296,13 @@ availableToList av =
             List.map (\( key, _ ) -> ( text, key )) pairs
 
         regions =
-            map "RegionIds" (Multiselect.getSelectedValues av.regions)
+            map "RegionNames" <| Multiselect.getSelectedValues av.regions
 
         soils =
-            map "SoilIds" <| Multiselect.getSelectedValues av.soils
+            map "SoilNames" <| Multiselect.getSelectedValues av.soils
 
         groups =
-            map "GroupIds" <| Multiselect.getSelectedValues av.groups
+            map "GroupNames" <| Multiselect.getSelectedValues av.groups
     in
     regions ++ soils ++ groups
 
