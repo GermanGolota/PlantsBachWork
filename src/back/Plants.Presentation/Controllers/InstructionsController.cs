@@ -19,52 +19,62 @@ public class InstructionsController : ControllerBase
         _instructionSearch = instructionSearch;
     }
 
+
+    public record FindInstructionsViewRequest(string GroupName, string? Title, string? Description);
+    public record FindInstructionsViewResult(List<FindInstructionsViewResultItem> Items);
+    public record FindInstructionsViewResultItem(Guid Id, string Title, string Description, bool HasCover);
+
     [HttpGet("find")]
-    public async Task<ActionResult<FindInstructionsResult2>> Find([FromQuery] FindInstructionsRequest request, CancellationToken token)
+    public async Task<ActionResult<FindInstructionsViewResult>> Find([FromQuery] FindInstructionsViewRequest request, CancellationToken token)
     {
         var param = new PlantInstructionParams(request.Title, request.Description);
         var results = await _instructionSearch.SearchAsync(param, new SearchAll(), token);
         //TODO: Fix group filtering not working with elastic
         results = results.Where(_ => _.Information.GroupName == request.GroupName);
-        return new FindInstructionsResult2(
+        return new FindInstructionsViewResult(
             results.Select(result =>
-                new FindInstructionsResultItem2(result.Id, result.Information.Title, result.Information.Description, result.CoverUrl is not null))
+                new FindInstructionsViewResultItem(result.Id, result.Information.Title, result.Information.Description, result.CoverUrl is not null))
             .ToList());
     }
 
+    public record GetInstructionViewResultItem(Guid Id, string Title, string Description,
+        string InstructionText, bool HasCover, string PlantGroupName);
+
     [HttpGet("{id}")]
-    public async Task<ActionResult<GetInstructionResult2>> Get([FromRoute] Guid id, CancellationToken token)
+    public async Task<ActionResult<QueryViewResult<GetInstructionViewResultItem>>> Get([FromRoute] Guid id, CancellationToken token)
     {
-        GetInstructionResult2 result;
+        QueryViewResult<GetInstructionViewResultItem> result;
         if (await _instructionQuery.ExistsAsync(id, token))
         {
             var instruction = await _instructionQuery.GetByIdAsync(id, token);
 
             var information = instruction.Information;
-            result = new(true, new(instruction.Id, information.Title, information.Description, information.Text, instruction.CoverUrl is not null, information.GroupName));
+            result = new(new(instruction.Id, information.Title, information.Description, information.Text, instruction.CoverUrl is not null, information.GroupName));
         }
         else
         {
-            result = new(false, new());
+            result = new();
         }
         return result;
     }
 
+    public record CreateInstructionViewRequest(string GroupName, string Text, string Title, string Description);
+
     [HttpPost("create")]
-    public async Task<ActionResult<CreateInstructionResult2>> Create([FromForm] CreateInstructionCommandDto cmd, IFormFile? file, CancellationToken token)
+    public async Task<ActionResult<Guid>> Create([FromForm] CreateInstructionViewRequest request, IFormFile? file, CancellationToken token)
     {
         var bytes = await file.ReadBytesAsync(token);
         var guid = new Random().GetRandomConvertableGuid();
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<CreateInstructionCommand>(new(guid, nameof(PlantInstruction))),
-            meta => new CreateInstructionCommand(meta, new(cmd.GroupName, cmd.Text, cmd.Title, cmd.Description), bytes),
+            meta => new CreateInstructionCommand(meta, new(request.GroupName, request.Text, request.Title, request.Description), bytes),
             token);
-        return new CreateInstructionResult2(guid);
+        return guid;
     }
 
     [HttpPost("{id}/edit")]
-    public async Task<ActionResult<EditInstructionResult2>> Edit(
-        [FromRoute] Guid id, [FromForm] CreateInstructionCommandDto cmd, IFormFile? file, CancellationToken token
+    public async Task<ActionResult<Guid>> Edit(
+        [FromRoute] Guid id, [FromForm] CreateInstructionViewRequest cmd, IFormFile? file, CancellationToken token
         )
     {
         var bytes = await file.ReadBytesAsync(token);
@@ -72,6 +82,6 @@ public class InstructionsController : ControllerBase
             factory => factory.Create<EditInstructionCommand>(new(id, nameof(PlantInstruction))),
             meta => new EditInstructionCommand(meta, new(cmd.GroupName, cmd.Text, cmd.Title, cmd.Description), bytes),
             token);
-        return new EditInstructionResult2(id);
+        return id;
     }
 }

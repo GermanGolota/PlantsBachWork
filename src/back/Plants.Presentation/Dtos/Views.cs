@@ -2,30 +2,6 @@
 
 namespace Plants.Presentation;
 
-//instructions
-
-public record CreateInstructionCommandDto(string GroupName, string Text,
-  string Title, string Description);
-
-public record FindInstructionsResult2(List<FindInstructionsResultItem2> Items);
-public record FindInstructionsResultItem2(Guid Id, string Title, string Description, bool HasCover);
-public record FindInstructionsRequest(string GroupName, string? Title, string? Description);
-
-public record GetInstructionResult2(bool Exists, GetInstructionResultItem2 Item);
-public record GetInstructionResultItem2(Guid Id, string Title, string Description,
-    string InstructionText, bool HasCover, string PlantGroupName)
-{
-    //decoder
-    public GetInstructionResultItem2() : this(Guid.NewGuid(), "", "", "", false, "-1")
-    {
-
-    }
-}
-
-public record CreateInstructionResult2(Guid Id);
-
-public record EditInstructionResult2(Guid InstructionId);
-
 //orders
 
 public record OrdersResult2(List<OrdersResultItem2> Items);

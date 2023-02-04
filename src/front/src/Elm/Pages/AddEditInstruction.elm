@@ -208,7 +208,7 @@ submitAddCommand : String -> View -> Cmd Msg
 submitAddCommand token page =
     let
         expect =
-            Http.expectJson GotSubmit (D.field "id" decodeId)
+            Http.expectJson GotSubmit decodeId
     in
     postAuthed token CreateInstruction (bodyEncoder page) expect Nothing |> mapCmd
 
@@ -217,7 +217,7 @@ submitEditCommand : String -> String -> View -> Cmd Msg
 submitEditCommand token id page =
     let
         expect =
-            Http.expectJson GotSubmit (D.field "instructionId" decodeId)
+            Http.expectJson GotSubmit decodeId
     in
     postAuthed token (EditInstruction id) (bodyEncoder page) expect Nothing |> mapCmd
 
