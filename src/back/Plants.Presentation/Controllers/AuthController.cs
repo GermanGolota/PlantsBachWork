@@ -14,9 +14,11 @@ public class AuthController : ControllerBase
         _authorizer = authorizer;
     }
 
+    public record LoginViewRequest(string Login, string Password);
+
     [HttpPost("login")]
-    [SwaggerRequestExample(typeof(LoginCommand), typeof(LoginRequestExample))]
-    public async Task<ActionResult> Login(LoginCommand command, CancellationToken token)
+    [SwaggerRequestExample(typeof(LoginViewRequest), typeof(LoginRequestExample))]
+    public async Task<ActionResult> Login(LoginViewRequest command, CancellationToken token)
     {
         var authorization = await _authorizer.AuthorizeAsync(command.Login, command.Password, token);
         ActionResult result;
@@ -32,4 +34,3 @@ public class AuthController : ControllerBase
     }
 }
 
-public record LoginCommand(string Login, string Password);

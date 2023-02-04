@@ -2,9 +2,6 @@
 
 namespace Plants.Presentation;
 
-//info
-public record DictsResult2(HashSet<string> Groups, HashSet<string> Regions, HashSet<string> Soils);
-
 //instructions
 
 public record CreateInstructionCommandDto(string GroupName, string Text,

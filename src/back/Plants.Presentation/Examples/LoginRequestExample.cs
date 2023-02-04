@@ -2,8 +2,8 @@
 
 namespace Plants.Presentation;
 
-internal class LoginRequestExample : IExamplesProvider<LoginCommand>
+internal class LoginRequestExample : IExamplesProvider<AuthController.LoginViewRequest>
 {
-    public LoginCommand GetExamples() =>
+    public AuthController.LoginViewRequest GetExamples() =>
          new("postgres", "testPassword");
 }
