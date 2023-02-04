@@ -60,7 +60,7 @@ plantDecoderBase priceOverride token =
         |> requiredItem "description" D.string
         |> priceDecoder
         |> requiredItem "soilName" D.string
-        |> requiredItem "regions" (D.list D.string)
+        |> requiredItem "regionNames" (D.list D.string)
         |> requiredItem "groupName" D.string
         |> custom createdDecoder
         |> requiredItem "sellerName" D.string

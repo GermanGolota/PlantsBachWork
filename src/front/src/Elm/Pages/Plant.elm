@@ -263,7 +263,7 @@ submitCmd : String -> String -> String -> Int -> Cmd Msg
 submitCmd token plantId city mailNumber =
     let
         expect =
-            Http.expectJson GotSubmit (submittedDecoder (D.field "successfull" D.bool) (D.field "message" D.string))
+            Http.expectJson GotSubmit (submittedDecoder (D.field "success" D.bool) (D.field "message" D.string))
     in
     postAuthed token (OrderPost plantId city mailNumber) Http.emptyBody expect Nothing |> mapCmd
 

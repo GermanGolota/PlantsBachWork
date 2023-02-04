@@ -136,7 +136,7 @@ submitCommand : String -> String -> Float -> Cmd Msg
 submitCommand token plantId price =
     let
         decoder =
-            submittedDecoder (D.field "successfull" D.bool) (D.field "message" D.string)
+            submittedDecoder (D.field "success" D.bool) (D.field "message" D.string)
 
         expect =
             Http.expectJson GotResult decoder

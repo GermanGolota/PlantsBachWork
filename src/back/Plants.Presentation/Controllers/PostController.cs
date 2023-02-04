@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Humanizer;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Plants.Presentation;
 
@@ -7,24 +8,30 @@ namespace Plants.Presentation;
 public class PostController : ControllerBase
 {
     private readonly IProjectionQueryService<PlantPost> _postQuery;
-    private readonly IProjectionQueryService<PlantInfo> _infoQuery;
     private readonly CommandHelper _command;
 
     public PostController(
         IProjectionQueryService<PlantPost> postQuery,
-        IProjectionQueryService<PlantInfo> infoQuery,
         CommandHelper command)
     {
         _postQuery = postQuery;
-        _infoQuery = infoQuery;
         _command = command;
     }
 
+    public record PostViewResultItem(Guid Id, string PlantName, string Description, decimal Price,
+        string SoilName, string[] RegionNames, string GroupName, DateTime Created,
+        string SellerName, string SellerPhone, long SellerCared, long SellerSold, long SellerInstructions,
+        long CareTakerCared, long CareTakerSold, long CareTakerInstructions, Picture[] Images
+    )
+    {
+        public string CreatedHumanDate => Created.Humanize();
+        public string CreatedDate => Created.ToShortDateString();
+    }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<PostResult2>> GetPost([FromRoute] Guid id, CancellationToken token)
+    public async Task<ActionResult<QueryViewResult<PostViewResultItem>>> GetPost([FromRoute] Guid id, CancellationToken token)
     {
-        PostResult2 result;
+        QueryViewResult<PostViewResultItem> result;
         if (await _postQuery.ExistsAsync(id, token))
         {
             var post = await _postQuery.GetByIdAsync(id, token);
@@ -38,12 +45,11 @@ public class PostController : ControllerBase
                 var stock = post.Stock;
                 var caretaker = stock.Caretaker;
                 var plant = stock.Information;
-                var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token)).PlantImagePaths.ToInverse();
                 result = new(new(post.Id, plant.PlantName, plant.Description, post.Price,
                     plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
                     seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
-                    caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated, 
-                    stock.PictureUrls.Select(url => images[url].ToString()).ToArray()));
+                    caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated,
+                    stock.Pictures));
             }
         }
         else
@@ -54,26 +60,24 @@ public class PostController : ControllerBase
     }
 
     [HttpPost("{id}/order")]
-    public async Task<ActionResult<PlaceOrderResult>> Order([FromRoute] Guid id, [FromQuery] string city, [FromQuery] long mailNumber, CancellationToken token = default)
+    public async Task<ActionResult<CommandViewResult>> Order([FromRoute] Guid id, [FromQuery] string city, [FromQuery] long mailNumber, CancellationToken token = default)
     {
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<OrderPostCommand>(new(id, nameof(PlantPost))),
             meta => new OrderPostCommand(meta, new(city, mailNumber)),
             token
             );
-        return result.Match<PlaceOrderResult>(
-            succ => new(true, "Success"),
-            fail => new(false, String.Join('\n', fail.Reasons)));
+        return result.ToCommandResult();
     }
 
     [HttpPost("{id}/delete")]
-    public async Task<ActionResult<DeletePostResult>> Delete([FromRoute] Guid id, CancellationToken token = default)
+    public async Task<ActionResult<CommandViewResult>> Delete([FromRoute] Guid id, CancellationToken token = default)
     {
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<RemovePostCommand>(new(id, nameof(PlantPost))),
             meta => new RemovePostCommand(meta),
             token
             );
-        return result.Match<DeletePostResult>(succ => new(true), fail => new(false));
+        return result.ToCommandResult();
     }
 }

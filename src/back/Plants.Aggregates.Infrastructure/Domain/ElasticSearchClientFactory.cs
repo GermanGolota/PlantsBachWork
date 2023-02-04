@@ -30,8 +30,8 @@ internal class ElasticSearchClientFactory : IElasticSearchClientFactory
             new ConnectionSettings(pool,
                  sourceSerializer: (builtin, settings) => new CustomJsonSerializer(builtin, settings))
             .BasicAuthentication(identity.UserName, _encrypter.Decrypt(identity.Hash))
-            .EnableApiVersioningHeader();
-
+            .EnableApiVersioningHeader()
+            .RequestTimeout(TimeSpan.FromSeconds(_connection.ElasticSearch.TimeoutInSeconds));
 
         settings.DisableDirectStreaming();
         return new ElasticClient(settings);

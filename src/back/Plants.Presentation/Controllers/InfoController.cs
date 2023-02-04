@@ -17,21 +17,23 @@ public class InfoController : ControllerBase
         _identity = identity;
     }
 
+    public record DictsViewResult(HashSet<string> Groups, HashSet<string> Regions, HashSet<string> Soils);
+
     [HttpGet("dicts")]
-    public async Task<ActionResult<DictsResult2>> Dicts(CancellationToken token)
+    public async Task<ActionResult<DictsViewResult>> Dicts(CancellationToken token)
     {
         var dicts = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
-        return new DictsResult2(ConvertDict(dicts.GroupNames), ConvertDict(dicts.RegionNames), ConvertDict(dicts.SoilNames));
+        return new DictsViewResult(dicts.GroupNames, dicts.RegionNames, dicts.SoilNames);
     }
 
-    private static Dictionary<string, string> ConvertDict(Dictionary<long, string> dict) =>
-        dict.ToDictionary(_ => _.Key.ToString(), _ => _.Value);
+    public record AddressViewResult(List<DeliveryAddress> Addresses);
 
     [HttpGet("addresses")]
-    public async Task<ActionResult<AddressResult>> Addresses(CancellationToken token)
+    public async Task<ActionResult<AddressViewResult>> Addresses(CancellationToken token)
     {
         var id = _identity.Identity!.UserName.ToGuid();
         var user = await _userQuery.GetByIdAsync(id, token);
-        return new AddressResult(user.UsedAdresses.Select(address => new PersonAddress(address.City, address.MailNumber)).ToList());
+        return new AddressViewResult(user.UsedAdresses.ToList());
     }
+
 }

@@ -43,7 +43,7 @@ decodeInstructionBase token =
         |> requiredItem "description" D.string
         |> custom (coverDecoder token)
         |> requiredItem "instructionText" D.string
-        |> requiredItem "plantGroupId" decodeId
+        |> requiredItem "plantGroupName" decodeId
 
 
 coverDecoder : String -> D.Decoder (Maybe String)

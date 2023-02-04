@@ -7,12 +7,13 @@ import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
-import Endpoints exposing (Endpoint(..), historyUrl, imageIdToUrl, postAuthed)
+import Endpoints exposing (Endpoint(..), historyUrl, imagesDecoder, postAuthed)
 import Html exposing (Html, div, i, text)
 import Html.Attributes exposing (alt, class, src, style)
 import Http
+import ImageList
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (hardcoded, required)
+import Json.Decode.Pipeline exposing (custom, hardcoded, required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar exposing (viewNav)
@@ -40,7 +41,7 @@ type alias SearchResultItem =
     , name : String
     , description : String
     , price : Float
-    , imageIds : List String
+    , images : ImageList.Model
     , wasAbleToDelete : Maybe (WebData Bool)
     }
 
@@ -58,6 +59,7 @@ type LocalMsg
     | GroupMS Multiselect.Msg
     | SelectedDeletePost String
     | GotDeletePost String (Result Http.Error Bool)
+    | ImageSelected String ImageList.Msg
 
 
 type alias Msg =
@@ -261,6 +263,25 @@ updateLocal msg m =
                             _ ->
                                 ( m, Cmd.none )
 
+                ( ImageSelected plantId image, Loaded val ) ->
+                    case model.results of
+                        Loaded vals ->
+                            let
+                                updateResult resultItem =
+                                    if resultItem.id == plantId then
+                                        { resultItem | images = ImageList.update image resultItem.images }
+
+                                    else
+                                        resultItem
+
+                                updatedResults =
+                                    Loaded <| List.map updateResult vals
+                            in
+                            ( authed <| View model.searchItems model.availableValues updatedResults, Cmd.none )
+
+                        _ ->
+                            ( m, Cmd.none )
+
                 ( _, _ ) ->
                     ( m, Cmd.none )
 
@@ -275,13 +296,13 @@ availableToList av =
             List.map (\( key, _ ) -> ( text, key )) pairs
 
         regions =
-            map "RegionIds" (Multiselect.getSelectedValues av.regions)
+            map "RegionNames" <| Multiselect.getSelectedValues av.regions
 
         soils =
-            map "SoilIds" <| Multiselect.getSelectedValues av.soils
+            map "SoilNames" <| Multiselect.getSelectedValues av.soils
 
         groups =
-            map "GroupIds" <| Multiselect.getSelectedValues av.groups
+            map "GroupNames" <| Multiselect.getSelectedValues av.groups
     in
     regions ++ soils ++ groups
 
@@ -321,7 +342,7 @@ deletePlant token id =
 
 
 deletedDecoder =
-    D.field "deleted" D.bool
+    D.field "success" D.bool
 
 
 getAvailable : String -> Cmd Msg
@@ -331,22 +352,22 @@ getAvailable token =
 
 search : List ( String, String ) -> String -> Cmd Msg
 search items token =
-    Endpoints.getAuthedQuery (buildQuery items) token Search (Http.expectJson GotSearch searchResultsDecoder) Nothing |> mapCmd
+    Endpoints.getAuthedQuery (buildQuery items) token Search (Http.expectJson GotSearch <| searchResultsDecoder token) Nothing |> mapCmd
 
 
-searchResultsDecoder : D.Decoder (List SearchResultItem)
-searchResultsDecoder =
-    D.field "items" <| D.list searchResultDecoder
+searchResultsDecoder : String -> D.Decoder (List SearchResultItem)
+searchResultsDecoder token =
+    D.field "items" <| D.list <| searchResultDecoder token
 
 
-searchResultDecoder : D.Decoder SearchResultItem
-searchResultDecoder =
+searchResultDecoder : String -> D.Decoder SearchResultItem
+searchResultDecoder token =
     D.succeed SearchResultItem
         |> required "id" decodeId
         |> required "plantName" D.string
         |> required "description" D.string
         |> required "price" D.float
-        |> required "imageIds" (D.list decodeId)
+        |> custom (imagesDecoder token [ "images" ])
         |> hardcoded Nothing
 
 
@@ -411,9 +432,6 @@ resultsView isAdmin showOrder showDelete token items =
 resultView : Bool -> Bool -> Bool -> String -> SearchResultItem -> Html Msg
 resultView isAdmin showOrder showDelete token item =
     let
-        url =
-            imageIdToUrl token (Maybe.withDefault "-1" (List.head item.imageIds))
-
         orderBtn =
             div [ flex, Flex.col, flex1 ]
                 [ Button.linkButton
@@ -465,7 +483,7 @@ resultView isAdmin showOrder showDelete token item =
     in
     Card.config [ Card.attrs (fillParent ++ [ style "flex" "1" ]) ]
         |> Card.header [ class "text-center" ]
-            [ Html.img ([ src url, alt "No images for this plant" ] ++ fillParent) []
+            [ ImageList.view item.images |> Html.map (\msg -> Main <| ImageSelected item.id msg)
             ]
         |> Card.block []
             [ Block.titleH4 [] [ text item.name ]

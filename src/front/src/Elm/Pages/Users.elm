@@ -5,7 +5,6 @@ import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
-import Debug exposing (log)
 import Endpoints exposing (Endpoint(..), IdType(..), getAuthed, getAuthedQuery, historyUrl, postAuthed)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, style)
@@ -104,16 +103,7 @@ updateLocal msg m =
                     ( authed <| { model | users = Loaded res }, getUserIds auth.token <| List.map .login res )
 
                 GotUsers (Err err) ->
-                    let
-                        msg2 =
-                            case err of
-                                Http.BadBody t ->
-                                    t
-
-                                _ ->
-                                    ""
-                    in
-                    ( log msg2 authed <| { model | users = Error err }, Cmd.none )
+                    ( authed <| { model | users = Error err }, Cmd.none )
 
                 SelectedRole roleMsg ->
                     let
@@ -378,7 +368,7 @@ removeRole : String -> UserRole -> String -> Cmd Msg
 removeRole token role login =
     let
         expect =
-            Http.expectJson (GotRemoveRole login) (D.succeed True)
+            Http.expectJson (GotRemoveRole login) (D.field "success" D.bool)
     in
     postAuthed token (RemoveRole login role) Http.emptyBody expect Nothing |> mapCmd
 
@@ -387,7 +377,7 @@ addRole : String -> UserRole -> String -> Cmd Msg
 addRole token role login =
     let
         expect =
-            Http.expectJson (GotAddRole login) (D.succeed True)
+            Http.expectJson (GotAddRole login) (D.field "success" D.bool)
     in
     postAuthed token (AddRole login role) Http.emptyBody expect Nothing |> mapCmd
 

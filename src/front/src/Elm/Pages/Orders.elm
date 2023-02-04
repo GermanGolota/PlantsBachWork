@@ -139,9 +139,6 @@ updateLocal msg m =
                     case model.data of
                         Loaded orders ->
                             let
-                                order =
-                                    List.head (List.filter (\o -> getPostId o == postId) orders)
-
                                 updateOrder o =
                                     if getPostId o == postId then
                                         case o of
@@ -259,7 +256,7 @@ confirmDelivery : String -> String -> Cmd Msg
 confirmDelivery token orderId =
     let
         expect =
-            Http.expectJson (GotConfirmReceived orderId) (D.field "successfull" D.bool)
+            Http.expectJson (GotConfirmReceived orderId) (D.field "success" D.bool)
     in
     postAuthed token (ReceivedOrder orderId) Http.emptyBody expect Nothing |> mapCmd
 
@@ -268,7 +265,7 @@ startDelivery : String -> String -> String -> Cmd Msg
 startDelivery token orderId ttn =
     let
         expect =
-            Http.expectJson (GotConfirmSend orderId) (D.field "successfull" D.bool)
+            Http.expectJson (GotConfirmSend orderId) (D.field "success" D.bool)
     in
     postAuthed token (SendOrder orderId ttn) Http.emptyBody expect Nothing |> mapCmd
 
@@ -547,7 +544,7 @@ viewOrder isAdmin confirmed rejected ttns viewType order =
                                 [ historyBtn
                                 ]
             in
-            viewOrderBase False cr (\a -> []) btns
+            viewOrderBase False cr (\_ -> []) btns
 
         Delivering del ->
             let
@@ -588,7 +585,7 @@ viewOrder isAdmin confirmed rejected ttns viewType order =
                                 [ historyBtn
                                 ]
             in
-            viewOrderBase False del (\a -> viewDelivering (\b -> div [] []) a) btns
+            viewOrderBase False del (\a -> viewDelivering (\_ -> div [] []) a) btns
 
         Delivered del ->
             viewOrderBase True del (\a -> viewDelivering viewDelivered a) (div [] [ historyBtn ])
@@ -715,7 +712,7 @@ getData token viewType =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 

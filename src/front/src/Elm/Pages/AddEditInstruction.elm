@@ -47,7 +47,7 @@ type ViewType
 
 type alias View =
     { selectedText : String
-    , selectedGroupId : String
+    , selectedGroupName : String
     , selectedTitle : String
     , selectedDescription : String
     , uploadedFile : Maybe File
@@ -158,11 +158,11 @@ updateLocal msg m =
                 DescriptionChanged desc ->
                     updateModel { getMainView | selectedDescription = desc }
 
-                GroupSelected groupId ->
-                    updateModel { getMainView | selectedGroupId = groupId }
+                GroupSelected groupName ->
+                    updateModel { getMainView | selectedGroupName = groupName }
 
                 GotAvailable (Ok res) ->
-                    updateModel { getMainView | available = Loaded res, selectedGroupId = res.groups |> Multiselect.getValues |> List.head |> Maybe.withDefault ( "", "" ) |> Tuple.first }
+                    updateModel { getMainView | available = Loaded res, selectedGroupName = res.groups |> Multiselect.getValues |> List.head |> Maybe.withDefault ( "", "" ) |> Tuple.first }
 
                 GotAvailable (Err err) ->
                     updateModel { getMainView | available = Error err }
@@ -208,7 +208,7 @@ submitAddCommand : String -> View -> Cmd Msg
 submitAddCommand token page =
     let
         expect =
-            Http.expectJson GotSubmit (D.field "id" decodeId)
+            Http.expectJson GotSubmit decodeId
     in
     postAuthed token CreateInstruction (bodyEncoder page) expect Nothing |> mapCmd
 
@@ -217,7 +217,7 @@ submitEditCommand : String -> String -> View -> Cmd Msg
 submitEditCommand token id page =
     let
         expect =
-            Http.expectJson GotSubmit (D.field "instructionId" decodeId)
+            Http.expectJson GotSubmit decodeId
     in
     postAuthed token (EditInstruction id) (bodyEncoder page) expect Nothing |> mapCmd
 
@@ -226,7 +226,7 @@ bodyEncoder : View -> Http.Body
 bodyEncoder page =
     let
         constant =
-            [ Http.stringPart "GroupId" page.selectedGroupId
+            [ Http.stringPart "GroupName" page.selectedGroupName
             , Http.stringPart "Text" page.selectedText
             , Http.stringPart "Title" page.selectedTitle
             , Http.stringPart "Description" page.selectedDescription
