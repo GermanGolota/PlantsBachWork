@@ -29,6 +29,8 @@ public class InfoController : ControllerBase
     {
         var id = _identity.Identity!.UserName.ToGuid();
         var user = await _userQuery.GetByIdAsync(id, token);
-        return new AddressResult(user.UsedAdresses.Select(address => new PersonAddress(address.City, address.MailNumber)).ToList());
+        return new AddressResult(user.UsedAdresses.ToList());
     }
+
+    public record AddressResult(List<DeliveryAddress> Addresses);
 }

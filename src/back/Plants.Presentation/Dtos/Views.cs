@@ -5,22 +5,13 @@ namespace Plants.Presentation;
 //info
 public record DictsResult2(HashSet<string> Groups, HashSet<string> Regions, HashSet<string> Soils);
 
-public record AddressResult(List<PersonAddress> Addresses);
-public record PersonAddress(string City, long MailNumber);
-
 //instructions
 
 public record CreateInstructionCommandDto(string GroupName, string Text,
   string Title, string Description);
 
 public record FindInstructionsResult2(List<FindInstructionsResultItem2> Items);
-public record FindInstructionsResultItem2(Guid Id, string Title, string Description, bool HasCover)
-{
-    public FindInstructionsResultItem2() : this(Guid.NewGuid(), "", "", false)
-    {
-    }
-}
-
+public record FindInstructionsResultItem2(Guid Id, string Title, string Description, bool HasCover);
 public record FindInstructionsRequest(string GroupName, string? Title, string? Description);
 
 public record GetInstructionResult2(bool Exists, GetInstructionResultItem2 Item);
