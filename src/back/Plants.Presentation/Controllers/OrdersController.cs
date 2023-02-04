@@ -22,8 +22,6 @@ public class OrdersController : ControllerBase
     [HttpGet()]
     public async Task<ActionResult<OrdersResult2>> GetAll([FromQuery] bool onlyMine, CancellationToken token)
     {
-        var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token)).PlantImagePaths.ToInverse();
-
         var items = await _orderQuery.SearchAsync(new(onlyMine), new SearchAll(), token);
         return new OrdersResult2(new(items.Select(item =>
         {
@@ -31,7 +29,7 @@ public class OrdersController : ControllerBase
             var stock = item.Post.Stock;
             return new OrdersResultItem2((int)item.Status, item.Post.Id,
                 item.Address.City, item.Address.MailNumber, seller.FullName,
-                seller.PhoneNumber, item.Post.Price, item.TrackingNumber, stock.PictureUrls.Select(url => images[url].ToString()).ToArray())
+                seller.PhoneNumber, item.Post.Price, item.TrackingNumber, stock.Pictures)
             {
                 DeliveryStarted = item.DeliveryStartedTime,
                 Ordered = item.OrderTime,

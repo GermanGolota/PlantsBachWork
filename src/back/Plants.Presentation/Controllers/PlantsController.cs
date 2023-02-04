@@ -44,7 +44,6 @@ public class PlantsController : ControllerBase
         if (await _stockProjector.ExistsAsync(id, token))
         {
             var plant = await _stockProjector.GetByIdAsync(id, token);
-            var images = (await _infoProjector.GetByIdAsync(PlantInfo.InfoId, token)).PlantImagePaths.ToInverse();
             var info = plant.Information;
             var dict = await _infoProjector.GetByIdAsync(PlantInfo.InfoId, token);
             var groups = dict.GroupNames.ToInverse();
@@ -52,8 +51,8 @@ public class PlantsController : ControllerBase
             var regions = dict.RegionNames.ToInverse();
             result = new PlantResult2(new PlantResultDto2(info.PlantName, info.Description,
                 groups[info.GroupName].ToString(), soils[info.SoilName].ToString(),
-                plant.PictureUrls.Select(url => images[url].ToString()).ToArray(),
-                info.RegionNames.Select(_ => regions[_].ToString()).ToArray())
+                plant.Pictures,
+                info.RegionNames.Select(regionName => regions[regionName].ToString()).ToArray())
             {
                 Created = plant.CreatedTime
             });
@@ -74,7 +73,6 @@ public class PlantsController : ControllerBase
         {
             var stock = await _stockProjector.GetByIdAsync(id, token);
             var seller = await _userProjector.GetByIdAsync(userId, token);
-            var images = (await _infoProjector.GetByIdAsync(PlantInfo.InfoId, token)).PlantImagePaths.ToInverse();
             var caretaker = stock.Caretaker;
             var plant = stock.Information;
             result = new PreparedPostResult2(new(stock.Id,
@@ -82,7 +80,7 @@ public class PlantsController : ControllerBase
                 plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
                 seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
                 caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated,
-                stock.PictureUrls.Select(url => images[url].ToString()).ToArray()
+                stock.Pictures
                 ));
         }
         else
@@ -159,10 +157,9 @@ public class PlantsController : ControllerBase
         var soil = info.SoilNames[plant.SoilId];
         var group = info.GroupNames[plant.GroupId];
         var plantInfo = new PlantInformation(plant.PlantName, plant.PlantDescription, regions, soil, group);
-        var removed = plant.RemovedImages?.Select(image => info.PlantImagePaths[image])?.ToArray() ?? Array.Empty<string>();
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<EditStockItemCommand>(new(id, nameof(PlantStock))),
-            meta => new EditStockItemCommand(meta, plantInfo, pictures, removed),
+            meta => new EditStockItemCommand(meta, plantInfo, pictures, plant.RemovedImages),
             token);
         return result.Match<EditPlantResult>(
             _ => new(true, "Successfull"),

@@ -12,7 +12,7 @@ public class PlantStock : AggregateBase, IEventHandler<StockAddedEvent>, IEventH
     }
 
     public PlantInformation Information { get; private set; }
-    public string[] PictureUrls { get; private set; }
+    public Picture[] Pictures { get; private set; }
     public User Caretaker { get; set; }
     public DateTime CreatedTime { get; private set; }
     public bool BeenPosted { get; private set; } = false;
@@ -20,15 +20,19 @@ public class PlantStock : AggregateBase, IEventHandler<StockAddedEvent>, IEventH
     public void Handle(StockAddedEvent @event)
     {
         Information = @event.Plant;
-        PictureUrls = @event.PictureUrls;
-        Metadata.Referenced.Add(new(@event.CaretakerUsername.ToGuid(), nameof(User)));
+        Pictures = @event.Pictures.Select(picture => picture with { Location = picture.Location.TrimStart('/') }).ToArray();
         CreatedTime = @event.CreatedTime;
+
+        Metadata.Referenced.Add(new(@event.CaretakerUsername.ToGuid(), nameof(User)));
     }
 
     public void Handle(StockEdditedEvent @event)
     {
         Information = @event.Plant;
-        PictureUrls = PictureUrls.Except(@event.RemovedPictureUrls).Union(@event.NewPictureUrls).ToArray();
+        Pictures = Pictures
+            .Where(_ => @event.RemovedPictureIds.NotContains(_.Id))
+            .Union(@event.NewPictures)
+            .ToArray();
     }
 
     public CommandForbidden? ShouldForbid(PostStockItemCommand command, IUserIdentity user) =>
@@ -45,3 +49,5 @@ public class PlantStock : AggregateBase, IEventHandler<StockAddedEvent>, IEventH
     }
 
 }
+
+public record Picture(Guid Id, string Location);

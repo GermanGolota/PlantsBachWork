@@ -45,11 +45,11 @@ public record OrdersResult2(List<OrdersResultItem2> Items);
 public record OrdersResultItem2(
     int Status, Guid PostId, string City,
     long MailNumber, string SellerName, string SellerContact,
-    decimal Price, string? DeliveryTrackingNumber, string[] Images)
+    decimal Price, string? DeliveryTrackingNumber, Picture[] Images)
 {
     //decoder
     public OrdersResultItem2() : this(0, Guid.NewGuid(), "",
-        0, "", "", 0, null, Array.Empty<string>())
+        0, "", "", 0, null, Array.Empty<Picture>())
     {
 
     }
@@ -103,7 +103,7 @@ public record RejectOrderResult(bool Success);
 public record AddPlantDto(string Name, string Description, long[] Regions, long SoilId, long GroupId, DateTime Created);
 
 public record EditPlantDto(string PlantName,
-  string PlantDescription, long[] RegionIds, long SoilId, long GroupId, long[]? RemovedImages);
+  string PlantDescription, long[] RegionIds, long SoilId, long GroupId, Guid[]? RemovedImages);
 
 public record PlantResult2(bool Exists, PlantResultDto2? Item)
 {
@@ -122,7 +122,7 @@ public record PlantsResult2(List<PlantResultItem2> Items);
 public record PlantResultItem2(Guid Id, string PlantName, string Description, bool IsMine);
 
 public record PlantResultDto2(string PlantName, string Description, string GroupId,
-    string SoilId, string[] Images, string[] Regions)
+    string SoilId, Picture[] Images, string[] Regions)
 {
     private DateTime _created;
     public DateTime Created
@@ -183,16 +183,11 @@ public class PreparedPostResultItem2
     public long CareTakerCared { get; set; }
     public long CareTakerSold { get; set; }
     public long CareTakerInstructions { get; set; }
-    public string[] Images { get; set; }
-    public PreparedPostResultItem2()
-    {
-
-    }
-
+    public Picture[] Images { get; set; }
     public PreparedPostResultItem2(Guid id, string plantName, string description,
         string soilName, string[] regions, string groupName, DateTime created, string sellerName,
         string sellerPhone, long sellerCared, long sellerSold, long sellerInstructions,
-        long careTakerCared, long careTakerSold, long careTakerInstructions, string[] images)
+        long careTakerCared, long careTakerSold, long careTakerInstructions, Picture[] images)
     {
         Id = id;
         PlantName = plantName;
@@ -268,7 +263,7 @@ public class PostResultItem2
     public long CareTakerCared { get; set; }
     public long CareTakerSold { get; set; }
     public long CareTakerInstructions { get; set; }
-    public string[] Images { get; set; }
+    public Picture[] Images { get; set; }
     public PostResultItem2()
     {
 
@@ -277,7 +272,7 @@ public class PostResultItem2
     public PostResultItem2(Guid id, string plantName, string description, decimal price,
         string soilName, string[] regions, string groupName, DateTime created, string sellerName,
         string sellerPhone, long sellerCared, long sellerSold, long sellerInstructions,
-        long careTakerCared, long careTakerSold, long careTakerInstructions, string[] images)
+        long careTakerCared, long careTakerSold, long careTakerInstructions, Picture[] images)
     {
         Id = id;
         PlantName = plantName;
@@ -308,14 +303,7 @@ public record DeletePostResult(bool Deleted);
 //search
 
 public record SearchResult2(List<SearchResultItem2> Items);
-public record SearchResultItem2(Guid Id, string PlantName, string Description, string[] ImageIds, double Price)
-{
-    //used by converter
-    public SearchResultItem2() : this(Guid.Empty, "", "", null, 0)
-    {
-
-    }
-}
+public record SearchResultItem2(Guid Id, string PlantName, string Description, Picture[] Images, double Price);
 
 public record SearchRequest(string? PlantName,
     decimal? LowerPrice,

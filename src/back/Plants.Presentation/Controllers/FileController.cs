@@ -20,24 +20,6 @@ public class FileController : ControllerBase
         _infoQuery = infoQuery;
     }
 
-    [HttpGet("plant/{id}")]
-    public async Task<ActionResult> Load([FromRoute] long id, CancellationToken token)
-    {
-        var plantInfo = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
-        var path = plantInfo.PlantImagePaths[id];
-        var info = _provider.GetFileInfo(path);
-        if (info.Exists)
-        {
-            var streamFunc = info.CreateReadStream;
-            var bytes = await streamFunc.ReadAllBytesAsync();
-            return File(bytes, "application/octet-stream");
-        }
-        else
-        {
-            return NotFound();
-        }
-    }
-
     [HttpGet("instruction/{id}")]
     public async Task<ActionResult> LoadInstruction([FromRoute] Guid id, CancellationToken token)
     {

@@ -45,4 +45,7 @@ public static class EnumerableExtensions
         rng ??= System.Random.Shared;
         return source.Random(rng.Next(minCountInclusive, maxCountExclusive));
     }
+
+    public static bool NotContains<T>(this IEnumerable<T> source, T item) =>
+        !source.Contains(item);
 }

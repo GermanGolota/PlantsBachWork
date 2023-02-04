@@ -25,7 +25,6 @@ public class SearchController : ControllerBase
         var groups = request.GroupIds?.Select(id => info.GroupNames[id])?.ToArray();
         var regions = request.RegionIds?.Select(id => info.RegionNames[id])?.ToArray();
         var soils = request.SoilIds?.Select(id => info.SoilNames[id])?.ToArray();
-        var images = info.PlantImagePaths.ToInverse();
         var param = new PlantPostParams(request.PlantName, request.LowerPrice, request.TopPrice, request.LastDate/*, groups, regions, soils*/);
         var result = await _search.SearchAsync(param, new SearchAll(), token);
         //TODO: Fix group filtering not working with elastic
@@ -38,7 +37,7 @@ public class SearchController : ControllerBase
                 item.Id,
                 item.Stock.Information.PlantName,
                 item.Stock.Information.Description,
-                item.Stock.PictureUrls.Select(url => images[url].ToString()).ToArray(),
+                item.Stock.Pictures,
                 (double)item.Price)).ToList()
                 );
     }

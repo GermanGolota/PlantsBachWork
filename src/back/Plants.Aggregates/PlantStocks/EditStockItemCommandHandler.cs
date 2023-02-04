@@ -31,7 +31,7 @@ internal class EditStockItemCommandHandler : ICommandHandler<EditStockItemComman
         var newUrls = await _uploader.UploadPlantAsync(_stock.Id, command.NewPictures, token);
         return new[]
         {
-            new StockEdditedEvent(EventFactory.Shared.Create<StockEdditedEvent>(command), command.Plant, newUrls, command.RemovedPictureUrls)
+            new StockEdditedEvent(EventFactory.Shared.Create<StockEdditedEvent>(command), command.Plant, newUrls, command.RemovedPictureIds)
         };
     }
 

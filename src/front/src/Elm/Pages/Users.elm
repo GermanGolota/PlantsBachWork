@@ -5,7 +5,6 @@ import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
-import Debug exposing (log)
 import Endpoints exposing (Endpoint(..), IdType(..), getAuthed, getAuthedQuery, historyUrl, postAuthed)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, style)
@@ -104,16 +103,7 @@ updateLocal msg m =
                     ( authed <| { model | users = Loaded res }, getUserIds auth.token <| List.map .login res )
 
                 GotUsers (Err err) ->
-                    let
-                        msg2 =
-                            case err of
-                                Http.BadBody t ->
-                                    t
-
-                                _ ->
-                                    ""
-                    in
-                    ( log msg2 authed <| { model | users = Error err }, Cmd.none )
+                    ( authed <| { model | users = Error err }, Cmd.none )
 
                 SelectedRole roleMsg ->
                     let

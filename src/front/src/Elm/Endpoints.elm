@@ -1,11 +1,10 @@
-module Endpoints exposing (Endpoint(..), IdType(..), endpointToUrl, getAuthed, getAuthedQuery, historyUrl, imageIdToUrl, imagesDecoder, instructioIdToCover, postAuthed, postAuthedQuery)
+module Endpoints exposing (Endpoint(..), IdType(..), endpointToUrl, getAuthed, getAuthedQuery, historyUrl, imagesDecoder, instructioIdToCover, postAuthed, postAuthedQuery)
 
 import Dict
 import Http exposing (header, request)
 import ImageList
 import Json.Decode as D
 import Main exposing (UserRole, roleToNumber)
-import Utils exposing (decodeId)
 
 
 baseUrl : String
@@ -19,7 +18,6 @@ type Endpoint
     | StatsFinancial
     | Search
     | Dicts
-    | Image String String --id, token
     | Post String
     | OrderPost String String Int --plantId, city, mailNumber
     | Addresses
@@ -71,9 +69,6 @@ endpointToUrl endpoint =
 
         Dicts ->
             baseUrl ++ "info/dicts"
-
-        Image id token ->
-            baseUrl ++ "file/plant/" ++ id ++ "?token=" ++ token
 
         Post plantId ->
             baseUrl ++ "post/" ++ plantId
@@ -175,11 +170,6 @@ getPath id =
             "0/" ++ guid
 
 
-imageIdToUrl : String -> String -> String
-imageIdToUrl token id =
-    endpointToUrl <| Image id token
-
-
 instructioIdToCover : String -> String -> String
 instructioIdToCover token id =
     endpointToUrl <| CoverImage id token
@@ -188,19 +178,15 @@ instructioIdToCover token id =
 imagesDecoder : String -> List String -> D.Decoder ImageList.Model
 imagesDecoder token at =
     let
-        baseDecoder =
-            imageIdsToModel token
+        baseDecoder tuples =
+            ImageList.fromDict <| Dict.fromList tuples
     in
-    D.map baseDecoder (D.at at (D.list decodeId))
+    D.map baseDecoder (D.at at (D.list <| imageDecoder token))
 
 
-imageIdsToModel : String -> List String -> ImageList.Model
-imageIdsToModel token ids =
-    let
-        baseList =
-            List.map (\id -> ( id, imageIdToUrl token id )) ids
-    in
-    ImageList.fromDict <| Dict.fromList baseList
+imageDecoder : String -> D.Decoder ( String, String )
+imageDecoder token =
+    D.map2 Tuple.pair (D.field "id" D.string) (D.map (\url -> baseUrl ++ url ++ "?token=" ++ token) <| D.field "location" D.string)
 
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg

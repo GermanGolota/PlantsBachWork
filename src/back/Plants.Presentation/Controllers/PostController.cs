@@ -38,12 +38,11 @@ public class PostController : ControllerBase
                 var stock = post.Stock;
                 var caretaker = stock.Caretaker;
                 var plant = stock.Information;
-                var images = (await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token)).PlantImagePaths.ToInverse();
                 result = new(new(post.Id, plant.PlantName, plant.Description, post.Price,
                     plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
                     seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
                     caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated, 
-                    stock.PictureUrls.Select(url => images[url].ToString()).ToArray()));
+                    stock.Pictures));
             }
         }
         else
