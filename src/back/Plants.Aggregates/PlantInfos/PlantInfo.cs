@@ -113,8 +113,7 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>,
     }
 
     private static string GetDateKey(DateTime time) =>
-        DateOnly.FromDateTime(time).ToString("yyyy-mm-dd");
-
+        time.ToString("yyyy-MM-dd");
 
     private class PlantStockSubscription : IAggregateSubscription<PlantInfo, PlantStock>
     {
