@@ -30,7 +30,7 @@ public class PlantStock : AggregateBase, IEventHandler<StockAddedEvent>, IEventH
     {
         Information = @event.Plant;
         Pictures = Pictures
-            .Where(_ => @event.RemovedPictureIds.NotContains(_.Id))
+            .Where(_ => @event.RemovedPictureIds?.NotContains(_.Id) ?? true)
             .Union(@event.NewPictures)
             .ToArray();
     }

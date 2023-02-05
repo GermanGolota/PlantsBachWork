@@ -89,8 +89,11 @@ pieLabel slice label =
 pieChart : List String -> List Float -> List String -> Svg.Svg Msg
 pieChart ids values labels =
     let
+        filtered =
+            List.filter (\v -> not (v == 0)) values
+
         pieData =
-            values |> List.filter (\v -> not (v == 0)) |> Shape.pie { defaultPieConfig | outerRadius = radius }
+            filtered |> Shape.pie { defaultPieConfig | outerRadius = radius }
 
         idToPie =
             List.map2 Tuple.pair ids pieData
