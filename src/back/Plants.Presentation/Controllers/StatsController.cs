@@ -41,7 +41,7 @@ public class StatsController : ControllerBase
     [HttpGet("total")]
     public async Task<ActionResult<ListViewResult<TotalStatsViewResult>>> Total(CancellationToken token)
     {
-        var stats = await _statQuery.FindAllAsync(_ => true, token);
+        var stats = (await _statQuery.FindAllAsync(_ => true, token)).ToList();
         return new ListViewResult<TotalStatsViewResult>(stats.Select(stat => new TotalStatsViewResult(stat.GroupName, stat.Income, stat.InstructionsCount, stat.PlantsCount)));
     }
 }
