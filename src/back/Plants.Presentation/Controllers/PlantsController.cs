@@ -1,6 +1,5 @@
 ﻿using Humanizer;
 using Microsoft.AspNetCore.Mvc;
-using static Plants.Presentation.PlantsController;
 
 namespace Plants.Presentation;
 
@@ -37,8 +36,8 @@ public class PlantsController : ControllerBase
                 ));
     }
 
-    public record PlantViewResultItem(string PlantName, string Description, string GroupName,
-        string SoilName, Picture[] Images, string[] RegionNames, DateTime Created)
+    public record PlantViewResultItem(string PlantName, string Description, string[] GroupNames,
+        string[] SoilNames, Picture[] Images, string[] RegionNames, DateTime Created)
     {
         public string CreatedHumanDate => Created.Humanize();
         public string CreatedDate => Created.ToShortDateString();
@@ -53,10 +52,7 @@ public class PlantsController : ControllerBase
             var plant = await _stockProjector.GetByIdAsync(id, token);
             var info = plant.Information;
             result = new(new PlantViewResultItem(info.PlantName, info.Description,
-                info.GroupName, info.SoilName,
-                plant.Pictures,
-                info.RegionNames,
-                plant.CreatedTime));
+                info.GroupNames, info.SoilNames, plant.Pictures, info.RegionNames, plant.CreatedTime));
         }
         else
         {
@@ -66,8 +62,8 @@ public class PlantsController : ControllerBase
     }
 
     public record PreparedPostResultItem2(
-        Guid Id, string PlantName, string Description, string SoilName,
-        string[] RegionNames, string GroupName, DateTime Created,
+        Guid Id, string PlantName, string Description, string[] SoilNames,
+        string[] RegionNames, string[] GroupNames, DateTime Created,
         string SellerName, string SellerPhone, long SellerCared, long SellerSold, long SellerInstructions,
         long CareTakerCared, long CareTakerSold, long CareTakerInstructions, Picture[] Images)
     {
@@ -88,7 +84,7 @@ public class PlantsController : ControllerBase
             var plant = stock.Information;
             result = new(new PreparedPostResultItem2(stock.Id,
                 plant.PlantName, plant.Description,
-                plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
+                plant.SoilNames, plant.RegionNames, plant.GroupNames, stock.CreatedTime,
                 seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
                 caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated,
                 stock.Pictures
@@ -113,7 +109,8 @@ public class PlantsController : ControllerBase
         return result.ToCommandResult();
     }
 
-    public record AddPlantViewRequest(string Name, string Description, string[] RegionNames, string SoilName, string GroupName, DateTime Created);
+    public record AddPlantViewRequest(string Name, string Description, 
+        string[] RegionNames, string[] SoilNames, string[] GroupNames, DateTime Created);
 
     [HttpPost("add")]
     public async Task<ActionResult<Guid>> Create
@@ -121,7 +118,7 @@ public class PlantsController : ControllerBase
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
         var stockId = new Random().GetRandomConvertableGuid();
-        var plantInfo = new PlantInformation(body.Name, body.Description, body.RegionNames, body.SoilName, body.SoilName);
+        var plantInfo = new PlantInformation(body.Name, body.Description, body.RegionNames, body.SoilNames, body.GroupNames);
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
             meta => new AddToStockCommand(meta, plantInfo, body.Created, pictures),
@@ -135,33 +132,15 @@ public class PlantsController : ControllerBase
             );
     }
 
-    [HttpPost("add2")]
-    public async Task<ActionResult<Guid>> Create2
-        ([FromForm] PlantInformation body, DateTime created, IEnumerable<IFormFile> files, CancellationToken token)
-    {
-        var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
-        var stockId = new Random().GetRandomConvertableGuid();
-        var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
-            meta => new AddToStockCommand(meta, body, created, pictures),
-            token
-            );
-
-        return result.Match<ActionResult<Guid>>(
-            success => Ok(stockId),
-            failure => BadRequest(failure.Reasons)
-            );
-    }
-
     public record EditPlantViewRequest(string PlantName,
-      string PlantDescription, string[] RegionNames, string SoilName, string GroupName, Guid[]? RemovedImages);
+      string PlantDescription, string[] RegionNames, string[] SoilNames, string[] GroupNames, Guid[]? RemovedImages);
 
     [HttpPost("{id}/edit")]
     public async Task<ActionResult<CommandViewResult>> Edit
       ([FromRoute] Guid id, [FromForm] EditPlantViewRequest plant, IEnumerable<IFormFile> files, CancellationToken token)
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
-        var plantInfo = new PlantInformation(plant.PlantName, plant.PlantDescription, plant.RegionNames, plant.SoilName, plant.GroupName);
+        var plantInfo = new PlantInformation(plant.PlantName, plant.PlantDescription, plant.RegionNames, plant.SoilNames, plant.GroupNames);
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<EditStockItemCommand>(new(id, nameof(PlantStock))),
             meta => new EditStockItemCommand(meta, plantInfo, pictures, plant.RemovedImages),

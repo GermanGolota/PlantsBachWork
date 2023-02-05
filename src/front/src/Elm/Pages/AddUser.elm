@@ -137,7 +137,7 @@ createUserCmd : String -> View -> Cmd Msg
 createUserCmd token page =
     let
         expect =
-            Http.expectJson GotSubmit (submittedDecoder (D.field "success" D.bool) (D.field "message" D.string))
+            Http.expectJson GotSubmit submittedDecoder
     in
     postAuthed token CreateUser (Http.jsonBody <| encodeBody page) expect Nothing |> mapCmd
 

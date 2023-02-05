@@ -148,7 +148,7 @@ viewLoading =
         spiners =
             List.map spiner colors
     in
-    Html.div (fillParent ++ flexCenter ++ [ flex ] ) spiners
+    Html.div (fillParent ++ flexCenter ++ [ flex ]) spiners
 
 
 itself : a -> a
@@ -252,9 +252,9 @@ type SubmittedResult
     | SubmittedFail String
 
 
-submittedDecoder : D.Decoder Bool -> D.Decoder String -> D.Decoder SubmittedResult
-submittedDecoder successDecoder msgDecoder =
-    successDecoder |> D.andThen (submittedMsgDecoder msgDecoder)
+submittedDecoder : D.Decoder SubmittedResult
+submittedDecoder =
+    D.field "success" D.bool |> D.andThen (submittedMsgDecoder (D.field "message" D.string))
 
 
 submittedMsgDecoder : D.Decoder String -> Bool -> D.Decoder SubmittedResult

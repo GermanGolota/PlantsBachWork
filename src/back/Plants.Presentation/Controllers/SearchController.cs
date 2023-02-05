@@ -31,9 +31,11 @@ public class SearchController : ControllerBase
         var param = new PlantPostParams(request.PlantName, request.LowerPrice, request.TopPrice, request.LastDate/*, groups, regions, soils*/);
         var result = await _search.SearchAsync(param, new SearchAll(), token);
         //TODO: Fix group filtering not working with elastic
-        result = result.Where(post => (request.GroupNames is null || post.Stock.Information.GroupName.In(request.GroupNames))
+        result = result.Where(post => (
+                request.GroupNames is null || post.Stock.Information.GroupNames.Intersect(request.GroupNames).Any())
             && (request.RegionNames is null || post.Stock.Information.RegionNames.Intersect(request.RegionNames).Any())
-            && (request.SoilNames is null || post.Stock.Information.SoilName.In(request.SoilNames))
+            && (request.SoilNames is null || post.Stock.Information.SoilNames.Intersect(request.SoilNames).Any()
+            )
         );
         return new ListViewResult<SearchViewResultItem>(result.Select(item =>
             new SearchViewResultItem(

@@ -7,9 +7,9 @@ public record EditStockItemCommand(CommandMetadata Metadata, PlantInformation Pl
 public record StockEdditedEvent(EventMetadata Metadata, PlantInformation Plant, Picture[] NewPictures, Guid[] RemovedPictureIds) : Event(Metadata);
 
 public record PostStockItemCommand(CommandMetadata Metadata, decimal Price) : Command(Metadata);
-public record StockItemPostedEvent(EventMetadata Metadata, string SellerUsername, decimal Price, string GroupName) : Event(Metadata);
+public record StockItemPostedEvent(EventMetadata Metadata, string SellerUsername, decimal Price, string[] GroupNames) : Event(Metadata);
 
 public record PlantInformation(
     string PlantName, string Description, string[] RegionNames,
-    string SoilName, string GroupName
+    string[] SoilNames, string[] GroupNames
     );

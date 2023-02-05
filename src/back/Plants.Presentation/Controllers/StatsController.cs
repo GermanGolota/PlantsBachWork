@@ -6,14 +6,11 @@ namespace Plants.Presentation;
 [Route("stats")]
 public class StatsController : ControllerBase
 {
-    private readonly IProjectionQueryService<PlantTotalStat> _statQuery;
-    private readonly IProjectionQueryService<PlantTimedStat> _timedStatQuery;
+    private readonly IProjectionQueryService<PlantInfo> _infoQuery;
 
-    public StatsController(IProjectionQueryService<PlantTotalStat> totalStatQuery,
-        IProjectionQueryService<PlantTimedStat> timedStatQuery)
+    public StatsController(IProjectionQueryService<PlantInfo> infoQuery)
     {
-        _statQuery = totalStatQuery;
-        _timedStatQuery = timedStatQuery;
+        _infoQuery = infoQuery;
     }
 
     public record FinancialStatsViewResult(decimal Income, string GroupName, long SoldCount, long PercentSold);
@@ -21,16 +18,18 @@ public class StatsController : ControllerBase
     [HttpGet("financial")]
     public async Task<ActionResult<ListViewResult<FinancialStatsViewResult>>> Financial([FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken token)
     {
-        var stats = await _timedStatQuery.FindAllAsync(_ => true, token);
-        List<FinancialStatsViewResult> results = new();
-        return new ListViewResult<FinancialStatsViewResult>(stats.Where(_ => IsInRange(_.Date, from, to)).GroupBy(stat => stat.GroupName)
+        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
+
+        return new ListViewResult<FinancialStatsViewResult>(info.FinancialStats
+            .Where(x => IsInRange(DateTime.Parse(x.Key), from, to))
+            .SelectMany(_ => _.Value)
+            .GroupBy(stat => stat.Key)
             .Select(pair =>
             {
-                var sold = pair.Sum(_ => _.SoldCount);
-                var plants = pair.Sum(_ => _.PlantsCount);
-                return new FinancialStatsViewResult(pair.Sum(_ => _.Income), pair.Key, sold, plants is 0 ? 0 : sold / plants);
-            })
-            .ToList());
+                var sold = pair.Sum(_ => _.Value.SoldCount);
+                var plants = pair.Sum(_ => _.Value.PlantsCount);
+                return new FinancialStatsViewResult(pair.Sum(_ => _.Value.Income), pair.Key, sold, plants is 0 ? 0 : sold / plants);
+            }));
     }
 
     private bool IsInRange(DateTime time, DateTime? from, DateTime? to) =>
@@ -41,7 +40,9 @@ public class StatsController : ControllerBase
     [HttpGet("total")]
     public async Task<ActionResult<ListViewResult<TotalStatsViewResult>>> Total(CancellationToken token)
     {
-        var stats = (await _statQuery.FindAllAsync(_ => true, token)).ToList();
-        return new ListViewResult<TotalStatsViewResult>(stats.Select(stat => new TotalStatsViewResult(stat.GroupName, stat.Income, stat.InstructionsCount, stat.PlantsCount)));
+        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
+        return new ListViewResult<TotalStatsViewResult>(info.TotalStats
+            .Select(stat => new TotalStatsViewResult(stat.Key, stat.Value.Income, stat.Value.InstructionsCount, stat.Value.PlantsCount))
+            );
     }
 }

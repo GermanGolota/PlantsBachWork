@@ -135,11 +135,8 @@ getPlantCommand token plantId =
 submitCommand : String -> String -> Float -> Cmd Msg
 submitCommand token plantId price =
     let
-        decoder =
-            submittedDecoder (D.field "success" D.bool) (D.field "message" D.string)
-
         expect =
-            Http.expectJson GotResult decoder
+            Http.expectJson GotResult submittedDecoder
     in
     postAuthed token (PostPlant plantId price) Http.emptyBody expect Nothing |> mapCmd
 
