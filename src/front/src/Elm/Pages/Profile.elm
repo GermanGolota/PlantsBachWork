@@ -115,11 +115,8 @@ getUserId token login =
 submitCommand : String -> String -> Cmd Msg
 submitCommand token pass =
     let
-        decoder =
-            submittedDecoder (D.field "success" D.bool) (D.field "message" D.string)
-
         expect =
-            Http.expectJson GotChangePass decoder
+            Http.expectJson GotChangePass submittedDecoder
 
         body =
             Http.jsonBody (E.object [ ( "password", E.string pass ) ])

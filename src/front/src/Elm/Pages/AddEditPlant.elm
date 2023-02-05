@@ -738,7 +738,7 @@ submitEditCommand : String -> String -> PlantView -> List String -> Cmd Msg
 submitEditCommand token plantId plant removed =
     let
         expect =
-            Http.expectJson GotSubmitEdit (submittedDecoder (D.field "success" D.bool) (D.field "message" D.string))
+            Http.expectJson GotSubmitEdit submittedDecoder
     in
     postAuthed token (EditPlant plantId) (getEditBody plant removed) expect Nothing |> mapCmd
 
