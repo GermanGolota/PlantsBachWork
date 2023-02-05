@@ -15,9 +15,9 @@ type alias PlantModel =
     { name : String
     , description : String
     , price : Float
-    , soil : String
+    , soils : List String
     , regions : List String
-    , group : String
+    , groups : List String
 
     --{createdDate}({createdHumanDate})
     , created : String
@@ -59,9 +59,9 @@ plantDecoderBase priceOverride token =
         |> requiredItem "plantName" D.string
         |> requiredItem "description" D.string
         |> priceDecoder
-        |> requiredItem "soilName" D.string
+        |> requiredItem "soilNames" (D.list D.string)
         |> requiredItem "regionNames" (D.list D.string)
-        |> requiredItem "groupName" D.string
+        |> requiredItem "groupNames" (D.list D.string)
         |> custom createdDecoder
         |> requiredItem "sellerName" D.string
         |> requiredItem "sellerPhone" D.string
@@ -98,9 +98,9 @@ viewPlantBase priceEditable eventConverter imgConverter btns plant =
         [ viewPlantLeft imgConverter plant
         , div [ flex, Flex.col, flex1 ]
             (desc
-                ++ [ viewPlantStat "Soil" plant.soil
+                ++ [ viewPlantStat "Soils" (String.join ", " plant.soils)
                    , viewPlantStat "Regions" (String.join ", " plant.regions)
-                   , viewPlantStat "Group" plant.group
+                   , viewPlantStat "Groups" (String.join ", " plant.groups)
                    , viewPlantStat "Age" plant.created
                    , btns
                    ]
