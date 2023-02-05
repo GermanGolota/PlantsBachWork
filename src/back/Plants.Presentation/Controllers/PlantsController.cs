@@ -118,7 +118,7 @@ public class PlantsController : ControllerBase
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
         var stockId = new Random().GetRandomConvertableGuid();
-        var plantInfo = new PlantInformation(body.Name, body.Description, body.RegionNames, body.SoilNames, body.SoilNames);
+        var plantInfo = new PlantInformation(body.Name, body.Description, body.RegionNames, body.SoilNames, body.GroupNames);
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
             meta => new AddToStockCommand(meta, plantInfo, body.Created, pictures),
