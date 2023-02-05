@@ -44,7 +44,7 @@ public class PlantStock : AggregateBase, IEventHandler<StockAddedEvent>, IEventH
         BeenPosted = true;
         return new[]
         {
-            new StockItemPostedEvent(EventFactory.Shared.Create<StockItemPostedEvent>(command), command.Metadata.UserName, command.Price, Information.GroupName)
+            new StockItemPostedEvent(EventFactory.Shared.Create<StockItemPostedEvent>(command), command.Metadata.UserName, command.Price, Information.GroupNames)
         };
     }
 

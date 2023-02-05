@@ -19,7 +19,7 @@ public class PostController : ControllerBase
     }
 
     public record PostViewResultItem(Guid Id, string PlantName, string Description, decimal Price,
-        string SoilName, string[] RegionNames, string GroupName, DateTime Created,
+        string[] SoilNames, string[] RegionNames, string[] GroupNames, DateTime Created,
         string SellerName, string SellerPhone, long SellerCared, long SellerSold, long SellerInstructions,
         long CareTakerCared, long CareTakerSold, long CareTakerInstructions, Picture[] Images
     )
@@ -46,7 +46,7 @@ public class PostController : ControllerBase
                 var caretaker = stock.Caretaker;
                 var plant = stock.Information;
                 result = new(new(post.Id, plant.PlantName, plant.Description, post.Price,
-                    plant.SoilName, plant.RegionNames, plant.GroupName, stock.CreatedTime,
+                    plant.SoilNames, plant.RegionNames, plant.GroupNames, stock.CreatedTime,
                     seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
                     caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated,
                     stock.Pictures));

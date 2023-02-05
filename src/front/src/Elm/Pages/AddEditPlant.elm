@@ -55,8 +55,8 @@ type alias PlantView =
     , description : String
     , created : String
     , regions : Multiselect.Model
-    , soil : String
-    , group : String
+    , soils : Multiselect.Model
+    , groups : Multiselect.Model
     , images : ImageList.Model
     , uploadedFiles : List File
     }
@@ -72,12 +72,12 @@ type LocalMsg
     | RemovedImages ImageList.Msg
     | NameUpdate String
     | DescriptionUpdate String
-    | SoilUpdate String
-    | GroupUpdate String
     | DateUpdate String
     | StartUpload
     | ImagesLoaded File (List File)
     | RegionsMS Multiselect.Msg
+    | GroupsMS Multiselect.Msg
+    | SoilsMS Multiselect.Msg
     | GotAvailable (Result Http.Error Available)
     | GotPlant (Result Http.Error (Maybe PlantView))
     | Submit
@@ -134,14 +134,11 @@ updateLocal msg m =
 
                 ( GotAvailable (Ok res), Add addView ) ->
                     let
-                        getFirstValue multi =
-                            Multiselect.getValues multi |> List.head |> Maybe.withDefault ( "", "" ) |> Tuple.first
-
                         updatePlant plant =
                             { plant
                                 | regions = res.regions
-                                , soil = getFirstValue res.soils
-                                , group = getFirstValue res.groups
+                                , soils = res.soils
+                                , groups = res.groups
                             }
                     in
                     ( authed <| Add <| { addView | available = Loaded res, plant = updatePlant addView.plant }, Cmd.none )
@@ -178,6 +175,50 @@ updateLocal msg m =
                                     Multiselect.update msEvent plantView.regions
                             in
                             ( authed <| Edit <| { editView | plant = Loaded { plantView | regions = subModel } }, Cmd.map RegionsMS subCmd |> mapCmd )
+
+                        _ ->
+                            noOp
+
+                ( GroupsMS msEvent, Add addView ) ->
+                    let
+                        ( subModel, subCmd, _ ) =
+                            Multiselect.update msEvent addView.plant.groups
+
+                        updatedRegion plant =
+                            { plant | groups = subModel }
+                    in
+                    ( authed <| Add <| { addView | plant = updatedRegion addView.plant }, Cmd.map GroupsMS subCmd |> mapCmd )
+
+                ( GroupsMS msEvent, Edit editView ) ->
+                    case editView.plant of
+                        Loaded plantView ->
+                            let
+                                ( subModel, subCmd, _ ) =
+                                    Multiselect.update msEvent plantView.groups
+                            in
+                            ( authed <| Edit <| { editView | plant = Loaded { plantView | groups = subModel } }, Cmd.map GroupsMS subCmd |> mapCmd )
+
+                        _ ->
+                            noOp
+
+                ( SoilsMS msEvent, Add addView ) ->
+                    let
+                        ( subModel, subCmd, _ ) =
+                            Multiselect.update msEvent addView.plant.soils
+
+                        updatedRegion plant =
+                            { plant | soils = subModel }
+                    in
+                    ( authed <| Add <| { addView | plant = updatedRegion addView.plant }, Cmd.map SoilsMS subCmd |> mapCmd )
+
+                ( SoilsMS msEvent, Edit editView ) ->
+                    case editView.plant of
+                        Loaded plantView ->
+                            let
+                                ( subModel, subCmd, _ ) =
+                                    Multiselect.update msEvent plantView.soils
+                            in
+                            ( authed <| Edit <| { editView | plant = Loaded { plantView | soils = subModel } }, Cmd.map SoilsMS subCmd |> mapCmd )
 
                         _ ->
                             noOp
@@ -307,41 +348,6 @@ updateLocal msg m =
                     case editView.plant of
                         Loaded pl ->
                             ( authed <| Edit <| { editView | plant = Loaded (updatedName pl) }, Cmd.none )
-
-                        _ ->
-                            noOp
-
-                ( SoilUpdate soil, _ ) ->
-                    case model of
-                        Add addView ->
-                            let
-                                updatePlant plant =
-                                    { plant | soil = soil }
-                            in
-                            ( authed <| Add <| { addView | plant = updatePlant addView.plant }, Cmd.none )
-
-                        Edit editView ->
-                            case editView.plant of
-                                Loaded plant ->
-                                    let
-                                        updatedPlant =
-                                            { plant | soil = soil }
-                                    in
-                                    ( authed <| Edit <| { editView | plant = Loaded updatedPlant }, Cmd.none )
-
-                                _ ->
-                                    noOp
-
-                        _ ->
-                            noOp
-
-                ( GroupUpdate group, Add { plant } ) ->
-                    ( setPlant { plant | group = group }, Cmd.none )
-
-                ( GroupUpdate group, Edit { plant } ) ->
-                    case plant of
-                        Loaded pl ->
-                            ( setPlant { pl | group = group }, Cmd.none )
 
                         _ ->
                             noOp
@@ -571,19 +577,6 @@ leftView isEdit plant av =
                 _ ->
                     String.join ", " (List.map File.name plant.uploadedFiles)
 
-        isSelected isGroup val =
-            if isGroup then
-                plant.group == val
-
-            else
-                plant.soil == val
-
-        viewOption isGroup ( val, desc ) =
-            Select.item [ value val, selected <| isSelected isGroup val ] [ text desc ]
-
-        viewOptions vals isGroup =
-            List.map (viewOption isGroup) (Multiselect.getValues vals)
-
         dateInput =
             if isEdit then
                 Input.text [ Input.disabled True, Input.value plant.created ]
@@ -601,14 +594,8 @@ leftView isEdit plant av =
                 ]
             )
         ++ viewInput "Regions" (Html.map RegionsMS <| Multiselect.view plant.regions)
-        ++ viewInput "Soil"
-            (Select.select [ Select.onChange SoilUpdate ]
-                (viewOptions av.soils False)
-            )
-        ++ viewInput "Group"
-            (Select.select [ Select.onChange GroupUpdate ]
-                (viewOptions av.groups True)
-            )
+        ++ viewInput "Soils" (Html.map SoilsMS <| Multiselect.view plant.soils)
+        ++ viewInput "Groups" (Html.map GroupsMS <| Multiselect.view plant.groups)
         ++ viewInput "Description" (Input.text [ Input.onInput DescriptionUpdate, Input.value plant.description ])
         ++ viewInput "Created Date" dateInput
     )
@@ -660,7 +647,7 @@ decodeInitial flags =
                 BadEdit
 
     else
-        Add <| AddView Loading (PlantView "" "" "" emptyMultiSelect "1" "1" empyImageList []) Nothing
+        Add <| AddView Loading (PlantView "" "" "" emptyMultiSelect emptyMultiSelect emptyMultiSelect empyImageList []) Nothing
 
 
 
@@ -709,36 +696,40 @@ plantDecoderBase av token =
         regions =
             Multiselect.getValues av.regions
 
-        getPairWithKey key list =
-            List.head (List.filter (\( k, v ) -> k == key) list)
+        groups =
+            Multiselect.getValues av.groups
 
-        getRegionFor id =
-            case getPairWithKey id regions of
-                Just val ->
-                    val
+        soils =
+            Multiselect.getValues av.soils
 
-                Nothing ->
-                    ( "-1", "Unknown" )
+        toSelfDict ids =
+            List.map (\id -> Tuple.pair id id) ids
+
+        reg ids =
+            Multiselect.populateValues (Multiselect.initModel regions "regionNames" Multiselect.Show) regions (toSelfDict ids)
+
+        group ids =
+            Multiselect.populateValues (Multiselect.initModel groups "groupNames" Multiselect.Show) groups (toSelfDict ids)
+
+        soil ids =
+            Multiselect.populateValues (Multiselect.initModel soils "soilNames" Multiselect.Show) soils (toSelfDict ids)
 
         regIdsDecoder =
             D.at [ "item", "regionNames" ] (D.list decodeId)
 
-        selected ids =
-            List.map getRegionFor ids
+        groupIdsDecoder =
+            D.at [ "item", "groupNames" ] (D.list decodeId)
 
-        reg ids =
-            Multiselect.populateValues (Multiselect.initModel regions "regionNames" Multiselect.Show) regions (selected ids)
-
-        regDecoder =
-            D.map reg regIdsDecoder
+        soilIdsDecoder =
+            D.at [ "item", "soilNames" ] (D.list decodeId)
     in
     D.succeed PlantView
         |> itemRequired "plantName" D.string
         |> itemRequired "description" D.string
         |> custom createdDecoder
-        |> custom regDecoder
-        |> itemRequired "soilName" decodeId
-        |> itemRequired "groupName" decodeId
+        |> custom (D.map reg regIdsDecoder)
+        |> custom (D.map soil soilIdsDecoder)
+        |> custom (D.map group groupIdsDecoder)
         |> custom (imagesDecoder token [ "item", "images" ])
         |> hardcoded []
 
@@ -766,10 +757,10 @@ getEditBody plant removed =
     Http.multipartBody
         ([ Http.stringPart "PlantName" plant.name
          , Http.stringPart "PlantDescription" plant.description
-         , Http.stringPart "SoilName" plant.soil
-         , Http.stringPart "GroupName" plant.group
          ]
-            ++ regionsParts "RegionNames" plant.regions
+            ++ selectedValues "RegionNames" plant.regions
+            ++ selectedValues "SoilNames" plant.soils
+            ++ selectedValues "GroupNames" plant.groups
             ++ filesParts plant.uploadedFiles
             ++ removedParts removed
         )
@@ -780,11 +771,11 @@ getAddBody plant =
     Http.multipartBody
         ([ Http.stringPart "Name" plant.name
          , Http.stringPart "Description" plant.description
-         , Http.stringPart "SoilName" plant.soil
-         , Http.stringPart "GroupName" plant.group
          , Http.stringPart "Created" plant.created
          ]
-            ++ regionsParts "RegionNames" plant.regions
+            ++ selectedValues "RegionNames" plant.regions
+            ++ selectedValues "SoilNames" plant.soils
+            ++ selectedValues "GroupNames" plant.groups
             ++ filesParts plant.uploadedFiles
         )
 
@@ -794,8 +785,8 @@ removedParts removed =
     List.map (\r -> Http.stringPart "RemovedImages" r) removed
 
 
-regionsParts : String -> Multiselect.Model -> List Http.Part
-regionsParts name regions =
+selectedValues : String -> Multiselect.Model -> List Http.Part
+selectedValues name regions =
     let
         keys =
             List.map Tuple.first (Multiselect.getSelectedValues regions)
