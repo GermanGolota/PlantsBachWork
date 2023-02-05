@@ -135,24 +135,6 @@ public class PlantsController : ControllerBase
             );
     }
 
-    [HttpPost("add2")]
-    public async Task<ActionResult<Guid>> Create2
-        ([FromForm] PlantInformation body, DateTime created, IEnumerable<IFormFile> files, CancellationToken token)
-    {
-        var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
-        var stockId = new Random().GetRandomConvertableGuid();
-        var result = await _command.CreateAndSendAsync(
-            factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
-            meta => new AddToStockCommand(meta, body, created, pictures),
-            token
-            );
-
-        return result.Match<ActionResult<Guid>>(
-            success => Ok(stockId),
-            failure => BadRequest(failure.Reasons)
-            );
-    }
-
     public record EditPlantViewRequest(string PlantName,
       string PlantDescription, string[] RegionNames, string SoilName, string GroupName, Guid[]? RemovedImages);
 
