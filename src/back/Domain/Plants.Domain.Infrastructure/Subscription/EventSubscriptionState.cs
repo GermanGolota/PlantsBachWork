@@ -19,6 +19,8 @@ internal class EventSubscriptionState : ISubscriptionProcessingMarker, ISubscrip
         private long _subscriptionProcessed = 0;
         private bool _isNew = true;
 
+        public string? NotifyUsername { get; set; }
+
         public void MarkProcessed()
         {
             _subscriptionProcessed++;
@@ -37,9 +39,13 @@ internal class EventSubscriptionState : ISubscriptionProcessingMarker, ISubscrip
 
     private ConcurrentDictionary<string, SubscriptionProcessingState> _processingStates = new();
 
-    public void SubscribeToNotifications(AggregateDescription description)
+    public void SubscribeToNotifications(AggregateDescription description, string? notifyUsername)
     {
         var state = GetProcessing(description, shouldCreate: true);
+        if (state is not null)
+        {
+            state.NotifyUsername = notifyUsername;
+        }
         _logger.LogDebug("Subscribed to '{@aggregate}'", description);
     }
 
@@ -56,11 +62,14 @@ internal class EventSubscriptionState : ISubscriptionProcessingMarker, ISubscrip
         _processingStates.RemoveWithRetry(GetKey(description));
     }
 
-    public void MarkSubscriptionComplete(AggregateDescription description)
+    public SubscriptionState? MarkSubscriptionComplete(AggregateDescription description)
     {
         _logger.LogDebug("Marking complete for '{@aggregate}'", description);
         var state = GetProcessing(description);
         state?.MarkProcessed();
+        return state is null
+            ? null
+            : new(state.WasProcessed(), state.NotifyUsername);
     }
 
     public void MarkSubscribersCount(AggregateDescription description, long subscriptionsCount)

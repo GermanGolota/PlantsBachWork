@@ -2,7 +2,7 @@
 
 public interface ISubscriptionProcessingSubscription
 { 
-    void SubscribeToNotifications(AggregateDescription description);
+    void SubscribeToNotifications(AggregateDescription description, string? notifyUsername);
     void UnsubscribeFromNotifications(AggregateDescription description);
     bool WasProcessed(AggregateDescription description);
 }
@@ -10,5 +10,7 @@ public interface ISubscriptionProcessingSubscription
 internal interface ISubscriptionProcessingMarker
 {
     void MarkSubscribersCount(AggregateDescription description, long subscriptionsCount);
-    void MarkSubscriptionComplete(AggregateDescription description);
+    SubscriptionState? MarkSubscriptionComplete(AggregateDescription description);
 }
+
+internal record SubscriptionState(bool IsProcessed, string? NotifyUsername);

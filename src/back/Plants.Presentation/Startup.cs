@@ -1,5 +1,6 @@
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Plants.Domain.Presentation;
 
 namespace Plants.Presentation;
 
@@ -28,6 +29,9 @@ public class Startup
             .AddJwtAuthorization(Configuration)
             .AddWebRootFileProvider()
             .AddPlantsSwagger()
+            .AddSignalR()
+            .Services
+            .AddTransient<INotificationSender, NotificationSender>()
             .AddControllers()
             .AddJsonOptions(_ =>
             {
@@ -101,6 +105,7 @@ public class Startup
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+            endpoints.MapHub<NotificationHub>("hub/notifications");
         });
     }
 }

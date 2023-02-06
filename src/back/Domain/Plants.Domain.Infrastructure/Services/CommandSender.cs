@@ -53,9 +53,9 @@ internal class CommandSender : ICommandSender
         {
             if (_cqrs.CommandHandlers.TryGetValue(commandType, out var handlePairs))
             {
-                if (options is CommandExecutionOptions.Wait)
+                if (options is CommandExecutionOptions.Wait || options is CommandExecutionOptions.Notify)
                 {
-                    _notificator.SubscribeToNotifications(commandAggregate);
+                    _notificator.SubscribeToNotifications(commandAggregate, options is CommandExecutionOptions.Notify n ? n.Username : null);
                     _marker.MarkSubscribersCount(commandAggregate, 1);
                 }
                 result = await ExecuteCommand(command, commandAggregate, handlePairs, token);
@@ -72,15 +72,25 @@ internal class CommandSender : ICommandSender
             result = new CommandForbidden($"Cannot perform any updates against '{commandAggregate.Name}'");
         }
 
-        if (options is CommandExecutionOptions.Wait wait)
+        if (options is CommandExecutionOptions.Wait || options is CommandExecutionOptions.Notify)
         {
-            var success = await WaitForSubscriptionAsync(commandAggregate, wait.TimeToWait, token);
-            if (success is false)
+            try
             {
-                _logger.LogInformation("Failed to wait to subscription to be processed for '{@aggregate}'", commandAggregate);
-                throw new TimeoutException($"Timeout while waiting for subscription to be processed for '{commandAggregate.Id}' in '{commandAggregate.Name}'");
+                if (options is CommandExecutionOptions.Wait wait)
+                {
+                    var success = await WaitForSubscriptionAsync(commandAggregate, wait.TimeToWait, token);
+                    if (success is false)
+                    {
+                        _logger.LogInformation("Failed to wait to subscription to be processed for '{@aggregate}'", commandAggregate);
+                        throw new TimeoutException($"Timeout while waiting for subscription to be processed for '{commandAggregate.Id}' in '{commandAggregate.Name}'");
+                    }
+                }
             }
-            _notificator.UnsubscribeFromNotifications(commandAggregate);
+            finally
+            {
+                _notificator.UnsubscribeFromNotifications(commandAggregate);
+            }
+
         }
 
         _logger.LogInformation("Processed command '{commandId}' for '{@aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
