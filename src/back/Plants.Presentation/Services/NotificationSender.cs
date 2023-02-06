@@ -15,5 +15,5 @@ internal sealed class NotificationSender : INotificationSender
     {
         await _context.Clients.User(username).SendAsync("CommandFinished", notificationName, success, token);
     }
-
+     
 }

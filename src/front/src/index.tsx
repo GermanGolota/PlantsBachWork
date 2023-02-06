@@ -1,4 +1,5 @@
-import React from "react";import ReactDOM from "react-dom";
+import React, { useEffect, useState } from "react";
+import ReactDOM from "react-dom";
 import { Route, BrowserRouter, Routes, useParams } from "react-router-dom";
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
@@ -21,6 +22,7 @@ import "./main.css";
 import { AuthResponse, retrieve, store } from "./Store";
 import AddInstructionPage from "./editor";
 import { useElmApp } from "./hooks";
+import Connector from "./signalr-connection";
 
 const HistoryPage = () => {
   const { name, id } = useParams();
@@ -337,47 +339,66 @@ const NotFound = () => {
   );
 };
 
-const App = () => (
-  <BrowserRouter>
-    <Routes>
-      <Route path="/login" element={<LoginPage isNew={false} />} />
-      <Route path="/login/new" element={<LoginPage isNew={true} />} />
-      <Route path="/stats" element={<StatsPage />} />
-      <Route path="/search" element={<SearchPage />} />
-      <Route path="/notPosted" element={<NotPostedPage />} />
-      <Route path="/plant/:plantId" element={<PlantPage isOrder={false} />} />
-      <Route
-        path="/plant/:plantId/order"
-        element={<PlantPage isOrder={true} />}
-      />
-      <Route path="/notPosted/:plantId/post" element={<PostPlantPage />} />
-      <Route path="/notPosted/add" element={<AddEditPage isEdit={false} />} />
-      <Route
-        path="/notPosted/:plantId/edit"
-        element={<AddEditPage isEdit={true} />}
-      />
-      <Route path="/orders" element={<OrdersPage isEmployee={false} />} />
-      <Route
-        path="/orders/employee"
-        element={<OrdersPage isEmployee={true} />}
-      />
-      <Route path="/user" element={<UsersPage />} />
-      <Route path="/user/add" element={<AddUserPage />} />
-      <Route path="/instructions" element={<SearchInstructionsPage />} />
-      <Route
-        path="/instructions/add"
-        element={<AddInstructionPage isEdit={false} />}
-      />
-      <Route
-        path="/instructions/:id/edit"
-        element={<AddInstructionPage isEdit={true} />}
-      />
-      <Route path="/instructions/:id" element={<InstructionPage />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/history/:name/:id" element={<HistoryPage />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  </BrowserRouter>
-);
+const App = () => {
+  const { events } = Connector();
+  const [notifications, setNotifications] = useState<
+    {
+      notificationName: string;
+      success: boolean;
+    }[]
+  >([]);
+  useEffect(() => {
+    events((notificationName, success) =>
+      setNotifications(
+        notifications.concat({
+          notificationName,
+          success,
+        })
+      )
+    );
+  });
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage isNew={false} />} />
+        <Route path="/login/new" element={<LoginPage isNew={true} />} />
+        <Route path="/stats" element={<StatsPage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/notPosted" element={<NotPostedPage />} />
+        <Route path="/plant/:plantId" element={<PlantPage isOrder={false} />} />
+        <Route
+          path="/plant/:plantId/order"
+          element={<PlantPage isOrder={true} />}
+        />
+        <Route path="/notPosted/:plantId/post" element={<PostPlantPage />} />
+        <Route path="/notPosted/add" element={<AddEditPage isEdit={false} />} />
+        <Route
+          path="/notPosted/:plantId/edit"
+          element={<AddEditPage isEdit={true} />}
+        />
+        <Route path="/orders" element={<OrdersPage isEmployee={false} />} />
+        <Route
+          path="/orders/employee"
+          element={<OrdersPage isEmployee={true} />}
+        />
+        <Route path="/user" element={<UsersPage />} />
+        <Route path="/user/add" element={<AddUserPage />} />
+        <Route path="/instructions" element={<SearchInstructionsPage />} />
+        <Route
+          path="/instructions/add"
+          element={<AddInstructionPage isEdit={false} />}
+        />
+        <Route
+          path="/instructions/:id/edit"
+          element={<AddInstructionPage isEdit={true} />}
+        />
+        <Route path="/instructions/:id" element={<InstructionPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/history/:name/:id" element={<HistoryPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
 ReactDOM.render(<App />, document.querySelector("#root"));
