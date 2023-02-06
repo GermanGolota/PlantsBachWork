@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom";
+import React, { useEffect, useState } from "react";import ReactDOM from "react-dom";
 import { Route, BrowserRouter, Routes, useParams } from "react-router-dom";
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
@@ -69,21 +68,6 @@ const HistoryPage = () => {
     </div>
   );
 };
-
-function getParents(elem: HTMLElement | null) {
-  var parents: HTMLElement[] = [];
-  if (elem) {
-    while (
-      elem.parentElement &&
-      elem.parentElement.nodeName.toLowerCase() != "body"
-    ) {
-      elem = elem.parentElement;
-      parents.push(elem);
-    }
-  }
-
-  return parents;
-}
 
 const SearchPage = () => {
   const { name, id } = useParams();
