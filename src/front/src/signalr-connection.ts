@@ -1,15 +1,22 @@
 import * as signalR from "@microsoft/signalr";
 
-const URL = process.env.HUB_ADDRESS ?? "https://localhost:5001/hub/notifications"; //or whatever your backend port is
+const URL = "http://localhost:5000/commandsnotifications"; //or whatever your backend port is
 class Connector {
 
   private connection: signalR.HubConnection;
+  private token: string;
   public events: (onCommandFinished: (notificationName: string, success: boolean) => void) => void;
   static instance: Connector;
 
-  constructor() {
+  constructor(token: string) {
+    this.token = token;
+
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl(URL)
+      .withUrl(URL, {
+        skipNegotiation: true,
+        transport: signalR.HttpTransportType.WebSockets,
+        accessTokenFactory: async () => { return this.token }
+      })
       .withAutomaticReconnect()
       .build();
     this.connection.start().catch(err => document.write(err));
@@ -20,9 +27,9 @@ class Connector {
     };
   }
 
-  public static getInstance(): Connector {
+  public static getInstance(token: string): Connector {
     if (!Connector.instance)
-      Connector.instance = new Connector();
+      Connector.instance = new Connector(token);
     return Connector.instance;
   }
 }

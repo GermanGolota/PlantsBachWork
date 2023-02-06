@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";import ReactDOM from "react-dom";
+import React, { useEffect, useState } from "react";
+import ReactDOM from "react-dom";
 import { Route, BrowserRouter, Routes, useParams } from "react-router-dom";
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
@@ -324,23 +325,29 @@ const NotFound = () => {
 };
 
 const App = () => {
-  const { events } = Connector();
-  const [notifications, setNotifications] = useState<
-    {
-      notificationName: string;
-      success: boolean;
-    }[]
-  >([]);
-  useEffect(() => {
-    events((notificationName, success) =>
-      setNotifications(
-        notifications.concat({
-          notificationName,
-          success,
-        })
-      )
-    );
-  });
+  let resp = retrieve();
+
+  if (resp) {
+    const [notifications, setNotifications] = useState<
+      {
+        notificationName: string;
+        success: boolean;
+      }[]
+    >([]);
+
+    const { events } = Connector(resp.token);
+
+    useEffect(() => {
+      events((notificationName, success) =>
+        setNotifications(
+          notifications.concat({
+            notificationName,
+            success,
+          })
+        )
+      );
+    });
+  }
   return (
     <BrowserRouter>
       <Routes>

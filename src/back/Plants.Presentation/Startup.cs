@@ -48,17 +48,27 @@ public class Startup
         {
             opt.AddPolicy(DevPolicyName, options =>
             {
-                options.AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
+                options.AllowAnyMethod()
+                       .AllowAnyHeader()
+                       .SetIsOriginAllowed(origin => true)
+                       .AllowCredentials();
             });
 
             opt.AddPolicy(ProdPolicyName, options =>
             {
                 var config = Configuration["AllowedHosts"]!;
-                options.WithOrigins(config)
-                                    .AllowAnyMethod()
-                                    .AllowAnyHeader();
+                if (config == "*")
+                {
+                    options.SetIsOriginAllowed(_ => true);
+                }
+                else
+                {
+                    options.WithOrigins(config);
+                }
+                options
+                   .AllowAnyMethod()
+                   .AllowAnyHeader()
+                   .AllowCredentials();
             });
         });
     }
@@ -90,8 +100,9 @@ public class Startup
             options.ApiPath = "/health-ui-api";
         });
 
+#if !DEBUG
         app.UseHttpsRedirection();
-
+#endif
         app.UseAuthentication();
         app.UseStaticFiles();
 
@@ -100,12 +111,11 @@ public class Startup
         app.UseRouting();
 
         app.UseAuthorization();
-        app.UseMiddleware<UrlAuthMiddleware>();
 
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
-            endpoints.MapHub<NotificationHub>("hub/notifications");
+            endpoints.MapHub<NotificationHub>("/commandsnotifications");
         });
     }
 }

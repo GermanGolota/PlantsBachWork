@@ -7,8 +7,8 @@ const valuesKey = "PlantAuthToken";
 type Roles = "Consumer" | "Producer" | "Manager";
 interface AuthResponse {
   roles: Roles[];
-  token: String;
-  username: String;
+  token: string;
+  username: string;
 }
 
 
