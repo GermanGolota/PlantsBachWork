@@ -7,7 +7,7 @@ import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
 import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, imagesDecoder, postAuthed)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, href, style)
+import Html.Attributes exposing (class, style)
 import Http
 import ImageList
 import Json.Decode as D
@@ -411,7 +411,16 @@ viewPage resp page =
         topViewItems =
             if page.showAdditional then
                 [ checksView
-                , div [] [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href viewLocation ] ] [ text switchViewMessage ] ]
+                , div []
+                    [ Button.linkButton
+                        [ Button.primary
+                        , Button.onClick <| Navigate viewLocation
+                        , Button.attrs
+                            [ smallMargin
+                            ]
+                        ]
+                        [ text switchViewMessage ]
+                    ]
                 ]
 
             else

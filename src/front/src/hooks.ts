@@ -46,15 +46,15 @@ const useElmApp = <
   React.useEffect(() => {
     if (app) {
       app.ports.navigate.subscribe((location) => {
-        navigate(location);
+        console.log("Navigating to ", location);
+        navigate("/wrapper/" + encodeURIComponent(location));
       });
 
       app.ports.goBack.subscribe((_) => {
-        navigate(-1);
+        navigate("/wrapper/" + "-1");
       });
 
       if (additional) {
-
         additional(ports);
       }
     }

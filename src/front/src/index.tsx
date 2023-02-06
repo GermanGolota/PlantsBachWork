@@ -1,6 +1,12 @@
-import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom";
-import { Route, BrowserRouter, Routes, useParams } from "react-router-dom";
+import React, { useEffect, useLayoutEffect, useState } from "react";import ReactDOM from "react-dom";
+import {
+  Route,
+  BrowserRouter,
+  Routes,
+  useParams,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
 import { Elm as SearchElm } from "./Elm/Pages/Search";
@@ -315,6 +321,24 @@ const LoginPage = (props: { isNew: boolean }) => {
   );
 };
 
+const NavigateWrapper = () => {
+  const navigate = useNavigate();
+  const { location } = useParams();
+
+  useEffect(() => {
+    if (location) {
+      if (location == "-1") {
+        navigate(-2);
+      } else {
+        navigate(decodeURIComponent(location), {
+          replace: true,
+        });
+      }
+    }
+  }, []);
+  return <div></div>;
+};
+
 const NotFound = () => {
   return (
     <div>
@@ -351,6 +375,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/wrapper/:location" element={<NavigateWrapper />}></Route>
         <Route path="/login" element={<LoginPage isNew={false} />} />
         <Route path="/login/new" element={<LoginPage isNew={true} />} />
         <Route path="/stats" element={<StatsPage />} />

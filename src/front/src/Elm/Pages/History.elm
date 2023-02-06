@@ -12,7 +12,7 @@ import Bootstrap.Text as Text
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (getAuthedQuery, historyUrl)
 import Html exposing (Html, div, i, text)
-import Html.Attributes exposing (class, href, style)
+import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as D
@@ -613,7 +613,7 @@ viewSnapshot snapshot state advanced =
                             ListGroup.li [ ListGroup.dark ]
                                 [ Button.linkButton
                                     [ Button.outlinePrimary
-                                    , Button.attrs [ href <| historyUrl rel.name rel.id ]
+                                    , Button.onClick <| Navigate <| historyUrl rel.name rel.id
                                     ]
                                     [ text rel.role ]
                                 ]

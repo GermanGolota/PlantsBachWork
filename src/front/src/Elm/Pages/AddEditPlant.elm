@@ -10,7 +10,7 @@ import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, imagesDecoder, p
 import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, href, selected, style, value)
+import Html.Attributes exposing (class, selected, style, value)
 import Http
 import ImageList
 import Json.Decode as D
@@ -501,7 +501,11 @@ viewResultAddValue data =
     div [ flex1, flex, Flex.col, class "text-success", Flex.alignItemsCenter, Flex.justifyEnd ]
         [ div [] [ text ("Successfully created plant " ++ data) ]
         , div []
-            [ Button.linkButton [ Button.primary, Button.attrs [ href ("/notPosted/" ++ data ++ "/edit") ] ] [ text "Go to edit" ]
+            [ Button.linkButton
+                [ Button.primary
+                , Button.onClick <| Navigate <| ("/notPosted/" ++ data ++ "/edit")
+                ]
+                [ text "Go to edit" ]
             ]
         ]
 

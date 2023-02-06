@@ -560,7 +560,8 @@ interactionButtons isAdmin allowOrder isOrder id =
                 Button.linkButton
                     [ Button.primary
                     , orderOnClick
-                    , Button.attrs [ smallMargin, largeFont, href orderUrl ]
+                    , Button.onClick <| Navigate orderUrl
+                    , Button.attrs [ smallMargin, largeFont ]
                     ]
                     [ text orderText ]
 
@@ -580,7 +581,14 @@ interactionButtons isAdmin allowOrder isOrder id =
                 div [] []
     in
     div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
-        [ Button.linkButton ([ Button.primary, Button.attrs [ smallMargin, largeFont, href backUrl ] ] ++ backNavigate) [ text "Back" ]
+        [ Button.linkButton
+            ([ Button.primary
+             , Button.onClick <| Navigate <| backUrl
+             , Button.attrs [ smallMargin, largeFont ]
+             ]
+                ++ backNavigate
+            )
+            [ text "Back" ]
         , orderBtn
         , historyBtn
         ]
