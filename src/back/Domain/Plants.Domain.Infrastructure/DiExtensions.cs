@@ -43,7 +43,7 @@ public static class DiExtensions
         services.AddTransient<EventSubscriptionProcessor>();
         services.AddTransient<AggregateEventSubscription>();
         services.AddSingleton<EventSubscriptionState>();
-        services.AddSingleton<ISubscriptionProcessingNotificator>(_ => _.GetRequiredService<EventSubscriptionState>());
+        services.AddSingleton<ISubscriptionProcessingSubscription>(_ => _.GetRequiredService<EventSubscriptionState>());
         services.AddSingleton<ISubscriptionProcessingMarker>(_ => _.GetRequiredService<EventSubscriptionState>());
         services.AddSingleton<IEventSubscriptionState>(_ => _.GetRequiredService<EventSubscriptionState>());
         services.AddTransient<IProjectionsUpdater, ProjectionsUpdater>();

@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace Plants.Domain.Infrastructure;
 
-internal class EventSubscriptionState : ISubscriptionProcessingMarker, ISubscriptionProcessingNotificator, IEventSubscriptionState
+internal class EventSubscriptionState : ISubscriptionProcessingMarker, ISubscriptionProcessingSubscription, IEventSubscriptionState
 {
     public EventSubscriptionState(ILogger<EventSubscriptionState> logger)
     {

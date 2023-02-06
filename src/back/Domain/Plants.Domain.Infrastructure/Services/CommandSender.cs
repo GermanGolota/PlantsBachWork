@@ -14,7 +14,7 @@ internal class CommandSender : ICommandSender
     private readonly IServiceProvider _service;
     private readonly IIdentityProvider _identityProvider;
     private readonly AccessesHelper _accesses;
-    private readonly ISubscriptionProcessingNotificator _notificator;
+    private readonly ISubscriptionProcessingSubscription _notificator;
     private readonly ISubscriptionProcessingMarker _marker;
 
     public CommandSender(CqrsHelper cqrs,
@@ -24,7 +24,7 @@ internal class CommandSender : ICommandSender
         IServiceProvider service,
         IIdentityProvider identityProvider,
         AccessesHelper accesses,
-        ISubscriptionProcessingNotificator notificator,
+        ISubscriptionProcessingSubscription notificator,
         ISubscriptionProcessingMarker marker)
     {
         _cqrs = cqrs;

@@ -18,4 +18,5 @@ public abstract record CommandExecutionOptions
 {
     public record NoWait() : CommandExecutionOptions;
     public record Wait(TimeSpan TimeToWait) : CommandExecutionOptions;
+    public record Notify(string Username) : CommandExecutionOptions;
 }

@@ -1,6 +1,6 @@
 ﻿namespace Plants.Domain.Infrastructure;
 
-public interface ISubscriptionProcessingNotificator
+public interface ISubscriptionProcessingSubscription
 { 
     void SubscribeToNotifications(AggregateDescription description);
     void UnsubscribeFromNotifications(AggregateDescription description);
