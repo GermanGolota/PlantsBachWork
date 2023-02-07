@@ -35,7 +35,7 @@ const useElmApp = <
     let model = retrieve();
     return init({
       node: elmRef.current,
-      flags: setFlags ? setFlags(model) : model,
+      flags: setFlags ? setFlags(model!) : model,
     });
   };
 
@@ -71,8 +71,10 @@ const useElmApp = <
 
     useEffect(() => {
       events((message) => {
-        resp.notifications.concat(message);
-        store(resp);
+        if (resp) {
+          resp.notifications.concat(message);
+          store(resp);
+        }
         app?.ports.notificationReceived.send(message);
       });
     });
