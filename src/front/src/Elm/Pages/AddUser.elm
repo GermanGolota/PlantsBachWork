@@ -11,7 +11,8 @@ import Http
 import Json.Decode as D
 import Json.Encode as E
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, roleToNumber, subscriptionBase, updateBase)
-import NavBar exposing (usersLink, viewNav)
+import Main2 exposing (viewBase2)
+import NavBar exposing (usersLink)
 import UserRolesSelector exposing (userRolesBtns)
 import Utils exposing (SubmittedResult(..), fillParent, flex, flexCenter, largeCentered, mediumMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -161,7 +162,7 @@ encodeBody page =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just usersLink) viewPage
+    viewBase2 model (Just usersLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg

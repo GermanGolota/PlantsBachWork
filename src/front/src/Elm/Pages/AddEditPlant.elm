@@ -3,21 +3,21 @@ module Pages.AddEditPlant exposing (..)
 import Available exposing (Available, availableDecoder)
 import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
-import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
 import Dict
 import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, imagesDecoder, postAuthed)
 import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, selected, style, value)
+import Html.Attributes exposing (class, style)
 import Http
 import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
+import Main2 exposing (viewBase2)
 import Multiselect
-import NavBar exposing (plantsLink, viewNav)
+import NavBar exposing (plantsLink)
 import Pages.Plant exposing (SelectedAddress(..))
 import Utils exposing (SubmittedResult(..), createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, largeFont, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -391,7 +391,7 @@ updateLocal msg m =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just plantsLink) viewPage
+    viewBase2 model (Just plantsLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg

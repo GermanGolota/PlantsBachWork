@@ -49,12 +49,12 @@ const useElmApp = <
   let ports = app?.ports as Omit<TApp["ports"], "navigate" | "goBack">;
   React.useEffect(() => {
     if (app) {
-      app.ports.navigate.subscribe((location) => {
+      app.ports.navigate?.subscribe((location) => {
         console.log("Navigating to ", location);
         navigate("/wrapper/" + encodeURIComponent(location));
       });
 
-      app.ports.goBack.subscribe((_) => {
+      app.ports.goBack?.subscribe((_) => {
         navigate("/wrapper/" + "-1");
       });
 

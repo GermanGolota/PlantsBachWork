@@ -19,7 +19,7 @@ class Connector {
       })
       .withAutomaticReconnect()
       .build();
-    this.connection.start().catch(err => document.write(err));
+    this.connection.start().catch(err => { console.log(err); });
     this.events = (onCommandFinished) => {
       this.connection.on("CommandFinished", (message) => {
         onCommandFinished(message);

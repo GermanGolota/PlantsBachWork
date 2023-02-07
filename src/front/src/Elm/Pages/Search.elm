@@ -9,14 +9,15 @@ import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
 import Endpoints exposing (Endpoint(..), historyUrl, imagesDecoder, postAuthed)
 import Html exposing (Html, div, i, text)
-import Html.Attributes exposing (alt, class, src, style)
+import Html.Attributes exposing (class, style)
 import Http
 import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
+import Main2 exposing (viewBase2)
 import Multiselect exposing (InputInMenu(..))
-import NavBar exposing (viewNav)
+import NavBar
 import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, mediumFont, smallMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -380,8 +381,9 @@ convertIds ids =
 --view
 
 
+view : ModelBase View -> Html (MsgBase LocalMsg)
 view model =
-    viewNav model (Just NavBar.searchLink) pageView
+    viewBase2 model (Just NavBar.searchLink) pageView
 
 
 pageView : AuthResponse -> View -> Html Msg

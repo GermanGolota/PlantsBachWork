@@ -95,8 +95,8 @@ mainInit initFunc flags =
                 Ok res ->
                     Just res
 
-                Err _ ->
-                    Nothing
+                Err e ->
+                    Debug.log (D.errorToString e) Nothing
     in
     initFunc authResp flags
 

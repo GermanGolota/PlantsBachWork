@@ -14,8 +14,9 @@ import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, mapSub, subscriptionBase, updateBase)
+import Main2 exposing (viewBase2)
 import Multiselect
-import NavBar exposing (instructionsLink, viewNav)
+import NavBar exposing (instructionsLink)
 import Transition exposing (constant)
 import Utils exposing (decodeId, fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, textHtml)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -259,7 +260,7 @@ requestImages =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just instructionsLink) viewPage
+    viewBase2 model (Just instructionsLink) viewPage
 
 
 viewPage : AuthResponse -> ViewType -> Html Msg

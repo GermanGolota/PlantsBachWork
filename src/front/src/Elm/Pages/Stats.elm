@@ -15,10 +15,11 @@ import Iso8601 exposing (toTime)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, subscriptionBase, updateBase)
-import NavBar exposing (statsLink, viewNav)
+import Main2 exposing (viewBase2)
+import NavBar exposing (statsLink)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Time
-import Utils exposing (AlignDirection(..), decodeId, fillParent, flatten, largeFont, textAlign, textCenter, unique)
+import Utils exposing (AlignDirection(..), fillParent, flatten, largeFont, textAlign, textCenter, unique)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -216,8 +217,9 @@ viewRow key value =
         ]
 
 
+view : ModelBase View -> Html (MsgBase LocalMsg)
 view model =
-    viewNav model (Just statsLink) viewMain
+    viewBase2 model (Just statsLink) viewMain
 
 
 viewMain : AuthResponse -> View -> Html Msg

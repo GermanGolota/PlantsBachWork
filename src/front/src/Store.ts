@@ -29,10 +29,10 @@ const store = (response: AuthResponse) => {
   localStorage.setItem(valuesKey, str);
 };
 
-const retrieve = (): AuthResponse => {
+const retrieve = (): AuthResponse | null => {
   let storedVal = localStorage.getItem(valuesKey) ?? '';
   let str = decrypt(storedVal);
-  let res;
+  let res: AuthResponse | null;
   if (str) {
     res = JSON.parse(str);
   }

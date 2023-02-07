@@ -11,7 +11,7 @@ import Http
 import Json.Decode as D
 import Json.Encode as E
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, roleToStr, subscriptionBase, updateBase)
-import NavBar exposing (viewNav)
+import Main2 exposing (viewBase2)
 import Utils exposing (SubmittedResult(..), fillParent, flex, flexCenter, largeCentered, mediumMargin, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -130,7 +130,7 @@ submitCommand token pass =
 
 view : Model -> Html Msg
 view model =
-    viewNav model Nothing viewPage
+    viewBase2 model Nothing viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
@@ -204,7 +204,7 @@ viewResult res =
 
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
-init resp flags =
+init resp _ =
     initBase [ Producer, Consumer, Manager ] (View "" Nothing Loading) (\res -> getUserId res.token res.username) resp
 
 

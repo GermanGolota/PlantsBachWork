@@ -9,7 +9,8 @@ import Http
 import ImageList
 import Json.Decode as D
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, subscriptionBase, updateBase)
-import NavBar exposing (plantsLink, viewNav)
+import Main2 exposing (viewBase2)
+import NavBar exposing (plantsLink)
 import PlantHelper exposing (PlantModel, plantDecoder, viewPlantBase)
 import Utils exposing (SubmittedResult(..), flex, flex1, largeFont, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -147,11 +148,11 @@ submitCommand token plantId price =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just plantsLink) viewPage
+    viewBase2 model (Just plantsLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
-viewPage resp page =
+viewPage _ page =
     let
         noplant =
             div [] [ text "Sorry, you cannot post this plant" ]
