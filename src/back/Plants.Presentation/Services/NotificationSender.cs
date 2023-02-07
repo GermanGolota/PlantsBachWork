@@ -11,9 +11,8 @@ internal sealed class NotificationSender : INotificationSender
         _context = context;
     }
 
-    public async Task SendNotificationAsync(string username, string notificationName, bool success, CancellationToken token)
+    public async Task SendNotificationAsync(string username, NotificationMessage message, CancellationToken token)
     {
-        await _context.Clients.User(username).SendAsync("CommandFinished", notificationName, success, token);
+        await _context.Clients.User(username).SendAsync("CommandFinished", message, token);
     }
-     
 }

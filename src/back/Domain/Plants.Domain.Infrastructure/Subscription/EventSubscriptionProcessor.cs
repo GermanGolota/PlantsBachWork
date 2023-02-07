@@ -13,7 +13,7 @@ internal class EventSubscriptionProcessor
     private readonly IProjectionsUpdater _updater;
     private readonly INotificationSender _notificationSender;
 
-    public EventSubscriptionProcessor(RepositoriesCaller caller, CqrsHelper cqrs, IEventStore eventStore, IServiceProvider provider, 
+    public EventSubscriptionProcessor(RepositoriesCaller caller, CqrsHelper cqrs, IEventStore eventStore, IServiceProvider provider,
         ISubscriptionProcessingMarker marker, IProjectionsUpdater updater, INotificationSender notificationSender)
     {
         _caller = caller;
@@ -38,15 +38,19 @@ internal class EventSubscriptionProcessor
             await Task.WhenAll(tasks);
             exception = null;
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             exception = e;
         }
 
         var subscription = _marker.MarkSubscriptionComplete(command.Metadata.InitialAggregate ?? command.Metadata.Aggregate);
-        if (subscription is not null && subscription.IsProcessed && subscription.NotifyUsername is not null)
+        if (subscription is not null && subscription.IsProcessed && subscription.NotifyUsername is not null && command.Metadata.InitialAggregate is not null)
         {
-            await _notificationSender.SendNotificationAsync(subscription.NotifyUsername, command.Metadata.Name, exception is null, token);
+            await _notificationSender.SendNotificationAsync(subscription.NotifyUsername,
+                                                            new(command.Metadata.InitialAggregate,
+                                                                command.Metadata.Name,
+                                                                exception is null),
+                                                            token);
         }
 
         return exception;

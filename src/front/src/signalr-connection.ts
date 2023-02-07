@@ -5,7 +5,7 @@ class Connector {
 
   private connection: signalR.HubConnection;
   private token: string;
-  public events: (onCommandFinished: (notificationName: string, success: boolean) => void) => void;
+  public events: (onCommandFinished: (message: NotificationMessage) => void) => void;
   static instance: Connector;
 
   constructor(token: string) {
@@ -21,8 +21,8 @@ class Connector {
       .build();
     this.connection.start().catch(err => document.write(err));
     this.events = (onCommandFinished) => {
-      this.connection.on("CommandFinished", (notificationName, success) => {
-        onCommandFinished(notificationName, success);
+      this.connection.on("CommandFinished", (message) => {
+        onCommandFinished(message);
       });
     };
   }
@@ -33,4 +33,15 @@ class Connector {
     return Connector.instance;
   }
 }
+
+export type NotificationMessage = {
+  aggregate: {
+    id: string,
+    name: string
+  },
+  commandName: string,
+  success: boolean
+}
+
+
 export default Connector.getInstance;

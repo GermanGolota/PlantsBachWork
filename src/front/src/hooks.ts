@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthResponse, retrieve } from "./Store";
+import Connector from "./signalr-connection";
 
 const useElmApp = <
   TApp extends {
@@ -59,6 +60,31 @@ const useElmApp = <
       }
     }
   }, [app]);
+
+  let resp = retrieve();
+
+  if (resp) {
+    const [notifications, setNotifications] = useState<
+      {
+        commandName: string;
+        success: boolean;
+      }[]
+    >([]);
+
+    const { events } = Connector(resp.token);
+
+    useEffect(() => {
+      events((message) => {
+        let { commandName, success } = message;
+        setNotifications(
+          notifications.concat({
+            commandName,
+            success,
+          })
+        );
+      });
+    });
+  }
 
   return { elmRef, ports };
 };

@@ -1,11 +1,11 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";import ReactDOM from "react-dom";
+import React, { useEffect } from "react";
+import ReactDOM from "react-dom";
 import {
   Route,
   BrowserRouter,
   Routes,
   useParams,
   useNavigate,
-  useLocation,
 } from "react-router-dom";
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
@@ -28,7 +28,6 @@ import "./main.css";
 import { AuthResponse, retrieve, store } from "./Store";
 import AddInstructionPage from "./editor";
 import { useElmApp } from "./hooks";
-import Connector from "./signalr-connection";
 
 const HistoryPage = () => {
   const { name, id } = useParams();
@@ -349,29 +348,6 @@ const NotFound = () => {
 };
 
 const App = () => {
-  let resp = retrieve();
-
-  if (resp) {
-    const [notifications, setNotifications] = useState<
-      {
-        notificationName: string;
-        success: boolean;
-      }[]
-    >([]);
-
-    const { events } = Connector(resp.token);
-
-    useEffect(() => {
-      events((notificationName, success) =>
-        setNotifications(
-          notifications.concat({
-            notificationName,
-            success,
-          })
-        )
-      );
-    });
-  }
   return (
     <BrowserRouter>
       <Routes>
