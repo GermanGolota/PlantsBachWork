@@ -1,8 +1,7 @@
 port module Main exposing (..)
 
 import Browser
-import Html exposing (Html, a, div, text)
-import Html.Attributes exposing (href)
+import Html exposing (Html)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
 import Utils exposing (intersect)
@@ -184,7 +183,7 @@ type MsgBase msg
 
 
 subscriptionBase : model -> Sub (MsgBase msg) -> Sub (MsgBase msg)
-subscriptionBase model baseSub =
+subscriptionBase _ baseSub =
     [ notificationReceived NotificationReceived, baseSub ] |> Sub.batch
 
 

@@ -18,7 +18,7 @@ import Http as Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required)
 import Json.Encode as E
-import Main exposing (AuthResponse, UserRole(..), baseApplication, mapCmd, roleToStr, rolesDecoder, subscriptionBase, updateBase)
+import Main exposing (AuthResponse, UserRole(..), baseApplication, roleToStr, rolesDecoder)
 import TypedSvg.Types exposing (px)
 import Utils exposing (fillParent, filledBackground, flexCenter, mapStyles, rgba255, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -109,7 +109,7 @@ update msg model =
         SubmitRequest (Ok response) ->
             ( { model | status = Just <| Loaded GoodCredentials }, notifyLoggedIn <| encodeResponse response )
 
-        SubmitRequest (Err err) ->
+        SubmitRequest (Err _) ->
             ( { model | status = Just <| Loaded BadCredentials }, Cmd.none )
 
 
@@ -238,7 +238,7 @@ displayFromCredStatus status =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
