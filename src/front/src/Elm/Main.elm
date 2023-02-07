@@ -215,7 +215,12 @@ updateBase updateFunc message model =
             updateFunc main model
 
         NotificationReceived notification ->
-            ( model, Cmd.none )
+            case model of
+                Authorized auth page ->
+                    ( Authorized { auth | notifications = auth.notifications ++ [ notification ] } page, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
 
 
 mapCmd : Cmd a -> Cmd (MsgBase a)
