@@ -15,7 +15,7 @@ import Http
 import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
 import Multiselect
 import NavBar exposing (plantsLink, viewNav)
 import Pages.Plant exposing (SelectedAddress(..))
@@ -660,7 +660,7 @@ decodeInitial flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    subscriptionBase model Sub.none
 
 
 

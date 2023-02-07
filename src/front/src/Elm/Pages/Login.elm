@@ -17,7 +17,7 @@ import Html.Attributes exposing (for, style)
 import Http as Http
 import Json.Decode as D
 import Json.Encode as E
-import Main exposing (AuthResponse, MsgBase(..), UserRole(..), baseApplication, mapCmd, roleToStr, rolesDecoder, updateBase)
+import Main exposing (AuthResponse, MsgBase(..), UserRole(..), baseApplication, mapCmd, roleToStr, rolesDecoder, subscriptionBase, updateBase)
 import TypedSvg.Types exposing (px)
 import Utils exposing (fillParent, filledBackground, flexCenter, mapStyles, rgba255, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -251,8 +251,8 @@ displayFromCredStatus status =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    subscriptionBase model Sub.none
 
 
 main : Program D.Value Model Msg

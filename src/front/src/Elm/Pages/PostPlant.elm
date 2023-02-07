@@ -8,7 +8,7 @@ import Html.Attributes exposing (class, style)
 import Http
 import ImageList
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, subscriptionBase, updateBase)
 import NavBar exposing (plantsLink, viewNav)
 import PlantHelper exposing (PlantModel, plantDecoder, viewPlantBase)
 import Utils exposing (SubmittedResult(..), flex, flex1, largeFont, smallMargin, submittedDecoder)
@@ -273,7 +273,7 @@ decodePlantId flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    subscriptionBase model Sub.none
 
 
 main : Program D.Value Model Msg

@@ -13,7 +13,7 @@ import Html.Attributes exposing (alt, class, src, style, value)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
 import Multiselect as Multiselect
 import NavBar exposing (instructionsLink, viewNav)
 import Utils exposing (buildQuery, chunkedView, decodeId, fillParent, flex, flex1, intersect, largeCentered, mediumMargin, smallMargin)
@@ -296,7 +296,7 @@ init resp flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    subscriptionBase model Sub.none
 
 
 main : Program D.Value Model Msg

@@ -14,7 +14,7 @@ import Http
 import Iso8601 exposing (toTime)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, subscriptionBase, updateBase)
 import NavBar exposing (statsLink, viewNav)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Time
@@ -528,7 +528,7 @@ getFin from to token =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    subscriptionBase model Sub.none
 
 
 main : Program D.Value Model Msg

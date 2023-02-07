@@ -14,7 +14,7 @@ import Http
 import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar exposing (viewNav)
 import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, mediumFont, smallMargin, textCenter)
@@ -526,7 +526,7 @@ init resp _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    subscriptionBase model Sub.none
 
 
 main : Program D.Value Model Msg

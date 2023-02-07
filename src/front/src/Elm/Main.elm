@@ -152,10 +152,32 @@ port navigate : String -> Cmd msg
 port goBack : () -> Cmd msg
 
 
+port notificationReceived : (Notification -> msg) -> Sub msg
+
+
+type alias Notification =
+    { commandName : String
+    , success : Bool
+    , aggregate : NotificationAggregate
+    }
+
+
+type alias NotificationAggregate =
+    { id : String
+    , name : String
+    }
+
+
 type MsgBase msg
     = Navigate String
     | GoBack
     | Main msg
+    | NotificationReceived Notification
+
+
+subscriptionBase : model -> Sub (MsgBase msg) -> Sub (MsgBase msg)
+subscriptionBase model baseSub =
+    [ notificationReceived NotificationReceived, baseSub ] |> Sub.batch
 
 
 initBase : List UserRole -> model -> (AuthResponse -> Cmd msg) -> Maybe AuthResponse -> ( ModelBase model, Cmd msg )
@@ -183,6 +205,9 @@ updateBase updateFunc message model =
 
         Main main ->
             updateFunc main model
+
+        NotificationReceived notification ->
+            ( model, Cmd.none )
 
 
 mapCmd : Cmd a -> Cmd (MsgBase a)

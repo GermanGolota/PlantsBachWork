@@ -12,6 +12,9 @@ export namespace Elm {
         goBack: {
           subscribe(callback: (data: null) => void): void
         }
+        notificationReceived: {
+          send(data: { commandName: string; success: boolean; aggregate: { id: string; name: string } }): void
+        }
         openEditor: {
           subscribe(callback: (data: string) => void): void
         }

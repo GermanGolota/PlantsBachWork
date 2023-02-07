@@ -11,7 +11,7 @@ import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
 import NavBar exposing (plantsLink, viewNav)
 import Utils exposing (bgTeal, chunkedView, decodeId, fillParent, flex, flex1, largeFont, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -207,8 +207,8 @@ plantDecoder =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    subscriptionBase model Sub.none
 
 
 main : Program D.Value Model Msg

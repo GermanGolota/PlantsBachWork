@@ -18,7 +18,7 @@ import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import JsonViewer exposing (initJsonTree, initJsonTreeCollapsed, updateJsonTree, viewJsonTree)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, subscriptionBase, updateBase)
 import NavBar exposing (viewNav)
 import Utils exposing (buildQuery, fillParent, flex, humanizePascalCase, largeCentered, mediumFont, mediumMargin, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -767,31 +767,33 @@ init resp flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model of
-        Authorized _ a ->
-            case a of
-                Valid v ->
-                    case v.history of
-                        Loaded history ->
-                            let
-                                snapshotSubs =
-                                    history.snapshots
-                                        |> List.map (\( agg, state ) -> Accordion.subscriptions state (\st -> Main <| AccordionSnapshotMsg agg st))
-                            in
-                            snapshotSubs
-                                ++ [ Accordion.subscriptions history.aggregateView (\st -> Main <| AccordionAggregateMsg st)
-                                   , Modal.subscriptions history.metadataModal.view (\vis -> Main <| AnimateMetadataModal vis)
-                                   ]
-                                |> Sub.batch
+    subscriptionBase model
+        (case model of
+            Authorized _ a ->
+                case a of
+                    Valid v ->
+                        case v.history of
+                            Loaded history ->
+                                let
+                                    snapshotSubs =
+                                        history.snapshots
+                                            |> List.map (\( agg, state ) -> Accordion.subscriptions state (\st -> Main <| AccordionSnapshotMsg agg st))
+                                in
+                                snapshotSubs
+                                    ++ [ Accordion.subscriptions history.aggregateView (\st -> Main <| AccordionAggregateMsg st)
+                                       , Modal.subscriptions history.metadataModal.view (\vis -> Main <| AnimateMetadataModal vis)
+                                       ]
+                                    |> Sub.batch
 
-                        _ ->
-                            Sub.none
+                            _ ->
+                                Sub.none
 
-                _ ->
-                    Sub.none
+                    _ ->
+                        Sub.none
 
-        _ ->
-            Sub.none
+            _ ->
+                Sub.none
+        )
 
 
 main : Program D.Value Model Msg

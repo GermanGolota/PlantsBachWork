@@ -13,7 +13,7 @@ import Html.Attributes exposing (style, value)
 import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, mapSub, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, mapSub, subscriptionBase, updateBase)
 import Multiselect
 import NavBar exposing (instructionsLink, viewNav)
 import Transition exposing (constant)
@@ -431,7 +431,7 @@ init resp flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    editorChanged EditorTextUpdated |> mapSub
+    subscriptionBase model (editorChanged EditorTextUpdated |> mapSub)
 
 
 main : Program D.Value Model Msg
