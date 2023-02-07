@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthResponse, retrieve } from "./Store";
+import { AuthResponse, retrieve, store } from "./Store";
 import Connector from "./signalr-connection";
 
 const useElmApp = <
@@ -71,6 +71,8 @@ const useElmApp = <
 
     useEffect(() => {
       events((message) => {
+        resp.notifications.concat(message);
+        store(resp);
         app?.ports.notificationReceived.send(message);
       });
     });

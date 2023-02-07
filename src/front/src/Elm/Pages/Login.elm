@@ -16,6 +16,7 @@ import Html exposing (Html, div, text)
 import Html.Attributes exposing (for, style)
 import Http as Http
 import Json.Decode as D
+import Json.Decode.Pipeline exposing (custom, hardcoded, required)
 import Json.Encode as E
 import Main exposing (AuthResponse, MsgBase(..), UserRole(..), baseApplication, mapCmd, roleToStr, rolesDecoder, subscriptionBase, updateBase)
 import TypedSvg.Types exposing (px)
@@ -25,10 +26,11 @@ import Webdata exposing (WebData(..), viewWebdata)
 
 submitSuccessDecoder : D.Decoder AuthResponse
 submitSuccessDecoder =
-    D.map3 AuthResponse
-        (D.field "token" D.string)
-        (rolesDecoder (D.field "roles" (D.list D.int)))
-        (D.field "username" D.string)
+    D.succeed AuthResponse
+        |> required "token" D.string
+        |> custom (rolesDecoder <| D.field "roles" (D.list D.int))
+        |> required "username" D.string
+        |> hardcoded []
 
 
 encodeResponse : AuthResponse -> E.Value
@@ -252,7 +254,7 @@ displayFromCredStatus status =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    subscriptionBase model Sub.none
+    Sub.none
 
 
 main : Program D.Value Model Msg

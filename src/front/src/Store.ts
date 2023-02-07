@@ -1,5 +1,6 @@
 import AES from 'crypto-js/aes';
 import Utf8 from 'crypto-js/enc-utf8';
+import { NotificationMessage } from './signalr-connection';
 
 const secret = "CIPHERKEY";
 const valuesKey = "PlantAuthToken";
@@ -9,6 +10,7 @@ interface AuthResponse {
   roles: Roles[];
   token: string;
   username: string;
+  notifications: NotificationMessage[]
 }
 
 

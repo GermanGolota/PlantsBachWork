@@ -4,6 +4,7 @@ import Browser
 import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (href)
 import Json.Decode as D
+import Json.Decode.Pipeline exposing (required)
 import Utils exposing (intersect)
 
 
@@ -64,6 +65,7 @@ type alias AuthResponse =
     { token : String
     , roles : List UserRole
     , username : String
+    , notifications: List Notification
     }
 
 
@@ -134,10 +136,15 @@ convertRoleStr roleId =
 
 decodeFlags : D.Decoder AuthResponse
 decodeFlags =
-    D.map3 AuthResponse
-        (D.field "token" D.string)
-        (D.field "roles" (D.list D.string) |> D.map convertRolesStr)
-        (D.field "username" D.string)
+    D.succeed AuthResponse
+        |> required "token" D.string
+        |> required "roles" ((D.list D.string) |> D.map convertRolesStr)
+        |> required "username" D.string
+        |> required "notifications" (D.list decodeNotification)
+
+decodeNotification : D.Decoder Notification
+decodeNotification = 
+    D.fail ""
 
 
 type ModelBase model
