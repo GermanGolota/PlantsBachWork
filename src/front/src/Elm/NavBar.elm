@@ -6,7 +6,7 @@ import Color
 import Html exposing (Html, a, div, i, text)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
-import Main exposing (AuthResponse, ModelBase, MsgBase(..), UserRole(..), viewBase)
+import Main exposing (MsgBase(..), UserRole(..))
 import TypedSvg.Types exposing (px)
 import Utils exposing (fillParent, fillScreen, flex, flex1, intersect, largeFont, smallMargin)
 
@@ -66,20 +66,6 @@ getLinksFor roles =
                     intersect roles items
     in
     List.filter roleIntersect allLinks
-
-
-viewNav : ModelBase model -> Maybe Link -> (AuthResponse -> model -> Html (MsgBase msg)) -> Html (MsgBase msg)
-viewNav model link pageView =
-    let
-        viewP =
-            viewMain link pageView
-    in
-    viewBase viewP model
-
-
-viewMain : Maybe Link -> (AuthResponse -> model -> Html (MsgBase msg)) -> AuthResponse -> model -> Html (MsgBase msg)
-viewMain link pageView resp model =
-    viewNavBase resp.username resp.roles link (pageView resp model)
 
 
 viewNavBase : String -> List UserRole -> Maybe Link -> Html (MsgBase msg) -> Html (MsgBase msg)

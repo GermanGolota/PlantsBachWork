@@ -15,7 +15,7 @@ import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
-import Main2 exposing (viewBase2)
+import Main2 exposing (viewBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar
 import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, mediumFont, smallMargin, textCenter)
@@ -383,7 +383,7 @@ convertIds ids =
 
 view : ModelBase View -> Html (MsgBase LocalMsg)
 view model =
-    viewBase2 model (Just NavBar.searchLink) pageView
+    viewBase model (Just NavBar.searchLink) pageView
 
 
 pageView : AuthResponse -> View -> Html Msg

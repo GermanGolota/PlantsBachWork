@@ -9,7 +9,7 @@ import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
-import Main2 exposing (viewBase2)
+import Main2 exposing (viewBase)
 import NavBar exposing (instructionsLink)
 import Utils exposing (decodeId, fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, textCenter, textHtml)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -84,7 +84,7 @@ updateLocal msg m =
 
 view : Model -> Html Msg
 view model =
-    viewBase2 model (Just instructionsLink) viewPage
+    viewBase model (Just instructionsLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg

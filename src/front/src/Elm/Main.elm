@@ -231,19 +231,3 @@ mapCmd msg =
 mapSub : Sub a -> Sub (MsgBase a)
 mapSub msg =
     Sub.map Main msg
-
-
-viewBase : (AuthResponse -> model -> Html msg) -> ModelBase model -> Html msg
-viewBase authorizedView modelB =
-    case modelB of
-        Unauthorized ->
-            div [] [ text "You are not authorized to view this page!" ]
-
-        NotLoggedIn ->
-            div []
-                [ text "You are not logged into your account!"
-                , a [ href "/login" ] [ text "Go to login" ]
-                ]
-
-        Authorized resp authM ->
-            authorizedView resp authM

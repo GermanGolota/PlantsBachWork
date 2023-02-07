@@ -15,7 +15,7 @@ import Iso8601 exposing (toTime)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, subscriptionBase, updateBase)
-import Main2 exposing (viewBase2)
+import Main2 exposing (viewBase)
 import NavBar exposing (statsLink)
 import PieChart exposing (Msg(..), pieChartWithLabel)
 import Time
@@ -219,7 +219,7 @@ viewRow key value =
 
 view : ModelBase View -> Html (MsgBase LocalMsg)
 view model =
-    viewBase2 model (Just statsLink) viewMain
+    viewBase model (Just statsLink) viewMain
 
 
 viewMain : AuthResponse -> View -> Html Msg

@@ -12,7 +12,7 @@ import ImageList as ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
-import Main2 exposing (viewBase2)
+import Main2 exposing (viewBase)
 import Maybe exposing (map)
 import NavBar exposing (searchLink)
 import PlantHelper exposing (PlantModel, plantDecoder, viewDesc, viewPlantBase, viewPlantLeft)
@@ -305,7 +305,7 @@ getPlantCommand token plantId =
 
 view : Model -> Html Msg
 view model =
-    viewBase2 model (Just searchLink) viewPage
+    viewBase model (Just searchLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg

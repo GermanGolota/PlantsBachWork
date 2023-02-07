@@ -13,7 +13,7 @@ import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
-import Main2 exposing (viewBase2)
+import Main2 exposing (viewBase)
 import NavBar exposing (ordersLink)
 import Utils exposing (bgTeal, decodeId, fillParent, flex, flex1, formatPrice, mediumCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -373,7 +373,7 @@ statusDecoder =
 
 view : Model -> Html Msg
 view model =
-    viewBase2 model (Just ordersLink) viewPage
+    viewBase model (Just ordersLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg

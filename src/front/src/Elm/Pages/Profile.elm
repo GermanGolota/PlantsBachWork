@@ -11,7 +11,7 @@ import Http
 import Json.Decode as D
 import Json.Encode as E
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, roleToStr, subscriptionBase, updateBase)
-import Main2 exposing (viewBase2)
+import Main2 exposing (viewBase)
 import Utils exposing (SubmittedResult(..), fillParent, flex, flexCenter, largeCentered, mediumMargin, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -130,7 +130,7 @@ submitCommand token pass =
 
 view : Model -> Html Msg
 view model =
-    viewBase2 model Nothing viewPage
+    viewBase model Nothing viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg

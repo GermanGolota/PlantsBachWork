@@ -19,7 +19,7 @@ import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import JsonViewer exposing (initJsonTree, initJsonTreeCollapsed, updateJsonTree, viewJsonTree)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, subscriptionBase, updateBase)
-import Main2 exposing (viewBase2)
+import Main2 exposing (viewBase)
 import Utils exposing (buildQuery, fillParent, flex, humanizePascalCase, largeCentered, mediumFont, mediumMargin, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -512,7 +512,7 @@ commandMetadataDecoder =
 
 view : Model -> Html Msg
 view model =
-    viewBase2 model Nothing viewPage
+    viewBase model Nothing viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg

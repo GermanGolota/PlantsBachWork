@@ -12,7 +12,7 @@ import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), allRoles, baseApplication, convertRole, initBase, isAdmin, mapCmd, roleToNumber, rolesDecoder, subscriptionBase, updateBase)
-import Main2 exposing (viewBase2)
+import Main2 exposing (viewBase)
 import Multiselect as Multiselect
 import NavBar exposing (usersLink)
 import UserRolesSelector exposing (userRolesBtns)
@@ -240,7 +240,7 @@ updateLocal msg m =
 
 view : ModelBase View -> Html (MsgBase LocalMsg)
 view model =
-    viewBase2 model (Just usersLink) viewPage
+    viewBase model (Just usersLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg

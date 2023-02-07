@@ -15,7 +15,7 @@ import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, requiredAt)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
-import Main2 exposing (viewBase2)
+import Main2 exposing (viewBase)
 import Multiselect
 import NavBar exposing (plantsLink)
 import Pages.Plant exposing (SelectedAddress(..))
@@ -391,7 +391,7 @@ updateLocal msg m =
 
 view : Model -> Html Msg
 view model =
-    viewBase2 model (Just plantsLink) viewPage
+    viewBase model (Just plantsLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg

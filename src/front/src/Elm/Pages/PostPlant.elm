@@ -9,7 +9,7 @@ import Http
 import ImageList
 import Json.Decode as D
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, subscriptionBase, updateBase)
-import Main2 exposing (viewBase2)
+import Main2 exposing (viewBase)
 import NavBar exposing (plantsLink)
 import PlantHelper exposing (PlantModel, plantDecoder, viewPlantBase)
 import Utils exposing (SubmittedResult(..), flex, flex1, largeFont, smallMargin, submittedDecoder)
@@ -148,7 +148,7 @@ submitCommand token plantId price =
 
 view : Model -> Html Msg
 view model =
-    viewBase2 model (Just plantsLink) viewPage
+    viewBase model (Just plantsLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
