@@ -18,7 +18,7 @@ import Http as Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required)
 import Json.Encode as E
-import Main exposing (AuthResponse, MsgBase(..), UserRole(..), baseApplication, mapCmd, roleToStr, rolesDecoder, subscriptionBase, updateBase)
+import Main exposing (AuthResponse, UserRole(..), baseApplication, mapCmd, roleToStr, rolesDecoder, subscriptionBase, updateBase)
 import TypedSvg.Types exposing (px)
 import Utils exposing (fillParent, filledBackground, flexCenter, mapStyles, rgba255, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -69,7 +69,6 @@ submit model =
         , body = body
         , expect = Http.expectJson SubmitRequest submitSuccessDecoder
         }
-        |> mapCmd
 
 
 type CredsStatus
@@ -84,15 +83,11 @@ type alias Model =
     }
 
 
-type LocalMsg
+type Msg
     = UsernameUpdated String
     | PasswordUpdate String
     | Submitted
     | SubmitRequest (Result Http.Error AuthResponse)
-
-
-type alias Msg =
-    MsgBase LocalMsg
 
 
 
@@ -100,12 +95,7 @@ type alias Msg =
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update =
-    updateBase updateLocal
-
-
-updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
-updateLocal msg model =
+update msg model =
     case msg of
         UsernameUpdated login ->
             ( { model | username = login, status = Nothing }, Cmd.none )
@@ -135,11 +125,6 @@ greenColor opacity =
 
 view : Model -> Html Msg
 view model =
-    viewLocal model |> Html.map Main
-
-
-viewLocal : Model -> Html LocalMsg
-viewLocal model =
     Grid.containerFluid [ style "height" "100vh" ]
         [ Grid.row [ Row.attrs (fillParent ++ flexCenter) ]
             [ Grid.col [] []
@@ -167,7 +152,7 @@ viewBackground =
                 ]
 
 
-viewForm : Model -> Html LocalMsg
+viewForm : Model -> Html Msg
 viewForm model =
     Card.config [ Card.attrs [ style "width" "100%", style "opacity" "0.66" ] ]
         |> Card.header [ textCenter ]
@@ -179,7 +164,7 @@ viewForm model =
         |> Card.view
 
 
-viewFormMain : Model -> Html LocalMsg
+viewFormMain : Model -> Html Msg
 viewFormMain model =
     let
         updatePass pass =

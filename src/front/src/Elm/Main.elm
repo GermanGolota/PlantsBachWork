@@ -65,7 +65,7 @@ type alias AuthResponse =
     { token : String
     , roles : List UserRole
     , username : String
-    , notifications: List Notification
+    , notifications : List Notification
     }
 
 
@@ -138,12 +138,13 @@ decodeFlags : D.Decoder AuthResponse
 decodeFlags =
     D.succeed AuthResponse
         |> required "token" D.string
-        |> required "roles" ((D.list D.string) |> D.map convertRolesStr)
+        |> required "roles" (D.list D.string |> D.map convertRolesStr)
         |> required "username" D.string
         |> required "notifications" (D.list decodeNotification)
 
+
 decodeNotification : D.Decoder Notification
-decodeNotification = 
+decodeNotification =
     D.fail ""
 
 
@@ -201,7 +202,7 @@ initBase requiredRoles initialModel initialCmd response =
             ( NotLoggedIn, Cmd.none )
 
 
-updateBase : (msg -> model -> ( model, Cmd (MsgBase msg) )) -> MsgBase msg -> model -> ( model, Cmd (MsgBase msg) )
+updateBase : (msg -> ModelBase model -> ( ModelBase model, Cmd (MsgBase msg) )) -> MsgBase msg -> ModelBase model -> ( ModelBase model, Cmd (MsgBase msg) )
 updateBase updateFunc message model =
     case message of
         Navigate location ->
