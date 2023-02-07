@@ -12,6 +12,9 @@ const useElmApp = <
       goBack: {
         subscribe(callback: (data: null) => void): void;
       };
+      notificationReceived: {
+        send(data: { commandName: string; success: boolean; aggregate: { id: string; name: string } }): void
+      };
     };
   }
 >(
@@ -64,24 +67,11 @@ const useElmApp = <
   let resp = retrieve();
 
   if (resp) {
-    const [notifications, setNotifications] = useState<
-      {
-        commandName: string;
-        success: boolean;
-      }[]
-    >([]);
-
     const { events } = Connector(resp.token);
 
     useEffect(() => {
       events((message) => {
-        let { commandName, success } = message;
-        setNotifications(
-          notifications.concat({
-            commandName,
-            success,
-          })
-        );
+        app?.ports.notificationReceived.send(message);
       });
     });
   }
