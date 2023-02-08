@@ -19,7 +19,7 @@ import Main2 exposing (viewBase)
 import Multiselect
 import NavBar exposing (plantsLink)
 import Pages.Plant exposing (SelectedAddress(..))
-import Utils exposing (SubmittedResult(..), createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, largeFont, smallMargin, submittedDecoder)
+import Utils exposing (SubmittedResult(..), createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, humanizePascalCase, largeCentered, largeFont, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -500,18 +500,14 @@ viewResultAddValue : SubmittedResult -> Html Msg
 viewResultAddValue data =
     case data of
         SubmittedSuccess _ notification ->
-            let
-                aggId =
-                    notification.aggregate.id
-            in
             div [ flex1, flex, Flex.col, class "text-success", Flex.alignItemsCenter, Flex.justifyEnd ]
-                [ div [] [ text ("Successfully created plant " ++ aggId) ]
+                [ div [] [ text ("Successfully submitted " ++ humanizePascalCase notification.commandName ++ ". Check your notifications for results.") ]
                 , div []
                     [ Button.linkButton
                         [ Button.primary
-                        , Button.onClick <| Navigate <| ("/notPosted/" ++ aggId ++ "/edit")
+                        , Button.onClick <| GoBack
                         ]
-                        [ text "Go to edit" ]
+                        [ text "Go back" ]
                     ]
                 ]
 

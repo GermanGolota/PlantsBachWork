@@ -552,10 +552,8 @@ interactionButtons isAdmin allowOrder isOrder id =
                 Button.onClick <| Main Submit
 
             else
-                --fix issue with plants component not reloading
                 Button.attrs []
 
-        --Button.onClick <| Navigate orderUrl
         orderBtn =
             if allowOrder then
                 Button.linkButton

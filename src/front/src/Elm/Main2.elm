@@ -44,27 +44,56 @@ notificationsModal modal notifications =
         |> Modal.view modal
 
 
-viewNotifications : List ( Notification, Bool ) -> List (Html msg)
+viewNotifications : List ( Notification, Bool ) -> List (Html (MsgBase msg))
 viewNotifications notifications =
     List.map (\( n, l ) -> viewNotification n l) notifications
 
 
-viewNotification : Notification -> Bool -> Html msg
+viewNotification : Notification -> Bool -> Html (MsgBase msg)
 viewNotification notification loaded =
     let
-        lower =
+        status =
             if loaded then
-                text "Completed!"
+                if notification.success then
+                    text "Completed successfully!"
+
+                else
+                    text "Failed to process!"
 
             else
                 viewLoading
+
+        result =
+            if loaded then
+                case findResultLocation notification.command.commandName notification.command.aggregate.id of
+                    Just location ->
+                        [ Button.linkButton [ Button.onClick <| Navigate location, Button.info ]
+                            [ text <| "See " ++ humanizePascalCase notification.command.aggregate.name ]
+                        ]
+
+                    Nothing ->
+                        []
+
+            else
+                []
     in
     div [ flex, Flex.col ]
         [ div [ Flex.row ] [ viewTitle notification ]
-        , div [ Flex.row ] [ lower ]
+        , div [ Flex.row ] [ status ]
+        , div [ Flex.row ] result
         ]
 
 
 viewTitle : Notification -> Html msg
 viewTitle notification =
     text <| humanizePascalCase notification.command.aggregate.name ++ " - " ++ humanizePascalCase notification.command.commandName
+
+
+findResultLocation : String -> String -> Maybe String
+findResultLocation commandName aggregateId =
+    case commandName of
+        "AddToStock" ->
+            Just <| "/notPosted/" ++ aggregateId ++ "/edit"
+
+        _ ->
+            Nothing
