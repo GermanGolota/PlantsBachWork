@@ -2,7 +2,7 @@ module NavBar exposing (..)
 
 import Assets exposing (treeIcon)
 import Bootstrap.Button as Button
-import Bootstrap.Popover as Popover
+import Bootstrap.Modal as Modal
 import Bootstrap.Utilities.Flex as Flex
 import Color
 import Html exposing (Html, a, div, i, text)
@@ -70,18 +70,18 @@ getLinksFor roles =
     List.filter roleIntersect allLinks
 
 
-viewNavBase : String -> List ( Notification, Bool ) -> Popover.State -> List UserRole -> Maybe Link -> Html (MsgBase msg) -> Html (MsgBase msg)
-viewNavBase username notifications notificationsState roles currentLink baseView =
+viewNavBase : String -> List UserRole -> Maybe Link -> Html (MsgBase msg) -> Html (MsgBase msg)
+viewNavBase username roles currentLink baseView =
     div fillScreen
         [ div ([ flex, Flex.row ] ++ fillParent)
-            [ navBar username notificationsState notifications roles currentLink
+            [ navBar username roles currentLink
             , div [ style "flex" "3", style "margin-left" "25vw", style "max-width" "75vw" ] [ baseView ]
             ]
         ]
 
 
-navBar : String -> Popover.State -> List ( Notification, Bool ) -> List UserRole -> Maybe Link -> Html (MsgBase msg)
-navBar username popover notifications roles currentLink =
+navBar : String -> List UserRole -> Maybe Link -> Html (MsgBase msg)
+navBar username roles currentLink =
     div
         [ flex1
         , style "height" "100%"
@@ -97,7 +97,7 @@ navBar username popover notifications roles currentLink =
                     ]
                 , linksView currentLink <| getLinksFor roles
                 ]
-            , div [] [ userView username popover notifications ]
+            , div [] [ userView username ]
             ]
         ]
 
@@ -134,51 +134,10 @@ linkView isSelected link =
         ]
 
 
-userView : String -> Popover.State -> List ( Notification, Bool ) -> Html (MsgBase msg)
-userView username popover notifications =
+userView : String -> Html (MsgBase msg)
+userView username =
     div [ flex, Flex.row, smallMargin, style "border-top" "solid gray 1px", Flex.alignItemsCenter, largeFont ]
         [ i [ class "fa-solid fa-user", style "margin-right" "2em", smallMargin ] []
         , a [ onClick <| Navigate "/profile" ] [ text username ]
-        , Popover.config
-            (Button.button
-                [ Button.small
-                , Button.primary
-                , Button.attrs <|
-                    Popover.onClick popover NotificationsPopover
-                ]
-                [ i [ class "fa fa-regular fa-bell" ]
-                    []
-                ]
-            )
-            |> Popover.top
-            |> Popover.titleH4 [] [ text "Notifications" ]
-            |> Popover.content []
-                (viewNotifications notifications)
-            |> Popover.view popover
+        , i [ class "fa-solid fa-bell", style "margin-right" "2em", smallMargin, onClick <| ShowNotificationsModal ] []
         ]
-
-
-viewNotifications : List ( Notification, Bool ) -> List (Html msg)
-viewNotifications notifications =
-    List.map (\( n, l ) -> viewNotification n l) notifications
-
-
-viewNotification : Notification -> Bool -> Html msg
-viewNotification notification loaded =
-    let
-        lower =
-            if loaded then
-                text "Completed!"
-
-            else
-                viewLoading
-    in
-    div [ flex, Flex.col ]
-        [ div [ Flex.row ] [ viewTitle notification ]
-        , div [ Flex.row ] [ lower ]
-        ]
-
-
-viewTitle : Notification -> Html msg
-viewTitle notification =
-    text <| humanizePascalCase notification.command.aggregate.name ++ " - " ++ humanizePascalCase notification.command.commandName

@@ -1,6 +1,6 @@
 port module Main exposing (..)
 
-import Bootstrap.Popover as Popover
+import Bootstrap.Modal as Modal
 import Browser
 import Html exposing (Html)
 import Json.Decode as D
@@ -77,7 +77,7 @@ type alias AuthResponse =
     , roles : List UserRole
     , username : String
     , notifications : List ( Notification, Bool )
-    , notificationsPopover : Popover.State
+    , notificationsModal : Modal.Visibility
     }
 
 
@@ -153,7 +153,7 @@ decodeFlags =
         |> required "roles" (D.list D.string |> D.map convertRolesStr)
         |> required "username" D.string
         |> required "notifications" (D.list decodeNotificationPair)
-        |> hardcoded Popover.initialState
+        |> hardcoded Modal.hidden
 
 
 type ModelBase model
@@ -177,12 +177,23 @@ type MsgBase msg
     | Main msg
     | NotificationStarted Notification
     | NotificationReceived Notification
-    | NotificationsPopover Popover.State
+    | CloseNotificationsModal
+    | ShowNotificationsModal
+    | AnimateNotificationsModal Modal.Visibility
 
 
-subscriptionBase : model -> Sub (MsgBase msg) -> Sub (MsgBase msg)
-subscriptionBase _ baseSub =
-    [ notificationReceived NotificationReceived, baseSub ] |> Sub.batch
+subscriptionBase : ModelBase model -> Sub (MsgBase msg) -> Sub (MsgBase msg)
+subscriptionBase mod baseSub =
+    let
+        notifications =
+            case mod of
+                Authorized auth _ ->
+                    [ Modal.subscriptions auth.notificationsModal AnimateNotificationsModal ]
+
+                _ ->
+                    []
+    in
+    ([ notificationReceived NotificationReceived, baseSub ] ++ notifications) |> Sub.batch
 
 
 initBase : List UserRole -> model -> (AuthResponse -> Cmd msg) -> Maybe AuthResponse -> ( ModelBase model, Cmd msg )
@@ -235,10 +246,26 @@ updateBase updateFunc message model =
                 _ ->
                     ( model, Cmd.none )
 
-        NotificationsPopover popover ->
+        CloseNotificationsModal ->
             case model of
                 Authorized auth page ->
-                    ( Authorized { auth | notificationsPopover = popover } page, Cmd.none )
+                    ( Authorized { auth | notificationsModal = Modal.hidden } page, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        ShowNotificationsModal ->
+            case model of
+                Authorized auth page ->
+                    ( Authorized { auth | notificationsModal = Modal.shown } page, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        AnimateNotificationsModal visibility ->
+            case model of
+                Authorized auth page ->
+                    ( Authorized { auth | notificationsModal = visibility } page, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )

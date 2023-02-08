@@ -10,6 +10,7 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
+import Bootstrap.Modal
 import Bootstrap.Popover as Popover
 import Color exposing (Color, toCssString)
 import Dict
@@ -33,7 +34,7 @@ submitSuccessDecoder =
         |> custom (rolesDecoder <| D.field "roles" (D.list D.int))
         |> required "username" D.string
         |> hardcoded []
-        |> hardcoded Popover.initialState
+        |> hardcoded Bootstrap.Modal.hidden
 
 
 encodeResponse : AuthResponse -> E.Value
