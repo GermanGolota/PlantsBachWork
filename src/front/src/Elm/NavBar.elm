@@ -1,8 +1,7 @@
 module NavBar exposing (..)
 
 import Assets exposing (treeIcon)
-import Bootstrap.Button as Button
-import Bootstrap.Modal as Modal
+import Bootstrap.Badge as Badge
 import Bootstrap.Utilities.Flex as Flex
 import Color
 import Html exposing (Html, a, div, i, text)
@@ -10,7 +9,7 @@ import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 import Main exposing (MsgBase(..), UserRole(..))
 import TypedSvg.Types exposing (px)
-import Utils exposing (Notification, fillParent, fillScreen, flex, flex1, humanizePascalCase, intersect, largeFont, smallMargin, viewLoading)
+import Utils exposing (fillParent, fillScreen, flex, flex1, intersect, largeFont, smallMargin)
 
 
 type alias Link =
@@ -70,18 +69,18 @@ getLinksFor roles =
     List.filter roleIntersect allLinks
 
 
-viewNavBase : String -> List UserRole -> Maybe Link -> Html (MsgBase msg) -> Html (MsgBase msg)
-viewNavBase username roles currentLink baseView =
+viewNavBase : String -> List UserRole -> Maybe Link -> Int -> Html (MsgBase msg) -> Html (MsgBase msg)
+viewNavBase username roles currentLink notifications baseView =
     div fillScreen
         [ div ([ flex, Flex.row ] ++ fillParent)
-            [ navBar username roles currentLink
+            [ navBar username roles currentLink notifications
             , div [ style "flex" "3", style "margin-left" "25vw", style "max-width" "75vw" ] [ baseView ]
             ]
         ]
 
 
-navBar : String -> List UserRole -> Maybe Link -> Html (MsgBase msg)
-navBar username roles currentLink =
+navBar : String -> List UserRole -> Maybe Link -> Int -> Html (MsgBase msg)
+navBar username roles currentLink notifications =
     div
         [ flex1
         , style "height" "100%"
@@ -97,7 +96,7 @@ navBar username roles currentLink =
                     ]
                 , linksView currentLink <| getLinksFor roles
                 ]
-            , div [] [ userView username ]
+            , div [] [ userView username notifications ]
             ]
         ]
 
@@ -134,10 +133,24 @@ linkView isSelected link =
         ]
 
 
-userView : String -> Html (MsgBase msg)
-userView username =
+userView : String -> Int -> Html (MsgBase msg)
+userView username notifications =
+    let
+        notificationsView =
+            if notifications == 0 then
+                [ div [] [] ]
+
+            else
+                [ Badge.badgeWarning badgeInfo [ text <| String.fromInt notifications ] ]
+    in
     div [ flex, Flex.row, smallMargin, style "border-top" "solid gray 1px", Flex.alignItemsCenter, largeFont ]
         [ i [ class "fa-solid fa-user", style "margin-right" "2em", smallMargin ] []
         , a [ onClick <| Navigate "/profile" ] [ text username ]
-        , i [ class "fa-solid fa-bell", style "margin-right" "2em", smallMargin, onClick <| ShowNotificationsModal ] []
+        , i [ class "fa-solid fa-bell", style "margin-right" "2em", smallMargin, onClick <| ShowNotificationsModal ]
+            notificationsView
         ]
+
+
+badgeInfo : List (Html.Attribute msg)
+badgeInfo =
+    [ style "color" "#fff", style "background-color" "#17a2b8" ]

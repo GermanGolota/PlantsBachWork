@@ -689,7 +689,7 @@ viewSnapshotName snapshot =
                 " executed "
 
             else
-                " received "
+                " requested "
     in
     div (largeCentered ++ [ class textColor ]) [ text ("\"" ++ snapshot.lastCommand.metadata.userName ++ "\"" ++ actionName ++ "\"" ++ humanizePascalCase snapshot.lastCommand.metadata.name ++ "\"" ++ " " ++ snapshot.displayTime) ]
 

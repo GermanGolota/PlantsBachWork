@@ -24,7 +24,14 @@ viewBase model link pageView =
                 ]
 
         Authorized resp authM ->
-            div [] [ notificationsModal resp.notificationsModal resp.notifications, viewNavBase resp.username resp.roles link <| pageView resp authM ]
+            let
+                notificatonsCounts =
+                    List.filter (\( n, loaded ) -> not loaded) resp.notifications |> List.length
+            in
+            div []
+                [ notificationsModal resp.notificationsModal resp.notifications
+                , viewNavBase resp.username resp.roles link notificatonsCounts <| pageView resp authM
+                ]
 
 
 notificationsModal : Modal.Visibility -> List ( Notification, Bool ) -> Html (MsgBase msg)
