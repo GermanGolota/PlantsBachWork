@@ -1,5 +1,6 @@
 port module Pages.Login exposing (main)
 
+import Array
 import Assets exposing (treeIcon)
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
@@ -35,7 +36,12 @@ submitSuccessDecoder =
 
 encodeResponse : AuthResponse -> E.Value
 encodeResponse response =
-    E.object [ ( "token", E.string response.token ), ( "roles", E.list roleToValue response.roles ), ( "username", E.string response.username ) ]
+    E.object
+        [ ( "token", E.string response.token )
+        , ( "roles", E.list roleToValue response.roles )
+        , ( "username", E.string response.username )
+        , ( "notifications", E.array E.string <| Array.fromList [] )
+        ]
 
 
 roleToValue : UserRole -> E.Value
