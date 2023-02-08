@@ -233,7 +233,7 @@ viewRes res =
             div [ flex1 ] [ div [ largeFont, class className ] [ text message ] ]
     in
     case res of
-        SubmittedSuccess msg ->
+        SubmittedSuccess msg model ->
             baseView "bg-primary" msg
 
         SubmittedFail msg ->

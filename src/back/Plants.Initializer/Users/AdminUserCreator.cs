@@ -27,11 +27,13 @@ internal class AdminUserCreator
                 "admin@admin.admin",
                 "English",
                 Enum.GetValues<UserRole>())),
+            wait: true,
             token);
 
     public async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendResetPasswordCommandAsync(CancellationToken token = default) =>
         await _command.CreateAndSendAsync(
             factory => factory.Create<ChangePasswordCommand, User>(_options.Username.ToGuid()),
             meta => new ChangePasswordCommand(meta, _options.Username, _context.TempPassword, _options.Password),
+            wait: true, 
             token);
 }

@@ -65,6 +65,7 @@ public class PostController : ControllerBase
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<OrderPostCommand>(new(id, nameof(PlantPost))),
             meta => new OrderPostCommand(meta, new(city, mailNumber)),
+            wait: true,
             token
             );
         return result.ToCommandResult();
@@ -76,6 +77,7 @@ public class PostController : ControllerBase
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<RemovePostCommand>(new(id, nameof(PlantPost))),
             meta => new RemovePostCommand(meta),
+            wait: true,
             token
             );
         return result.ToCommandResult();

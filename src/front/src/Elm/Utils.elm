@@ -14,6 +14,7 @@ import Html.Attributes exposing (style)
 import Html.Parser
 import Html.Parser.Util
 import Json.Decode as D
+import Json.Decode.Pipeline exposing (custom, hardcoded, required)
 import Regex
 
 
@@ -248,7 +249,7 @@ formatPrice price =
 
 
 type SubmittedResult
-    = SubmittedSuccess String
+    = SubmittedSuccess String NotificationCommand
     | SubmittedFail String
 
 
@@ -260,7 +261,7 @@ submittedDecoder =
 submittedMsgDecoder : D.Decoder String -> Bool -> D.Decoder SubmittedResult
 submittedMsgDecoder messageField success =
     if success then
-        D.map SubmittedSuccess messageField
+        D.map2 SubmittedSuccess messageField (D.field "command" decodeNotificationCommand)
 
     else
         D.map SubmittedFail messageField
@@ -335,3 +336,51 @@ textHtml t =
 decodeId : D.Decoder String
 decodeId =
     D.oneOf [ D.string, D.map String.fromInt D.int ]
+
+
+type alias Notification =
+    { command : NotificationCommand
+    , success : Bool
+    }
+
+
+type alias NotificationCommand =
+    { commandId : String
+    , commandName : String
+    , aggregate : NotificationAggregate
+    }
+
+
+type alias NotificationAggregate =
+    { id : String
+    , name : String
+    }
+
+
+decodeNotificationPair : D.Decoder ( Notification, Bool )
+decodeNotificationPair =
+    D.succeed Tuple.pair
+        |> custom decodeNotification
+        |> hardcoded True
+
+
+decodeNotification : D.Decoder Notification
+decodeNotification =
+    D.succeed Notification
+        |> custom decodeNotificationCommand
+        |> required "success" D.bool
+
+
+decodeNotificationCommand : D.Decoder NotificationCommand
+decodeNotificationCommand =
+    D.succeed NotificationCommand
+        |> required "commandId" D.string
+        |> required "commandName" D.string
+        |> required "aggregate" decodeNotificationAggregate
+
+
+decodeNotificationAggregate : D.Decoder NotificationAggregate
+decodeNotificationAggregate =
+    D.succeed NotificationAggregate
+        |> required "id" D.string
+        |> required "name" D.string

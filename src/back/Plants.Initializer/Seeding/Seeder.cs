@@ -71,6 +71,7 @@ internal class Seeder
                 results.Add(await _command.CreateAndSendAsync(
                     factory => factory.Create<CreateUserCommand, User>(user.Login.ToGuid()),
                     meta => new CreateUserCommand(meta, user),
+                    wait: true,
                     token)
                     );
 
@@ -78,6 +79,7 @@ internal class Seeder
                     factory => factory.Create<ChangePasswordCommand, User>(user.Login.ToGuid()),
                     meta => new ChangePasswordCommand(meta, user.Login, 
                     _context.TempPassword, $"{user.FirstName.ToLower().Trim()}password"),
+                    wait: true,
                     token)
                     );
             }
@@ -90,6 +92,7 @@ internal class Seeder
                 results.Add(await _command.CreateAndSendAsync(
                     factory => factory.Create<AddToStockCommand, PlantStock>(stockId),
                     meta => new AddToStockCommand(meta, stock, _dateTime.UtcNow, images.Random(1, 3).ToArray()),
+                    wait: true,
                     token)
                     );
             }
@@ -100,6 +103,7 @@ internal class Seeder
                 results.Add(await _command.CreateAndSendAsync(
                    factory => factory.Create<PostStockItemCommand, PlantStock>(postId),
                    meta => new PostStockItemCommand(meta, rng.Next(_options.PriceRangeMin, _options.PriceRangeMax)),
+                   wait: true,
                    token)
                    );
             }

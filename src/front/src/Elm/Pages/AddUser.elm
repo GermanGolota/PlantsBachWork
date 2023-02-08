@@ -170,7 +170,7 @@ viewPage resp page =
     let
         viewSubmit submit =
             case submit of
-                SubmittedSuccess msg ->
+                SubmittedSuccess msg cmd ->
                     div [ flex, Flex.row, class "text-success" ] [ text msg ]
 
                 SubmittedFail msg ->

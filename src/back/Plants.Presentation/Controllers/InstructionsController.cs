@@ -67,6 +67,7 @@ public class InstructionsController : ControllerBase
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<CreateInstructionCommand>(new(guid, nameof(PlantInstruction))),
             meta => new CreateInstructionCommand(meta, new(request.GroupName, request.Text, request.Title, request.Description), bytes),
+            wait: true,
             token);
         return guid;
     }
@@ -80,6 +81,7 @@ public class InstructionsController : ControllerBase
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<EditInstructionCommand>(new(id, nameof(PlantInstruction))),
             meta => new EditInstructionCommand(meta, new(cmd.GroupName, cmd.Text, cmd.Title, cmd.Description), bytes),
+            wait: true,
             token);
         return id;
     }

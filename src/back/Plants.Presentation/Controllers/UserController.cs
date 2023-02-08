@@ -45,6 +45,7 @@ public class UserController : ControllerBase
         var result = await _command.CreateAndSendAsync(
                     factory => factory.Create<ChangeRoleCommand>(new(login.ToGuid(), nameof(User))),
                     meta => new ChangeRoleCommand(meta, role),
+                    wait: true,
                     token
                     );
         return result.ToCommandResult();
@@ -67,6 +68,7 @@ public class UserController : ControllerBase
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<CreateUserCommand>(new(command.Login.ToGuid(), nameof(User))),
             meta => new CreateUserCommand(meta, new(command.FirstName, command.LastName, command.PhoneNumber, command.Login, command.Email, command.Language, command.Roles.ToArray())),
+            wait: true,
             token
             );
         return result.ToCommandResult();
@@ -81,6 +83,7 @@ public class UserController : ControllerBase
         var result = await _command.CreateAndSendAsync(
             (factory, identity) => factory.Create<ChangeOwnPasswordCommand>(new(identity.UserName.ToGuid(), nameof(User))),
             (meta, identity) => new ChangeOwnPasswordCommand(meta, oldPassword, password.Password),
+            wait: true,
             token
             );
         return result.ToCommandResult();

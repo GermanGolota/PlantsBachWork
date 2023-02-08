@@ -48,7 +48,8 @@ public class OrdersController : ControllerBase
     {
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<StartOrderDeliveryCommand>(new(id, nameof(PlantOrder))),
-            meta => new StartOrderDeliveryCommand(meta, trackingNumber), 
+            meta => new StartOrderDeliveryCommand(meta, trackingNumber),
+            wait: true, 
             token);
         return result.ToCommandResult();
     }
@@ -68,6 +69,7 @@ public class OrdersController : ControllerBase
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<ConfirmDeliveryCommand>(new(id, nameof(PlantOrder))),
             meta => new ConfirmDeliveryCommand(meta),
+            wait: true,
             token);
         return result.ToCommandResult();
     }

@@ -1,10 +1,22 @@
 port module Main exposing (..)
 
+import Bootstrap.Popover as Popover
 import Browser
 import Html exposing (Html)
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (custom, hardcoded, required)
-import Utils exposing (intersect)
+import Json.Decode.Pipeline exposing (hardcoded, required)
+import Task
+import Utils exposing (Notification, SubmittedResult(..), decodeNotificationPair, intersect)
+
+
+notifyCmd : SubmittedResult -> Cmd (MsgBase msg)
+notifyCmd result =
+    case result of
+        SubmittedSuccess _ command ->
+            Task.perform (\_ -> NotificationStarted <| Notification command True) (Task.succeed True)
+
+        SubmittedFail a ->
+            Cmd.none
 
 
 type UserRole
@@ -65,6 +77,7 @@ type alias AuthResponse =
     , roles : List UserRole
     , username : String
     , notifications : List ( Notification, Bool )
+    , notificationsPopover : Popover.State
     }
 
 
@@ -140,35 +153,7 @@ decodeFlags =
         |> required "roles" (D.list D.string |> D.map convertRolesStr)
         |> required "username" D.string
         |> required "notifications" (D.list decodeNotificationPair)
-
-
-decodeNotificationPair : D.Decoder ( Notification, Bool )
-decodeNotificationPair =
-    D.succeed Tuple.pair
-        |> custom decodeNotification
-        |> hardcoded True
-
-
-decodeNotification : D.Decoder Notification
-decodeNotification =
-    D.succeed Notification
-        |> custom decodeNotificationCommand
-        |> required "success" D.bool
-
-
-decodeNotificationCommand : D.Decoder NotificationCommand
-decodeNotificationCommand =
-    D.succeed NotificationCommand
-        |> required "commandId" D.string
-        |> required "commandName" D.string
-        |> custom decodeNotificationAggregate
-
-
-decodeNotificationAggregate : D.Decoder NotificationAggregate
-decodeNotificationAggregate =
-    D.succeed NotificationAggregate
-        |> required "id" D.string
-        |> required "name" D.string
+        |> hardcoded Popover.initialState
 
 
 type ModelBase model
@@ -186,31 +171,13 @@ port goBack : () -> Cmd msg
 port notificationReceived : (Notification -> msg) -> Sub msg
 
 
-type alias Notification =
-    { command : NotificationCommand
-    , success : Bool
-    }
-
-
-type alias NotificationCommand =
-    { commandId : String
-    , commandName : String
-    , aggregate : NotificationAggregate
-    }
-
-
-type alias NotificationAggregate =
-    { id : String
-    , name : String
-    }
-
-
 type MsgBase msg
     = Navigate String
     | GoBack
     | Main msg
     | NotificationStarted Notification
     | NotificationReceived Notification
+    | NotificationsPopover Popover.State
 
 
 subscriptionBase : model -> Sub (MsgBase msg) -> Sub (MsgBase msg)
@@ -247,7 +214,7 @@ updateBase updateFunc message model =
         NotificationStarted notification ->
             case model of
                 Authorized auth page ->
-                    ( Authorized { auth | notifications = auth.notifications ++ [ (notification, False) ] } page, Cmd.none )
+                    ( Authorized { auth | notifications = auth.notifications ++ [ ( notification, False ) ] } page, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -264,6 +231,14 @@ updateBase updateFunc message model =
                                 ( not, succ )
                     in
                     ( Authorized { auth | notifications = List.map (\( n, s ) -> mapNotification n s) auth.notifications } page, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        NotificationsPopover popover ->
+            case model of
+                Authorized auth page ->
+                    ( Authorized { auth | notificationsPopover = popover } page, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )

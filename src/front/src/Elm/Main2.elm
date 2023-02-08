@@ -19,8 +19,4 @@ viewBase model link pageView =
                 ]
 
         Authorized resp authM ->
-            let
-                basePage =
-                    pageView resp authM
-            in
-            viewNavBase resp.username resp.roles link basePage
+            viewNavBase resp.username resp.notifications resp.notificationsPopover resp.roles link <| pageView resp authM

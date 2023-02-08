@@ -105,6 +105,7 @@ public class PlantsController : ControllerBase
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<PostStockItemCommand, PlantStock>(id),
             meta => new PostStockItemCommand(meta, price),
+            wait: true, 
             token);
         return result.ToCommandResult();
     }
@@ -113,7 +114,7 @@ public class PlantsController : ControllerBase
         string[] RegionNames, string[] SoilNames, string[] GroupNames, DateTime Created);
 
     [HttpPost("add")]
-    public async Task<ActionResult<Guid>> Create
+    public async Task<ActionResult<CommandViewResult>> Create
         ([FromForm] AddPlantViewRequest body, IEnumerable<IFormFile> files, CancellationToken token)
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
@@ -122,14 +123,11 @@ public class PlantsController : ControllerBase
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
             meta => new AddToStockCommand(meta, plantInfo, body.Created, pictures),
+            wait: false,
             token
             );
 
-        //TODO: Add failures into response here
-        return result.Match<ActionResult<Guid>>(
-            success => Ok(stockId),
-            failure => BadRequest(failure.Reasons)
-            );
+        return result.ToCommandResult();
     }
 
     public record EditPlantViewRequest(string PlantName,
@@ -144,6 +142,7 @@ public class PlantsController : ControllerBase
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<EditStockItemCommand>(new(id, nameof(PlantStock))),
             meta => new EditStockItemCommand(meta, plantInfo, pictures, plant.RemovedImages),
+            wait: true,
             token);
         return result.ToCommandResult();
     }

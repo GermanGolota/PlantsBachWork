@@ -196,7 +196,7 @@ buttonView page =
 viewResult : SubmittedResult -> Html msg
 viewResult res =
     case res of
-        SubmittedSuccess msg ->
+        SubmittedSuccess msg cmd ->
             div (largeCentered ++ [ class "text-success" ]) [ text msg ]
 
         SubmittedFail msg ->

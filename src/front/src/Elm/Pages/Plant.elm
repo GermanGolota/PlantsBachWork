@@ -389,14 +389,14 @@ viewResult result =
 
         viewText =
             case result of
-                SubmittedSuccess msg ->
+                SubmittedSuccess msg cmd ->
                     baseView "text-primary" msg
 
                 SubmittedFail msg ->
                     baseView "text-warning" msg
     in
     case result of
-        SubmittedSuccess msg ->
+        SubmittedSuccess msg cmd ->
             div [ flex, Flex.col, flex1 ]
                 [ div [ Flex.row, flex1 ]
                     [ viewText ]
