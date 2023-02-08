@@ -3,7 +3,7 @@ port module Main exposing (..)
 import Browser
 import Html exposing (Html)
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (required)
+import Json.Decode.Pipeline exposing (custom, hardcoded, required)
 import Utils exposing (intersect)
 
 
@@ -64,7 +64,7 @@ type alias AuthResponse =
     { token : String
     , roles : List UserRole
     , username : String
-    , notifications : List Notification
+    , notifications : List ( Notification, Bool )
     }
 
 
@@ -139,12 +139,36 @@ decodeFlags =
         |> required "token" D.string
         |> required "roles" (D.list D.string |> D.map convertRolesStr)
         |> required "username" D.string
-        |> required "notifications" (D.list decodeNotification)
+        |> required "notifications" (D.list decodeNotificationPair)
+
+
+decodeNotificationPair : D.Decoder ( Notification, Bool )
+decodeNotificationPair =
+    D.succeed Tuple.pair
+        |> custom decodeNotification
+        |> hardcoded True
 
 
 decodeNotification : D.Decoder Notification
 decodeNotification =
-    D.fail ""
+    D.succeed Notification
+        |> custom decodeNotificationCommand
+        |> required "success" D.bool
+
+
+decodeNotificationCommand : D.Decoder NotificationCommand
+decodeNotificationCommand =
+    D.succeed NotificationCommand
+        |> required "commandId" D.string
+        |> required "commandName" D.string
+        |> custom decodeNotificationAggregate
+
+
+decodeNotificationAggregate : D.Decoder NotificationAggregate
+decodeNotificationAggregate =
+    D.succeed NotificationAggregate
+        |> required "id" D.string
+        |> required "name" D.string
 
 
 type ModelBase model
@@ -185,6 +209,7 @@ type MsgBase msg
     = Navigate String
     | GoBack
     | Main msg
+    | NotificationStarted Notification
     | NotificationReceived Notification
 
 
@@ -219,10 +244,26 @@ updateBase updateFunc message model =
         Main main ->
             updateFunc main model
 
+        NotificationStarted notification ->
+            case model of
+                Authorized auth page ->
+                    ( Authorized { auth | notifications = auth.notifications ++ [ (notification, False) ] } page, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
         NotificationReceived notification ->
             case model of
                 Authorized auth page ->
-                    ( Authorized { auth | notifications = auth.notifications ++ [ notification ] } page, Cmd.none )
+                    let
+                        mapNotification not succ =
+                            if not.command.commandId == notification.command.commandId then
+                                ( not, True )
+
+                            else
+                                ( not, succ )
+                    in
+                    ( Authorized { auth | notifications = List.map (\( n, s ) -> mapNotification n s) auth.notifications } page, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
