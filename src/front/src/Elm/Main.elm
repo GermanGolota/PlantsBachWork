@@ -163,8 +163,14 @@ port notificationReceived : (Notification -> msg) -> Sub msg
 
 
 type alias Notification =
-    { commandName : String
+    { command : NotificationCommand
     , success : Bool
+    }
+
+
+type alias NotificationCommand =
+    { commandId : String
+    , commandName : String
     , aggregate : NotificationAggregate
     }
 

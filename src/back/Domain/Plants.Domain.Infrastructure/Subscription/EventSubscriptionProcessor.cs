@@ -47,8 +47,7 @@ internal class EventSubscriptionProcessor
         if (subscription is not null && subscription.IsProcessed && subscription.NotifyUsername is not null && command.Metadata.InitialAggregate is not null)
         {
             await _notificationSender.SendNotificationAsync(subscription.NotifyUsername,
-                                                            new(command.Metadata.InitialAggregate,
-                                                                command.Metadata.Name,
+                                                            new(new(command.Metadata.Id, command.Metadata.Name, command.Metadata.Aggregate), 
                                                                 exception is null),
                                                             token);
         }

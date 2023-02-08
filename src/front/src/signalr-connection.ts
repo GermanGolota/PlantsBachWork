@@ -35,11 +35,14 @@ class Connector {
 }
 
 export type NotificationMessage = {
-  aggregate: {
-    id: string,
-    name: string
+  command: {
+    commandId: string,
+    commandName: string,
+    aggregate: {
+      id: string,
+      name: string
+    }
   },
-  commandName: string,
   success: boolean
 }
 

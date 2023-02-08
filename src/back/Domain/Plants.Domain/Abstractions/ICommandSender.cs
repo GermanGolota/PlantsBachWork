@@ -5,7 +5,8 @@ public interface ICommandSender
     Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendCommandAsync(Command command, CommandExecutionOptions options, CancellationToken token = default);
 }
 
-public record struct CommandAcceptedResult();
+public record struct CommandAcceptedResult(CommandDescription Command);
+public record struct CommandDescription(Guid CommandId, string CommandName, AggregateDescription Aggregate);
 public record struct CommandForbidden(string[] Reasons)
 {
     public CommandForbidden(string reason) : this(new[] { reason })

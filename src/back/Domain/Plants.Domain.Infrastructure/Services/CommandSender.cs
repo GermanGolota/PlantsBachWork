@@ -147,7 +147,7 @@ internal class CommandSender : ICommandSender
                 events = await ExecuteHandlersAsync(command, checkResults, token);
                 await _eventStore.AppendEventsAsync(events, commandVersion, command, token);
                 _logger.LogInformation("Successfully processes command '{commandId}' for '{aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
-                result = new CommandAcceptedResult();
+                result = new CommandAcceptedResult(new(command.Metadata.Id, command.Metadata.Name, command.Metadata.Aggregate));
             }
             catch (Exception e)
             {
@@ -155,7 +155,6 @@ internal class CommandSender : ICommandSender
                 var reasons = new[] { e.Message, e.ToString() };
                 result = await AppendFailureAsync(command, commandVersion, reasons, true, token);
             }
-
         }
 
         return result;
