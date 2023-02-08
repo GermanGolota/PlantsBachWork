@@ -72,18 +72,15 @@ internal class CommandSender : ICommandSender
             result = new CommandForbidden($"Cannot perform any updates against '{commandAggregate.Name}'");
         }
 
-        if (options is CommandExecutionOptions.Wait || options is CommandExecutionOptions.Notify)
+        if (options is CommandExecutionOptions.Wait wait)
         {
             try
             {
-                if (options is CommandExecutionOptions.Wait wait)
+                var success = await WaitForSubscriptionAsync(commandAggregate, wait.TimeToWait, token);
+                if (success is false)
                 {
-                    var success = await WaitForSubscriptionAsync(commandAggregate, wait.TimeToWait, token);
-                    if (success is false)
-                    {
-                        _logger.LogInformation("Failed to wait to subscription to be processed for '{@aggregate}'", commandAggregate);
-                        throw new TimeoutException($"Timeout while waiting for subscription to be processed for '{commandAggregate.Id}' in '{commandAggregate.Name}'");
-                    }
+                    _logger.LogInformation("Failed to wait to subscription to be processed for '{@aggregate}'", commandAggregate);
+                    throw new TimeoutException($"Timeout while waiting for subscription to be processed for '{commandAggregate.Id}' in '{commandAggregate.Name}'");
                 }
             }
             finally

@@ -12,9 +12,12 @@ internal class EventSubscriptionProcessor
     private readonly ISubscriptionProcessingMarker _marker;
     private readonly IProjectionsUpdater _updater;
     private readonly INotificationSender _notificationSender;
+    private readonly ISubscriptionProcessingSubscription _notificator;
 
-    public EventSubscriptionProcessor(RepositoriesCaller caller, CqrsHelper cqrs, IEventStore eventStore, IServiceProvider provider,
-        ISubscriptionProcessingMarker marker, IProjectionsUpdater updater, INotificationSender notificationSender)
+    public EventSubscriptionProcessor(RepositoriesCaller caller, CqrsHelper cqrs,
+        IEventStore eventStore, IServiceProvider provider,
+        ISubscriptionProcessingMarker marker, IProjectionsUpdater updater,
+        INotificationSender notificationSender, ISubscriptionProcessingSubscription notificator)
     {
         _caller = caller;
         _cqrs = cqrs;
@@ -23,6 +26,7 @@ internal class EventSubscriptionProcessor
         _marker = marker;
         _updater = updater;
         _notificationSender = notificationSender;
+        _notificator = notificator;
     }
 
     public async Task<Exception?> ProcessCommandAsync(Command command, List<Event> aggEvents, CancellationToken token = default)
@@ -47,9 +51,10 @@ internal class EventSubscriptionProcessor
         if (subscription is not null && subscription.IsProcessed && subscription.NotifyUsername is not null && command.Metadata.InitialAggregate is not null)
         {
             await _notificationSender.SendNotificationAsync(subscription.NotifyUsername,
-                                                            new(new(command.Metadata.Id, command.Metadata.Name, command.Metadata.Aggregate), 
+                                                            new(new(command.Metadata.Id, command.Metadata.Name, command.Metadata.Aggregate),
                                                                 exception is null),
                                                             token);
+            _notificator.UnsubscribeFromNotifications(command.Metadata.InitialAggregate);
         }
 
         return exception;
