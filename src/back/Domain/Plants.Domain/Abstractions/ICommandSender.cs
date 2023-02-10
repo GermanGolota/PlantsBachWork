@@ -6,7 +6,7 @@ public interface ICommandSender
 }
 
 public record struct CommandAcceptedResult(CommandDescription Command);
-public record struct CommandDescription(Guid CommandId, string CommandName, AggregateDescription Aggregate);
+public record struct CommandDescription(Guid Id, string Name, DateTime StartedTime, AggregateDescription Aggregate);
 public record struct CommandForbidden(string[] Reasons)
 {
     public CommandForbidden(string reason) : this(new[] { reason })

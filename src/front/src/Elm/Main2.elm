@@ -72,7 +72,7 @@ viewNotification notification loaded =
 
         result =
             if loaded then
-                case findResultLocation notification.command.commandName notification.command.aggregate.id of
+                case findResultLocation notification.command.name notification.command.aggregate.id of
                     Just location ->
                         [ Button.linkButton [ Button.onClick <| Navigate location, Button.info ]
                             [ text <| "See " ++ humanizePascalCase notification.command.aggregate.name ]
@@ -93,7 +93,7 @@ viewNotification notification loaded =
 
 viewTitle : Notification -> Html msg
 viewTitle notification =
-    text <| humanizePascalCase notification.command.aggregate.name ++ " - " ++ humanizePascalCase notification.command.commandName
+    text <| humanizePascalCase notification.command.aggregate.name ++ " - " ++ humanizePascalCase notification.command.name
 
 
 findResultLocation : String -> String -> Maybe String

@@ -36,8 +36,9 @@ class Connector {
 
 export type NotificationMessage = {
   command: {
-    commandId: string,
-    commandName: string,
+    id: string,
+    name: string,
+    startedTime: string,
     aggregate: {
       id: string,
       name: string

@@ -13,7 +13,7 @@ export namespace Elm {
           subscribe(callback: (data: null) => void): void
         }
         notificationReceived: {
-          send(data: { command: { commandId: string; commandName: string; aggregate: { id: string; name: string } }; success: boolean }): void
+          send(data: { command: { id: string; name: string; startedTime: string; aggregate: { id: string; name: string } }; success: boolean }): void
         }
         openEditor: {
           subscribe(callback: (data: string) => void): void

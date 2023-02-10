@@ -227,7 +227,7 @@ updateBase updateFunc message model =
                 Authorized auth page ->
                     let
                         updateNotifications =
-                            if List.any (\( n, _ ) -> n.command.commandId == notification.command.commandId) auth.notifications then
+                            if List.any (\( n, _ ) -> n.command.id == notification.command.id) auth.notifications then
                                 auth.notifications
 
                             else
@@ -243,7 +243,7 @@ updateBase updateFunc message model =
                 Authorized auth page ->
                     let
                         mapNotification not succ =
-                            if not.command.commandId == notification.command.commandId then
+                            if not.command.id == notification.command.id then
                                 ( not, True )
 
                             else

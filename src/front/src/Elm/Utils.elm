@@ -345,8 +345,9 @@ type alias Notification =
 
 
 type alias NotificationCommand =
-    { commandId : String
-    , commandName : String
+    { id : String
+    , name : String
+    , startedTime: String
     , aggregate : NotificationAggregate
     }
 
@@ -374,8 +375,9 @@ decodeNotification =
 decodeNotificationCommand : D.Decoder NotificationCommand
 decodeNotificationCommand =
     D.succeed NotificationCommand
-        |> required "commandId" D.string
-        |> required "commandName" D.string
+        |> required "id" D.string
+        |> required "name" D.string
+        |> required "startedTime" D.string
         |> required "aggregate" decodeNotificationAggregate
 
 

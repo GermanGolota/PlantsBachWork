@@ -501,7 +501,7 @@ viewResultAddValue data =
     case data of
         SubmittedSuccess _ notification ->
             div [ flex1, flex, Flex.col, class "text-success", Flex.alignItemsCenter, Flex.justifyEnd ]
-                [ div [] [ text ("Successfully submitted " ++ humanizePascalCase notification.commandName ++ ". Check your notifications for results.") ]
+                [ div [] [ text ("Successfully submitted " ++ humanizePascalCase notification.name ++ ". Check your notifications for results.") ]
                 , div []
                     [ Button.linkButton
                         [ Button.primary
