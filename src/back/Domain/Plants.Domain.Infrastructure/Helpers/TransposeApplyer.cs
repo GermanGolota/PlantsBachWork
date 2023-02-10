@@ -29,6 +29,14 @@ internal class TransposeApplyer<TIn, TEvent> where TIn : AggregateBase where TEv
     public async Task<IEnumerable<Event>> CallTransposeAsync(AggregateLoadingTranspose<TIn, TEvent> transpose, IEnumerable<Event> events, CancellationToken token = default)
     {
         var filteredEvents = events.OfType<TEvent>();
+
+        return filteredEvents.Any()
+                ? await ProcessFiltered(transpose, filteredEvents, token)
+                : Array.Empty<Event>();
+    }
+
+    private async Task<IEnumerable<Event>> ProcessFiltered(AggregateLoadingTranspose<TIn, TEvent> transpose, IEnumerable<TEvent> filteredEvents, CancellationToken token)
+    {
         var id = transpose.ExtractId(filteredEvents.First());
         var aggregate = await _repo.GetByIdAsync(id, token: token);
         return transpose.Transpose(filteredEvents, aggregate);
