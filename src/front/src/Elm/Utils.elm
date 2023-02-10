@@ -367,7 +367,7 @@ decodeNotificationPair =
 decodeNotification : D.Decoder Notification
 decodeNotification =
     D.succeed Notification
-        |> custom decodeNotificationCommand
+        |> required "command" decodeNotificationCommand
         |> required "success" D.bool
 
 

@@ -48,7 +48,6 @@ const useElmApp = <
   }
 
   const elmApp = () => {
-    console.log(resp);
     return init({
       node: elmRef.current,
       flags: setFlags ? setFlags(resp!) : resp,

@@ -11,7 +11,6 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Modal
-import Bootstrap.Popover as Popover
 import Color exposing (Color, toCssString)
 import Dict
 import Endpoints exposing (Endpoint(..), endpointToUrl)

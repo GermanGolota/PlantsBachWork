@@ -26,7 +26,7 @@ viewBase model link pageView =
         Authorized resp authM ->
             let
                 notificatonsCounts =
-                    List.filter (\( n, loaded ) -> not loaded) resp.notifications |> List.length
+                    List.filter (\( _, loaded ) -> not loaded) resp.notifications |> List.length
             in
             div []
                 [ notificationsModal resp.notificationsModal resp.notifications
@@ -101,6 +101,12 @@ findResultLocation commandName aggregateId =
     case commandName of
         "AddToStock" ->
             Just <| "/notPosted/" ++ aggregateId ++ "/edit"
+
+        "CreateInstruction" ->
+            Just <| "/instructions/" ++ aggregateId
+
+        "EditInstruction" ->
+            Just <| "/instructions/" ++ aggregateId
 
         _ ->
             Nothing

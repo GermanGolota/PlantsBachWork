@@ -225,7 +225,15 @@ updateBase updateFunc message model =
         NotificationStarted notification ->
             case model of
                 Authorized auth page ->
-                    ( Authorized { auth | notifications = auth.notifications ++ [ ( notification, False ) ] } page, Cmd.none )
+                    let
+                        updateNotifications =
+                            if List.any (\( n, _ ) -> n.command.commandId == notification.command.commandId) auth.notifications then
+                                auth.notifications
+
+                            else
+                                auth.notifications ++ [ ( notification, False ) ]
+                    in
+                    ( Authorized { auth | notifications = updateNotifications } page, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )

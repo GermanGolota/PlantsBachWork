@@ -8,10 +8,10 @@ import Html.Attributes exposing (alt, src, style)
 import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, subscriptionBase, updateBase)
 import Main2 exposing (viewBase)
 import NavBar exposing (instructionsLink)
-import Utils exposing (decodeId, fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, textCenter, textHtml)
+import Utils exposing (decodeId, fillParent, flex, flex1, intersect, largeCentered, mediumMargin, smallMargin, textCenter, textHtml)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -95,28 +95,39 @@ viewPage resp page =
 
         Instruction ins ->
             let
-                historyBtn =
-                    if isAdmin resp then
+                historyBtn id =
+                    Button.linkButton
+                        [ Button.outlinePrimary
+                        , Button.onClick <| Navigate <| historyUrl "PlantInstruction" id
+                        , Button.attrs [ smallMargin ]
+                        ]
+                        [ text "View history" ]
+
+                editBtn id =
+                    Button.linkButton
+                        [ Button.outlinePrimary
+                        , Button.onClick <| Navigate <| "/instructions/" ++ id ++ "/edit"
+                        , Button.attrs [ smallMargin ]
+                        ]
+                        [ text "Edit" ]
+
+                btns =
+                    if intersect [ Producer, Manager ] resp.roles then
                         case ins of
                             Loaded i ->
-                                Button.linkButton
-                                    [ Button.outlinePrimary
-                                    , Button.onClick <| Navigate <| historyUrl "PlantInstruction" i.id
-                                    , Button.attrs [ smallMargin ]
-                                    ]
-                                    [ text "View history" ]
+                                [ editBtn i.id, historyBtn i.id ]
 
                             _ ->
-                                div [] []
+                                []
 
                     else
-                        div [] []
+                        []
             in
-            viewWebdata ins (viewInstruction historyBtn)
+            viewWebdata ins (viewInstruction btns)
 
 
-viewInstruction : Html Msg -> InstructionView -> Html Msg
-viewInstruction historyBtn ins =
+viewInstruction : List (Html Msg) -> InstructionView -> Html Msg
+viewInstruction conditionalBtns ins =
     let
         viewDesc txt =
             div largeCentered [ text txt ]
@@ -143,9 +154,10 @@ viewInstruction historyBtn ins =
                 [ Html.p [] (textHtml ins.text) ]
             ]
         , div [ style "flex" "0.5", flex, Flex.row, Flex.justifyCenter, smallMargin ]
-            [ Button.linkButton [ Button.outlinePrimary, Button.onClick <| Navigate "/instructions" ] [ text "Go back" ]
-            , historyBtn
-            ]
+            ([ Button.linkButton [ Button.outlinePrimary, Button.onClick <| Navigate "/instructions" ] [ text "Go back" ]
+             ]
+                ++ conditionalBtns
+            )
         ]
 
 
