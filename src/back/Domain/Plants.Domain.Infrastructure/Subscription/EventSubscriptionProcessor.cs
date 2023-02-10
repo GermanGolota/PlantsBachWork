@@ -47,24 +47,18 @@ internal class EventSubscriptionProcessor
             exception = e;
         }
 
-        var subscription = _marker.MarkSubscriptionComplete(command.Metadata.InitialAggregate ?? command.Metadata.Aggregate);
-        if (subscription is not null && subscription.IsProcessed && subscription.NotifyUsername is not null && command.Metadata.InitialAggregate is not null)
+        var finalAggregate = command.Metadata.InitialAggregate ?? command.Metadata.Aggregate;
+        var subscription = _marker.MarkSubscriptionComplete(finalAggregate);
+        if (subscription is not null && subscription.IsProcessed && subscription.NotifyUsername is not null && finalAggregate is not null)
         {
             await _notificationSender.SendNotificationAsync(subscription.NotifyUsername,
                                                             new(new(command.Metadata.Id, command.Metadata.Name, command.Metadata.Aggregate),
                                                                 exception is null),
                                                             token);
-            _notificator.UnsubscribeFromNotifications(command.Metadata.InitialAggregate);
+            _notificator.UnsubscribeFromNotifications(finalAggregate);
         }
 
         return exception;
-    }
-
-    private async Task UpdateProjectionAsync(AggregateDescription desc, CancellationToken token = default)
-    {
-        var aggregate = await _caller.LoadAsync(desc, token: token);
-        await _caller.InsertOrUpdateProjectionAsync(aggregate, token);
-        await _caller.IndexProjectionAsync(aggregate, token);
     }
 
     private async Task UpdateSubscribersAsync(Command parentCommand, List<Event> aggEvents, CancellationToken token = default)
