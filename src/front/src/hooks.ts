@@ -31,11 +31,27 @@ const useElmApp = <
   const elmRef = React.useRef(null);
   const navigate = useNavigate();
 
+  let resp = retrieve();
+
+  if (resp) {
+    const { events } = Connector(resp.token);
+
+    useEffect(() => {
+      events((message) => {
+        if (resp) {
+          resp.notifications = resp.notifications.concat(message);
+          store(resp);
+        }
+        app?.ports.notificationReceived.send(message);
+      });
+    });
+  }
+
   const elmApp = () => {
-    let model = retrieve();
+    console.log(resp);
     return init({
       node: elmRef.current,
-      flags: setFlags ? setFlags(model!) : model,
+      flags: setFlags ? setFlags(resp!) : resp,
     });
   };
 
@@ -63,22 +79,6 @@ const useElmApp = <
       }
     }
   }, [app]);
-
-  let resp = retrieve();
-
-  if (resp) {
-    const { events } = Connector(resp.token);
-
-    useEffect(() => {
-      events((message) => {
-        if (resp) {
-          resp.notifications = resp.notifications.concat(message);
-          store(resp);
-        }
-        app?.ports.notificationReceived.send(message);
-      });
-    });
-  }
 
   return { elmRef, ports };
 };
