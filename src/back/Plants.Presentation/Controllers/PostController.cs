@@ -62,7 +62,7 @@ public class PostController : ControllerBase
     [HttpPost("{id}/order")]
     public async Task<ActionResult<CommandViewResult>> Order([FromRoute] Guid id, [FromQuery] string city, [FromQuery] long mailNumber, CancellationToken token = default)
     {
-        var result = await _command.SendAndWaitAsync(
+        var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<OrderPostCommand>(new(id, nameof(PlantPost))),
             meta => new OrderPostCommand(meta, new(city, mailNumber)),
             token

@@ -11,7 +11,7 @@ import Http
 import ImageList as ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, notifyCmd, subscriptionBase, updateBase)
 import Main2 exposing (viewBase)
 import Maybe exposing (map)
 import NavBar exposing (searchLink)
@@ -236,7 +236,7 @@ localUpdate msg m =
                 ( GotSubmit (Ok res), Plant p ) ->
                     case p.plantType of
                         Order orderView ->
-                            ( authedOrder p <| Order { orderView | result = Just <| Loaded res }, Cmd.none )
+                            ( authedOrder p <| Order { orderView | result = Just <| Loaded res }, notifyCmd res )
 
                         _ ->
                             noOp
@@ -386,20 +386,12 @@ viewResult result =
     let
         baseView className message =
             div [ flex1 ] [ div [ largeFont, class className ] [ text message ] ]
-
-        viewText =
-            case result of
-                SubmittedSuccess msg cmd ->
-                    baseView "text-primary" msg
-
-                SubmittedFail msg ->
-                    baseView "text-warning" msg
     in
     case result of
-        SubmittedSuccess msg cmd ->
+        SubmittedSuccess _ _ ->
             div [ flex, Flex.col, flex1 ]
                 [ div [ Flex.row, flex1 ]
-                    [ viewText ]
+                    [ baseView "text-primary" "Successfully submitted. Check your notifications for results." ]
                 , div [ Flex.row, flex1 ]
                     [ Button.linkButton [ Button.onClick <| Navigate "/orders", Button.info, Button.attrs [ largeFont ] ] [ text "View my orders" ]
                     ]
@@ -407,7 +399,7 @@ viewResult result =
 
         SubmittedFail msg ->
             div [ flex1 ]
-                [ viewText
+                [ baseView "text-warning" msg
                 ]
 
 
@@ -552,14 +544,13 @@ interactionButtons isAdmin allowOrder isOrder id =
                 Button.onClick <| Main Submit
 
             else
-                Button.attrs []
+                Button.onClick <| Navigate orderUrl
 
         orderBtn =
             if allowOrder then
                 Button.linkButton
                     [ Button.primary
                     , orderOnClick
-                    , Button.onClick <| Navigate orderUrl
                     , Button.attrs [ smallMargin, largeFont ]
                     ]
                     [ text orderText ]

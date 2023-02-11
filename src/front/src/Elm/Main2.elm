@@ -151,5 +151,8 @@ findResultLocation commandName aggregateId =
         "PostStockItem" ->
             Just <| "/plant/" ++ aggregateId
 
+        "OrderPost" ->
+            Just <| "/orders"
+
         _ ->
             Nothing
