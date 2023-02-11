@@ -24,6 +24,7 @@ var host = Host.CreateDefaultBuilder(args)
                     .AddSingleton<AdminUserCreator>()
                     .AddSingleton<Initializer>()
                     .AddSingleton<Seeder>()
+                    .AddSingleton<INotificationSender, MockNotificationSender>()
                     .AddSingleton<IFileProvider>(factory =>
                     {
                         var options = factory.GetRequiredService<IOptions<WebRootConfig>>().Value;
