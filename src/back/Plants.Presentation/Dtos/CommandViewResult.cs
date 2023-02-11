@@ -9,4 +9,5 @@ public static class CommandViewResultExtensions
             _ => new CommandViewResult(true, successMessage, _.Command),
             fail => new CommandViewResult(false, string.Join('\n', fail.Reasons), null)
             );
+
 }

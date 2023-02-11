@@ -6,7 +6,12 @@ public interface ICommandSender
 }
 
 public record struct CommandAcceptedResult(CommandDescription Command);
-public record struct CommandDescription(Guid Id, string Name, DateTime StartedTime, AggregateDescription Aggregate);
+public record struct CommandDescription(Guid Id, string Name, DateTime Started, AggregateDescription Aggregate)
+{
+    public string StartedTime => Started.ToShortTimeString();
+    public string StartedDate => Started.ToShortDateString();
+};
+
 public record struct CommandForbidden(string[] Reasons)
 {
     public CommandForbidden(string reason) : this(new[] { reason })

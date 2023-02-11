@@ -52,7 +52,12 @@ internal class EventSubscriptionProcessor
         if (subscription is not null && subscription.IsProcessed && subscription.NotifyUsername is not null && finalAggregate is not null)
         {
             await _notificationSender.SendNotificationAsync(subscription.NotifyUsername,
-                                                            new(new(command.Metadata.Id, command.Metadata.Name, command.Metadata.Time, finalAggregate),
+                                                            new(
+                                                                new(
+                                                                    command.Metadata.Id,
+                                                                    command.Metadata.Name, 
+                                                                    command.Metadata.Time,
+                                                                    finalAggregate),
                                                                 exception is null),
                                                             token);
             _notificator.UnsubscribeFromNotifications(finalAggregate);
