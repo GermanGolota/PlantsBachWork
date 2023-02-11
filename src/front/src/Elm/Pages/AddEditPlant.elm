@@ -373,7 +373,7 @@ updateLocal msg m =
                     ( authed <| Add <| { addView | result = Just <| Error err }, Cmd.none )
 
                 ( GotSubmitEdit (Ok res), Edit editView ) ->
-                    ( authed <| Edit <| { editView | result = Just (Loaded res) }, Cmd.none )
+                    ( authed <| Edit <| { editView | result = Just (Loaded res) }, notifyCmd res )
 
                 ( GotSubmitEdit (Err err), Edit editView ) ->
                     ( authed <| Edit <| { editView | result = Just <| Error err }, Cmd.none )
@@ -464,10 +464,10 @@ viewResultEdit result =
                 textContent data =
                     case data of
                         SubmittedSuccess msg cmd ->
-                            msg
+                            "Successfully submitted. See your notifications for results."
 
                         SubmittedFail msg ->
-                            msg
+                            "Failed to submit: " ++ msg
 
                 colorClass data =
                     case data of

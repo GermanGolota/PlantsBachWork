@@ -142,7 +142,7 @@ public class PlantsController : ControllerBase
         var result = await _command.CreateAndSendAsync(
             factory => factory.Create<EditStockItemCommand>(new(id, nameof(PlantStock))),
             meta => new EditStockItemCommand(meta, plantInfo, pictures, plant.RemovedImages),
-            wait: true,
+            wait: false,
             token);
         return result.ToCommandResult();
     }

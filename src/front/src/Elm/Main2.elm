@@ -128,15 +128,25 @@ viewTitle notification =
 
 findResultLocation : String -> String -> Maybe String
 findResultLocation commandName aggregateId =
+    let
+        plantEditPage =
+            "/notPosted/" ++ aggregateId ++ "/edit"
+
+        instructionPage =
+            "/instructions/" ++ aggregateId
+    in
     case commandName of
         "AddToStock" ->
-            Just <| "/notPosted/" ++ aggregateId ++ "/edit"
+            Just plantEditPage
+
+        "EditStockItem" ->
+            Just plantEditPage
 
         "CreateInstruction" ->
-            Just <| "/instructions/" ++ aggregateId
+            Just instructionPage
 
         "EditInstruction" ->
-            Just <| "/instructions/" ++ aggregateId
+            Just instructionPage
 
         _ ->
             Nothing
