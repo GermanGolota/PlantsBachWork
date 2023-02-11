@@ -174,6 +174,9 @@ port goBack : () -> Cmd msg
 port notificationReceived : (Notification -> msg) -> Sub msg
 
 
+port dismissNotification : Notification -> Cmd msg
+
+
 port resizeAccordions : () -> Cmd msg
 
 
@@ -183,6 +186,8 @@ type MsgBase msg
     | Main msg
     | NotificationStarted Notification
     | NotificationReceived Notification
+    | NotificationDismissed Notification
+    | AllNotificationsDismissed
     | CloseNotificationsModal
     | ShowNotificationsModal
     | AnimateNotificationsModal Modal.Visibility
@@ -243,6 +248,28 @@ updateBase updateFunc message model =
                                 [ ( notification, False ) ] ++ auth.notifications
                     in
                     ( Authorized { auth | notifications = updateNotifications } page, resizeAccordions () )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        NotificationDismissed notification ->
+            case model of
+                Authorized auth page ->
+                    ( Authorized { auth | notifications = List.filter (\( n, _ ) -> n.command.id /= notification.command.id) auth.notifications } page, [ resizeAccordions (), dismissNotification notification ] |> Cmd.batch )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        AllNotificationsDismissed ->
+            case model of
+                Authorized auth page ->
+                    ( Authorized
+                        { auth
+                            | notifications = []
+                        }
+                        page
+                    , List.map (\( n, _ ) -> dismissNotification n) auth.notifications |> Cmd.batch
+                    )
 
                 _ ->
                     ( model, Cmd.none )

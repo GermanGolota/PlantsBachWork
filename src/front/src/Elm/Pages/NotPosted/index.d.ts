@@ -15,6 +15,9 @@ export namespace Elm {
         notificationReceived: {
           send(data: { command: { id: string; name: string; startedTime: string; aggregate: { id: string; name: string } }; success: boolean }): void
         }
+        dismissNotification: {
+          subscribe(callback: (data: { command: { id: string; name: string; startedTime: string; aggregate: { id: string; name: string } }; success: boolean }) => void): void
+        }
         resizeAccordions: {
           subscribe(callback: (data: null) => void): void
         }

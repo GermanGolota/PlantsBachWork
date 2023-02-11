@@ -17,13 +17,16 @@ const useElmApp = <
       };
       resizeAccordions: {
         subscribe(callback: (data: null) => void): void
-      }
+      };
+      dismissNotification: {
+        subscribe(callback: (data: { command: { id: string; name: string; startedTime: string; aggregate: { id: string; name: string } }; success: boolean }) => void): void
+      };
     };
   }
 >(
   init: (options: { node?: HTMLElement | null; flags: any }) => TApp,
   config: {
-    additional?: (app: Omit<TApp["ports"], "navigate" | "goBack" | "resizeAccordions">) => void;
+    additional?: (app: Omit<TApp["ports"], "navigate" | "goBack" | "resizeAccordions" | "dismissNotification">) => void;
     onSetApp?: () => void;
     setFlags?: (auth: AuthResponse) => any;
   }
@@ -64,7 +67,7 @@ const useElmApp = <
     setApp(elmApp());
   }, []);
   // Subscribe to state changes from Elm
-  let ports = app?.ports as Omit<TApp["ports"], "navigate" | "goBack" | "resizeAccordions">;
+  let ports = app?.ports as Omit<TApp["ports"], "navigate" | "goBack" | "resizeAccordions" | "dismissNotification">;
   React.useEffect(() => {
     if (app) {
       app.ports.navigate?.subscribe((location) => {
@@ -74,6 +77,13 @@ const useElmApp = <
 
       app.ports.goBack?.subscribe((_) => {
         navigate("/wrapper/" + "-1");
+      });
+
+      app.ports.dismissNotification?.subscribe((notification) => {
+        if (resp) {
+          resp.notifications = resp.notifications.filter(n => n.command.id != notification.command.id);
+          store(resp);
+        }
       });
 
       app.ports.resizeAccordions?.subscribe((_) => {

@@ -5,12 +5,12 @@ import Bootstrap.Button as Button
 import Bootstrap.Card.Block as Block
 import Bootstrap.Modal as Modal
 import Bootstrap.Utilities.Flex as Flex
-import Html exposing (Html, a, div, text)
+import Html exposing (Html, a, div, i, text)
 import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..))
 import NavBar exposing (Link, viewNavBase)
-import Utils exposing (Notification, flex, humanizePascalCase, viewLoading)
+import Utils exposing (Notification, flex, humanizePascalCase, largeFont, mediumCentered, viewLoading)
 
 
 viewBase : ModelBase model -> Maybe Link -> (AuthResponse -> model -> Html (MsgBase msg)) -> Html (MsgBase msg)
@@ -42,7 +42,7 @@ notificationsModal modal accordion notifications =
         |> Modal.withAnimation AnimateNotificationsModal
         |> Modal.small
         |> Modal.h3 [] [ text "Notifications" ]
-        |> Modal.body [] [ viewNotifications notifications accordion ]
+        |> Modal.body [] [ Button.linkButton [ Button.outlineDanger, Button.onClick AllNotificationsDismissed ] [ text "Dismiss all" ], viewNotifications notifications accordion ]
         |> Modal.footer []
             [ Button.button
                 [ Button.outlinePrimary
@@ -106,11 +106,17 @@ viewNotification notification loaded =
         , options =
             []
         , header =
-            Accordion.header [ cardColor ] <| Accordion.toggle [] [ text <| (humanizePascalCase notification.command.name ++ " at " ++ notification.command.startedTime) ]
+            Accordion.header [ cardColor ] <|
+                Accordion.toggle []
+                    [ div (mediumCentered ++ [ flex, Flex.row ])
+                        [ text <| (humanizePascalCase notification.command.name ++ " at " ++ notification.command.startedTime)
+                        , i [ class "fa-solid fa-x", onClick <| NotificationDismissed notification ] []
+                        ]
+                    ]
         , blocks =
             [ Accordion.block []
                 [ Block.custom
-                    (div [ flex, Flex.col ]
+                    (div ([ flex, Flex.col ] ++ mediumCentered)
                         [ div [ Flex.row ] [ viewTitle notification ]
                         , div [ Flex.row ] [ status ]
                         , div [ Flex.row ] result
