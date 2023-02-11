@@ -129,7 +129,6 @@ flatten : List (List a) -> List a
 flatten plane =
     plane |> List.foldr (++) []
 
-
 viewLoading : Html msg
 viewLoading =
     let
@@ -347,7 +346,7 @@ type alias Notification =
 type alias NotificationCommand =
     { id : String
     , name : String
-    , startedTime: String
+    , startedTime : String
     , aggregate : NotificationAggregate
     }
 

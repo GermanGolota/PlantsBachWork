@@ -240,7 +240,7 @@ updateBase updateFunc message model =
                                 auth.notifications
 
                             else
-                                auth.notifications ++ [ ( notification, False ) ]
+                                [ ( notification, False ) ] ++ auth.notifications
                     in
                     ( Authorized { auth | notifications = updateNotifications } page, resizeAccordions () )
 

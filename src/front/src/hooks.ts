@@ -42,7 +42,7 @@ const useElmApp = <
     useEffect(() => {
       events((message) => {
         if (resp) {
-          resp.notifications = resp.notifications.concat(message);
+          resp.notifications = [message].concat(resp.notifications);
           store(resp);
         }
         app?.ports.notificationReceived.send(message);
