@@ -122,6 +122,7 @@ public class PlantsController : ControllerBase
         var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
             meta => new AddToStockCommand(meta, plantInfo, body.Created, pictures),
+            token
             );
 
         return result.ToCommandResult();
