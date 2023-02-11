@@ -68,18 +68,16 @@ internal class Seeder
             var results = new List<OneOf<CommandAcceptedResult, CommandForbidden>>();
             foreach (var user in users)
             {
-                results.Add(await _command.CreateAndSendAsync(
+                results.Add(await _command.SendAndWaitAsync(
                     factory => factory.Create<CreateUserCommand, User>(user.Login.ToGuid()),
                     meta => new CreateUserCommand(meta, user),
-                    wait: true,
                     token)
                     );
 
-                results.Add(await _command.CreateAndSendAsync(
+                results.Add(await _command.SendAndWaitAsync(
                     factory => factory.Create<ChangePasswordCommand, User>(user.Login.ToGuid()),
                     meta => new ChangePasswordCommand(meta, user.Login, 
                     _context.TempPassword, $"{user.FirstName.ToLower().Trim()}password"),
-                    wait: true,
                     token)
                     );
             }
@@ -89,10 +87,9 @@ internal class Seeder
             {
                 var stockId = rng.GetRandomConvertableGuid();
                 stockIds.Add(stockId);
-                results.Add(await _command.CreateAndSendAsync(
+                results.Add(await _command.SendAndWaitAsync(
                     factory => factory.Create<AddToStockCommand, PlantStock>(stockId),
                     meta => new AddToStockCommand(meta, stock, _dateTime.UtcNow, images.Random(1, 3).ToArray()),
-                    wait: true,
                     token)
                     );
             }
@@ -100,10 +97,9 @@ internal class Seeder
             var stocksToPost = stockIds.Random((int)(stocks.Length * 3.0 / 4));
             foreach (var postId in stocksToPost)
             {
-                results.Add(await _command.CreateAndSendAsync(
+                results.Add(await _command.SendAndWaitAsync(
                    factory => factory.Create<PostStockItemCommand, PlantStock>(postId),
                    meta => new PostStockItemCommand(meta, rng.Next(_options.PriceRangeMin, _options.PriceRangeMax)),
-                   wait: true,
                    token)
                    );
             }

@@ -42,10 +42,9 @@ public class UserController : ControllerBase
 
     private async Task<ActionResult<CommandViewResult>> ChangeRole(string login, UserRole role, CancellationToken token = default)
     {
-        var result = await _command.CreateAndSendAsync(
+        var result = await _command.SendAndWaitAsync(
                     factory => factory.Create<ChangeRoleCommand>(new(login.ToGuid(), nameof(User))),
                     meta => new ChangeRoleCommand(meta, role),
-                    wait: true,
                     token
                     );
         return result.ToCommandResult();
@@ -65,10 +64,9 @@ public class UserController : ControllerBase
     public async Task<ActionResult<CommandViewResult>> CreateUser(
         [FromBody] CreateUserViewRequest command, CancellationToken token = default)
     {
-        var result = await _command.CreateAndSendAsync(
+        var result = await _command.SendAndWaitAsync(
             factory => factory.Create<CreateUserCommand>(new(command.Login.ToGuid(), nameof(User))),
             meta => new CreateUserCommand(meta, new(command.FirstName, command.LastName, command.PhoneNumber, command.Login, command.Email, command.Language, command.Roles.ToArray())),
-            wait: true,
             token
             );
         return result.ToCommandResult();
@@ -80,10 +78,9 @@ public class UserController : ControllerBase
     public async Task<ActionResult<CommandViewResult>> ChangePassword([FromBody] ChangePasswordViewRequest password, CancellationToken token)
     {
         var oldPassword = _encrypter.Decrypt(_command.IdentityProvider.Identity!.Hash);
-        var result = await _command.CreateAndSendAsync(
+        var result = await _command.SendAndWaitAsync(
             (factory, identity) => factory.Create<ChangeOwnPasswordCommand>(new(identity.UserName.ToGuid(), nameof(User))),
             (meta, identity) => new ChangeOwnPasswordCommand(meta, oldPassword, password.Password),
-            wait: true,
             token
             );
         return result.ToCommandResult();

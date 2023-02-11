@@ -22,7 +22,31 @@ public class CommandHelper
 
 public static class CommandHelperExtensions
 {
-    public static async Task<OneOf<CommandAcceptedResult, CommandForbidden>> CreateAndSendAsync(this CommandHelper helper,
+    public static async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendAndWaitAsync(this CommandHelper helper,
+      Func<CommandMetadataFactory, IUserIdentity, CommandMetadata> metadataFunc,
+      Func<CommandMetadata, IUserIdentity, Command> commandFunc,
+      CancellationToken token = default) =>
+        await helper.CreateAndSendAsync(metadataFunc, commandFunc, wait: true, token);
+
+    public static async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendAndNotifyAsync(this CommandHelper helper,
+      Func<CommandMetadataFactory, IUserIdentity, CommandMetadata> metadataFunc,
+      Func<CommandMetadata, IUserIdentity, Command> commandFunc,
+      CancellationToken token = default) =>
+        await helper.CreateAndSendAsync(metadataFunc, commandFunc, wait: false, token);
+
+    public static async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendAndWaitAsync(this CommandHelper helper,
+        Func<CommandMetadataFactory, CommandMetadata> metadataFunc,
+        Func<CommandMetadata, Command> commandFunc,
+        CancellationToken token = default) =>
+        await helper.CreateAndSendAsync(metadataFunc, commandFunc, wait: true, token);
+
+    public static async Task<OneOf<CommandAcceptedResult, CommandForbidden>> SendAndNotifyAsync(this CommandHelper helper,
+        Func<CommandMetadataFactory, CommandMetadata> metadataFunc,
+        Func<CommandMetadata, Command> commandFunc,
+        CancellationToken token = default) =>
+        await helper.CreateAndSendAsync(metadataFunc, commandFunc, wait: false, token);
+
+    private static async Task<OneOf<CommandAcceptedResult, CommandForbidden>> CreateAndSendAsync(this CommandHelper helper,
         Func<CommandMetadataFactory, CommandMetadata> metadataFunc,
         Func<CommandMetadata, Command> commandFunc,
         bool wait = false,
@@ -33,7 +57,7 @@ public static class CommandHelperExtensions
         return await helper.Sender.SendCommandAsync(command, GetOptions(helper, helper.IdentityProvider.Identity!, wait), token);
     }
 
-    public static async Task<OneOf<CommandAcceptedResult, CommandForbidden>> CreateAndSendAsync(this CommandHelper helper,
+    private static async Task<OneOf<CommandAcceptedResult, CommandForbidden>> CreateAndSendAsync(this CommandHelper helper,
        Func<CommandMetadataFactory, IUserIdentity, CommandMetadata> metadataFunc,
        Func<CommandMetadata, IUserIdentity, Command> commandFunc,
        bool wait = false,
