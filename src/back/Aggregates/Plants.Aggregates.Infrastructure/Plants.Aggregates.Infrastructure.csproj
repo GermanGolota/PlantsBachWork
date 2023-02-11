@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!--This is needed for updating user, would need to remove this when grpc package has this capability -->
     <PackageReference Include="EventStore.Client" Version="22.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions" Version="7.0.0" />
@@ -18,9 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Domain\Plants.Domain.Infrastructure\Plants.Domain.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Domain\Plants.Domain.Infrastructure\Plants.Domain.Infrastructure.csproj" />
     <ProjectReference Include="..\Plants.Aggregates\Plants.Aggregates.csproj" />
-    <ProjectReference Include="..\Plants.Services.Infrastructure\Plants.Services.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Shared\Plants.Services.Infrastructure\Plants.Services.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
