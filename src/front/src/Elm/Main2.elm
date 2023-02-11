@@ -1,10 +1,12 @@
 module Main2 exposing (viewBase)
 
+import Bootstrap.Accordion as Accordion
 import Bootstrap.Button as Button
+import Bootstrap.Card.Block as Block
 import Bootstrap.Modal as Modal
 import Bootstrap.Utilities.Flex as Flex
 import Html exposing (Html, a, div, text)
-import Html.Attributes exposing (href)
+import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..))
 import NavBar exposing (Link, viewNavBase)
@@ -29,18 +31,18 @@ viewBase model link pageView =
                     List.filter (\( _, loaded ) -> not loaded) resp.notifications |> List.length
             in
             div []
-                [ notificationsModal resp.notificationsModal resp.notifications
+                [ notificationsModal resp.notificationsModal resp.notificationsAccordion resp.notifications
                 , viewNavBase resp.username resp.roles link notificatonsCounts <| pageView resp authM
                 ]
 
 
-notificationsModal : Modal.Visibility -> List ( Notification, Bool ) -> Html (MsgBase msg)
-notificationsModal modal notifications =
+notificationsModal : Modal.Visibility -> Accordion.State -> List ( Notification, Bool ) -> Html (MsgBase msg)
+notificationsModal modal accordion notifications =
     Modal.config CloseNotificationsModal
         |> Modal.withAnimation AnimateNotificationsModal
         |> Modal.small
         |> Modal.h3 [] [ text "Notifications" ]
-        |> Modal.body [] (viewNotifications notifications)
+        |> Modal.body [] [ viewNotifications notifications accordion ]
         |> Modal.footer []
             [ Button.button
                 [ Button.outlinePrimary
@@ -51,12 +53,16 @@ notificationsModal modal notifications =
         |> Modal.view modal
 
 
-viewNotifications : List ( Notification, Bool ) -> List (Html (MsgBase msg))
-viewNotifications notifications =
-    List.map (\( n, l ) -> viewNotification n l) notifications
+viewNotifications : List ( Notification, Bool ) -> Accordion.State -> Html (MsgBase msg)
+viewNotifications notifications accordion =
+    Accordion.config NotificationsAccordion
+        |> Accordion.withAnimation
+        |> Accordion.cards
+            (List.map (\( n, l ) -> viewNotification n l) notifications)
+        |> Accordion.view accordion
 
 
-viewNotification : Notification -> Bool -> Html (MsgBase msg)
+viewNotification : Notification -> Bool -> Accordion.Card (MsgBase msg)
 viewNotification notification loaded =
     let
         status =
@@ -83,12 +89,36 @@ viewNotification notification loaded =
 
             else
                 []
+
+        cardColor =
+            if loaded then
+                if notification.success then
+                    class "bg-info"
+
+                else
+                    class "bg-danger"
+
+            else
+                class "bg-warning"
     in
-    div [ flex, Flex.col ]
-        [ div [ Flex.row ] [ viewTitle notification ]
-        , div [ Flex.row ] [ status ]
-        , div [ Flex.row ] result
-        ]
+    Accordion.card
+        { id = notification.command.id
+        , options =
+            []
+        , header =
+            Accordion.header [ cardColor ] <| Accordion.toggle [] [ text <| (humanizePascalCase notification.command.name ++ " at " ++ notification.command.startedTime) ]
+        , blocks =
+            [ Accordion.block []
+                [ Block.custom
+                    (div [ flex, Flex.col ]
+                        [ div [ Flex.row ] [ viewTitle notification ]
+                        , div [ Flex.row ] [ status ]
+                        , div [ Flex.row ] result
+                        ]
+                    )
+                ]
+            ]
+        }
 
 
 viewTitle : Notification -> Html msg

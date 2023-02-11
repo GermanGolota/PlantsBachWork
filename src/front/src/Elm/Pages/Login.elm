@@ -11,6 +11,7 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Modal
+import Bootstrap.Accordion
 import Color exposing (Color, toCssString)
 import Dict
 import Endpoints exposing (Endpoint(..), endpointToUrl)
@@ -34,6 +35,7 @@ submitSuccessDecoder =
         |> required "username" D.string
         |> hardcoded []
         |> hardcoded Bootstrap.Modal.hidden
+        |> hardcoded Bootstrap.Accordion.initialState
 
 
 encodeResponse : AuthResponse -> E.Value

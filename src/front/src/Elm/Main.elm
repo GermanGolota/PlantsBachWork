@@ -1,5 +1,6 @@
 port module Main exposing (..)
 
+import Bootstrap.Accordion as Accordion
 import Bootstrap.Modal as Modal
 import Browser
 import Html exposing (Html)
@@ -78,6 +79,7 @@ type alias AuthResponse =
     , username : String
     , notifications : List ( Notification, Bool )
     , notificationsModal : Modal.Visibility
+    , notificationsAccordion : Accordion.State
     }
 
 
@@ -154,6 +156,7 @@ decodeFlags =
         |> required "username" D.string
         |> required "notifications" (D.list decodeNotificationPair)
         |> hardcoded Modal.hidden
+        |> hardcoded Accordion.initialState
 
 
 type ModelBase model
@@ -171,6 +174,9 @@ port goBack : () -> Cmd msg
 port notificationReceived : (Notification -> msg) -> Sub msg
 
 
+port resizeAccordions : () -> Cmd msg
+
+
 type MsgBase msg
     = Navigate String
     | GoBack
@@ -180,6 +186,7 @@ type MsgBase msg
     | CloseNotificationsModal
     | ShowNotificationsModal
     | AnimateNotificationsModal Modal.Visibility
+    | NotificationsAccordion Accordion.State
 
 
 subscriptionBase : ModelBase model -> Sub (MsgBase msg) -> Sub (MsgBase msg)
@@ -188,7 +195,9 @@ subscriptionBase mod baseSub =
         notifications =
             case mod of
                 Authorized auth _ ->
-                    [ Modal.subscriptions auth.notificationsModal AnimateNotificationsModal ]
+                    [ Modal.subscriptions auth.notificationsModal AnimateNotificationsModal
+                    , Accordion.subscriptions auth.notificationsAccordion NotificationsAccordion
+                    ]
 
                 _ ->
                     []
@@ -233,7 +242,7 @@ updateBase updateFunc message model =
                             else
                                 auth.notifications ++ [ ( notification, False ) ]
                     in
-                    ( Authorized { auth | notifications = updateNotifications } page, Cmd.none )
+                    ( Authorized { auth | notifications = updateNotifications } page, resizeAccordions () )
 
                 _ ->
                     ( model, Cmd.none )
@@ -249,7 +258,7 @@ updateBase updateFunc message model =
                             else
                                 ( not, succ )
                     in
-                    ( Authorized { auth | notifications = List.map (\( n, s ) -> mapNotification n s) auth.notifications } page, Cmd.none )
+                    ( Authorized { auth | notifications = List.map (\( n, s ) -> mapNotification n s) auth.notifications } page, resizeAccordions () )
 
                 _ ->
                     ( model, Cmd.none )
@@ -274,6 +283,14 @@ updateBase updateFunc message model =
             case model of
                 Authorized auth page ->
                     ( Authorized { auth | notificationsModal = visibility } page, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        NotificationsAccordion state ->
+            case model of
+                Authorized auth page ->
+                    ( Authorized { auth | notificationsAccordion = state } page, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )

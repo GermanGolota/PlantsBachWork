@@ -15,12 +15,15 @@ const useElmApp = <
       notificationReceived: {
         send(data: { command: { id: string; name: string; aggregate: { id: string; name: string } }; success: boolean }): void
       };
+      resizeAccordions: {
+        subscribe(callback: (data: null) => void): void
+      }
     };
   }
 >(
   init: (options: { node?: HTMLElement | null; flags: any }) => TApp,
   config: {
-    additional?: (app: Omit<TApp["ports"], "navigate" | "goBack">) => void;
+    additional?: (app: Omit<TApp["ports"], "navigate" | "goBack" | "resizeAccordions">) => void;
     onSetApp?: () => void;
     setFlags?: (auth: AuthResponse) => any;
   }
@@ -61,7 +64,7 @@ const useElmApp = <
     setApp(elmApp());
   }, []);
   // Subscribe to state changes from Elm
-  let ports = app?.ports as Omit<TApp["ports"], "navigate" | "goBack">;
+  let ports = app?.ports as Omit<TApp["ports"], "navigate" | "goBack" | "resizeAccordions">;
   React.useEffect(() => {
     if (app) {
       app.ports.navigate?.subscribe((location) => {
@@ -71,6 +74,30 @@ const useElmApp = <
 
       app.ports.goBack?.subscribe((_) => {
         navigate("/wrapper/" + "-1");
+      });
+
+      app.ports.resizeAccordions?.subscribe((_) => {
+        const accordions = document.getElementsByClassName("accordion");
+        for (let index = 0; index < accordions.length; index++) {
+          const accordion = accordions[index];
+          if (accordion) {
+            for (let index = 0; index < accordion.childNodes.length; index++) {
+              const cards = accordion.childNodes[index];
+              for (let index2 = 0; index2 < cards.childNodes.length; index2++) {
+                const body = cards.childNodes[index2];
+                if (body instanceof HTMLElement && body.id) {
+                  if (body.style.height == "0px") {
+                    //element.style.removeProperty("height");
+                    //element.style.height = "0%";
+                  } else {
+                    body.style.removeProperty("height");
+                    body.style.height = "100%";
+                  }
+                }
+              }
+            }
+          }
+        }
       });
 
       if (additional) {

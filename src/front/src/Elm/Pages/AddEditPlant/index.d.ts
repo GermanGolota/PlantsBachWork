@@ -15,14 +15,14 @@ export namespace Elm {
         notificationReceived: {
           send(data: { command: { id: string; name: string; startedTime: string; aggregate: { id: string; name: string } }; success: boolean }): void
         }
+        resizeAccordions: {
+          subscribe(callback: (data: null) => void): void
+        }
         openEditor: {
           subscribe(callback: (data: string) => void): void
         }
         editorChanged: {
           send(data: string): void
-        }
-        resizeAggregates: {
-          subscribe(callback: (data: null) => void): void
         }
         notifyLoggedIn: {
           subscribe(callback: (data: unknown) => void): void

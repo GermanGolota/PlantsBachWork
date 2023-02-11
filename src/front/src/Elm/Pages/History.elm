@@ -1,4 +1,4 @@
-port module Pages.History exposing (..)
+module Pages.History exposing (..)
 
 import Bootstrap.Accordion as Accordion exposing (State(..))
 import Bootstrap.Button as Button
@@ -18,17 +18,10 @@ import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import JsonViewer exposing (initJsonTree, initJsonTreeCollapsed, updateJsonTree, viewJsonTree)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, subscriptionBase, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, resizeAccordions, subscriptionBase, updateBase)
 import Main2 exposing (viewBase)
 import Utils exposing (buildQuery, fillParent, flex, humanizePascalCase, largeCentered, mediumFont, mediumMargin, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
-
-
-
--- ports
-
-
-port resizeAggregates : () -> Cmd msg
 
 
 
@@ -193,7 +186,7 @@ update msg m =
                                         updateHistory =
                                             { history | snapshots = List.map (\( k, v ) -> mapSnapshot k v) history.snapshots }
                                     in
-                                    ( authed <| Valid <| { viewModel | history = Loaded updateHistory }, resizeAggregates () )
+                                    ( authed <| Valid <| { viewModel | history = Loaded updateHistory }, resizeAccordions () )
 
                                 _ ->
                                     noOp
@@ -205,7 +198,7 @@ update msg m =
                                         updateHistory =
                                             { history | aggregateView = state }
                                     in
-                                    ( authed <| Valid <| { viewModel | history = Loaded updateHistory }, resizeAggregates () )
+                                    ( authed <| Valid <| { viewModel | history = Loaded updateHistory }, resizeAccordions () )
 
                                 _ ->
                                     noOp

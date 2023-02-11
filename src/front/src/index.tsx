@@ -39,32 +39,6 @@ const HistoryPage = () => {
         name,
       };
     },
-    additional: (flags) => {
-      flags.resizeAggregates.subscribe(() => {
-        const accordions = document.getElementsByClassName("accordion");
-        for (let index = 0; index < accordions.length; index++) {
-          const accordion = accordions[index];
-          if (accordion) {
-            for (let index = 0; index < accordion.childNodes.length; index++) {
-              const cards = accordion.childNodes[index];
-              for (let index2 = 0; index2 < cards.childNodes.length; index2++) {
-                const body = cards.childNodes[index2];
-                if (body instanceof HTMLElement && body.id) {
-                  console.log("child", body);
-                  if (body.style.height == "0px") {
-                    //element.style.removeProperty("height");
-                    //element.style.height = "0%";
-                  } else {
-                    body.style.removeProperty("height");
-                    body.style.height = "100%";
-                  }
-                }
-              }
-            }
-          }
-        }
-      });
-    },
   });
 
   return (
