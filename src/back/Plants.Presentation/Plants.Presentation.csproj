@@ -25,8 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Plants.Domain.Infrastructure\Plants.Domain.Infrastructure.csproj" />
-    <ProjectReference Include="..\Plants.Aggregates.Infrastructure\Plants.Aggregates.Infrastructure.csproj" />
-    <ProjectReference Include="..\Plants.Aggregates\Plants.Aggregates.csproj" />
+    <ProjectReference Include="..\Aggregates\Plants.Aggregates.Infrastructure\Plants.Aggregates.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -15,17 +15,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Domain", "Domain", "{1DA048
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Domain.Infrastructure", "Domain\Plants.Domain.Infrastructure\Plants.Domain.Infrastructure.csproj", "{2CD777C2-70B0-41BF-A9F1-D0642468182E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Shared", "Plants.Shared\Plants.Shared.csproj", "{74AC546B-E677-444A-BC35-531E194A317E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Shared", "Shared\Plants.Shared\Plants.Shared.csproj", "{74AC546B-E677-444A-BC35-531E194A317E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Shared.Tests", "..\tests\Plants.Shared.Tests\Plants.Shared.Tests.csproj", "{4A17365C-DA40-4546-9534-C217DF4F12C8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Aggregates", "Plants.Aggregates\Plants.Aggregates.csproj", "{557401E6-1AEF-4D73-827E-CB1150EE5A79}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Aggregates", "Aggregates\Plants.Aggregates\Plants.Aggregates.csproj", "{557401E6-1AEF-4D73-827E-CB1150EE5A79}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Aggregates", "Aggregates", "{65E88B3F-B47A-44C7-AEF7-81A751FADC5C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Aggregates.Infrastructure", "Plants.Aggregates.Infrastructure\Plants.Aggregates.Infrastructure.csproj", "{585C566E-F43B-40EF-8085-F06B4C7EDBD0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Aggregates.Infrastructure", "Aggregates\Plants.Aggregates.Infrastructure\Plants.Aggregates.Infrastructure.csproj", "{585C566E-F43B-40EF-8085-F06B4C7EDBD0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Initializer", "Plants.Initializer\Plants.Initializer.csproj", "{FF8D4914-753E-432D-A46F-EB1BDDB45DFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Initializer", "Aggregates\Plants.Initializer\Plants.Initializer.csproj", "{FF8D4914-753E-432D-A46F-EB1BDDB45DFA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{0E8B5107-96CA-4C9C-8044-50B6416EC31A}"
 	ProjectSection(SolutionItems) = preProject
@@ -36,9 +36,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{0E8B5107
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{C038A9B7-E3BA-4544-A774-1B95D0ACD6B8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Services", "Plants.Services\Plants.Services.csproj", "{797BC51D-15A6-4700-BDA9-22EBA2589DE3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Services", "Shared\Plants.Services\Plants.Services.csproj", "{797BC51D-15A6-4700-BDA9-22EBA2589DE3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Services.Infrastructure", "Plants.Services.Infrastructure\Plants.Services.Infrastructure.csproj", "{48F3FA5D-7B8C-426B-81BF-BA3F009E2BAB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Services.Infrastructure", "Shared\Plants.Services.Infrastructure\Plants.Services.Infrastructure.csproj", "{48F3FA5D-7B8C-426B-81BF-BA3F009E2BAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
