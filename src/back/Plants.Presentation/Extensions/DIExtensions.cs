@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
@@ -95,6 +94,21 @@ public static class DIExtensions
            x.RequireHttpsMetadata = false;
            x.SaveToken = true;
            x.TokenValidationParameters = GetValidationParams(key);
+           x.Events = new JwtBearerEvents
+           {
+               OnMessageReceived = context =>
+               {
+                   if ((context.Request.Query.TryGetValue("access_token", out StringValues token) ||
+                       context.Request.Query.TryGetValue("token", out token))
+                       && token != new StringValues()
+                       )
+                   {
+                       context.Token = token;
+                   }
+
+                   return Task.CompletedTask;
+               }
+           };
        });
         return services;
     }

@@ -56,13 +56,10 @@ internal class AggregateEventSubscription
         {
             var command = subscriptionState.Command!;
             _logger.LogInformation("Processing subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
-            try
+            var exception = await _processor.ProcessCommandAsync(command, subscriptionState.Events, cancellationToken);
+            if (exception is not null)
             {
-                await _processor.ProcessCommandAsync(command, subscriptionState.Events, cancellationToken);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to process command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
+                _logger.LogError(exception, "Failed to process command from subscription for '{aggName}'-'{aggId}' with command '{cmdName}'-'{cmdId}'", subscription.SubscriptionId, aggregateId, command.Metadata.Name, command.Metadata.Id);
                 //TODO: add dead letter queue here
             }
             await subscription.Ack(subscriptionState.EventIds);

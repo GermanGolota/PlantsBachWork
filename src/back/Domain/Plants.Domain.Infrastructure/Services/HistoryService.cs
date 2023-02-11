@@ -1,4 +1,6 @@
-﻿namespace Plants.Domain.Infrastructure;
+﻿using System.Reflection;
+
+namespace Plants.Domain.Infrastructure;
 
 internal class HistoryService : IHistoryService
 {
@@ -25,7 +27,7 @@ internal class HistoryService : IHistoryService
             aggregate = _applyer.ApplyEventsTo(aggregate, new[] { result });
             snapshots.Add(new(
                 result.Command.Metadata.Time,
-                new ObjectWithMetadata<AggregateMetadata>(RemoveMetadata(aggregate), aggregate.Metadata),
+                new ObjectWithMetadata<AggregateMetadata>(RemoveMetadataAndRelatedAggregates(aggregate), aggregate.Metadata),
                 new CommandSnapshot(RemoveMetadata(result.Command), result.Command.Metadata, result.Command.Metadata.InitialAggregate is null),
                 result.Events
                     .Where(_ => _ is not CommandProcessedEvent)
@@ -47,16 +49,24 @@ internal class HistoryService : IHistoryService
     }
 
     private RelatedAggregate GetReferenced(AggregateDescription desc, AggregateDescription reference) =>
-        new RelatedAggregate(reference.Name, reference.Id, _helper.ReferencedAggregates[desc.Name][reference.Name].Name);
+        new(reference.Name, reference.Id, RelatedProps(desc)[reference.Name].Name);
 
-    private static object RemoveMetadata(AggregateBase aggregate) =>
-        aggregate.RemoveProperty(nameof(AggregateBase.Metadata));
+    private IReadOnlyDictionary<string, PropertyInfo> RelatedProps(AggregateDescription desc) =>
+        _helper.ReferencedAggregates[desc.Name];
+
+    private object RemoveMetadataAndRelatedAggregates(AggregateBase aggregate) =>
+        aggregate.RemoveProperties(
+            RelatedProps(aggregate.GetDescription())
+            .Select(_ => _.Value.Name)
+            .Append(nameof(AggregateBase.Metadata))
+            .ToArray()
+            );
 
     private static object RemoveMetadata(Command command) =>
-        command.RemoveProperty(nameof(Command.Metadata));
+        command.RemoveProperties(nameof(Command.Metadata));
 
     private static object RemoveMetadata(Event @event) =>
-        @event.RemoveProperty(nameof(Event.Metadata));
+        @event.RemoveProperties(nameof(Event.Metadata));
 
     private static CommandHandlingResult CleanUp(CommandHandlingResult result) =>
         new(result.Command, result.Events.Where(_ => _ is not CommandProcessedEvent));

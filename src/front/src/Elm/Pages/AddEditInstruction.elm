@@ -8,16 +8,18 @@ import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), historyUrl, postAuthed)
 import File exposing (File)
 import File.Select as FileSelect
-import Html exposing (Html, div, text)
+import Html exposing (Html, button, div, text)
 import Html.Attributes exposing (style, value)
+import Html.Events exposing (onClick)
 import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, mapSub, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, mapSub, notifyCmd, subscriptionBase, updateBase)
+import Main2 exposing (viewBase)
 import Multiselect
-import NavBar exposing (instructionsLink, viewNav)
+import NavBar exposing (instructionsLink)
 import Transition exposing (constant)
-import Utils exposing (decodeId, fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, textHtml)
+import Utils exposing (SubmittedResult, decodeId, fillParent, flex, flex1, largeCentered, mediumMargin, smallMargin, submittedDecoder, textHtml)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -52,7 +54,7 @@ type alias View =
     , selectedDescription : String
     , uploadedFile : Maybe File
     , available : WebData Available
-    , result : Maybe (WebData String)
+    , result : Maybe (WebData SubmittedResult)
     }
 
 
@@ -69,7 +71,7 @@ type LocalMsg
     | DescriptionChanged String
     | OpenEditor
     | GotAvailable (Result Http.Error Available)
-    | GotSubmit (Result Http.Error String)
+    | GotSubmit (Result Http.Error SubmittedResult)
     | StartUpload
     | ImagesLoaded File (List File)
     | Submit
@@ -96,16 +98,19 @@ updateLocal msg m =
                 authed =
                     Authorized auth
 
-                updateModel newModel =
+                updateModelAndCmd newModel cmd =
                     case model of
                         Edit id (Loaded oldModel) ->
-                            ( authed <| Edit id (Loaded newModel), Cmd.none )
+                            ( authed <| Edit id (Loaded newModel), cmd )
 
                         Add oldModel ->
-                            ( authed <| Add newModel, Cmd.none )
+                            ( authed <| Add newModel, cmd )
 
                         _ ->
                             noOp
+
+                updateModel newModel =
+                    updateModelAndCmd newModel Cmd.none
 
                 getMainView =
                     case model of
@@ -183,7 +188,7 @@ updateLocal msg m =
                             noOp
 
                 GotSubmit (Ok res) ->
-                    updateModel { getMainView | result = Just (Loaded res) }
+                    updateModelAndCmd { getMainView | result = Just (Loaded res) } <| notifyCmd res
 
                 GotSubmit (Err err) ->
                     updateModel { getMainView | result = Just <| Error err }
@@ -208,7 +213,7 @@ submitAddCommand : String -> View -> Cmd Msg
 submitAddCommand token page =
     let
         expect =
-            Http.expectJson GotSubmit decodeId
+            Http.expectJson GotSubmit submittedDecoder
     in
     postAuthed token CreateInstruction (bodyEncoder page) expect Nothing |> mapCmd
 
@@ -217,7 +222,7 @@ submitEditCommand : String -> String -> View -> Cmd Msg
 submitEditCommand token id page =
     let
         expect =
-            Http.expectJson GotSubmit decodeId
+            Http.expectJson GotSubmit submittedDecoder
     in
     postAuthed token (EditInstruction id) (bodyEncoder page) expect Nothing |> mapCmd
 
@@ -259,7 +264,7 @@ requestImages =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just instructionsLink) viewPage
+    viewBase model (Just instructionsLink) viewPage
 
 
 viewPage : AuthResponse -> ViewType -> Html Msg
@@ -309,16 +314,15 @@ viewMain historyBtn isEdit page av =
 
         resultText =
             if isEdit then
-                "Successfully edited instruction!"
+                "Submitted edited instruction. Check notifications for results."
 
             else
-                "Successfully created instruction!"
+                "Submitted create instruction. Check notifications for results."
 
         viewResult result =
             viewRow
                 [ viewCol
                     [ div largeCentered [ text resultText ]
-                    , Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/instructions/" ++ result) ] [ text "Open Instruction" ]
                     ]
                 ]
 
@@ -372,15 +376,10 @@ viewMain historyBtn isEdit page av =
                 [ text "Upload" ]
             , viewCol [ div largeCentered [ text fileStr ] ]
             ]
-         , viewRow
-            [ Button.button
-                [ Button.primary, Button.onClick <| Main OpenEditor, Button.attrs [ flex1 ] ]
-                [ text "Edit text" ]
-            ]
          , div [ flex, Flex.row, style "flex" "4" ]
             [ viewCol
                 [ div largeCentered [ text "Instruction Content" ]
-                , div (fillParent ++ [ style "border" "1px solid gray" ]) [ Html.p [] (textHtml page.selectedText) ]
+                , button (fillParent ++ [ style "border" "1px solid gray", onClick <| Main OpenEditor ]) [ Html.p [] (textHtml page.selectedText) ]
                 ]
             ]
          ]
@@ -431,7 +430,7 @@ init resp flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    editorChanged EditorTextUpdated |> mapSub
+    subscriptionBase model (editorChanged EditorTextUpdated |> mapSub)
 
 
 main : Program D.Value Model Msg

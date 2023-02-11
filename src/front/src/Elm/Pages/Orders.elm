@@ -7,13 +7,14 @@ import Bootstrap.Utilities.Flex as Flex
 import Dict exposing (Dict)
 import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, imagesDecoder, postAuthed)
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, href, style)
+import Html.Attributes exposing (class, style)
 import Http
 import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
-import NavBar exposing (ordersLink, viewNav)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
+import Main2 exposing (viewBase)
+import NavBar exposing (ordersLink)
 import Utils exposing (bgTeal, decodeId, fillParent, flex, flex1, formatPrice, mediumCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -372,7 +373,7 @@ statusDecoder =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just ordersLink) viewPage
+    viewBase model (Just ordersLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
@@ -411,7 +412,16 @@ viewPage resp page =
         topViewItems =
             if page.showAdditional then
                 [ checksView
-                , div [] [ Button.linkButton [ Button.primary, Button.attrs [ smallMargin, href viewLocation ] ] [ text switchViewMessage ] ]
+                , div []
+                    [ Button.linkButton
+                        [ Button.primary
+                        , Button.onClick <| Navigate viewLocation
+                        , Button.attrs
+                            [ smallMargin
+                            ]
+                        ]
+                        [ text switchViewMessage ]
+                    ]
                 ]
 
             else
@@ -712,8 +722,8 @@ getData token viewType =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    subscriptionBase model Sub.none
 
 
 main : Program D.Value Model Msg

@@ -6,14 +6,15 @@ import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, postAuthed)
 import Html exposing (Html, div, i, input, text)
-import Html.Attributes exposing (checked, class, disabled, href, style, type_, value)
+import Html.Attributes exposing (checked, class, disabled, style, type_, value)
 import Http
 import ImageList as ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, notifyCmd, subscriptionBase, updateBase)
+import Main2 exposing (viewBase)
 import Maybe exposing (map)
-import NavBar exposing (searchLink, viewNav)
+import NavBar exposing (searchLink)
 import PlantHelper exposing (PlantModel, plantDecoder, viewDesc, viewPlantBase, viewPlantLeft)
 import Utils exposing (SubmittedResult(..), fillParent, flex, flex1, largeCentered, largeFont, mediumMargin, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -235,7 +236,7 @@ localUpdate msg m =
                 ( GotSubmit (Ok res), Plant p ) ->
                     case p.plantType of
                         Order orderView ->
-                            ( authedOrder p <| Order { orderView | result = Just <| Loaded res }, Cmd.none )
+                            ( authedOrder p <| Order { orderView | result = Just <| Loaded res }, notifyCmd res )
 
                         _ ->
                             noOp
@@ -304,7 +305,7 @@ getPlantCommand token plantId =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just searchLink) viewPage
+    viewBase model (Just searchLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
@@ -385,20 +386,12 @@ viewResult result =
     let
         baseView className message =
             div [ flex1 ] [ div [ largeFont, class className ] [ text message ] ]
-
-        viewText =
-            case result of
-                SubmittedSuccess msg ->
-                    baseView "text-primary" msg
-
-                SubmittedFail msg ->
-                    baseView "text-warning" msg
     in
     case result of
-        SubmittedSuccess msg ->
+        SubmittedSuccess _ _ ->
             div [ flex, Flex.col, flex1 ]
                 [ div [ Flex.row, flex1 ]
-                    [ viewText ]
+                    [ baseView "text-primary" "Successfully submitted. Check your notifications for results." ]
                 , div [ Flex.row, flex1 ]
                     [ Button.linkButton [ Button.onClick <| Navigate "/orders", Button.info, Button.attrs [ largeFont ] ] [ text "View my orders" ]
                     ]
@@ -406,7 +399,7 @@ viewResult result =
 
         SubmittedFail msg ->
             div [ flex1 ]
-                [ viewText
+                [ baseView "text-warning" msg
                 ]
 
 
@@ -551,16 +544,14 @@ interactionButtons isAdmin allowOrder isOrder id =
                 Button.onClick <| Main Submit
 
             else
-                --fix issue with plants component not reloading
-                Button.attrs []
+                Button.onClick <| Navigate orderUrl
 
-        --Button.onClick <| Navigate orderUrl
         orderBtn =
             if allowOrder then
                 Button.linkButton
                     [ Button.primary
                     , orderOnClick
-                    , Button.attrs [ smallMargin, largeFont, href orderUrl ]
+                    , Button.attrs [ smallMargin, largeFont ]
                     ]
                     [ text orderText ]
 
@@ -580,7 +571,14 @@ interactionButtons isAdmin allowOrder isOrder id =
                 div [] []
     in
     div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
-        [ Button.linkButton ([ Button.primary, Button.attrs [ smallMargin, largeFont, href backUrl ] ] ++ backNavigate) [ text "Back" ]
+        [ Button.linkButton
+            ([ Button.primary
+             , Button.onClick <| Navigate <| backUrl
+             , Button.attrs [ smallMargin, largeFont ]
+             ]
+                ++ backNavigate
+            )
+            [ text "Back" ]
         , orderBtn
         , historyBtn
         ]
@@ -655,7 +653,7 @@ decodePlantId flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    subscriptionBase model Sub.none
 
 
 main : Program D.Value Model Msg

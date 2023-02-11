@@ -13,9 +13,10 @@ import Html.Attributes exposing (alt, class, src, style, value)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
+import Main2 exposing (viewBase)
 import Multiselect as Multiselect
-import NavBar exposing (instructionsLink, viewNav)
+import NavBar exposing (instructionsLink)
 import Utils exposing (buildQuery, chunkedView, decodeId, fillParent, flex, flex1, intersect, largeCentered, mediumMargin, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -181,7 +182,7 @@ coverImageDecoder token hasCover =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just instructionsLink) viewPage
+    viewBase model (Just instructionsLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
@@ -281,7 +282,7 @@ viewInstruction isAdmin isProducer ins =
 
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
-init resp flags =
+init resp _ =
     let
         shouldShow =
             case resp of
@@ -296,7 +297,7 @@ init resp flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    subscriptionBase model Sub.none
 
 
 main : Program D.Value Model Msg

@@ -1,4 +1,4 @@
-port module Pages.History exposing (..)
+module Pages.History exposing (..)
 
 import Bootstrap.Accordion as Accordion exposing (State(..))
 import Bootstrap.Button as Button
@@ -12,23 +12,16 @@ import Bootstrap.Text as Text
 import Bootstrap.Utilities.Flex as Flex
 import Endpoints exposing (getAuthedQuery, historyUrl)
 import Html exposing (Html, div, i, text)
-import Html.Attributes exposing (class, href, style)
+import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required, requiredAt)
 import JsonViewer exposing (initJsonTree, initJsonTreeCollapsed, updateJsonTree, viewJsonTree)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
-import NavBar exposing (viewNav)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, resizeAccordions, subscriptionBase, updateBase)
+import Main2 exposing (viewBase)
 import Utils exposing (buildQuery, fillParent, flex, humanizePascalCase, largeCentered, mediumFont, mediumMargin, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
-
-
-
--- ports
-
-
-port resizeAggregates : () -> Cmd msg
 
 
 
@@ -193,7 +186,7 @@ update msg m =
                                         updateHistory =
                                             { history | snapshots = List.map (\( k, v ) -> mapSnapshot k v) history.snapshots }
                                     in
-                                    ( authed <| Valid <| { viewModel | history = Loaded updateHistory }, resizeAggregates () )
+                                    ( authed <| Valid <| { viewModel | history = Loaded updateHistory }, resizeAccordions () )
 
                                 _ ->
                                     noOp
@@ -205,7 +198,7 @@ update msg m =
                                         updateHistory =
                                             { history | aggregateView = state }
                                     in
-                                    ( authed <| Valid <| { viewModel | history = Loaded updateHistory }, resizeAggregates () )
+                                    ( authed <| Valid <| { viewModel | history = Loaded updateHistory }, resizeAccordions () )
 
                                 _ ->
                                     noOp
@@ -512,7 +505,7 @@ commandMetadataDecoder =
 
 view : Model -> Html Msg
 view model =
-    viewNav model Nothing viewPage
+    viewBase model Nothing viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
@@ -613,7 +606,7 @@ viewSnapshot snapshot state advanced =
                             ListGroup.li [ ListGroup.dark ]
                                 [ Button.linkButton
                                     [ Button.outlinePrimary
-                                    , Button.attrs [ href <| historyUrl rel.name rel.id ]
+                                    , Button.onClick <| Navigate <| historyUrl rel.name rel.id
                                     ]
                                     [ text rel.role ]
                                 ]
@@ -689,7 +682,7 @@ viewSnapshotName snapshot =
                 " executed "
 
             else
-                " received "
+                " requested "
     in
     div (largeCentered ++ [ class textColor ]) [ text ("\"" ++ snapshot.lastCommand.metadata.userName ++ "\"" ++ actionName ++ "\"" ++ humanizePascalCase snapshot.lastCommand.metadata.name ++ "\"" ++ " " ++ snapshot.displayTime) ]
 
@@ -767,31 +760,33 @@ init resp flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model of
-        Authorized _ a ->
-            case a of
-                Valid v ->
-                    case v.history of
-                        Loaded history ->
-                            let
-                                snapshotSubs =
-                                    history.snapshots
-                                        |> List.map (\( agg, state ) -> Accordion.subscriptions state (\st -> Main <| AccordionSnapshotMsg agg st))
-                            in
-                            snapshotSubs
-                                ++ [ Accordion.subscriptions history.aggregateView (\st -> Main <| AccordionAggregateMsg st)
-                                   , Modal.subscriptions history.metadataModal.view (\vis -> Main <| AnimateMetadataModal vis)
-                                   ]
-                                |> Sub.batch
+    subscriptionBase model
+        (case model of
+            Authorized _ a ->
+                case a of
+                    Valid v ->
+                        case v.history of
+                            Loaded history ->
+                                let
+                                    snapshotSubs =
+                                        history.snapshots
+                                            |> List.map (\( agg, state ) -> Accordion.subscriptions state (\st -> Main <| AccordionSnapshotMsg agg st))
+                                in
+                                snapshotSubs
+                                    ++ [ Accordion.subscriptions history.aggregateView (\st -> Main <| AccordionAggregateMsg st)
+                                       , Modal.subscriptions history.metadataModal.view (\vis -> Main <| AnimateMetadataModal vis)
+                                       ]
+                                    |> Sub.batch
 
-                        _ ->
-                            Sub.none
+                            _ ->
+                                Sub.none
 
-                _ ->
-                    Sub.none
+                    _ ->
+                        Sub.none
 
-        _ ->
-            Sub.none
+            _ ->
+                Sub.none
+        )
 
 
 main : Program D.Value Model Msg

@@ -10,8 +10,9 @@ import Html.Attributes exposing (class, value)
 import Http
 import Json.Decode as D
 import Json.Encode as E
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, roleToNumber, updateBase)
-import NavBar exposing (usersLink, viewNav)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, roleToNumber, subscriptionBase, updateBase)
+import Main2 exposing (viewBase)
+import NavBar exposing (usersLink)
 import UserRolesSelector exposing (userRolesBtns)
 import Utils exposing (SubmittedResult(..), fillParent, flex, flexCenter, largeCentered, mediumMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -161,7 +162,7 @@ encodeBody page =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just usersLink) viewPage
+    viewBase model (Just usersLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
@@ -169,7 +170,7 @@ viewPage resp page =
     let
         viewSubmit submit =
             case submit of
-                SubmittedSuccess msg ->
+                SubmittedSuccess msg cmd ->
                     div [ flex, Flex.row, class "text-success" ] [ text msg ]
 
                 SubmittedFail msg ->
@@ -242,8 +243,8 @@ init resp _ =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    subscriptionBase model Sub.none
 
 
 main : Program D.Value Model Msg

@@ -11,9 +11,10 @@ import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, required)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), allRoles, baseApplication, convertRole, initBase, isAdmin, mapCmd, roleToNumber, rolesDecoder, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), allRoles, baseApplication, convertRole, initBase, isAdmin, mapCmd, roleToNumber, rolesDecoder, subscriptionBase, updateBase)
+import Main2 exposing (viewBase)
 import Multiselect as Multiselect
-import NavBar exposing (usersLink, viewNav)
+import NavBar exposing (usersLink)
 import UserRolesSelector exposing (userRolesBtns)
 import Utils exposing (buildQuery, chunkedView, fillParent, flatten, flex, flex1, flexCenter, largeCentered, mediumMargin, smallMargin, unique)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -237,8 +238,9 @@ updateLocal msg m =
 --view
 
 
+view : ModelBase View -> Html (MsgBase LocalMsg)
 view model =
-    viewNav model (Just usersLink) viewPage
+    viewBase model (Just usersLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
@@ -440,7 +442,7 @@ justOrEmpty key val =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    subscriptionBase model Sub.none
 
 
 main : Program D.Value Model Msg

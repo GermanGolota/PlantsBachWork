@@ -1,5 +1,6 @@
 port module Pages.Login exposing (main)
 
+import Array
 import Assets exposing (treeIcon)
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
@@ -9,6 +10,8 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
+import Bootstrap.Modal
+import Bootstrap.Accordion
 import Color exposing (Color, toCssString)
 import Dict
 import Endpoints exposing (Endpoint(..), endpointToUrl)
@@ -16,8 +19,9 @@ import Html exposing (Html, div, text)
 import Html.Attributes exposing (for, style)
 import Http as Http
 import Json.Decode as D
+import Json.Decode.Pipeline exposing (custom, hardcoded, required)
 import Json.Encode as E
-import Main exposing (AuthResponse, MsgBase(..), UserRole(..), baseApplication, mapCmd, roleToStr, rolesDecoder, updateBase)
+import Main exposing (AuthResponse, UserRole(..), baseApplication, roleToStr, rolesDecoder)
 import TypedSvg.Types exposing (px)
 import Utils exposing (fillParent, filledBackground, flexCenter, mapStyles, rgba255, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -25,15 +29,23 @@ import Webdata exposing (WebData(..), viewWebdata)
 
 submitSuccessDecoder : D.Decoder AuthResponse
 submitSuccessDecoder =
-    D.map3 AuthResponse
-        (D.field "token" D.string)
-        (rolesDecoder (D.field "roles" (D.list D.int)))
-        (D.field "username" D.string)
+    D.succeed AuthResponse
+        |> required "token" D.string
+        |> custom (rolesDecoder <| D.field "roles" (D.list D.int))
+        |> required "username" D.string
+        |> hardcoded []
+        |> hardcoded Bootstrap.Modal.hidden
+        |> hardcoded Bootstrap.Accordion.initialState
 
 
 encodeResponse : AuthResponse -> E.Value
 encodeResponse response =
-    E.object [ ( "token", E.string response.token ), ( "roles", E.list roleToValue response.roles ), ( "username", E.string response.username ) ]
+    E.object
+        [ ( "token", E.string response.token )
+        , ( "roles", E.list roleToValue response.roles )
+        , ( "username", E.string response.username )
+        , ( "notifications", E.array E.string <| Array.fromList [] )
+        ]
 
 
 roleToValue : UserRole -> E.Value
@@ -67,7 +79,6 @@ submit model =
         , body = body
         , expect = Http.expectJson SubmitRequest submitSuccessDecoder
         }
-        |> mapCmd
 
 
 type CredsStatus
@@ -82,15 +93,11 @@ type alias Model =
     }
 
 
-type LocalMsg
+type Msg
     = UsernameUpdated String
     | PasswordUpdate String
     | Submitted
     | SubmitRequest (Result Http.Error AuthResponse)
-
-
-type alias Msg =
-    MsgBase LocalMsg
 
 
 
@@ -98,12 +105,7 @@ type alias Msg =
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update =
-    updateBase updateLocal
-
-
-updateLocal : LocalMsg -> Model -> ( Model, Cmd Msg )
-updateLocal msg model =
+update msg model =
     case msg of
         UsernameUpdated login ->
             ( { model | username = login, status = Nothing }, Cmd.none )
@@ -117,7 +119,7 @@ updateLocal msg model =
         SubmitRequest (Ok response) ->
             ( { model | status = Just <| Loaded GoodCredentials }, notifyLoggedIn <| encodeResponse response )
 
-        SubmitRequest (Err err) ->
+        SubmitRequest (Err _) ->
             ( { model | status = Just <| Loaded BadCredentials }, Cmd.none )
 
 
@@ -133,11 +135,6 @@ greenColor opacity =
 
 view : Model -> Html Msg
 view model =
-    viewLocal model |> Html.map Main
-
-
-viewLocal : Model -> Html LocalMsg
-viewLocal model =
     Grid.containerFluid [ style "height" "100vh" ]
         [ Grid.row [ Row.attrs (fillParent ++ flexCenter) ]
             [ Grid.col [] []
@@ -165,7 +162,7 @@ viewBackground =
                 ]
 
 
-viewForm : Model -> Html LocalMsg
+viewForm : Model -> Html Msg
 viewForm model =
     Card.config [ Card.attrs [ style "width" "100%", style "opacity" "0.66" ] ]
         |> Card.header [ textCenter ]
@@ -177,7 +174,7 @@ viewForm model =
         |> Card.view
 
 
-viewFormMain : Model -> Html LocalMsg
+viewFormMain : Model -> Html Msg
 viewFormMain model =
     let
         updatePass pass =

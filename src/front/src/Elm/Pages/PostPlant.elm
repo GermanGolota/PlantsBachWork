@@ -8,8 +8,9 @@ import Html.Attributes exposing (class, style)
 import Http
 import ImageList
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, updateBase)
-import NavBar exposing (plantsLink, viewNav)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, notifyCmd, subscriptionBase, updateBase)
+import Main2 exposing (viewBase)
+import NavBar exposing (plantsLink)
 import PlantHelper exposing (PlantModel, plantDecoder, viewPlantBase)
 import Utils exposing (SubmittedResult(..), flex, flex1, largeFont, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
@@ -104,7 +105,7 @@ updateLocal msg m =
                                     noOp
 
                         GotResult (Ok res) ->
-                            ( authedPlant <| { plantView | postResult = Just <| Loaded res }, Cmd.none )
+                            ( authedPlant <| { plantView | postResult = Just <| Loaded res }, notifyCmd res )
 
                         GotResult (Err err) ->
                             ( authedPlant <| { plantView | postResult = Just <| Error err }, Cmd.none )
@@ -147,11 +148,11 @@ submitCommand token plantId price =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just plantsLink) viewPage
+    viewBase model (Just plantsLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
-viewPage resp page =
+viewPage _ page =
     let
         noplant =
             div [] [ text "Sorry, you cannot post this plant" ]
@@ -232,8 +233,8 @@ viewRes res =
             div [ flex1 ] [ div [ largeFont, class className ] [ text message ] ]
     in
     case res of
-        SubmittedSuccess msg ->
-            baseView "bg-primary" msg
+        SubmittedSuccess _ _ ->
+            baseView "bg-primary" "Successfully submitted. Check notifications for results."
 
         SubmittedFail msg ->
             baseView "bg-warning" msg
@@ -273,7 +274,7 @@ decodePlantId flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    subscriptionBase model Sub.none
 
 
 main : Program D.Value Model Msg

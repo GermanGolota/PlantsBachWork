@@ -102,7 +102,7 @@ public class PlantsController : ControllerBase
     public async Task<ActionResult<CommandViewResult>> Post([FromRoute] Guid id,
         [FromQuery] decimal price, CancellationToken token)
     {
-        var result = await _command.CreateAndSendAsync(
+        var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<PostStockItemCommand, PlantStock>(id),
             meta => new PostStockItemCommand(meta, price),
             token);
@@ -113,23 +113,19 @@ public class PlantsController : ControllerBase
         string[] RegionNames, string[] SoilNames, string[] GroupNames, DateTime Created);
 
     [HttpPost("add")]
-    public async Task<ActionResult<Guid>> Create
+    public async Task<ActionResult<CommandViewResult>> Create
         ([FromForm] AddPlantViewRequest body, IEnumerable<IFormFile> files, CancellationToken token)
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
         var stockId = new Random().GetRandomConvertableGuid();
         var plantInfo = new PlantInformation(body.Name, body.Description, body.RegionNames, body.SoilNames, body.GroupNames);
-        var result = await _command.CreateAndSendAsync(
+        var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
             meta => new AddToStockCommand(meta, plantInfo, body.Created, pictures),
             token
             );
 
-        //TODO: Add failures into response here
-        return result.Match<ActionResult<Guid>>(
-            success => Ok(stockId),
-            failure => BadRequest(failure.Reasons)
-            );
+        return result.ToCommandResult();
     }
 
     public record EditPlantViewRequest(string PlantName,
@@ -141,7 +137,7 @@ public class PlantsController : ControllerBase
     {
         var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
         var plantInfo = new PlantInformation(plant.PlantName, plant.PlantDescription, plant.RegionNames, plant.SoilNames, plant.GroupNames);
-        var result = await _command.CreateAndSendAsync(
+        var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<EditStockItemCommand>(new(id, nameof(PlantStock))),
             meta => new EditStockItemCommand(meta, plantInfo, pictures, plant.RemovedImages),
             token);

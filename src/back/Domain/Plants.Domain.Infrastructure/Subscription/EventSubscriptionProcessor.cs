@@ -11,9 +11,13 @@ internal class EventSubscriptionProcessor
     private readonly IServiceProvider _provider;
     private readonly ISubscriptionProcessingMarker _marker;
     private readonly IProjectionsUpdater _updater;
+    private readonly INotificationSender _notificationSender;
+    private readonly ISubscriptionProcessingSubscription _notificator;
 
-    public EventSubscriptionProcessor(RepositoriesCaller caller, CqrsHelper cqrs, IEventStore eventStore,
-        IServiceProvider provider, ISubscriptionProcessingMarker marker, IProjectionsUpdater updater)
+    public EventSubscriptionProcessor(RepositoriesCaller caller, CqrsHelper cqrs,
+        IEventStore eventStore, IServiceProvider provider,
+        ISubscriptionProcessingMarker marker, IProjectionsUpdater updater,
+        INotificationSender notificationSender, ISubscriptionProcessingSubscription notificator)
     {
         _caller = caller;
         _cqrs = cqrs;
@@ -21,10 +25,13 @@ internal class EventSubscriptionProcessor
         _provider = provider;
         _marker = marker;
         _updater = updater;
+        _notificationSender = notificationSender;
+        _notificator = notificator;
     }
 
-    public async Task ProcessCommandAsync(Command command, List<Event> aggEvents, CancellationToken token = default)
+    public async Task<Exception?> ProcessCommandAsync(Command command, List<Event> aggEvents, CancellationToken token = default)
     {
+        Exception? exception;
         try
         {
             var tasks = new[]
@@ -33,18 +40,30 @@ internal class EventSubscriptionProcessor
                 UpdateSubscribersAsync(command, aggEvents, token)
             };
             await Task.WhenAll(tasks);
+            exception = null;
         }
-        finally
+        catch (Exception e)
         {
-            _marker.MarkSubscriptionComplete(command.Metadata.InitialAggregate ?? command.Metadata.Aggregate);
+            exception = e;
         }
-    }
 
-    private async Task UpdateProjectionAsync(AggregateDescription desc, CancellationToken token = default)
-    {
-        var aggregate = await _caller.LoadAsync(desc, token: token);
-        await _caller.InsertOrUpdateProjectionAsync(aggregate, token);
-        await _caller.IndexProjectionAsync(aggregate, token);
+        var finalAggregate = command.Metadata.InitialAggregate ?? command.Metadata.Aggregate;
+        var subscription = _marker.MarkSubscriptionComplete(finalAggregate);
+        if (subscription is not null && subscription.IsProcessed && subscription.NotifyUsername is not null && finalAggregate is not null)
+        {
+            await _notificationSender.SendNotificationAsync(subscription.NotifyUsername,
+                                                            new(
+                                                                new(
+                                                                    command.Metadata.Id,
+                                                                    command.Metadata.Name, 
+                                                                    command.Metadata.Time,
+                                                                    finalAggregate),
+                                                                exception is null),
+                                                            token);
+            _notificator.UnsubscribeFromNotifications(finalAggregate);
+        }
+
+        return exception;
     }
 
     private async Task UpdateSubscribersAsync(Command parentCommand, List<Event> aggEvents, CancellationToken token = default)

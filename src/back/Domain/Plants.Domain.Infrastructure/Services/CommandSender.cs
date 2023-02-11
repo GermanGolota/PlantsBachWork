@@ -14,7 +14,7 @@ internal class CommandSender : ICommandSender
     private readonly IServiceProvider _service;
     private readonly IIdentityProvider _identityProvider;
     private readonly AccessesHelper _accesses;
-    private readonly ISubscriptionProcessingNotificator _notificator;
+    private readonly ISubscriptionProcessingSubscription _notificator;
     private readonly ISubscriptionProcessingMarker _marker;
 
     public CommandSender(CqrsHelper cqrs,
@@ -24,7 +24,7 @@ internal class CommandSender : ICommandSender
         IServiceProvider service,
         IIdentityProvider identityProvider,
         AccessesHelper accesses,
-        ISubscriptionProcessingNotificator notificator,
+        ISubscriptionProcessingSubscription notificator,
         ISubscriptionProcessingMarker marker)
     {
         _cqrs = cqrs;
@@ -53,9 +53,9 @@ internal class CommandSender : ICommandSender
         {
             if (_cqrs.CommandHandlers.TryGetValue(commandType, out var handlePairs))
             {
-                if (options is CommandExecutionOptions.Wait)
+                if (options is CommandExecutionOptions.Wait || options is CommandExecutionOptions.Notify)
                 {
-                    _notificator.SubscribeToNotifications(commandAggregate);
+                    _notificator.SubscribeToNotifications(commandAggregate, options is CommandExecutionOptions.Notify n ? n.Username : null);
                     _marker.MarkSubscribersCount(commandAggregate, 1);
                 }
                 result = await ExecuteCommand(command, commandAggregate, handlePairs, token);
@@ -74,13 +74,20 @@ internal class CommandSender : ICommandSender
 
         if (options is CommandExecutionOptions.Wait wait)
         {
-            var success = await WaitForSubscriptionAsync(commandAggregate, wait.TimeToWait, token);
-            if (success is false)
+            try
             {
-                _logger.LogInformation("Failed to wait to subscription to be processed for '{@aggregate}'", commandAggregate);
-                throw new TimeoutException($"Timeout while waiting for subscription to be processed for '{commandAggregate.Id}' in '{commandAggregate.Name}'");
+                var success = await WaitForSubscriptionAsync(commandAggregate, wait.TimeToWait, token);
+                if (success is false)
+                {
+                    _logger.LogInformation("Failed to wait to subscription to be processed for '{@aggregate}'", commandAggregate);
+                    throw new TimeoutException($"Timeout while waiting for subscription to be processed for '{commandAggregate.Id}' in '{commandAggregate.Name}'");
+                }
             }
-            _notificator.UnsubscribeFromNotifications(commandAggregate);
+            finally
+            {
+                _notificator.UnsubscribeFromNotifications(commandAggregate);
+            }
+
         }
 
         _logger.LogInformation("Processed command '{commandId}' for '{@aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
@@ -137,7 +144,13 @@ internal class CommandSender : ICommandSender
                 events = await ExecuteHandlersAsync(command, checkResults, token);
                 await _eventStore.AppendEventsAsync(events, commandVersion, command, token);
                 _logger.LogInformation("Successfully processes command '{commandId}' for '{aggregate}'", command.Metadata.Id, command.Metadata.Aggregate);
-                result = new CommandAcceptedResult();
+                result = new CommandAcceptedResult(
+                    new(
+                        command.Metadata.Id, 
+                        command.Metadata.Name, 
+                        command.Metadata.Time,
+                        command.Metadata.Aggregate)
+                    );
             }
             catch (Exception e)
             {
@@ -145,7 +158,6 @@ internal class CommandSender : ICommandSender
                 var reasons = new[] { e.Message, e.ToString() };
                 result = await AppendFailureAsync(command, commandVersion, reasons, true, token);
             }
-
         }
 
         return result;

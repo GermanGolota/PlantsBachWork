@@ -1,6 +1,5 @@
 module Available exposing (Available, availableDecoder)
 
-import Dict exposing (Dict)
 import Json.Decode as D
 import Multiselect as Multiselect
 

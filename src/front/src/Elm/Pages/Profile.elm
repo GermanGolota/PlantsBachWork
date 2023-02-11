@@ -10,8 +10,8 @@ import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as D
 import Json.Encode as E
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, roleToStr, updateBase)
-import NavBar exposing (viewNav)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, roleToStr, subscriptionBase, updateBase)
+import Main2 exposing (viewBase)
 import Utils exposing (SubmittedResult(..), fillParent, flex, flexCenter, largeCentered, mediumMargin, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -130,7 +130,7 @@ submitCommand token pass =
 
 view : Model -> Html Msg
 view model =
-    viewNav model Nothing viewPage
+    viewBase model Nothing viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
@@ -196,7 +196,7 @@ buttonView page =
 viewResult : SubmittedResult -> Html msg
 viewResult res =
     case res of
-        SubmittedSuccess msg ->
+        SubmittedSuccess msg cmd ->
             div (largeCentered ++ [ class "text-success" ]) [ text msg ]
 
         SubmittedFail msg ->
@@ -204,13 +204,13 @@ viewResult res =
 
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
-init resp flags =
+init resp _ =
     initBase [ Producer, Consumer, Manager ] (View "" Nothing Loading) (\res -> getUserId res.token res.username) resp
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    subscriptionBase model Sub.none
 
 
 main : Program D.Value Model Msg

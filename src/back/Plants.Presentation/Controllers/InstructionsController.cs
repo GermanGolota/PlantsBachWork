@@ -60,27 +60,27 @@ public class InstructionsController : ControllerBase
     public record CreateInstructionViewRequest(string GroupName, string Text, string Title, string Description);
 
     [HttpPost("create")]
-    public async Task<ActionResult<Guid>> Create([FromForm] CreateInstructionViewRequest request, IFormFile? file, CancellationToken token)
+    public async Task<ActionResult<CommandViewResult>> Create([FromForm] CreateInstructionViewRequest request, IFormFile? file, CancellationToken token)
     {
         var bytes = await file.ReadBytesAsync(token);
         var guid = new Random().GetRandomConvertableGuid();
-        var result = await _command.CreateAndSendAsync(
+        var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<CreateInstructionCommand>(new(guid, nameof(PlantInstruction))),
             meta => new CreateInstructionCommand(meta, new(request.GroupName, request.Text, request.Title, request.Description), bytes),
             token);
-        return guid;
+        return result.ToCommandResult();
     }
 
     [HttpPost("{id}/edit")]
-    public async Task<ActionResult<Guid>> Edit(
+    public async Task<ActionResult<CommandViewResult>> Edit(
         [FromRoute] Guid id, [FromForm] CreateInstructionViewRequest cmd, IFormFile? file, CancellationToken token
         )
     {
         var bytes = await file.ReadBytesAsync(token);
-        var result = await _command.CreateAndSendAsync(
+        var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<EditInstructionCommand>(new(id, nameof(PlantInstruction))),
             meta => new EditInstructionCommand(meta, new(cmd.GroupName, cmd.Text, cmd.Title, cmd.Description), bytes),
             token);
-        return id;
+        return result.ToCommandResult();
     }
 }

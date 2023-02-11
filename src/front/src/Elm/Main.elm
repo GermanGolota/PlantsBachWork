@@ -1,10 +1,23 @@
 port module Main exposing (..)
 
+import Bootstrap.Accordion as Accordion
+import Bootstrap.Modal as Modal
 import Browser
-import Html exposing (Html, a, div, text)
-import Html.Attributes exposing (href)
+import Html exposing (Html)
 import Json.Decode as D
-import Utils exposing (intersect)
+import Json.Decode.Pipeline exposing (hardcoded, required)
+import Task
+import Utils exposing (Notification, SubmittedResult(..), decodeNotificationPair, intersect)
+
+
+notifyCmd : SubmittedResult -> Cmd (MsgBase msg)
+notifyCmd result =
+    case result of
+        SubmittedSuccess _ command ->
+            Task.perform (\_ -> NotificationStarted <| Notification command True) (Task.succeed True)
+
+        SubmittedFail a ->
+            Cmd.none
 
 
 type UserRole
@@ -64,6 +77,9 @@ type alias AuthResponse =
     { token : String
     , roles : List UserRole
     , username : String
+    , notifications : List ( Notification, Bool )
+    , notificationsModal : Modal.Visibility
+    , notificationsAccordion : Accordion.State
     }
 
 
@@ -93,7 +109,7 @@ mainInit initFunc flags =
                 Ok res ->
                     Just res
 
-                Err _ ->
+                Err e ->
                     Nothing
     in
     initFunc authResp flags
@@ -134,10 +150,13 @@ convertRoleStr roleId =
 
 decodeFlags : D.Decoder AuthResponse
 decodeFlags =
-    D.map3 AuthResponse
-        (D.field "token" D.string)
-        (D.field "roles" (D.list D.string) |> D.map convertRolesStr)
-        (D.field "username" D.string)
+    D.succeed AuthResponse
+        |> required "token" D.string
+        |> required "roles" (D.list D.string |> D.map convertRolesStr)
+        |> required "username" D.string
+        |> required "notifications" (D.list decodeNotificationPair)
+        |> hardcoded Modal.hidden
+        |> hardcoded Accordion.initialState
 
 
 type ModelBase model
@@ -152,10 +171,43 @@ port navigate : String -> Cmd msg
 port goBack : () -> Cmd msg
 
 
+port notificationReceived : (Notification -> msg) -> Sub msg
+
+
+port dismissNotification : Notification -> Cmd msg
+
+
+port resizeAccordions : () -> Cmd msg
+
+
 type MsgBase msg
     = Navigate String
     | GoBack
     | Main msg
+    | NotificationStarted Notification
+    | NotificationReceived Notification
+    | NotificationDismissed Notification
+    | AllNotificationsDismissed
+    | CloseNotificationsModal
+    | ShowNotificationsModal
+    | AnimateNotificationsModal Modal.Visibility
+    | NotificationsAccordion Accordion.State
+
+
+subscriptionBase : ModelBase model -> Sub (MsgBase msg) -> Sub (MsgBase msg)
+subscriptionBase mod baseSub =
+    let
+        notifications =
+            case mod of
+                Authorized auth _ ->
+                    [ Modal.subscriptions auth.notificationsModal AnimateNotificationsModal
+                    , Accordion.subscriptions auth.notificationsAccordion NotificationsAccordion
+                    ]
+
+                _ ->
+                    []
+    in
+    ([ notificationReceived NotificationReceived, baseSub ] ++ notifications) |> Sub.batch
 
 
 initBase : List UserRole -> model -> (AuthResponse -> Cmd msg) -> Maybe AuthResponse -> ( ModelBase model, Cmd msg )
@@ -172,7 +224,7 @@ initBase requiredRoles initialModel initialCmd response =
             ( NotLoggedIn, Cmd.none )
 
 
-updateBase : (msg -> model -> ( model, Cmd (MsgBase msg) )) -> MsgBase msg -> model -> ( model, Cmd (MsgBase msg) )
+updateBase : (msg -> ModelBase model -> ( ModelBase model, Cmd (MsgBase msg) )) -> MsgBase msg -> ModelBase model -> ( ModelBase model, Cmd (MsgBase msg) )
 updateBase updateFunc message model =
     case message of
         Navigate location ->
@@ -184,6 +236,92 @@ updateBase updateFunc message model =
         Main main ->
             updateFunc main model
 
+        NotificationStarted notification ->
+            case model of
+                Authorized auth page ->
+                    let
+                        updateNotifications =
+                            if List.any (\( n, _ ) -> n.command.id == notification.command.id) auth.notifications then
+                                auth.notifications
+
+                            else
+                                [ ( notification, False ) ] ++ auth.notifications
+                    in
+                    ( Authorized { auth | notifications = updateNotifications } page, resizeAccordions () )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        NotificationDismissed notification ->
+            case model of
+                Authorized auth page ->
+                    ( Authorized { auth | notifications = List.filter (\( n, _ ) -> n.command.id /= notification.command.id) auth.notifications } page, [ resizeAccordions (), dismissNotification notification ] |> Cmd.batch )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        AllNotificationsDismissed ->
+            case model of
+                Authorized auth page ->
+                    ( Authorized
+                        { auth
+                            | notifications = []
+                        }
+                        page
+                    , List.map (\( n, _ ) -> dismissNotification n) auth.notifications |> Cmd.batch
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        NotificationReceived notification ->
+            case model of
+                Authorized auth page ->
+                    let
+                        mapNotification not succ =
+                            if not.command.id == notification.command.id then
+                                ( not, True )
+
+                            else
+                                ( not, succ )
+                    in
+                    ( Authorized { auth | notifications = List.map (\( n, s ) -> mapNotification n s) auth.notifications } page, resizeAccordions () )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        CloseNotificationsModal ->
+            case model of
+                Authorized auth page ->
+                    ( Authorized { auth | notificationsModal = Modal.hidden } page, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        ShowNotificationsModal ->
+            case model of
+                Authorized auth page ->
+                    ( Authorized { auth | notificationsModal = Modal.shown } page, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        AnimateNotificationsModal visibility ->
+            case model of
+                Authorized auth page ->
+                    ( Authorized { auth | notificationsModal = visibility } page, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        NotificationsAccordion state ->
+            case model of
+                Authorized auth page ->
+                    ( Authorized { auth | notificationsAccordion = state } page, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 mapCmd : Cmd a -> Cmd (MsgBase a)
 mapCmd msg =
@@ -193,19 +331,3 @@ mapCmd msg =
 mapSub : Sub a -> Sub (MsgBase a)
 mapSub msg =
     Sub.map Main msg
-
-
-viewBase : (AuthResponse -> model -> Html msg) -> ModelBase model -> Html msg
-viewBase authorizedView modelB =
-    case modelB of
-        Unauthorized ->
-            div [] [ text "You are not authorized to view this page!" ]
-
-        NotLoggedIn ->
-            div []
-                [ text "You are not logged into your account!"
-                , a [ href "/login" ] [ text "Go to login" ]
-                ]
-
-        Authorized resp authM ->
-            authorizedView resp authM

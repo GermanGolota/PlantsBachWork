@@ -46,9 +46,9 @@ public class OrdersController : ControllerBase
     public async Task<ActionResult<CommandViewResult>> StartDelivery([FromRoute] Guid id,
         [FromQuery] string trackingNumber, CancellationToken token)
     {
-        var result = await _command.CreateAndSendAsync(
+        var result = await _command.SendAndWaitAsync(
             factory => factory.Create<StartOrderDeliveryCommand>(new(id, nameof(PlantOrder))),
-            meta => new StartOrderDeliveryCommand(meta, trackingNumber), 
+            meta => new StartOrderDeliveryCommand(meta, trackingNumber),
             token);
         return result.ToCommandResult();
     }
@@ -56,7 +56,7 @@ public class OrdersController : ControllerBase
     [HttpPost("{id}/reject")]
     public async Task<ActionResult<CommandViewResult>> RejectOrder([FromRoute] Guid id, CancellationToken token)
     {
-        var result = await _command.CreateAndSendAsync(
+        var result = await _command.SendAndWaitAsync(
             factory => factory.Create<RejectOrderCommand>(new(id, nameof(PlantOrder))),
             meta => new RejectOrderCommand(meta));
         return result.ToCommandResult();
@@ -65,7 +65,7 @@ public class OrdersController : ControllerBase
     [HttpPost("{id}/delivered")]
     public async Task<ActionResult<CommandViewResult>> MarkAsDelivered([FromRoute] Guid id, CancellationToken token)
     {
-        var result = await _command.CreateAndSendAsync(
+        var result = await _command.SendAndWaitAsync(
             factory => factory.Create<ConfirmDeliveryCommand>(new(id, nameof(PlantOrder))),
             meta => new ConfirmDeliveryCommand(meta),
             token);

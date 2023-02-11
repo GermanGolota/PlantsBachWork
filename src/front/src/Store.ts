@@ -1,5 +1,6 @@
 import AES from 'crypto-js/aes';
 import Utf8 from 'crypto-js/enc-utf8';
+import { NotificationMessage } from './signalr-connection';
 
 const secret = "CIPHERKEY";
 const valuesKey = "PlantAuthToken";
@@ -7,8 +8,9 @@ const valuesKey = "PlantAuthToken";
 type Roles = "Consumer" | "Producer" | "Manager";
 interface AuthResponse {
   roles: Roles[];
-  token: String;
-  username: String;
+  token: string;
+  username: string;
+  notifications: NotificationMessage[];
 }
 
 
@@ -27,10 +29,10 @@ const store = (response: AuthResponse) => {
   localStorage.setItem(valuesKey, str);
 };
 
-const retrieve = (): AuthResponse => {
+const retrieve = (): AuthResponse | null => {
   let storedVal = localStorage.getItem(valuesKey) ?? '';
   let str = decrypt(storedVal);
-  let res;
+  let res: AuthResponse | null;
   if (str) {
     res = JSON.parse(str);
   }

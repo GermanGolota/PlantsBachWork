@@ -3,23 +3,23 @@ module Pages.AddEditPlant exposing (..)
 import Available exposing (Available, availableDecoder)
 import Bootstrap.Button as Button
 import Bootstrap.Form.Input as Input
-import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
 import Dict
 import Endpoints exposing (Endpoint(..), getAuthed, historyUrl, imagesDecoder, postAuthed)
 import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, href, selected, style, value)
+import Html.Attributes exposing (class, style)
 import Http
 import ImageList
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, hardcoded, requiredAt)
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, notifyCmd, subscriptionBase, updateBase)
+import Main2 exposing (viewBase)
 import Multiselect
-import NavBar exposing (plantsLink, viewNav)
+import NavBar exposing (plantsLink)
 import Pages.Plant exposing (SelectedAddress(..))
-import Utils exposing (SubmittedResult(..), createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, largeCentered, largeFont, smallMargin, submittedDecoder)
+import Utils exposing (SubmittedResult(..), createdDecoder, decodeId, existsDecoder, fillParent, flex, flex1, humanizePascalCase, largeCentered, largeFont, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -38,7 +38,7 @@ type View
 
 
 type alias AddView =
-    { available : WebData Available, plant : PlantView, result : Maybe (WebData String) }
+    { available : WebData Available, plant : PlantView, result : Maybe (WebData SubmittedResult) }
 
 
 type alias EditView =
@@ -81,7 +81,7 @@ type LocalMsg
     | GotAvailable (Result Http.Error Available)
     | GotPlant (Result Http.Error (Maybe PlantView))
     | Submit
-    | GotSubmitAdd (Result Http.Error String)
+    | GotSubmitAdd (Result Http.Error SubmittedResult)
     | GotSubmitEdit (Result Http.Error SubmittedResult)
 
 
@@ -367,13 +367,13 @@ updateLocal msg m =
                             noOp
 
                 ( GotSubmitAdd (Ok res), Add addView ) ->
-                    ( authed <| Add <| { addView | result = Just (Loaded res) }, Cmd.none )
+                    ( authed <| Add <| { addView | result = Just (Loaded res) }, notifyCmd res )
 
                 ( GotSubmitAdd (Err err), Add addView ) ->
                     ( authed <| Add <| { addView | result = Just <| Error err }, Cmd.none )
 
                 ( GotSubmitEdit (Ok res), Edit editView ) ->
-                    ( authed <| Edit <| { editView | result = Just (Loaded res) }, Cmd.none )
+                    ( authed <| Edit <| { editView | result = Just (Loaded res) }, notifyCmd res )
 
                 ( GotSubmitEdit (Err err), Edit editView ) ->
                     ( authed <| Edit <| { editView | result = Just <| Error err }, Cmd.none )
@@ -391,7 +391,7 @@ updateLocal msg m =
 
 view : Model -> Html Msg
 view model =
-    viewNav model (Just plantsLink) viewPage
+    viewBase model (Just plantsLink) viewPage
 
 
 viewPage : AuthResponse -> View -> Html Msg
@@ -463,15 +463,15 @@ viewResultEdit result =
             let
                 textContent data =
                     case data of
-                        SubmittedSuccess msg ->
-                            msg
+                        SubmittedSuccess msg cmd ->
+                            "Successfully submitted. See your notifications for results."
 
                         SubmittedFail msg ->
-                            msg
+                            "Failed to submit: " ++ msg
 
                 colorClass data =
                     case data of
-                        SubmittedSuccess msg ->
+                        SubmittedSuccess msg cmd ->
                             "text-primary"
 
                         SubmittedFail msg ->
@@ -486,7 +486,7 @@ viewResultEdit result =
             div [ flex1 ] []
 
 
-viewResultAdd : Maybe (WebData String) -> Html Msg
+viewResultAdd : Maybe (WebData SubmittedResult) -> Html Msg
 viewResultAdd result =
     case result of
         Just web ->
@@ -496,14 +496,23 @@ viewResultAdd result =
             div [ flex1 ] []
 
 
-viewResultAddValue : String -> Html Msg
+viewResultAddValue : SubmittedResult -> Html Msg
 viewResultAddValue data =
-    div [ flex1, flex, Flex.col, class "text-success", Flex.alignItemsCenter, Flex.justifyEnd ]
-        [ div [] [ text ("Successfully created plant " ++ data) ]
-        , div []
-            [ Button.linkButton [ Button.primary, Button.attrs [ href ("/notPosted/" ++ data ++ "/edit") ] ] [ text "Go to edit" ]
-            ]
-        ]
+    case data of
+        SubmittedSuccess _ notification ->
+            div [ flex1, flex, Flex.col, class "text-success", Flex.alignItemsCenter, Flex.justifyEnd ]
+                [ div [] [ text ("Successfully submitted " ++ humanizePascalCase notification.name ++ ". Check your notifications for results.") ]
+                , div []
+                    [ Button.linkButton
+                        [ Button.primary
+                        , Button.onClick <| GoBack
+                        ]
+                        [ text "Go back" ]
+                    ]
+                ]
+
+        SubmittedFail message ->
+            div [ Html.Attributes.class "text-warning" ] [ text <| "Failed: " ++ message ]
 
 
 viewPlant : ImageList.Model -> WebData Available -> Html Msg -> Bool -> Bool -> Html Msg -> PlantView -> Html Msg
@@ -656,7 +665,7 @@ decodeInitial flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    subscriptionBase model Sub.none
 
 
 
@@ -747,7 +756,7 @@ submitAddCommand : String -> PlantView -> Cmd Msg
 submitAddCommand token plant =
     let
         expect =
-            Http.expectJson GotSubmitAdd decodeId
+            Http.expectJson GotSubmitAdd submittedDecoder
     in
     postAuthed token AddPlant (getAddBody plant) expect Nothing |> mapCmd
 

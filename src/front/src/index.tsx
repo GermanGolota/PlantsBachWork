@@ -1,5 +1,11 @@
-import React from "react";import ReactDOM from "react-dom";
-import { Route, BrowserRouter, Routes, useParams } from "react-router-dom";
+import React, { useEffect } from "react";import ReactDOM from "react-dom";
+import {
+  Route,
+  BrowserRouter,
+  Routes,
+  useParams,
+  useNavigate,
+} from "react-router-dom";
 import { Elm as StatsElm } from "./Elm/Pages/Stats";
 import { Elm as LoginElm } from "./Elm/Pages/Login";
 import { Elm as SearchElm } from "./Elm/Pages/Search";
@@ -33,32 +39,6 @@ const HistoryPage = () => {
         name,
       };
     },
-    additional: (flags) => {
-      flags.resizeAggregates.subscribe(() => {
-        const accordions = document.getElementsByClassName("accordion");
-        for (let index = 0; index < accordions.length; index++) {
-          const accordion = accordions[index];
-          if (accordion) {
-            for (let index = 0; index < accordion.childNodes.length; index++) {
-              const cards = accordion.childNodes[index];
-              for (let index2 = 0; index2 < cards.childNodes.length; index2++) {
-                const body = cards.childNodes[index2];
-                if (body instanceof HTMLElement && body.id) {
-                  console.log("child", body);
-                  if (body.style.height == "0px") {
-                    //element.style.removeProperty("height");
-                    //element.style.height = "0%";
-                  } else {
-                    body.style.removeProperty("height");
-                    body.style.height = "100%";
-                  }
-                }
-              }
-            }
-          }
-        }
-      });
-    },
   });
 
   return (
@@ -67,21 +47,6 @@ const HistoryPage = () => {
     </div>
   );
 };
-
-function getParents(elem: HTMLElement | null) {
-  var parents: HTMLElement[] = [];
-  if (elem) {
-    while (
-      elem.parentElement &&
-      elem.parentElement.nodeName.toLowerCase() != "body"
-    ) {
-      elem = elem.parentElement;
-      parents.push(elem);
-    }
-  }
-
-  return parents;
-}
 
 const SearchPage = () => {
   const { name, id } = useParams();
@@ -328,6 +293,24 @@ const LoginPage = (props: { isNew: boolean }) => {
   );
 };
 
+const NavigateWrapper = () => {
+  const navigate = useNavigate();
+  const { location } = useParams();
+
+  useEffect(() => {
+    if (location) {
+      if (location == "-1") {
+        navigate(-2);
+      } else {
+        navigate(decodeURIComponent(location), {
+          replace: true,
+        });
+      }
+    }
+  }, []);
+  return <div></div>;
+};
+
 const NotFound = () => {
   return (
     <div>
@@ -337,47 +320,50 @@ const NotFound = () => {
   );
 };
 
-const App = () => (
-  <BrowserRouter>
-    <Routes>
-      <Route path="/login" element={<LoginPage isNew={false} />} />
-      <Route path="/login/new" element={<LoginPage isNew={true} />} />
-      <Route path="/stats" element={<StatsPage />} />
-      <Route path="/search" element={<SearchPage />} />
-      <Route path="/notPosted" element={<NotPostedPage />} />
-      <Route path="/plant/:plantId" element={<PlantPage isOrder={false} />} />
-      <Route
-        path="/plant/:plantId/order"
-        element={<PlantPage isOrder={true} />}
-      />
-      <Route path="/notPosted/:plantId/post" element={<PostPlantPage />} />
-      <Route path="/notPosted/add" element={<AddEditPage isEdit={false} />} />
-      <Route
-        path="/notPosted/:plantId/edit"
-        element={<AddEditPage isEdit={true} />}
-      />
-      <Route path="/orders" element={<OrdersPage isEmployee={false} />} />
-      <Route
-        path="/orders/employee"
-        element={<OrdersPage isEmployee={true} />}
-      />
-      <Route path="/user" element={<UsersPage />} />
-      <Route path="/user/add" element={<AddUserPage />} />
-      <Route path="/instructions" element={<SearchInstructionsPage />} />
-      <Route
-        path="/instructions/add"
-        element={<AddInstructionPage isEdit={false} />}
-      />
-      <Route
-        path="/instructions/:id/edit"
-        element={<AddInstructionPage isEdit={true} />}
-      />
-      <Route path="/instructions/:id" element={<InstructionPage />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/history/:name/:id" element={<HistoryPage />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  </BrowserRouter>
-);
+const App = () => {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/wrapper/:location" element={<NavigateWrapper />}></Route>
+        <Route path="/login" element={<LoginPage isNew={false} />} />
+        <Route path="/login/new" element={<LoginPage isNew={true} />} />
+        <Route path="/stats" element={<StatsPage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/notPosted" element={<NotPostedPage />} />
+        <Route path="/plant/:plantId" element={<PlantPage isOrder={false} />} />
+        <Route
+          path="/plant/:plantId/order"
+          element={<PlantPage isOrder={true} />}
+        />
+        <Route path="/notPosted/:plantId/post" element={<PostPlantPage />} />
+        <Route path="/notPosted/add" element={<AddEditPage isEdit={false} />} />
+        <Route
+          path="/notPosted/:plantId/edit"
+          element={<AddEditPage isEdit={true} />}
+        />
+        <Route path="/orders" element={<OrdersPage isEmployee={false} />} />
+        <Route
+          path="/orders/employee"
+          element={<OrdersPage isEmployee={true} />}
+        />
+        <Route path="/user" element={<UsersPage />} />
+        <Route path="/user/add" element={<AddUserPage />} />
+        <Route path="/instructions" element={<SearchInstructionsPage />} />
+        <Route
+          path="/instructions/add"
+          element={<AddInstructionPage isEdit={false} />}
+        />
+        <Route
+          path="/instructions/:id/edit"
+          element={<AddInstructionPage isEdit={true} />}
+        />
+        <Route path="/instructions/:id" element={<InstructionPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/history/:name/:id" element={<HistoryPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
 ReactDOM.render(<App />, document.querySelector("#root"));
