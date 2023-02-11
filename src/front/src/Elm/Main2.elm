@@ -10,7 +10,7 @@ import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..))
 import NavBar exposing (Link, viewNavBase)
-import Utils exposing (Notification, flex, humanizePascalCase, largeFont, mediumCentered, viewLoading)
+import Utils exposing (Notification, flex, humanizePascalCase, mediumCentered, viewLoading)
 
 
 viewBase : ModelBase model -> Maybe Link -> (AuthResponse -> model -> Html (MsgBase msg)) -> Html (MsgBase msg)
