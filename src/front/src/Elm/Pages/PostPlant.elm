@@ -8,7 +8,7 @@ import Html.Attributes exposing (class, style)
 import Http
 import ImageList
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, subscriptionBase, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, notifyCmd, subscriptionBase, updateBase)
 import Main2 exposing (viewBase)
 import NavBar exposing (plantsLink)
 import PlantHelper exposing (PlantModel, plantDecoder, viewPlantBase)
@@ -105,7 +105,7 @@ updateLocal msg m =
                                     noOp
 
                         GotResult (Ok res) ->
-                            ( authedPlant <| { plantView | postResult = Just <| Loaded res }, Cmd.none )
+                            ( authedPlant <| { plantView | postResult = Just <| Loaded res }, notifyCmd res )
 
                         GotResult (Err err) ->
                             ( authedPlant <| { plantView | postResult = Just <| Error err }, Cmd.none )
@@ -233,8 +233,8 @@ viewRes res =
             div [ flex1 ] [ div [ largeFont, class className ] [ text message ] ]
     in
     case res of
-        SubmittedSuccess msg model ->
-            baseView "bg-primary" msg
+        SubmittedSuccess _ _ ->
+            baseView "bg-primary" "Successfully submitted. Check notifications for results."
 
         SubmittedFail msg ->
             baseView "bg-warning" msg

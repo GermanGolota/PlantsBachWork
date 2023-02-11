@@ -148,5 +148,8 @@ findResultLocation commandName aggregateId =
         "EditInstruction" ->
             Just instructionPage
 
+        "PostStockItem" ->
+            Just <| "/plant/" ++ aggregateId
+
         _ ->
             Nothing

@@ -102,7 +102,7 @@ public class PlantsController : ControllerBase
     public async Task<ActionResult<CommandViewResult>> Post([FromRoute] Guid id,
         [FromQuery] decimal price, CancellationToken token)
     {
-        var result = await _command.SendAndWaitAsync(
+        var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<PostStockItemCommand, PlantStock>(id),
             meta => new PostStockItemCommand(meta, price),
             token);
