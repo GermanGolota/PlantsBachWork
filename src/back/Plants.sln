@@ -30,6 +30,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{0E8B5107-96CA-4C9C-8044-50B6416EC31A}"
 	ProjectSection(SolutionItems) = preProject
 		..\docker-compose-env.yml = ..\docker-compose-env.yml
+		..\docker-compose-setup.yml = ..\docker-compose-setup.yml
 		..\docker-compose.yml = ..\docker-compose.yml
 		..\..\README.md = ..\..\README.md
 	EndProjectSection
