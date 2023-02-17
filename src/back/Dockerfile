@@ -7,15 +7,12 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY ["Plants.Presentation/Plants.Presentation.csproj", "Plants.Presentation/"]
 COPY ["Domain/Plants.Domain.Infrastructure/Plants.Domain.Infrastructure.csproj", "Domain/Plants.Domain.Infrastructure/"]
-COPY ["Plants.Shared/Plants.Shared.csproj", "Plants.Shared/"]
+COPY ["Shared/Plants.Shared/Plants.Shared.csproj", "Shared/Plants.Shared/"]
 COPY ["Domain/Plants.Domain/Plants.Domain.csproj", "Domain/Plants.Domain/"]
-COPY ["Plants.Aggregates.Infrastructure/Plants.Aggregates.Infrastructure.csproj", "Plants.Aggregates.Infrastructure/"]
-COPY ["Plants.Aggregates/Plants.Aggregates.csproj", "Plants.Aggregates/"]
-COPY ["Plants.Services/Plants.Services.csproj", "Plants.Services/"]
-COPY ["Plants.Services.Infrastructure/Plants.Services.Infrastructure.csproj", "Plants.Services.Infrastructure/"]
-COPY ["Plants.Application/Plants.Application.csproj", "Plants.Application/"]
-COPY ["Plants.Core/Plants.Core.csproj", "Plants.Core/"]
-COPY ["Plants.Infrastructure/Plants.Infrastructure.csproj", "Plants.Infrastructure/"]
+COPY ["Aggregates/Plants.Aggregates.Infrastructure/Plants.Aggregates.Infrastructure.csproj", "Aggregates/Plants.Aggregates.Infrastructure/"]
+COPY ["Aggregates/Plants.Aggregates/Plants.Aggregates.csproj", "Aggregates/Plants.Aggregates/"]
+COPY ["Shared/Plants.Services/Plants.Services.csproj", "Shared/Plants.Services/"]
+COPY ["Shared/Plants.Services.Infrastructure/Plants.Services.Infrastructure.csproj", "Shared/Plants.Services.Infrastructure/"]
 RUN dotnet restore "Plants.Presentation/Plants.Presentation.csproj"
 COPY . .
 WORKDIR "/src/Plants.Presentation"
