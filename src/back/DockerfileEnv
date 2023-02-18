@@ -3,6 +3,7 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
+
 COPY ["Aggregates/Plants.Initializer/Plants.Initializer.csproj", "Aggregates/Plants.Initializer/"]
 COPY ["Aggregates/Plants.Aggregates.Infrastructure/Plants.Aggregates.Infrastructure.csproj", "Aggregates/Plants.Aggregates.Infrastructure/"]
 COPY ["Domain/Plants.Domain.Infrastructure/Plants.Domain.Infrastructure.csproj", "Domain/Plants.Domain.Infrastructure/"]
@@ -21,5 +22,10 @@ RUN dotnet publish "Plants.Initializer.csproj" -c Release -o /app/publish /p:Use
 
 FROM base AS final
 WORKDIR /app
+
+COPY ca.crt /usr/local/share/ca-certificates
+COPY es01.crt /usr/local/share/ca-certificates
+RUN update-ca-certificates
+
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Plants.Initializer.dll"]

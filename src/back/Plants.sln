@@ -33,6 +33,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{0E8B5107
 		..\docker-compose-setup.yml = ..\docker-compose-setup.yml
 		..\docker-compose.yml = ..\docker-compose.yml
 		..\..\README.md = ..\..\README.md
+		..\RebuildEnv.ps1 = ..\RebuildEnv.ps1
+		..\RebuildProd.ps1 = ..\RebuildProd.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{C038A9B7-E3BA-4544-A774-1B95D0ACD6B8}"
