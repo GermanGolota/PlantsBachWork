@@ -41,6 +41,7 @@ services:
   elasticsearch:
     image: elasticsearch:8.5.3
     environment:
+      - ingest.geoip.downloader.enabled=false
       - node.name=elasticsearch
       - cluster.name=es-docker-cluster
       - cluster.initial_master_nodes=elasticsearch
@@ -58,7 +59,7 @@ services:
       - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
       - xpack.security.transport.ssl.verification_mode=certificate
       - xpack.license.self_generated.type=basic
-      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
       - KIBANA_PASSWORD=changeit
     ulimits:
       memlock:
@@ -69,13 +70,21 @@ services:
       - ./persist/certs:/usr/share/elasticsearch/config/certs
     ports:
       - 9200:9200
+    healthcheck:
+      test: curl -u elastic:changeit -s -k -f https://elasticsearch:9200/_cat/health >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.5.3
     ports:
       - 5601:5601
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+      startup:
+        condition: service_completed_successfully
     environment:
       - ELASTICSEARCH_HOSTS=https://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=kibana_system
@@ -85,25 +94,48 @@ services:
       - ./persist/certs:/usr/share/kibana/config/certs
       - ./persist/kibana:/usr/share/kibana/data
 
+  startup:
+    build:
+      context: ./back
+      dockerfile: DockerfileEnv
+    environment:
+      - Connection__EventStore__Template=esdb://eventstore:2113?tls=true&tlsVerifyCert=false
+      - Connection__MongoDb__Template=mongodb://{0}:{1}@mongo:27017/?authSource=admin
+      - Connection__MongoDb__DatabaseName=Dev
+      - Connection__ElasticSearch__Template=https://elasticsearch:9200
+      - Connection__ElasticSearch__Creds__Username=elastic
+      - Connection__ElasticSearch__Creds__Password=changeit
+      - Connection__DefaultCreds__Username=admin
+      - Connection__DefaultCreds__Password=changeit
+      - WebRoot__Path=/wwwroot
+    volumes:
+      - ./persist/wwwroot:/wwwroot
+
   back:
     build: back/
     ports:
       - 8001:80
       - 5001:443
     environment:
-      AllowedHosts: "*"
-      Auth:AuthKey: "Set this key in secure configuration storage in prod mode"
-      Auth:TokenValidityHours: 5000
-      ASPNETCORE_URLS: "https://+;http://+"
-      ASPNETCORE_HTTPS_PORT: 5001
-      ASPNETCORE_Kestrel__Certificates__Default__Password: "password"
-      ASPNETCORE_Kestrel__Certificates__Default__Path: /https/aspnetapp.pfx
+      - AllowedHosts="*"
+      - Auth__AuthKey="Set this key in secure configuration storage in prod mode"
+      - Auth__TokenValidityHours=5000
+      - ASPNETCORE_URLS="https://+;http://+"
+      - ASPNETCORE_HTTPS_PORT=5001
+      - ASPNETCORE_Kestrel__Certificates__Default__Password="password"
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+      - Connection__EventStore__Template=esdb://eventstore:2113?tls=true&tlsVerifyCert=false
+      - Connection__MongoDb__Template=mongodb://{0}:{1}@mongo:27017/?authSource=admin
+      - Connection__MongoDb__DatabaseName=Dev
+      - Connection__ElasticSearch__Template=https://elasticsearch:9200
+      - Connection__DefaultCreds__Username=admin
+      - Connection__DefaultCreds__Password=changeit
     volumes:
       - ~/.aspnet/https:/https
-
+      - ./persist/wwwroot:/app/wwwroot
     depends_on:
-      - eventstore
-      - elasticsearch
+      startup:
+        condition: service_completed_successfully
 
   front:
     build: front/
