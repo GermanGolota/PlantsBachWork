@@ -16,8 +16,9 @@ dotnet dev-certs https --trust
 ```
 If you have any issues with that you may refer to https://docs.microsoft.com/en-us/aspnet/core/security/docker-https?view=aspnetcore-6.0
 
-To start the actual application you may then run the following from the root of the project: 
-```bash
-docker-compose -f src/docker-compose.yml up --remove-orphans
+To start the actual application you may then run the following from the src directory of the project: 
+```powershell
+RebuildProd.ps1
 ```
 After that, the frontend application should be available at http://localhost:8002/login
+
