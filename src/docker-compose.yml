@@ -110,6 +110,9 @@ services:
       - WebRoot__Path=/wwwroot
     volumes:
       - ./persist/wwwroot:/wwwroot
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
   back:
     build: back/
@@ -123,7 +126,7 @@ services:
       - ASPNETCORE_URLS="https://+;http://+"
       - ASPNETCORE_HTTPS_PORT=5001
       - ASPNETCORE_Kestrel__Certificates__Default__Password="password"
-      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnet.pfx
       - Connection__EventStore__Template=esdb://eventstore:2113?tls=true&tlsVerifyCert=false
       - Connection__MongoDb__Template=mongodb://{0}:{1}@mongo:27017/?authSource=admin
       - Connection__MongoDb__DatabaseName=Dev
@@ -131,7 +134,7 @@ services:
       - Connection__DefaultCreds__Username=admin
       - Connection__DefaultCreds__Password=changeit
     volumes:
-      - ~/.aspnet/https:/https
+      - ./persist/certs/aspnet.pfx:/https/aspnet.pfx
       - ./persist/wwwroot:/app/wwwroot
     depends_on:
       startup:
