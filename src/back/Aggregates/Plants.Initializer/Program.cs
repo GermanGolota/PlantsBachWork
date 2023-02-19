@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Plants.Initializer;
 using Serilog;
@@ -52,13 +53,33 @@ using (var scope = scopeFactory.CreateScope())
     var check = provider.GetRequiredService<IHealthChecker>();
     await check.WaitForServicesStartupOrTimeout(cts.Token);
     var sub = provider.GetRequiredService<IEventSubscription>();
+
     await sub.StartAsync(cts.Token);
-    var initer = provider.GetRequiredService<Initializer>();
-    await initer.InitializeAsync(cts.Token);
-    var seeder = provider.GetRequiredService<Seeder>();
-    await seeder.SeedAsync(cts.Token);
+
+    var command = provider.GetRequiredService<CommandHelper>();
+    var result = await command.SendAndWaitAsync(
+        factory => factory.Create<InitializationRequestedCommand, StartupStatus>(StartupStatus.StartupId),
+        meta => new InitializationRequestedCommand(meta),
+        cts.Token);
+
     sub.Stop();
-    await host.StopAsync(cts.Token);
+
+    var logger = provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Program>>();
+    result.Match(succ =>
+    {
+        logger.LogInformation("Successfully initialized");
+    }, fail =>
+    {
+        if (fail.Reasons.All(_ => _.Contains("Already processed")))
+        {
+            logger.LogInformation("Already initialized - skipping initialization");
+        }
+        else
+        {
+            throw new Exception(String.Join('\n', fail.Reasons));
+        }
+    });
+
 }
 
 cts.Cancel();
