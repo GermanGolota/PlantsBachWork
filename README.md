@@ -24,4 +24,3 @@ If you wish to clear the application data, execute the folowing:
 ```powershell
 DropPersistance.ps1
 ```
-Note: This would also remove certificates you have accepted, so you would need to rerun that script
