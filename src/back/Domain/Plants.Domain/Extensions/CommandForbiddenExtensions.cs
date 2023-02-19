@@ -14,9 +14,7 @@ public static class CommandForbiddenExtensions
       forbidden ?? forbiddenSecond;
 
     public static CommandForbidden? ToForbidden(this bool success, string forbiddenReason) =>
-        success switch
-        {
-            true => null,
-            false => new CommandForbidden(forbiddenReason)
-        };
+        success 
+            ? null 
+            : new CommandForbidden(forbiddenReason);
 }

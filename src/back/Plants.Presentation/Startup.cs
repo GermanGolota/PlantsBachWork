@@ -41,9 +41,6 @@ public class Startup
         services.AddHealthChecks()
             .AddDomainHealthChecks(Configuration);
 
-        services.AddHealthChecksUI()
-            .AddInMemoryStorage();
-
         services.AddCors(opt =>
         {
             opt.AddPolicy(DevPolicyName, options =>
@@ -92,12 +89,6 @@ public class Startup
         {
             Predicate = _ => true,
             ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-        });
-
-        app.UseHealthChecksUI(options =>
-        {
-            options.UIPath = "/health-ui";
-            options.ApiPath = "/health-ui-api";
         });
 
 #if !DEBUG

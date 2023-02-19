@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Plants.Initializer": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}
