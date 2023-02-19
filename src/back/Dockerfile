@@ -23,5 +23,10 @@ RUN dotnet publish "Plants.Presentation.csproj" -c Release -o /app/publish /p:Us
 
 FROM base AS final
 WORKDIR /app
+
+COPY ca.crt /usr/local/share/ca-certificates
+COPY es01.crt /usr/local/share/ca-certificates
+RUN update-ca-certificates
+
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Plants.Presentation.dll"]
