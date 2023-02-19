@@ -29,12 +29,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plants.Initializer", "Aggre
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{0E8B5107-96CA-4C9C-8044-50B6416EC31A}"
 	ProjectSection(SolutionItems) = preProject
+		..\CreateCerts.ps1 = ..\CreateCerts.ps1
 		..\docker-compose-env.yml = ..\docker-compose-env.yml
 		..\docker-compose-setup.yml = ..\docker-compose-setup.yml
 		..\docker-compose.yml = ..\docker-compose.yml
+		Dockerfile = Dockerfile
+		..\DropPersistance.ps1 = ..\DropPersistance.ps1
 		..\..\README.md = ..\..\README.md
-		..\RebuildEnv.ps1 = ..\RebuildEnv.ps1
-		..\RebuildProd.ps1 = ..\RebuildProd.ps1
+		..\StartEnv.ps1 = ..\StartEnv.ps1
+		..\StartProd.ps1 = ..\StartProd.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{C038A9B7-E3BA-4544-A774-1B95D0ACD6B8}"
