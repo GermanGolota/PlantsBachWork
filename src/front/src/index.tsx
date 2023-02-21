@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";import ReactDOM from "react-dom";
+import React, { useEffect } from "react";
+import ReactDOM from "react-dom";
 import {
   Route,
   BrowserRouter,
@@ -270,6 +271,7 @@ const LoginPage = (props: { isNew: boolean }) => {
         if (retrieve()) {
           if (props.isNew) {
             localStorage.clear();
+            window.location.replace("/login");
           } else {
             window.location.replace("/search");
           }
