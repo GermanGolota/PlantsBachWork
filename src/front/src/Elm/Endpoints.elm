@@ -1,4 +1,4 @@
-module Endpoints exposing (Endpoint(..), IdType(..), endpointToUrl, getAuthed, getAuthedQuery, historyUrl, imagesDecoder, instructioIdToCover, postAuthed, postAuthedQuery)
+module Endpoints exposing (Endpoint(..), IdType(..), endpointToUrl, getAuthed, getAuthedQuery, getImageUrl, historyUrl, imagesDecoder, postAuthed, postAuthedQuery)
 
 import Dict
 import Http exposing (header, request)
@@ -35,7 +35,6 @@ type Endpoint
     | RemoveRole String UserRole
     | CreateUser
     | FindInstructions
-    | CoverImage String String
     | CreateInstruction
     | EditInstruction String
     | GetInstruction String
@@ -129,9 +128,6 @@ endpointToUrl endpoint =
         FindInstructions ->
             baseUrl ++ "instructions/find"
 
-        CoverImage id token ->
-            baseUrl ++ "file/instruction/" ++ id ++ "?token=" ++ token
-
         CreateInstruction ->
             baseUrl ++ "instructions/create"
 
@@ -170,11 +166,6 @@ getPath id =
             "0/" ++ guid
 
 
-instructioIdToCover : String -> String -> String
-instructioIdToCover token id =
-    endpointToUrl <| CoverImage id token
-
-
 imagesDecoder : String -> List String -> D.Decoder ImageList.Model
 imagesDecoder token at =
     let
@@ -186,7 +177,12 @@ imagesDecoder token at =
 
 imageDecoder : String -> D.Decoder ( String, String )
 imageDecoder token =
-    D.map2 Tuple.pair (D.field "id" D.string) (D.map (\url -> baseUrl ++ url ++ "?token=" ++ token) <| D.field "location" D.string)
+    D.map2 Tuple.pair (D.field "id" D.string) (D.map (getImageUrl token) <| D.field "location" D.string)
+
+
+getImageUrl : String -> String -> String
+getImageUrl token location =
+    baseUrl ++ location ++ "?token=" ++ token
 
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg

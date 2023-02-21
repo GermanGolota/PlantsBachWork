@@ -21,7 +21,7 @@ public class InstructionsController : ControllerBase
 
 
     public record FindInstructionsViewRequest(string GroupName, string? Title, string? Description);
-    public record FindInstructionsViewResultItem(Guid Id, string Title, string Description, bool HasCover);
+    public record FindInstructionsViewResultItem(Guid Id, string Title, string Description, string CoverUrl);
 
     [HttpGet("find")]
     public async Task<ActionResult<ListViewResult<FindInstructionsViewResultItem>>> Find([FromQuery] FindInstructionsViewRequest request, CancellationToken token)
@@ -32,12 +32,12 @@ public class InstructionsController : ControllerBase
         results = results.Where(_ => _.Information.GroupName == request.GroupName);
         return new ListViewResult<FindInstructionsViewResultItem>(
             results.Select(result =>
-                new FindInstructionsViewResultItem(result.Id, result.Information.Title, result.Information.Description, result.CoverUrl is not null))
+                new FindInstructionsViewResultItem(result.Id, result.Information.Title, result.Information.Description, result.Picture.Location))
             );
     }
 
     public record GetInstructionViewResultItem(Guid Id, string Title, string Description,
-        string InstructionText, bool HasCover, string PlantGroupName);
+        string InstructionText, string CoverUrl, string PlantGroupName);
 
     [HttpGet("{id}")]
     public async Task<ActionResult<QueryViewResult<GetInstructionViewResultItem>>> Get([FromRoute] Guid id, CancellationToken token)
@@ -48,7 +48,7 @@ public class InstructionsController : ControllerBase
             var instruction = await _instructionQuery.GetByIdAsync(id, token);
 
             var information = instruction.Information;
-            result = new(new(instruction.Id, information.Title, information.Description, information.Text, instruction.CoverUrl is not null, information.GroupName));
+            result = new(new(instruction.Id, information.Title, information.Description, information.Text, instruction.Picture.Location, information.GroupName));
         }
         else
         {
