@@ -14,7 +14,7 @@ import Html.Events exposing (onClick)
 import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, mapSub, notifyCmd, subscriptionBase, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, mapSub, notifyCmd, subscriptionBase, updateBase)
 import Main2 exposing (viewBase)
 import Multiselect
 import NavBar exposing (instructionsLink)
@@ -276,12 +276,16 @@ viewPage resp page =
         Edit id edit ->
             let
                 btn =
-                    Button.linkButton
-                        [ Button.outlinePrimary
-                        , Button.onClick <| Navigate <| historyUrl "PlantInstruction" id
-                        , Button.attrs [ smallMargin ]
-                        ]
-                        [ text "View history" ]
+                    if isAdmin resp then
+                        Button.linkButton
+                            [ Button.outlinePrimary
+                            , Button.onClick <| Navigate <| historyUrl "PlantInstruction" id
+                            , Button.attrs [ smallMargin ]
+                            ]
+                            [ text "View history" ]
+
+                    else
+                        div [] []
             in
             viewWebdata edit (\editLoaded -> viewWebdata editLoaded.available (viewMain btn True editLoaded))
 

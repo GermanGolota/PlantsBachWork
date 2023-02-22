@@ -401,12 +401,15 @@ viewPage resp page =
             if isAdmin resp then
                 case page of
                     Edit e ->
-                        Button.linkButton
-                            [ Button.outlinePrimary
-                            , Button.onClick <| Navigate <| historyUrl "PlantStock" e.plantId
-                            , Button.attrs [ smallMargin, largeFont ]
-                            ]
-                            [ text "View history" ]
+                        if isAdmin resp then
+                            Button.linkButton
+                                [ Button.outlinePrimary
+                                , Button.onClick <| Navigate <| historyUrl "PlantStock" e.plantId
+                                , Button.attrs [ smallMargin, largeFont ]
+                                ]
+                                [ text "View history" ]
+                        else
+                            div [] []
 
                     _ ->
                         div [] []
