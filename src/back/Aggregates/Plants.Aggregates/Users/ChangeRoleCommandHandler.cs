@@ -14,7 +14,7 @@ internal class ChangeRoleCommandHandler : ICommandHandler<ChangeRoleCommand>
 
     public async Task<CommandForbidden?> ShouldForbidAsync(ChangeRoleCommand command, IUserIdentity identity, CancellationToken token = default)
     {
-        var result = identity.HasRole(command.Role);
+        var result = identity.Roles.Any(_ => (int)_ >= (int)command.Role).ToForbidden("Cannot assign role that is higher than yours");
         _user = await _userRepo.GetByIdAsync(command.Metadata.Aggregate.Id, token: token);
         return result.And((_user.Roles.Length != 1 || _user.Roles[0] != command.Role).ToForbidden("Cannot remove last role of the user"));
     }

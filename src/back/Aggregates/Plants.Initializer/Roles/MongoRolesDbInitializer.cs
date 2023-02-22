@@ -7,6 +7,9 @@ namespace Plants.Initializer;
 internal class MongoRolesDbInitializer
 {
     private const string _commonRoleName = "changeOwnPasswordCustomDataRole";
+
+    private const string _userCreatorRoleName = "userCreatorRole";
+
     private readonly IMongoClientFactory _factory;
     private readonly AccessesHelper _accesses;
     private readonly ConnectionConfig _connection;
@@ -89,6 +92,18 @@ internal class MongoRolesDbInitializer
             }
             """,
             $$"""
+             {
+            "createRole": "{{_userCreatorRoleName}}",
+            "privileges": [
+               {
+            "resource": { "db": "", collection: ""},
+                 "actions": [ "createUser", "grantRole", "revokeRole" ]
+               }
+            ],
+            "roles": []
+            }
+            """,
+            $$"""
             {
             "createRole": "{{UserRole.Consumer}}",
             "privileges": [
@@ -96,7 +111,7 @@ internal class MongoRolesDbInitializer
              ],
              "roles":[
                 {
-                    "role":"changeOwnPasswordCustomDataRole", "db":"admin" 
+                    "role":"{{_commonRoleName}}", "db":"admin" 
                 }
              ]
             }
@@ -109,7 +124,10 @@ internal class MongoRolesDbInitializer
              ],
              "roles":[
                 {
-                    "role":"changeOwnPasswordCustomDataRole", "db":"admin" 
+                    "role":"{{_commonRoleName}}", "db":"admin"
+                }, 
+                {
+                    "role":"{{_userCreatorRoleName}}", "db":"admin"
                 }]
             }
             """,

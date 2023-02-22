@@ -16,9 +16,10 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand>
     }
 
     public async Task<CommandForbidden?> ShouldForbidAsync(CreateUserCommand command, IUserIdentity userIdentity, CancellationToken token = default) =>
-        userIdentity.HasRoles(UserCheckType.All, command.Data.Roles)
+        (userIdentity.Roles.Any(_ => (int)_ >= command.Data.Roles.Max(_ => (int)_)))
+        .ToForbidden("Cannot create user that would have more access than you do")
         .And(command.Data.Roles.Any().ToForbidden("Has to have some roles"))
-        .And(await UserDontExistAsync(command));
+        .And(await UserDontExistAsync(command, token));
 
     private async Task<CommandForbidden?> UserDontExistAsync(CreateUserCommand command, CancellationToken token = default)
     {
