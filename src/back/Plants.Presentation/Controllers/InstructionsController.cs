@@ -32,7 +32,7 @@ public class InstructionsController : ControllerBase
         results = results.Where(_ => _.Information.GroupName == request.GroupName);
         return new ListViewResult<FindInstructionsViewResultItem>(
             results.Select(result =>
-                new FindInstructionsViewResultItem(result.Id, result.Information.Title, result.Information.Description, result.Picture.Location))
+                new FindInstructionsViewResultItem(result.Id, result.Information.Title, result.Information.Description, result.Cover.Location))
             );
     }
 
@@ -48,7 +48,7 @@ public class InstructionsController : ControllerBase
             var instruction = await _instructionQuery.GetByIdAsync(id, token);
 
             var information = instruction.Information;
-            result = new(new(instruction.Id, information.Title, information.Description, information.Text, instruction.Picture.Location, information.GroupName));
+            result = new(new(instruction.Id, information.Title, information.Description, information.Text, instruction.Cover.Location, information.GroupName));
         }
         else
         {

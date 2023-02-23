@@ -6,11 +6,11 @@ namespace Plants.Presentation;
 [Route("info")]
 public class InfoController : ControllerBase
 {
-    private readonly IProjectionQueryService<PlantInfo> _infoQuery;
+    private readonly IProjectionQueryService<PlantsInformation> _infoQuery;
     private readonly IProjectionQueryService<User> _userQuery;
     private readonly IIdentityProvider _identity;
 
-    public InfoController(IProjectionQueryService<PlantInfo> infoQuery, IProjectionQueryService<User> userQuery, IIdentityProvider identity)
+    public InfoController(IProjectionQueryService<PlantsInformation> infoQuery, IProjectionQueryService<User> userQuery, IIdentityProvider identity)
     {
         _infoQuery = infoQuery;
         _userQuery = userQuery;
@@ -22,7 +22,7 @@ public class InfoController : ControllerBase
     [HttpGet("dicts")]
     public async Task<ActionResult<DictsViewResult>> Dicts(CancellationToken token)
     {
-        var dicts = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
+        var dicts = await _infoQuery.GetByIdAsync(PlantsInformation.InfoId, token);
         return new DictsViewResult(dicts.GroupNames, dicts.RegionNames, dicts.SoilNames);
     }
 

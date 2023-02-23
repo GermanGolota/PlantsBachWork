@@ -6,9 +6,9 @@ namespace Plants.Presentation;
 [Route("stats")]
 public class StatsController : ControllerBase
 {
-    private readonly IProjectionQueryService<PlantInfo> _infoQuery;
+    private readonly IProjectionQueryService<PlantsInformation> _infoQuery;
 
-    public StatsController(IProjectionQueryService<PlantInfo> infoQuery)
+    public StatsController(IProjectionQueryService<PlantsInformation> infoQuery)
     {
         _infoQuery = infoQuery;
     }
@@ -18,7 +18,7 @@ public class StatsController : ControllerBase
     [HttpGet("financial")]
     public async Task<ActionResult<ListViewResult<FinancialStatsViewResult>>> Financial([FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken token)
     {
-        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
+        var info = await _infoQuery.GetByIdAsync(PlantsInformation.InfoId, token);
 
         return new ListViewResult<FinancialStatsViewResult>(info.FinancialStats
             .Where(x => IsInRange(DateTime.Parse(x.Key), from, to))
@@ -40,7 +40,7 @@ public class StatsController : ControllerBase
     [HttpGet("total")]
     public async Task<ActionResult<ListViewResult<TotalStatsViewResult>>> Total(CancellationToken token)
     {
-        var info = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
+        var info = await _infoQuery.GetByIdAsync(PlantsInformation.InfoId, token);
         return new ListViewResult<TotalStatsViewResult>(info.TotalStats
             .Select(stat => new TotalStatsViewResult(stat.Key, stat.Value.Income, stat.Value.InstructionsCount, stat.Value.PlantsCount))
             );
