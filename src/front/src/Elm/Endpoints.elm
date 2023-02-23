@@ -42,7 +42,6 @@ type Endpoint
     | RejectOrder String
     | ChangePassword
     | History
-    | ConvertId IdType
 
 
 type IdType
@@ -148,22 +147,6 @@ endpointToUrl endpoint =
 
         History ->
             baseUrl ++ "eventsourcing/history"
-
-        ConvertId id ->
-            baseUrl ++ "eventsourcing/convert/" ++ getPath id
-
-
-getPath : IdType -> String
-getPath id =
-    case id of
-        LongId int ->
-            "2/" ++ String.fromInt int
-
-        StringId str ->
-            "1/" ++ str
-
-        GuidId guid ->
-            "0/" ++ guid
 
 
 imagesDecoder : String -> List String -> D.Decoder ImageList.Model

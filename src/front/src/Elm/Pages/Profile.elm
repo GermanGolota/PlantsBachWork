@@ -27,7 +27,6 @@ type alias Model =
 type alias View =
     { password : String
     , result : Maybe (WebData SubmittedResult)
-    , id : WebData String
     }
 
 
@@ -40,7 +39,6 @@ type LocalMsg
     | NewPasswordChanged String
     | ChangePass
     | GotChangePass (Result Http.Error SubmittedResult)
-    | GotId (Result Http.Error String)
 
 
 type alias Msg =
@@ -80,18 +78,6 @@ updateLocal msg m =
                 GotChangePass (Err err) ->
                     updateModel { model | result = Just <| Error err }
 
-                GotId id ->
-                    let
-                        getId =
-                            case id of
-                                Ok res ->
-                                    Loaded res
-
-                                Err err ->
-                                    Error err
-                    in
-                    updateModel { model | id = getId }
-
                 NoOp ->
                     noOp
 
@@ -101,15 +87,6 @@ updateLocal msg m =
 
 
 --commands
-
-
-getUserId : String -> String -> Cmd Msg
-getUserId token login =
-    let
-        expect =
-            Http.expectJson GotId D.string
-    in
-    getAuthed token (ConvertId <| StringId login) expect Nothing |> mapCmd
 
 
 submitCommand : String -> String -> Cmd Msg
@@ -146,16 +123,12 @@ viewPage resp page =
 
         historyBtn =
             if isAdmin resp then
-                viewWebdata
-                    page.id
-                    (\id ->
-                        Button.linkButton
-                            [ Button.outlinePrimary
-                            , Button.onClick <| Navigate <| historyUrl "User" id
-                            , Button.attrs [ smallMargin ]
-                            ]
-                            [ text "View history" ]
-                    )
+                Button.linkButton
+                    [ Button.outlinePrimary
+                    , Button.onClick <| Navigate <| historyUrl "User" resp.userId
+                    , Button.attrs [ smallMargin ]
+                    ]
+                    [ text "View history" ]
 
             else
                 div [] []
@@ -205,7 +178,7 @@ viewResult res =
 
 init : Maybe AuthResponse -> D.Value -> ( Model, Cmd Msg )
 init resp _ =
-    initBase [ Producer, Consumer, Manager ] (View "" Nothing Loading) (\res -> getUserId res.token res.username) resp
+    initBase [ Producer, Consumer, Manager ] (View "" Nothing) (\_ -> Cmd.none) resp
 
 
 subscriptions : Model -> Sub Msg
