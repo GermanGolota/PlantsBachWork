@@ -16,7 +16,7 @@ import Main2 exposing (viewBase)
 import Multiselect as Multiselect
 import NavBar exposing (usersLink)
 import UserRolesSelector exposing (userRolesBtns)
-import Utils exposing (buildQuery, chunkedView, fillParent, flatten, flex, flex1, flexCenter, largeCentered, mediumMargin, smallMargin, unique)
+import Utils exposing (SubmittedResult(..), buildQuery, chunkedView, fillParent, flatten, flex, flex1, flexCenter, largeCentered, mediumMargin, smallMargin, submittedDecoder, unique)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -41,8 +41,8 @@ type alias User =
     , contact : String
     , roles : List UserRole
     , login : String
-    , alteringResult : Maybe (WebData String)
-    , id : WebData String
+    , alteringResult : Maybe (WebData SubmittedResult)
+    , id : String
     }
 
 
@@ -57,9 +57,8 @@ type LocalMsg
     | ChangedName String
     | ChangedPhone String
     | CheckedRole UserRole String
-    | GotRemoveRole String (Result Http.Error Bool)
-    | GotAddRole String (Result Http.Error Bool)
-    | GotIdConversion String (Result Http.Error String) -- username to id
+    | GotRemoveRole String (Result Http.Error SubmittedResult)
+    | GotAddRole String (Result Http.Error SubmittedResult)
 
 
 type alias Msg =
@@ -101,7 +100,7 @@ updateLocal msg m =
             in
             case msg of
                 GotUsers (Ok res) ->
-                    ( authed <| { model | users = Loaded res }, getUserIds auth.token <| List.map .login res )
+                    ( authed <| { model | users = Loaded res }, Cmd.none )
 
                 GotUsers (Err err) ->
                     ( authed <| { model | users = Error err }, Cmd.none )
@@ -134,7 +133,7 @@ updateLocal msg m =
                         Loaded users ->
                             let
                                 selectedUser =
-                                    Maybe.withDefault (User "" "" [] "" Nothing Loading) <| List.head <| List.filter (\user -> user.login == login) users
+                                    Maybe.withDefault (User "" "" [] "" Nothing "") <| List.head <| List.filter (\user -> user.login == login) users
 
                                 isRemove =
                                     List.member role selectedUser.roles
@@ -158,21 +157,45 @@ updateLocal msg m =
                         _ ->
                             noOp
 
-                GotAddRole login (Ok _) ->
+                GotAddRole login (Ok res) ->
                     case model.users of
                         Loaded users ->
-                            ( m, refreshCmd )
+                            let
+                                command =
+                                    case res of
+                                        SubmittedSuccess _ _ ->
+                                            refreshCmd
+
+                                        _ ->
+                                            Cmd.none
+
+                                updateUser user =
+                                    if user.login == login then
+                                        { user | alteringResult = Just <| Loaded res }
+
+                                    else
+                                        user
+
+                                updatedUsers =
+                                    case res of
+                                        SubmittedSuccess _ _ ->
+                                            Loading
+
+                                        _ ->
+                                            Loaded (List.map updateUser users)
+                            in
+                            ( authed { model | users = updatedUsers }, command )
 
                         _ ->
                             noOp
 
-                GotAddRole login (Err err) ->
+                GotAddRole login (Err _) ->
                     case model.users of
                         Loaded users ->
                             let
                                 updateUser user =
                                     if user.login == login then
-                                        { user | alteringResult = Just (Loaded "Failed to add role") }
+                                        { user | alteringResult = Just <| Loaded <| SubmittedFail "Failed to add role" }
 
                                     else
                                         user
@@ -182,10 +205,34 @@ updateLocal msg m =
                         _ ->
                             noOp
 
-                GotRemoveRole login (Ok _) ->
+                GotRemoveRole login (Ok res) ->
                     case model.users of
                         Loaded users ->
-                            ( m, refreshCmd )
+                            let
+                                command =
+                                    case res of
+                                        SubmittedSuccess _ _ ->
+                                            refreshCmd
+
+                                        _ ->
+                                            Cmd.none
+
+                                updateUser user =
+                                    if user.login == login then
+                                        { user | alteringResult = Just <| Loaded res }
+
+                                    else
+                                        user
+
+                                updatedUsers =
+                                    case res of
+                                        SubmittedSuccess _ _ ->
+                                            Loading
+
+                                        _ ->
+                                            Loaded (List.map updateUser users)
+                            in
+                            ( authed { model | users = updatedUsers }, command )
 
                         _ ->
                             noOp
@@ -196,28 +243,7 @@ updateLocal msg m =
                             let
                                 updateUser user =
                                     if user.login == login then
-                                        { user | alteringResult = Just (Loaded "Failed to remove role") }
-
-                                    else
-                                        user
-                            in
-                            ( authed { model | users = Loaded (List.map updateUser users) }, Cmd.none )
-
-                        _ ->
-                            noOp
-
-                GotIdConversion login id ->
-                    case model.users of
-                        Loaded users ->
-                            let
-                                updateUser user =
-                                    if user.login == login then
-                                        case id of
-                                            Err err ->
-                                                { user | id = Error err }
-
-                                            Ok res ->
-                                                { user | id = Loaded res }
+                                        { user | alteringResult = Just <| Loaded <| SubmittedFail "Failed to remove role" }
 
                                     else
                                         user
@@ -266,16 +292,12 @@ viewUser isAdmin viewerRoles user =
     let
         historyBtn =
             if isAdmin then
-                viewWebdata
-                    user.id
-                    (\id ->
-                        Button.linkButton
-                            [ Button.outlinePrimary
-                            , Button.onClick <| Navigate <| historyUrl "User" id
-                            , Button.attrs [ smallMargin ]
-                            ]
-                            [ text "View history" ]
-                    )
+                Button.linkButton
+                    [ Button.outlinePrimary
+                    , Button.onClick <| Navigate <| historyUrl "User" user.id
+                    , Button.attrs [ smallMargin ]
+                    ]
+                    [ text "View history" ]
 
             else
                 div [] []
@@ -283,11 +305,16 @@ viewUser isAdmin viewerRoles user =
         btnViewBase =
             userRolesBtns (\role -> CheckedRole role user.login) user.roles viewerRoles
 
-        btnsMessage msg =
-            div [ flex, Flex.col ]
-                [ div (largeCentered ++ [ class "text-danger" ]) [ text msg ]
-                , btnViewBase
-                ]
+        btnsMessage res =
+            case res of
+                SubmittedSuccess _ _ ->
+                    div [] []
+
+                SubmittedFail msg ->
+                    div [ flex, Flex.col ]
+                        [ div (largeCentered ++ [ class "text-danger" ]) [ text msg ]
+                        , btnViewBase
+                        ]
 
         btnsView =
             case user.alteringResult of
@@ -357,20 +384,11 @@ init resp flags =
 --cmds
 
 
-getUserIds : String -> List String -> Cmd Msg
-getUserIds token logins =
-    let
-        expect login =
-            Http.expectJson (GotIdConversion login) D.string
-    in
-    List.map (\login -> getAuthed token (ConvertId <| StringId login) (expect login) Nothing) logins |> Cmd.batch |> mapCmd
-
-
 removeRole : String -> UserRole -> String -> Cmd Msg
 removeRole token role login =
     let
         expect =
-            Http.expectJson (GotRemoveRole login) (D.field "success" D.bool)
+            Http.expectJson (GotRemoveRole login) submittedDecoder
     in
     postAuthed token (RemoveRole login role) Http.emptyBody expect Nothing |> mapCmd
 
@@ -379,7 +397,7 @@ addRole : String -> UserRole -> String -> Cmd Msg
 addRole token role login =
     let
         expect =
-            Http.expectJson (GotAddRole login) (D.field "success" D.bool)
+            Http.expectJson (GotAddRole login) submittedDecoder
     in
     postAuthed token (AddRole login role) Http.emptyBody expect Nothing |> mapCmd
 
@@ -423,7 +441,7 @@ userDecoder =
         |> custom (rolesDecoder (D.field "roleCodes" <| D.list D.int))
         |> required "login" D.string
         |> hardcoded Nothing
-        |> hardcoded Loading
+        |> required "id" D.string
 
 
 justOrEmpty : String -> Maybe a -> List ( String, a )

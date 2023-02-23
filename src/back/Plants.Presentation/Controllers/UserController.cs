@@ -18,7 +18,7 @@ public class UserController : ControllerBase
         _search = search;
     }
 
-    public record FindUsersResultItem(string FullName, string Mobile, string Login, UserRole[] RoleCodes);
+    public record FindUsersResultItem(Guid Id, string FullName, string Mobile, string Login, UserRole[] RoleCodes);
 
     [HttpGet("")]
     public async Task<ActionResult<ListViewResult<FindUsersResultItem>>> Search(
@@ -27,9 +27,13 @@ public class UserController : ControllerBase
         var currentUserRoles = _command.IdentityProvider.Identity!.Roles;
         var allRoles = Enum.GetValues<UserRole>();
         var rolesToFetch = currentUserRoles.Intersect(roles ?? allRoles).ToArray();
+
+        // hack
+        await Task.Delay(2000, token);
+
         var results = await _search.SearchAsync(new(name, phone, roles), new SearchAll(), token);
         return new ListViewResult<FindUsersResultItem>(
-            results.Select(user => new FindUsersResultItem(user.FullName, user.PhoneNumber, user.Login, user.Roles))
+            results.Select(user => new FindUsersResultItem(user.Id, user.FullName, user.PhoneNumber, user.Login, user.Roles))
             );
     }
 
