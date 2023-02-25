@@ -26,7 +26,7 @@ public class PlantsInformation : AggregateBase, IEventHandler<StockAddedEvent>,
     // group name
     public Dictionary<string, PlantStats> TotalStats { get; private set; } = new();
     // date yyyy-mm-dd, group name
-    public Dictionary<string, Dictionary<string, PlantStats>> FinancialStats { get; private set; } = new();
+    public Dictionary<string, Dictionary<string, PlantStats>> DailyStats { get; private set; } = new();
 
     public void Handle(StockAddedEvent @event)
     {
@@ -98,18 +98,18 @@ public class PlantsInformation : AggregateBase, IEventHandler<StockAddedEvent>,
         TotalStats[groupName] = statUpdater(TotalStats[groupName]);
 
         var date = GetDateKey(time);
-        if (FinancialStats.ContainsKey(date) is false)
+        if (DailyStats.ContainsKey(date) is false)
         {
-            FinancialStats[date] = new();
+            DailyStats[date] = new();
         }
 
-        var groupStats = FinancialStats[date];
+        var groupStats = DailyStats[date];
         if (groupStats.ContainsKey(groupName) is false)
         {
             groupStats[groupName] = new();
         }
 
-        FinancialStats[date][groupName] = statUpdater(groupStats[groupName]);
+        DailyStats[date][groupName] = statUpdater(groupStats[groupName]);
     }
 
     private static string GetDateKey(DateTime time) =>
