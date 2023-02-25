@@ -50,6 +50,10 @@ public class OrdersController : ControllerBase
             factory => factory.Create<StartOrderDeliveryCommand>(new(id, nameof(PlantOrder))),
             meta => new StartOrderDeliveryCommand(meta, trackingNumber),
             token);
+        
+        // Hack
+        await Task.Delay(2000, token);
+
         return result.ToCommandResult();
     }
 
@@ -59,6 +63,10 @@ public class OrdersController : ControllerBase
         var result = await _command.SendAndWaitAsync(
             factory => factory.Create<RejectOrderCommand>(new(id, nameof(PlantOrder))),
             meta => new RejectOrderCommand(meta));
+
+        // Hack
+        await Task.Delay(2000, token);
+
         return result.ToCommandResult();
     }
 
@@ -69,6 +77,10 @@ public class OrdersController : ControllerBase
             factory => factory.Create<ConfirmDeliveryCommand>(new(id, nameof(PlantOrder))),
             meta => new ConfirmDeliveryCommand(meta),
             token);
+
+        // Hack
+        await Task.Delay(2000, token);
+
         return result.ToCommandResult();
     }
 
