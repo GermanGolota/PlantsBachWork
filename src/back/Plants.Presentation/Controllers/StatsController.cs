@@ -20,7 +20,7 @@ public class StatsController : ControllerBase
     {
         var info = await _infoQuery.GetByIdAsync(PlantsInformation.InfoId, token);
 
-        return new ListViewResult<FinancialStatsViewResult>(info.FinancialStats
+        return new ListViewResult<FinancialStatsViewResult>(info.DailyStats
             .Where(x => IsInRange(DateTime.Parse(x.Key), from, to))
             .SelectMany(_ => _.Value)
             .GroupBy(stat => stat.Key)
