@@ -7,39 +7,20 @@ namespace Plants.Presentation;
 public class OrdersController : ControllerBase
 {
     private readonly CommandHelper _command;
-    private readonly ISearchQueryService<PlantOrder, PlantOrderParams> _orderQuery;
+    private readonly IMediator _query;
 
     public OrdersController(CommandHelper command,
-        ISearchQueryService<PlantOrder, PlantOrderParams> orderQuery)
+        IMediator query)
     {
         _command = command;
-        _orderQuery = orderQuery;
-    }
-
-    public record OrdersViewResultItem(
-        int Status, Guid PostId, string City,
-        long MailNumber, string SellerName, string SellerContact,
-        decimal Price, string? DeliveryTrackingNumber, Picture[] Images,
-        DateTime Ordered, DateTime? DeliveryStarted, DateTime? Shipped)
-    {
-        public string OrderedDate => Ordered.ToShortDateString();
-        public string? DeliveryStartedDate => DeliveryStarted?.ToShortDateString();
-        public string? ShippedDate => Shipped?.ToShortDateString();
+        _query = query;
     }
 
     [HttpGet()]
     public async Task<ActionResult<ListViewResult<OrdersViewResultItem>>> GetAll([FromQuery] bool onlyMine, CancellationToken token)
     {
-        var items = await _orderQuery.SearchAsync(new(onlyMine), new SearchAll(), token);
-        return new ListViewResult<OrdersViewResultItem>(items.Select(item =>
-        {
-            var seller = item.Post.Seller;
-            var stock = item.Post.Stock;
-            return new OrdersViewResultItem((int)item.Status, item.Post.Id,
-                item.Address.City, item.Address.MailNumber, seller.FullName,
-                seller.PhoneNumber, item.Post.Price, item.TrackingNumber, stock.Pictures,
-                 item.OrderTime, item.DeliveryStartedTime, item.DeliveredTime);
-        }));
+        var items = await _query.Send(new SearchOrders(new(onlyMine), new QueryOptions.All()), token);
+        return new ListViewResult<OrdersViewResultItem>(items);
     }
 
     [HttpPost("{id}/deliver")]
@@ -50,7 +31,7 @@ public class OrdersController : ControllerBase
             factory => factory.Create<StartOrderDeliveryCommand>(new(id, nameof(PlantOrder))),
             meta => new StartOrderDeliveryCommand(meta, trackingNumber),
             token);
-        
+
         // Hack
         await Task.Delay(2000, token);
 

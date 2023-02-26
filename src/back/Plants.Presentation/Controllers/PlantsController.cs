@@ -1,5 +1,4 @@
-﻿using Humanizer;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace Plants.Presentation;
 
@@ -8,94 +7,37 @@ namespace Plants.Presentation;
 public class PlantsController : ControllerBase
 {
     private readonly CommandHelper _command;
-    private readonly ISearchQueryService<PlantStock, PlantStockParams> _search;
-    private readonly IProjectionQueryService<PlantStock> _stockProjector;
-    private readonly IProjectionQueryService<User> _userProjector;
+    private readonly IMediator _query;
 
     public PlantsController(CommandHelper command,
         ISearchQueryService<PlantStock, PlantStockParams> search,
         IProjectionQueryService<PlantStock> stockProjector,
-        IProjectionQueryService<User> userProjector)
+        IProjectionQueryService<User> userProjector,
+        IMediator query)
     {
         _command = command;
-        _search = search;
-        _stockProjector = stockProjector;
-        _userProjector = userProjector;
+        _query = query;
     }
-
-    public record StockViewResultItem(Guid Id, string PlantName, string Description, bool IsMine);
 
     [HttpGet("notposted")]
     public async Task<ActionResult<ListViewResult<StockViewResultItem>>> GetNotPosted(CancellationToken token)
     {
-        var username = _command.IdentityProvider.Identity!.UserName;
-        var result = await _search.SearchAsync(new PlantStockParams(false), new SearchAll(), token);
-        return new ListViewResult<StockViewResultItem>(
-                result.Select(stock =>
-                new StockViewResultItem(stock.Id, stock.Information.PlantName, stock.Information.Description, stock.Caretaker.Login == username)
-                ));
-    }
-
-    public record PlantViewResultItem(string PlantName, string Description, string[] GroupNames,
-        string[] SoilNames, Picture[] Images, string[] RegionNames, DateTime Created)
-    {
-        public string CreatedHumanDate => Created.Humanize();
-        public string CreatedDate => Created.ToShortDateString();
+        var items = await _query.Send(new GetStockItems(new PlantStockParams(false), new QueryOptions.All()), token);
+        return new ListViewResult<StockViewResultItem>(items);
     }
 
     [HttpGet("notposted/{id}")]
     public async Task<ActionResult<QueryViewResult<PlantViewResultItem>>> GetNotPosted([FromRoute] Guid id, CancellationToken token)
     {
-        QueryViewResult<PlantViewResultItem> result;
-        if (await _stockProjector.ExistsAsync(id, token))
-        {
-            var plant = await _stockProjector.GetByIdAsync(id, token);
-            var info = plant.Information;
-            result = new(new PlantViewResultItem(info.PlantName, info.Description,
-                info.GroupNames, info.SoilNames, plant.Pictures, info.RegionNames, plant.CreatedTime));
-        }
-        else
-        {
-            result = new();
-        }
-        return result;
-    }
-
-    public record PreparedPostResultItem2(
-        Guid Id, string PlantName, string Description, string[] SoilNames,
-        string[] RegionNames, string[] GroupNames, DateTime Created,
-        string SellerName, string SellerPhone, long SellerCared, long SellerSold, long SellerInstructions,
-        long CareTakerCared, long CareTakerSold, long CareTakerInstructions, Picture[] Images)
-    {
-        public string CreatedHumanDate => Created.Humanize();
-        public string CreatedDate => Created.ToShortDateString();
+        var item = await _query.Send(new GetStockItem(id), token);
+        return item.ToQueryResult();
     }
 
     [HttpGet("prepared/{id}")]
-    public async Task<ActionResult<QueryViewResult<PreparedPostResultItem2>>> GetPrepared(Guid id, CancellationToken token)
+    public async Task<ActionResult<QueryViewResult<PreparedPostResultItem>>> GetPrepared(Guid id, CancellationToken token)
     {
-        var userId = _command.IdentityProvider.Identity!.UserName.ToGuid();
-        QueryViewResult<PreparedPostResultItem2> result;
-        if (await _stockProjector.ExistsAsync(id, token) && await _userProjector.ExistsAsync(userId, token))
-        {
-            var stock = await _stockProjector.GetByIdAsync(id, token);
-            var seller = await _userProjector.GetByIdAsync(userId, token);
-            var caretaker = stock.Caretaker;
-            var plant = stock.Information;
-            result = new(new PreparedPostResultItem2(stock.Id,
-                plant.PlantName, plant.Description,
-                plant.SoilNames, plant.RegionNames, plant.GroupNames, stock.CreatedTime,
-                seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
-                caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated,
-                stock.Pictures
-                ));
-        }
-        else
-        {
-            result = new();
-        }
-
-        return result;
+        var item = await _query.Send(new GetPrepared(id), token);
+        return item.ToQueryResult();
     }
 
     [HttpPost("{id}/post")]

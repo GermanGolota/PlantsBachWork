@@ -7,56 +7,22 @@ namespace Plants.Presentation;
 [Route("post")]
 public class PostController : ControllerBase
 {
-    private readonly IProjectionQueryService<PlantPost> _postQuery;
     private readonly CommandHelper _command;
+    private readonly IMediator _query;
 
     public PostController(
-        IProjectionQueryService<PlantPost> postQuery,
-        CommandHelper command)
+        CommandHelper command,
+        IMediator query)
     {
-        _postQuery = postQuery;
         _command = command;
-    }
-
-    public record PostViewResultItem(Guid Id, string PlantName, string Description, decimal Price,
-        string[] SoilNames, string[] RegionNames, string[] GroupNames, DateTime Created,
-        string SellerName, string SellerPhone, long SellerCared, long SellerSold, long SellerInstructions,
-        long CareTakerCared, long CareTakerSold, long CareTakerInstructions, Picture[] Images
-    )
-    {
-        public string CreatedHumanDate => Created.Humanize();
-        public string CreatedDate => Created.ToShortDateString();
+        _query = query;
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<QueryViewResult<PostViewResultItem>>> GetPost([FromRoute] Guid id, CancellationToken token)
     {
-        QueryViewResult<PostViewResultItem> result;
-        if (await _postQuery.ExistsAsync(id, token))
-        {
-            var post = await _postQuery.GetByIdAsync(id, token);
-            if (post.IsRemoved)
-            {
-                result = new();
-            }
-            else
-            {
-                var seller = post.Seller;
-                var stock = post.Stock;
-                var caretaker = stock.Caretaker;
-                var plant = stock.Information;
-                result = new(new(post.Id, plant.PlantName, plant.Description, post.Price,
-                    plant.SoilNames, plant.RegionNames, plant.GroupNames, stock.CreatedTime,
-                    seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
-                    caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated,
-                    stock.Pictures));
-            }
-        }
-        else
-        {
-            result = new();
-        }
-        return result;
+        var item = await _query.Send(new GetPost(id), token);
+        return item.ToQueryResult();
     }
 
     [HttpPost("{id}/order")]
