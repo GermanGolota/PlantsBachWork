@@ -54,9 +54,10 @@ const useElmApp = <
   }
 
   const elmApp = () => {
+    const flags = setFlags ? setFlags(resp!) : resp;
     return init({
       node: elmRef.current,
-      flags: setFlags ? setFlags(resp!) : resp,
+      flags: flags
     });
   };
 
@@ -71,7 +72,6 @@ const useElmApp = <
   React.useEffect(() => {
     if (app) {
       app.ports.navigate?.subscribe((location) => {
-        console.log("Navigating to ", location);
         navigate("/wrapper/" + encodeURIComponent(location));
       });
 

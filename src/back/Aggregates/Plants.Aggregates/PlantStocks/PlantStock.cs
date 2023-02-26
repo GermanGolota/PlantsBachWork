@@ -20,7 +20,7 @@ public class PlantStock : AggregateBase, IEventHandler<StockAddedEvent>, IEventH
     public void Handle(StockAddedEvent @event)
     {
         Information = @event.Plant;
-        Pictures = @event.Pictures.Select(picture => picture with { Location = picture.Location.TrimStart('/') }).ToArray();
+        Pictures = @event.Pictures;
         CreatedTime = @event.CreatedTime;
 
         Metadata.Referenced.Add(new(@event.CaretakerUsername.ToGuid(), nameof(User)));

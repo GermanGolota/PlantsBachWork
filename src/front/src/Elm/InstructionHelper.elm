@@ -1,6 +1,6 @@
 module InstructionHelper exposing (..)
 
-import Endpoints exposing (Endpoint(..), getAuthed, instructioIdToCover)
+import Endpoints exposing (Endpoint(..), getAuthed, getImageUrl)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, requiredAt)
@@ -41,19 +41,20 @@ decodeInstructionBase token =
         |> requiredItem "id" decodeId
         |> requiredItem "title" D.string
         |> requiredItem "description" D.string
-        |> custom (coverDecoder token)
+        |> custom (D.at [ "item", "coverUrl" ] <| coverDecoder token)
         |> requiredItem "instructionText" D.string
         |> requiredItem "plantGroupName" decodeId
 
 
 coverDecoder : String -> D.Decoder (Maybe String)
 coverDecoder token =
-    D.at [ "item", "hasCover" ] D.bool |> D.andThen (coverImageDecoder token)
+    D.nullable D.string |> D.andThen (coverImageDecoder token)
 
 
-coverImageDecoder token hasCover =
-    if hasCover then
-        D.map (\id -> Just (instructioIdToCover token id)) (D.at [ "item", "id" ] decodeId)
+coverImageDecoder token url =
+    case url of
+        Just loc ->
+            D.succeed <| Just <| getImageUrl token loc
 
-    else
-        D.succeed Nothing
+        Nothing ->
+            D.succeed Nothing

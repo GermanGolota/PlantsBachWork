@@ -27,7 +27,7 @@ internal class Authorizer : IAuthorizer
                 .Distinct()
                 .ToArray();
             var userToken = _tokenManager.CreateToken(username, password, roles);
-            result = new(username, roles, userToken);
+            result = new(username.ToGuid(), username, roles, userToken);
         }
         catch
         {

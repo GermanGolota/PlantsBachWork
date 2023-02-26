@@ -1,6 +1,7 @@
 import * as signalR from "@microsoft/signalr";
 
-const URL = "http://localhost:5000/commandsnotifications"; //or whatever your backend port is
+const URL = "https://localhost:5001/commandsnotifications";
+
 class Connector {
 
   private connection: signalR.HubConnection;

@@ -6,34 +6,23 @@ namespace Plants.Presentation;
 [Route("info")]
 public class InfoController : ControllerBase
 {
-    private readonly IProjectionQueryService<PlantInfo> _infoQuery;
-    private readonly IProjectionQueryService<User> _userQuery;
-    private readonly IIdentityProvider _identity;
+    private readonly IMediator _query;
 
-    public InfoController(IProjectionQueryService<PlantInfo> infoQuery, IProjectionQueryService<User> userQuery, IIdentityProvider identity)
+    public InfoController(IMediator query)
     {
-        _infoQuery = infoQuery;
-        _userQuery = userQuery;
-        _identity = identity;
+        _query = query;
     }
-
-    public record DictsViewResult(HashSet<string> Groups, HashSet<string> Regions, HashSet<string> Soils);
 
     [HttpGet("dicts")]
-    public async Task<ActionResult<DictsViewResult>> Dicts(CancellationToken token)
+    public async Task<ActionResult<PlantSpecifications>> Dicts(CancellationToken token)
     {
-        var dicts = await _infoQuery.GetByIdAsync(PlantInfo.InfoId, token);
-        return new DictsViewResult(dicts.GroupNames, dicts.RegionNames, dicts.SoilNames);
+        return await _query.Send(new GetUsedPlantSpecifications(), token);
     }
-
-    public record AddressViewResult(List<DeliveryAddress> Addresses);
 
     [HttpGet("addresses")]
     public async Task<ActionResult<AddressViewResult>> Addresses(CancellationToken token)
     {
-        var id = _identity.Identity!.UserName.ToGuid();
-        var user = await _userQuery.GetByIdAsync(id, token);
-        return new AddressViewResult(user.UsedAdresses.ToList());
+        return await _query.Send(new GetOwnUsedAddresses(), token);
     }
 
 }

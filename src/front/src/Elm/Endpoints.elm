@@ -1,4 +1,4 @@
-module Endpoints exposing (Endpoint(..), IdType(..), endpointToUrl, getAuthed, getAuthedQuery, historyUrl, imagesDecoder, instructioIdToCover, postAuthed, postAuthedQuery)
+module Endpoints exposing (Endpoint(..), IdType(..), endpointToUrl, getAuthed, getAuthedQuery, getImageUrl, historyUrl, imagesDecoder, postAuthed, postAuthedQuery)
 
 import Dict
 import Http exposing (header, request)
@@ -35,7 +35,6 @@ type Endpoint
     | RemoveRole String UserRole
     | CreateUser
     | FindInstructions
-    | CoverImage String String
     | CreateInstruction
     | EditInstruction String
     | GetInstruction String
@@ -43,7 +42,6 @@ type Endpoint
     | RejectOrder String
     | ChangePassword
     | History
-    | ConvertId IdType
 
 
 type IdType
@@ -129,9 +127,6 @@ endpointToUrl endpoint =
         FindInstructions ->
             baseUrl ++ "instructions/find"
 
-        CoverImage id token ->
-            baseUrl ++ "file/instruction/" ++ id ++ "?token=" ++ token
-
         CreateInstruction ->
             baseUrl ++ "instructions/create"
 
@@ -153,27 +148,6 @@ endpointToUrl endpoint =
         History ->
             baseUrl ++ "eventsourcing/history"
 
-        ConvertId id ->
-            baseUrl ++ "eventsourcing/convert/" ++ getPath id
-
-
-getPath : IdType -> String
-getPath id =
-    case id of
-        LongId int ->
-            "2/" ++ String.fromInt int
-
-        StringId str ->
-            "1/" ++ str
-
-        GuidId guid ->
-            "0/" ++ guid
-
-
-instructioIdToCover : String -> String -> String
-instructioIdToCover token id =
-    endpointToUrl <| CoverImage id token
-
 
 imagesDecoder : String -> List String -> D.Decoder ImageList.Model
 imagesDecoder token at =
@@ -186,7 +160,12 @@ imagesDecoder token at =
 
 imageDecoder : String -> D.Decoder ( String, String )
 imageDecoder token =
-    D.map2 Tuple.pair (D.field "id" D.string) (D.map (\url -> baseUrl ++ url ++ "?token=" ++ token) <| D.field "location" D.string)
+    D.map2 Tuple.pair (D.field "id" D.string) (D.map (getImageUrl token) <| D.field "location" D.string)
+
+
+getImageUrl : String -> String -> String
+getImageUrl token location =
+    baseUrl ++ location ++ "?token=" ++ token
 
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg

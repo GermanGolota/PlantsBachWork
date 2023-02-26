@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Nest;
 
 namespace Plants.Domain.Infrastructure;
 
@@ -18,7 +19,7 @@ public class ElasticSearchQueryService<TAggregate, TParams> : ISearchQueryServic
         _loggerFactory = loggerFactory;
     }
 
-    public async Task<IEnumerable<TAggregate>> SearchAsync(TParams parameters, OneOf<SearchPager, SearchAll> searchOption, CancellationToken token = default)
+    public async Task<IEnumerable<TAggregate>> SearchAsync(TParams parameters, QueryOptions options, CancellationToken token = default)
     {
         var aggregateName = _helper.Aggregates.Get(typeof(TAggregate));
         var client = _clientFactory.Create();
@@ -33,7 +34,12 @@ public class ElasticSearchQueryService<TAggregate, TParams> : ISearchQueryServic
         var result = await client.SearchAsync<TAggregate>(s =>
         {
             s.Index(aggregateName.ToIndexName());
-            searchOption.Match(page => { s.From(page.StartFrom).Size(page.Size); }, all => { });
+
+            if(options is QueryOptions.Pager pager)
+            {
+                s.From(pager.StartFrom).Size(pager.Size);
+            }
+
             projector.ProjectParams(parameters, s);
 
             s.Sort(a =>

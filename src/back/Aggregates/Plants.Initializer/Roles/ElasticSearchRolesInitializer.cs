@@ -102,7 +102,7 @@ internal class ElasticSearchRolesInitializer
             var indices = GetIndices(allowToPriveleges, role);
             roleDefs.Add((roleName, new RoleDefinition()
             {
-                Cluster = new() { },
+                Cluster = new() { "manage_security" },
                 Indices = indices
             }));
         }

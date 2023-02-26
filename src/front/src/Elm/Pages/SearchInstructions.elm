@@ -7,10 +7,11 @@ import Bootstrap.Card.Block as Block
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Utilities.Flex as Flex
-import Endpoints exposing (Endpoint(..), historyUrl, instructioIdToCover)
+import Endpoints exposing (Endpoint(..), historyUrl)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (alt, class, src, style, value)
 import Http
+import InstructionHelper exposing (coverDecoder)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
@@ -160,20 +161,7 @@ searchItemDecoder token =
         |> required "id" decodeId
         |> required "title" D.string
         |> required "description" D.string
-        |> custom (coverDecoder token)
-
-
-coverDecoder : String -> D.Decoder (Maybe String)
-coverDecoder token =
-    D.field "hasCover" D.bool |> D.andThen (coverImageDecoder token)
-
-
-coverImageDecoder token hasCover =
-    if hasCover then
-        D.map (\id -> Just (instructioIdToCover token id)) (D.field "id" decodeId)
-
-    else
-        D.succeed Nothing
+        |> custom (D.field "coverUrl" <| coverDecoder token)
 
 
 

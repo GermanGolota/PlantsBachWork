@@ -7,54 +7,27 @@ namespace Plants.Presentation;
 public class InstructionsController : ControllerBase
 {
     private readonly CommandHelper _command;
-    private readonly IProjectionQueryService<PlantInstruction> _instructionQuery;
-    private readonly ISearchQueryService<PlantInstruction, PlantInstructionParams> _instructionSearch;
+    private readonly IMediator _query;
 
     public InstructionsController(CommandHelper command,
-        IProjectionQueryService<PlantInstruction> instructionQuery,
-        ISearchQueryService<PlantInstruction, PlantInstructionParams> instructionSearch)
+        IMediator query)
     {
         _command = command;
-        _instructionQuery = instructionQuery;
-        _instructionSearch = instructionSearch;
+        _query = query;
     }
-
-
-    public record FindInstructionsViewRequest(string GroupName, string? Title, string? Description);
-    public record FindInstructionsViewResultItem(Guid Id, string Title, string Description, bool HasCover);
 
     [HttpGet("find")]
-    public async Task<ActionResult<ListViewResult<FindInstructionsViewResultItem>>> Find([FromQuery] FindInstructionsViewRequest request, CancellationToken token)
+    public async Task<ActionResult<ListViewResult<FindInstructionsViewResultItem>>> Find([FromQuery] PlantInstructionParams parameters, CancellationToken token)
     {
-        var param = new PlantInstructionParams(request.Title, request.Description);
-        var results = await _instructionSearch.SearchAsync(param, new SearchAll(), token);
-        //TODO: Fix group filtering not working with elastic
-        results = results.Where(_ => _.Information.GroupName == request.GroupName);
-        return new ListViewResult<FindInstructionsViewResultItem>(
-            results.Select(result =>
-                new FindInstructionsViewResultItem(result.Id, result.Information.Title, result.Information.Description, result.CoverUrl is not null))
-            );
+        var items = await _query.Send(new SearchInstructions(parameters, new QueryOptions.All()), token);
+        return new ListViewResult<FindInstructionsViewResultItem>(items.ToList());
     }
-
-    public record GetInstructionViewResultItem(Guid Id, string Title, string Description,
-        string InstructionText, bool HasCover, string PlantGroupName);
 
     [HttpGet("{id}")]
     public async Task<ActionResult<QueryViewResult<GetInstructionViewResultItem>>> Get([FromRoute] Guid id, CancellationToken token)
     {
-        QueryViewResult<GetInstructionViewResultItem> result;
-        if (await _instructionQuery.ExistsAsync(id, token))
-        {
-            var instruction = await _instructionQuery.GetByIdAsync(id, token);
-
-            var information = instruction.Information;
-            result = new(new(instruction.Id, information.Title, information.Description, information.Text, instruction.CoverUrl is not null, information.GroupName));
-        }
-        else
-        {
-            result = new();
-        }
-        return result;
+        var item = await _query.Send(new GetInstruction(id), token);
+        return item.ToQueryResult();
     }
 
     public record CreateInstructionViewRequest(string GroupName, string Text, string Title, string Description);

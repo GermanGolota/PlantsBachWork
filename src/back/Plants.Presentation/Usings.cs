@@ -5,3 +5,4 @@ global using Plants.Aggregates;
 global using Plants.Aggregates.Infrastructure;
 global using Plants.Services;
 global using Plants.Services.Infrastructure;
+global using MediatR;

@@ -19,7 +19,7 @@ public class PlantOrder : AggregateBase, IEventHandler<PostOrderedEvent>,
     public PlantPost Post { get; private set; }
     public User Buyer { get; private set; }
 
-    public string TrackingNumber { get; private set; }
+    public string? TrackingNumber { get; private set; }
 
     public OrderStatus Status { get; private set; }
     public DateTime OrderTime { get; private set; }

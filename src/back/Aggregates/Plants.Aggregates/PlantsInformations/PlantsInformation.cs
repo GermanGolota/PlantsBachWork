@@ -5,13 +5,13 @@
 [Allow(Producer, Write)]
 [Allow(Manager, Read)]
 [Allow(Manager, Write)]
-public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>,
+public class PlantsInformation : AggregateBase, IEventHandler<StockAddedEvent>,
     IEventHandler<InstructionCreatedEvent>, IEventHandler<StockItemPostedEvent>,
     IEventHandler<DeliveryConfirmedEvent>
 {
     //Id that is being used by plant info singleton
     public static Guid InfoId { get; } = Guid.Parse("1eebef8d-ba56-406f-a9f5-bc21c1a9ca96");
-    public PlantInfo(Guid id) : base(InfoId)
+    public PlantsInformation(Guid id) : base(InfoId)
     {
         if (id != Guid.Empty && id != InfoId)
         {
@@ -26,7 +26,7 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>,
     // group name
     public Dictionary<string, PlantStats> TotalStats { get; private set; } = new();
     // date yyyy-mm-dd, group name
-    public Dictionary<string, Dictionary<string, PlantStats>> FinancialStats { get; private set; } = new();
+    public Dictionary<string, Dictionary<string, PlantStats>> DailyStats { get; private set; } = new();
 
     public void Handle(StockAddedEvent @event)
     {
@@ -98,35 +98,35 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>,
         TotalStats[groupName] = statUpdater(TotalStats[groupName]);
 
         var date = GetDateKey(time);
-        if (FinancialStats.ContainsKey(date) is false)
+        if (DailyStats.ContainsKey(date) is false)
         {
-            FinancialStats[date] = new();
+            DailyStats[date] = new();
         }
 
-        var groupStats = FinancialStats[date];
+        var groupStats = DailyStats[date];
         if (groupStats.ContainsKey(groupName) is false)
         {
             groupStats[groupName] = new();
         }
 
-        FinancialStats[date][groupName] = statUpdater(groupStats[groupName]);
+        DailyStats[date][groupName] = statUpdater(groupStats[groupName]);
     }
 
     private static string GetDateKey(DateTime time) =>
         time.ToString("yyyy-MM-dd");
 
-    private class PlantStockSubscription : IAggregateSubscription<PlantInfo, PlantStock>
+    private class PlantStockSubscription : IAggregateSubscription<PlantsInformation, PlantStock>
     {
-        public IEnumerable<EventSubscriptionBase<PlantInfo, PlantStock>> Subscriptions => new EventSubscriptionBase<PlantInfo, PlantStock>[]
+        public IEnumerable<EventSubscriptionBase<PlantsInformation, PlantStock>> Subscriptions => new EventSubscriptionBase<PlantsInformation, PlantStock>[]
         {
-            new EventSubscription<PlantInfo, PlantStock, StockAddedEvent>(
-                new AggregateLoadingTranspose<PlantInfo, StockAddedEvent>(
+            new EventSubscription<PlantsInformation, PlantStock, StockAddedEvent>(
+                new AggregateLoadingTranspose<PlantsInformation, StockAddedEvent>(
                     _ => InfoId,
                     (oldEvents, info) =>
                         oldEvents.Select(added => info.TransposeSubscribedEvent(added)))
                 ),
-            new EventSubscription<PlantInfo, PlantStock, StockItemPostedEvent>(
-                new AggregateLoadingTranspose<PlantInfo, StockItemPostedEvent>(
+            new EventSubscription<PlantsInformation, PlantStock, StockItemPostedEvent>(
+                new AggregateLoadingTranspose<PlantsInformation, StockItemPostedEvent>(
                     _ => InfoId,
                     (oldEvents, info) =>
                         oldEvents.Select(added => info.TransposeSubscribedEvent(added)))
@@ -134,12 +134,12 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>,
         };
     }
 
-    private class PlantInstructionSubscription : IAggregateSubscription<PlantInfo, PlantInstruction>
+    private class PlantInstructionSubscription : IAggregateSubscription<PlantsInformation, PlantInstruction>
     {
-        public IEnumerable<EventSubscriptionBase<PlantInfo, PlantInstruction>> Subscriptions => new EventSubscriptionBase<PlantInfo, PlantInstruction>[]
+        public IEnumerable<EventSubscriptionBase<PlantsInformation, PlantInstruction>> Subscriptions => new EventSubscriptionBase<PlantsInformation, PlantInstruction>[]
         {
-            new EventSubscription<PlantInfo, PlantInstruction, InstructionCreatedEvent>(
-                new AggregateLoadingTranspose<PlantInfo, InstructionCreatedEvent>(
+            new EventSubscription<PlantsInformation, PlantInstruction, InstructionCreatedEvent>(
+                new AggregateLoadingTranspose<PlantsInformation, InstructionCreatedEvent>(
                     _ => InfoId,
                     (oldEvents, info) =>
                         oldEvents.Select(added => info.TransposeSubscribedEvent(added)))
@@ -147,12 +147,12 @@ public class PlantInfo : AggregateBase, IEventHandler<StockAddedEvent>,
         };
     }
 
-    private class PlantOrderSubscription : IAggregateSubscription<PlantInfo, PlantOrder>
+    private class PlantOrderSubscription : IAggregateSubscription<PlantsInformation, PlantOrder>
     {
-        public IEnumerable<EventSubscriptionBase<PlantInfo, PlantOrder>> Subscriptions => new EventSubscriptionBase<PlantInfo, PlantOrder>[]
+        public IEnumerable<EventSubscriptionBase<PlantsInformation, PlantOrder>> Subscriptions => new EventSubscriptionBase<PlantsInformation, PlantOrder>[]
         {
-            new EventSubscription<PlantInfo, PlantOrder, DeliveryConfirmedEvent>(
-                new AggregateLoadingTranspose<PlantInfo, DeliveryConfirmedEvent>(
+            new EventSubscription<PlantsInformation, PlantOrder, DeliveryConfirmedEvent>(
+                new AggregateLoadingTranspose<PlantsInformation, DeliveryConfirmedEvent>(
                     _ => InfoId,
                     (oldEvents, info) =>
                         oldEvents.Select(added => info.TransposeSubscribedEvent(added)))

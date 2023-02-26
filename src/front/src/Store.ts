@@ -10,6 +10,7 @@ interface AuthResponse {
   roles: Roles[];
   token: string;
   username: string;
+  userId: string;
   notifications: NotificationMessage[];
 }
 

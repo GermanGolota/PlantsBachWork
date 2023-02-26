@@ -26,6 +26,12 @@ public static class DiExtensions
         services.AddSingleton<ILoggerInitializer, LoggerInitializer>();
         services.AddSingleton<IHealthChecker, HealthChecker>();
 
+        services.AddMediatR(
+            config =>
+            {
+                config.RegisterServicesFromAssemblyContaining<Plants.Aggregates.AssemblyMarker>();
+            });
+
         return services;
     }
 

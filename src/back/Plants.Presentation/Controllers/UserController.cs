@@ -2,35 +2,35 @@
 
 namespace Plants.Presentation;
 
-
 [ApiController]
 [Route("users")]
 public class UserController : ControllerBase
 {
     private readonly CommandHelper _command;
     private readonly SymmetricEncrypter _encrypter;
-    private readonly ISearchQueryService<User, UserSearchParams> _search;
+    private readonly IMediator _query;
 
-    public UserController(CommandHelper command, SymmetricEncrypter encrypter, ISearchQueryService<User, UserSearchParams> search)
+    public UserController(CommandHelper command, SymmetricEncrypter encrypter, IMediator query)
     {
         _command = command;
         _encrypter = encrypter;
-        _search = search;
+        _query = query;
     }
-
-    public record FindUsersResultItem(string FullName, string Mobile, string Login, UserRole[] RoleCodes);
 
     [HttpGet("")]
     public async Task<ActionResult<ListViewResult<FindUsersResultItem>>> Search(
        [FromQuery] string? name, [FromQuery] string? phone, [FromQuery] UserRole[]? roles, CancellationToken token)
     {
+
         var currentUserRoles = _command.IdentityProvider.Identity!.Roles;
         var allRoles = Enum.GetValues<UserRole>();
         var rolesToFetch = currentUserRoles.Intersect(roles ?? allRoles).ToArray();
-        var results = await _search.SearchAsync(new(name, phone, roles), new SearchAll(), token);
-        return new ListViewResult<FindUsersResultItem>(
-            results.Select(user => new FindUsersResultItem(user.FullName, user.PhoneNumber, user.Login, user.Roles))
-            );
+
+        // hack
+        await Task.Delay(2000, token);
+
+        var items = await _query.Send(new SearchUsers(new UserSearchParams(name, phone, rolesToFetch), new QueryOptions.All()), token);
+        return new ListViewResult<FindUsersResultItem>(items);
     }
 
     [HttpPost("{login}/add/{role}")]

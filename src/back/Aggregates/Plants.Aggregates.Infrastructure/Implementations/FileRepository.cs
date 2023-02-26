@@ -45,7 +45,7 @@ internal class FileRepository : IFileRepository
         endPath = AppendPath(endPath, _baseDirectory);
         endPath = SplitAndAppendPath(endPath, location.Path);
         endPath = AppendPath(endPath, $"{location.FileName}.{location.FileExtension}");
-        return endPath;
+        return endPath.ToString().TrimStart('/');
     }
 
     private static PathString SplitAndAppendPath(PathString initialPath, string path)

@@ -30,19 +30,6 @@ public class EventSourcingController : ControllerBase
         return new HistoryViewModel(model.Snapshots.Select(_ => new AggregateSnapshotViewModel(_, _.Time.Humanize(utcDate: true))).ToList());
     }
 
-    [HttpGet("convert/{idType}/{id}")]
-    public ActionResult<Guid> ConvertId(
-        [FromRoute] string id,
-        [FromRoute] IdConversionType idType,
-        CancellationToken token) =>
-            Ok(idType switch
-            {
-                IdConversionType.Guid => Guid.Parse(id),
-                IdConversionType.String => id.ToGuid(),
-                IdConversionType.Long => long.Parse(id).ToGuid(),
-                _ => throw new NotImplementedException(),
-            });
-
     [HttpPost("refresh")]
     public async Task<IActionResult> RefreshAggregate(
         [FromQuery] string name,

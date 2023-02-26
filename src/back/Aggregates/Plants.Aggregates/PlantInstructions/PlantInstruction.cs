@@ -13,20 +13,20 @@ public class PlantInstruction : AggregateBase,
     }
 
     public InstructionModel Information { get; private set; }
-    public string CoverUrl { get; private set; }
+    public Picture Cover { get; private set; }
 
     public void Handle(InstructionCreatedEvent @event)
     {
         Information = @event.Instruction;
-        CoverUrl = @event.CoverUrl;
+        Cover = new(Guid.NewGuid(), @event.CoverUrl);
     }
 
     public void Handle(InstructionEditedEvent @event)
     {
         Information = @event.Instruction;
-        if (@event.CoverUrl is null)
+        if (@event.CoverUrl is not null)
         {
-            CoverUrl = @event.CoverUrl;
+            Cover = new(Guid.NewGuid(), @event.CoverUrl);
         }
     }
 

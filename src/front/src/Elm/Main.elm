@@ -77,6 +77,7 @@ type alias AuthResponse =
     { token : String
     , roles : List UserRole
     , username : String
+    , userId : String
     , notifications : List ( Notification, Bool )
     , notificationsModal : Modal.Visibility
     , notificationsAccordion : Accordion.State
@@ -109,7 +110,7 @@ mainInit initFunc flags =
                 Ok res ->
                     Just res
 
-                Err e ->
+                Err _ ->
                     Nothing
     in
     initFunc authResp flags
@@ -154,6 +155,7 @@ decodeFlags =
         |> required "token" D.string
         |> required "roles" (D.list D.string |> D.map convertRolesStr)
         |> required "username" D.string
+        |> required "userId" D.string
         |> required "notifications" (D.list decodeNotificationPair)
         |> hardcoded Modal.hidden
         |> hardcoded Accordion.initialState

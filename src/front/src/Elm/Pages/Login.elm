@@ -2,6 +2,7 @@ port module Pages.Login exposing (main)
 
 import Array
 import Assets exposing (treeIcon)
+import Bootstrap.Accordion
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
@@ -11,7 +12,6 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Modal
-import Bootstrap.Accordion
 import Color exposing (Color, toCssString)
 import Dict
 import Endpoints exposing (Endpoint(..), endpointToUrl)
@@ -33,6 +33,7 @@ submitSuccessDecoder =
         |> required "token" D.string
         |> custom (rolesDecoder <| D.field "roles" (D.list D.int))
         |> required "username" D.string
+        |> required "userId" D.string
         |> hardcoded []
         |> hardcoded Bootstrap.Modal.hidden
         |> hardcoded Bootstrap.Accordion.initialState
@@ -45,6 +46,7 @@ encodeResponse response =
         , ( "roles", E.list roleToValue response.roles )
         , ( "username", E.string response.username )
         , ( "notifications", E.array E.string <| Array.fromList [] )
+        , ( "userId", E.string response.userId )
         ]
 
 

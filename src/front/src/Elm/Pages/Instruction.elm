@@ -8,7 +8,7 @@ import Html.Attributes exposing (alt, src, style)
 import Http
 import InstructionHelper exposing (InstructionView, getInstruction)
 import Json.Decode as D
-import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, mapCmd, subscriptionBase, updateBase)
+import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
 import Main2 exposing (viewBase)
 import NavBar exposing (instructionsLink)
 import Utils exposing (decodeId, fillParent, flex, flex1, intersect, largeCentered, mediumMargin, smallMargin, textCenter, textHtml)
@@ -96,12 +96,16 @@ viewPage resp page =
         Instruction ins ->
             let
                 historyBtn id =
-                    Button.linkButton
-                        [ Button.outlinePrimary
-                        , Button.onClick <| Navigate <| historyUrl "PlantInstruction" id
-                        , Button.attrs [ smallMargin ]
-                        ]
-                        [ text "View history" ]
+                    if isAdmin resp then
+                        Button.linkButton
+                            [ Button.outlinePrimary
+                            , Button.onClick <| Navigate <| historyUrl "PlantInstruction" id
+                            , Button.attrs [ smallMargin ]
+                            ]
+                            [ text "View history" ]
+
+                    else
+                        div [] []
 
                 editBtn id =
                     Button.linkButton
