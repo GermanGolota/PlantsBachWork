@@ -10,9 +10,6 @@ public class PlantsController : ControllerBase
     private readonly IMediator _query;
 
     public PlantsController(CommandHelper command,
-        ISearchQueryService<PlantStock, PlantStockParams> search,
-        IProjectionQueryService<PlantStock> stockProjector,
-        IProjectionQueryService<User> userProjector,
         IMediator query)
     {
         _command = command;

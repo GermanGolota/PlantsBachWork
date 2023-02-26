@@ -10,25 +10,14 @@ public record PostRemovedEvent(EventMetadata Metadata) : Event(Metadata);
 public record OrderPostCommand(CommandMetadata Metadata, DeliveryAddress Address) : Command(Metadata);
 public record PostOrderedEvent(EventMetadata Metadata, DeliveryAddress Address, string BuyerUsername) : Event(Metadata);
 
-public record DeliveryAddress(string City, long MailNumber);
-
 // Queries
 
-
 public record SearchPosts(PlantPostParams Parameters, QueryOptions Options) : IRequest<IEnumerable<PostSearchViewResultItem>>;
-
-public record PostSearchViewResultItem(Guid Id, string PlantName, string Description, Picture[] Images, double Price);
-
-public record PlantPostParams(
-    string? PlantName,
-    decimal? LowerPrice,
-    decimal? TopPrice,
-    DateTime? LastDate,
-    string[]? GroupNames,
-    string[]? RegionNames,
-    string[]? SoilNames) : ISearchParams;
-
 public record GetPost(Guid PostId) : IRequest<PostViewResultItem?>;
+
+// Types
+
+public record DeliveryAddress(string City, long MailNumber);
 
 public record PostViewResultItem(Guid Id, string PlantName, string Description, decimal Price,
     string[] SoilNames, string[] RegionNames, string[] GroupNames, DateTime Created,
@@ -39,3 +28,14 @@ public record PostViewResultItem(Guid Id, string PlantName, string Description, 
     public string CreatedHumanDate => Created.Humanize();
     public string CreatedDate => Created.ToShortDateString();
 }
+
+public record PlantPostParams(
+    string? PlantName,
+    decimal? LowerPrice,
+    decimal? TopPrice,
+    DateTime? LastDate,
+    string[]? GroupNames,
+    string[]? RegionNames,
+    string[]? SoilNames) : ISearchParams;
+
+public record PostSearchViewResultItem(Guid Id, string PlantName, string Description, Picture[] Images, double Price);

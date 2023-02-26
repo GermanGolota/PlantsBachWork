@@ -13,9 +13,9 @@ public record DeliveryConfirmedEvent(EventMetadata Metadata, string SellerUserna
 
 // Queries
 
-
 public record SearchOrders(PlantOrderParams Parameters, QueryOptions Options) : IRequest<IEnumerable<OrdersViewResultItem>>;
 
+// Types
 public record PlantOrderParams(bool OnlyMine) : ISearchParams;
 
 public record OrdersViewResultItem(
