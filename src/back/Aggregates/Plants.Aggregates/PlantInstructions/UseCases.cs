@@ -14,7 +14,7 @@ public record SearchInstructions(PlantInstructionParams Parameters, QueryOptions
 public record GetInstruction(Guid InstructionId) : IRequest<GetInstructionViewResultItem?>;
 
 public record FindInstructionsViewResultItem(Guid Id, string Title, string Description, string CoverUrl);
-public record PlantInstructionParams(string GroupName, string Title, string Description) : ISearchParams;
+public record PlantInstructionParams(string GroupName, string? Title, string? Description) : ISearchParams;
 
 // Types
 
