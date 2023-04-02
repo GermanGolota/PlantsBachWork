@@ -5,7 +5,9 @@
 [Allow(Producer, Write)]
 [Allow(Manager, Read)]
 [Allow(Manager, Write)]
-public class PlantStock : AggregateBase, IEventHandler<StockAddedEvent>, IEventHandler<StockEdditedEvent>, IDomainCommandHandler<PostStockItemCommand>
+public class PlantStock : AggregateBase, 
+    IEventHandler<StockAddedEvent>, IEventHandler<StockEdditedEvent>, 
+    IDomainCommandHandler<PostStockItemCommand>
 {
     public PlantStock(Guid id) : base(id)
     {
