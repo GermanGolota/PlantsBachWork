@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using System.Linq;
 
 namespace Plants.Initializer;
 
@@ -55,8 +54,9 @@ internal class Seeder
             var stocks = Enumerable.Range(0, _options.PlantsCount)
                 .Select(_ =>
                 {
+                    var demonym = GetDemonym();
                     var groupNames = testData.Groups.Random(1, 3);
-                    var name = $"{Faker.Country.Name()} {groupNames.First()}";
+                    var name = $"{demonym} {groupNames.First()}";
                     return new PlantInformation(name,
                         Faker.Lorem.Sentence(5),
                         testData.Regions.Random(3).ToArray(),
@@ -116,6 +116,24 @@ internal class Seeder
         {
             _logger.LogInformation("Skiping seeding");
         }
+    }
+
+    private static string GetDemonym()
+    {
+        string demonym = null!;
+
+        while (demonym is null)
+        {
+            var code = Faker.Country.TwoLetterCode();
+            var nat = NationalityFinder.FindOrDefault(code);
+            if (nat is not null)
+            {
+                demonym = nat.Demonym;
+                break;
+            }
+        }
+
+        return demonym;
     }
 
     public void SetupIdentity()
