@@ -5,3 +5,5 @@ global using Plants.Aggregates;
 global using Plants.Aggregates.Infrastructure;
 global using Plants.Services;
 global using Plants.Services.Infrastructure;
+global using Plants.Files;
+global using Plants.Files.Infrastructure;

@@ -8,8 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AspNetCore.HealthChecks.AzureStorage" Version="6.1.2" />
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.15.1" />
     <PackageReference Include="EventStore.Client" Version="22.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />

@@ -8,12 +8,15 @@ public class PlantsController : ControllerBase
 {
     private readonly CommandHelper _command;
     private readonly IMediator _query;
+    private readonly IPictureUploader _fileUploader;
 
     public PlantsController(CommandHelper command,
-        IMediator query)
+        IMediator query,
+        IPictureUploader fileUploader)
     {
         _command = command;
         _query = query;
+        _fileUploader = fileUploader;
     }
 
     [HttpGet("notposted")]
@@ -55,7 +58,8 @@ public class PlantsController : ControllerBase
     public async Task<ActionResult<CommandViewResult>> Create
         ([FromForm] AddPlantViewRequest body, IEnumerable<IFormFile> files, CancellationToken token)
     {
-        var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
+        var bytes = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
+        var pictures = await _fileUploader.UploadAsync(token, bytes.Select(_ => new FileView(Guid.NewGuid(), _)).ToArray());
         var stockId = new Random().GetRandomConvertableGuid();
         var plantInfo = new PlantInformation(body.Name, body.Description, body.RegionNames, body.SoilNames, body.GroupNames);
         var result = await _command.SendAndNotifyAsync(
@@ -74,7 +78,9 @@ public class PlantsController : ControllerBase
     public async Task<ActionResult<CommandViewResult>> Edit
       ([FromRoute] Guid id, [FromForm] EditPlantViewRequest plant, IEnumerable<IFormFile> files, CancellationToken token)
     {
-        var pictures = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
+        var bytes = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
+        var pictures = await _fileUploader.UploadAsync(token, bytes.Select(_ => new FileView(Guid.NewGuid(), _)).ToArray());
+
         var plantInfo = new PlantInformation(plant.PlantName, plant.PlantDescription, plant.RegionNames, plant.SoilNames, plant.GroupNames);
         var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<EditStockItemCommand>(new(id, nameof(PlantStock))),

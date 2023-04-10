@@ -1,7 +1,7 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 
-namespace Plants.Aggregates.Infrastructure;
+namespace Plants.Files.Infrastructure;
 
 internal sealed class BlobStoragesInitializer : IBlobStoragesInitializer
 {

@@ -6,19 +6,12 @@ public static class DiExtensions
 {
     public static IServiceCollection AddAggregatesInfrastructure(this IServiceCollection services)
     {
-        services.AddScoped<FileUploader>();
-
         services.AddDomainDependencies();
         services.AddScoped<TempPasswordContext>();
         services.AddScoped<IAuthorizer, Authorizer>();
         services.AddHttpContextAccessor();
         services.AddScoped<IIdentityProvider, IdentityProvider>();
         services.AddScoped<IIdentityHelper, IdentityHelper>();
-
-        services.AddSingleton<IBlobStoragesInitializer, BlobStoragesInitializer>();
-        services.AddSingleton<CloudBlobClientFactory>();
-        services.AddSingleton<IFileRepository, BlobFileRepository>();
-        services.AddHostedService<BlobStoragesInitializationHostedService>();
 
         services.AddHttpClient();
         services.AddScoped<ElasticSearchHelper>();

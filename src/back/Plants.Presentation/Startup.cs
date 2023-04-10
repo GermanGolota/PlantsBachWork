@@ -27,6 +27,7 @@ public class Startup
             .AddHostedService<EventStoreHostedService>()
             .AddJwtAuthorization(Configuration)
             .AddPlantsSwagger()
+            .AddFilesServices()
             .AddSignalR()
             .Services
             .AddTransient<INotificationSender, NotificationSender>()
@@ -38,7 +39,7 @@ public class Startup
 
         services.AddHealthChecks()
             .AddDomainHealthChecks(Configuration)
-            .AddAggregatesHealthChecks(Configuration);
+            .AddFilesHealthChecks(Configuration);
 
         services.AddCors(opt =>
         {

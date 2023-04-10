@@ -1,6 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 
-namespace Plants.Aggregates.Infrastructure;
+namespace Plants.Files.Infrastructure;
 
 internal sealed class BlobFileRepository : IFileRepository
 {

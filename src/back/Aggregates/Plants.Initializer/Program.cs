@@ -12,11 +12,12 @@ var host = Host.CreateDefaultBuilder(args)
                 .AddShared()
                 .AddSharedServices()
                 .AddDomainInfrastructure()
-                .AddAggregatesInfrastructure();
+                .AddAggregatesInfrastructure()
+                .AddFilesServices();
 
             services.AddHealthChecks()
                 .AddDomainHealthChecks(ctx.Configuration)
-                .AddAggregatesHealthChecks(ctx.Configuration);
+                .AddFilesHealthChecks(ctx.Configuration);
 
             services.AddSingleton<MongoRolesDbInitializer>()
                     .AddSingleton<ElasticSearchRolesInitializer>()

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 
-namespace Plants.Aggregates.Infrastructure;
+namespace Plants.Files.Infrastructure;
 
 internal sealed class BlobStoragesInitializationHostedService : IHostedService
 {

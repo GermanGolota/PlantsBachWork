@@ -1,7 +1,8 @@
 ﻿using Azure.Storage.Blobs;
 using Microsoft.Extensions.Options;
+using Plants.Domain.Infrastructure;
 
-namespace Plants.Aggregates.Infrastructure;
+namespace Plants.Files.Infrastructure;
 
 internal sealed class CloudBlobClientFactory
 {

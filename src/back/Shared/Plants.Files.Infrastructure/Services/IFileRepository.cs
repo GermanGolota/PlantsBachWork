@@ -1,4 +1,4 @@
-﻿namespace Plants.Aggregates;
+﻿namespace Plants.Files;
 
 public interface IFileRepository
 {

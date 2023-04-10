@@ -1,4 +1,4 @@
-﻿namespace Plants.Aggregates.Infrastructure;
+﻿namespace Plants.Files.Infrastructure;
 
 public interface IBlobStoragesInitializer
 {
