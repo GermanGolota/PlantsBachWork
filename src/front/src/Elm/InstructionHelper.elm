@@ -1,6 +1,6 @@
 module InstructionHelper exposing (..)
 
-import Endpoints exposing (Endpoint(..), getAuthed, getImageUrl)
+import Endpoints exposing (Endpoint(..), getAuthed)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (custom, requiredAt)
@@ -21,18 +21,18 @@ getInstruction : (Result Http.Error (Maybe InstructionView) -> msg) -> String ->
 getInstruction cmd token id =
     let
         expect =
-            Http.expectJson cmd (decodeInstruction token)
+            Http.expectJson cmd decodeInstruction
     in
     getAuthed token (GetInstruction id) expect Nothing
 
 
-decodeInstruction : String -> D.Decoder (Maybe InstructionView)
-decodeInstruction token =
-    existsDecoder (decodeInstructionBase token)
+decodeInstruction : D.Decoder (Maybe InstructionView)
+decodeInstruction =
+    existsDecoder decodeInstructionBase
 
 
-decodeInstructionBase : String -> D.Decoder InstructionView
-decodeInstructionBase token =
+decodeInstructionBase : D.Decoder InstructionView
+decodeInstructionBase =
     let
         requiredItem name =
             requiredAt [ "item", name ]
@@ -41,20 +41,20 @@ decodeInstructionBase token =
         |> requiredItem "id" decodeId
         |> requiredItem "title" D.string
         |> requiredItem "description" D.string
-        |> custom (D.at [ "item", "coverUrl" ] <| coverDecoder token)
+        |> custom (D.at [ "item", "coverUrl" ] coverDecoder)
         |> requiredItem "instructionText" D.string
         |> requiredItem "plantGroupName" decodeId
 
 
-coverDecoder : String -> D.Decoder (Maybe String)
-coverDecoder token =
-    D.nullable D.string |> D.andThen (coverImageDecoder token)
+coverDecoder : D.Decoder (Maybe String)
+coverDecoder =
+    D.nullable D.string |> D.andThen coverImageDecoder
 
 
-coverImageDecoder token url =
+coverImageDecoder url =
     case url of
         Just loc ->
-            D.succeed <| Just <| getImageUrl token loc
+            D.succeed <| Just loc
 
         Nothing ->
             D.succeed Nothing

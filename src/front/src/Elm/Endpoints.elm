@@ -1,4 +1,4 @@
-module Endpoints exposing (Endpoint(..), IdType(..), endpointToUrl, getAuthed, getAuthedQuery, getImageUrl, historyUrl, imagesDecoder, postAuthed, postAuthedQuery)
+module Endpoints exposing (Endpoint(..), IdType(..), endpointToUrl, getAuthed, getAuthedQuery, historyUrl, imagesDecoder, postAuthed, postAuthedQuery)
 
 import Dict
 import Http exposing (header, request)
@@ -160,12 +160,7 @@ imagesDecoder token at =
 
 imageDecoder : String -> D.Decoder ( String, String )
 imageDecoder token =
-    D.map2 Tuple.pair (D.field "id" D.string) (D.map (getImageUrl token) <| D.field "location" D.string)
-
-
-getImageUrl : String -> String -> String
-getImageUrl token location =
-    baseUrl ++ location ++ "?token=" ++ token
+    D.map2 Tuple.pair (D.field "id" D.string) (D.field "location" D.string)
 
 
 postAuthed : String -> Endpoint -> Http.Body -> Http.Expect msg -> Maybe Float -> Cmd msg

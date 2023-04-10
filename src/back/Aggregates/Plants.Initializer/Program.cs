@@ -37,6 +37,7 @@ var host = Host.CreateDefaultBuilder(args)
         .Build();
 
 host.Services.GetRequiredService<ILoggerInitializer>().Initialize();
+await host.Services.GetRequiredService<IBlobStoragesInitializer>().Initialize(CancellationToken.None);
 
 var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (s, e) =>
@@ -64,7 +65,7 @@ using (var scope = scopeFactory.CreateScope())
 
     sub.Stop();
 
-    var logger = provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Program>>();
+    var logger = provider.GetRequiredService<ILogger<Program>>();
     result.Match(succ =>
     {
         logger.LogInformation("Successfully initialized");

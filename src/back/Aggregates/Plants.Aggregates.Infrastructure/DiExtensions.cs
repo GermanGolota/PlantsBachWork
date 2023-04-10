@@ -14,7 +14,11 @@ public static class DiExtensions
         services.AddHttpContextAccessor();
         services.AddScoped<IIdentityProvider, IdentityProvider>();
         services.AddScoped<IIdentityHelper, IdentityHelper>();
-        services.AddSingleton<IFileRepository, FileRepository>();
+
+        services.AddSingleton<IBlobStoragesInitializer, BlobStoragesInitializer>();
+        services.AddSingleton<CloudBlobClientFactory>();
+        services.AddSingleton<IFileRepository, BlobFileRepository>();
+        services.AddHostedService<BlobStoragesInitializationHostedService>();
 
         services.AddHttpClient();
         services.AddScoped<ElasticSearchHelper>();
