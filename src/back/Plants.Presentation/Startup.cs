@@ -19,7 +19,6 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         services
-            .AddSingleton<IHostingContext, HostingContext>()
             .AddPlantsConfiguration(Configuration)
             .AddShared()
             .AddSharedServices()
@@ -27,7 +26,6 @@ public class Startup
             .AddAggregatesInfrastructure()
             .AddHostedService<EventStoreHostedService>()
             .AddJwtAuthorization(Configuration)
-            .AddWebRootFileProvider()
             .AddPlantsSwagger()
             .AddSignalR()
             .Services

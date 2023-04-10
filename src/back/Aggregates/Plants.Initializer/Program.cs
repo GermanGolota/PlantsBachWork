@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Plants.Initializer;
 using Serilog;
 
@@ -25,13 +23,7 @@ var host = Host.CreateDefaultBuilder(args)
                     .AddSingleton<AdminUserCreator>()
                     .AddSingleton<Initializer>()
                     .AddSingleton<Seeder>()
-                    .AddSingleton<INotificationSender, MockNotificationSender>()
-                    .AddSingleton<IFileProvider>(factory =>
-                    {
-                        var options = factory.GetRequiredService<IOptions<WebRootConfig>>().Value;
-                        return new PhysicalFileProvider(options.Path);
-                    })
-                    .AddSingleton<IHostingContext, HostingContext>();
+                    .AddSingleton<INotificationSender, MockNotificationSender>();
         })
         .UseSerilog()
         .Build();
