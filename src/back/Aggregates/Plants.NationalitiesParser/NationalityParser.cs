@@ -39,6 +39,8 @@ internal static class NationalityParser
             }
         })
             .OfType<Nationality>()
+            .GroupBy(_ => _.TwoLetterIsoCode)
+            .Select(_ => _.First())
             .ToArray();
     }
 
