@@ -7,7 +7,8 @@
 [Allow(Manager, Write)]
 public class PlantStock : AggregateBase, 
     IEventHandler<StockAddedEvent>, IEventHandler<StockEdditedEvent>, 
-    IDomainCommandHandler<PostStockItemCommand>
+    IDomainCommandHandler<PostStockItemCommand>, IDomainCommandHandler<AddToStockCommand>,
+    IDomainCommandHandler<EditStockItemCommand>
 {
     public PlantStock(Guid id) : base(id)
     {
@@ -50,6 +51,31 @@ public class PlantStock : AggregateBase,
         };
     }
 
-}
+    public CommandForbidden? ShouldForbid(AddToStockCommand command, IUserIdentity userIdentity) =>
+        userIdentity.HasRole(Producer).And(this.RequireNew);
 
-public record Picture(Guid Id, string Location);
+    public IEnumerable<Event> Handle(AddToStockCommand command) =>
+        new[]
+        {
+            new StockAddedEvent(EventFactory.Shared.Create<StockAddedEvent>(command), command.Plant, command.CreatedTime, command.Pictures, command.Metadata.UserName)
+        };
+
+    public CommandForbidden? ShouldForbid(EditStockItemCommand command, IUserIdentity user)
+    {
+        var validIdentity = user.HasRole(Manager).Or(user.HasRole(Producer).And(IsCaretaker(user)));
+        var notPosted = (BeenPosted is false).ToForbidden("Cannot edit stock after it was posted");
+        //TODO: Should validate data here
+        return validIdentity.And(notPosted);
+    }
+
+    private CommandForbidden? IsCaretaker(IUserIdentity user) =>
+        (user.UserName == Caretaker.Login).ToForbidden("Cannot eddit somebody elses stock item");
+
+    public IEnumerable<Event> Handle(EditStockItemCommand command)
+    {
+        return new[]
+        {
+            new StockEdditedEvent(EventFactory.Shared.Create<StockEdditedEvent>(command), command.Plant, command.NewPictures, command.RemovedPictureIds)
+        };
+    }
+}

@@ -4,10 +4,10 @@ namespace Plants.Aggregates;
 
 // Commands
 
-public record AddToStockCommand(CommandMetadata Metadata, PlantInformation Plant, DateTime CreatedTime, byte[][] Pictures) : Command(Metadata);
+public record AddToStockCommand(CommandMetadata Metadata, PlantInformation Plant, DateTime CreatedTime, Picture[] Pictures) : Command(Metadata);
 public record StockAddedEvent(EventMetadata Metadata, PlantInformation Plant, DateTime CreatedTime, Picture[] Pictures, string CaretakerUsername) : Event(Metadata);
 
-public record EditStockItemCommand(CommandMetadata Metadata, PlantInformation Plant, byte[][] NewPictures, Guid[] RemovedPictureIds) : Command(Metadata);
+public record EditStockItemCommand(CommandMetadata Metadata, PlantInformation Plant, Picture[] NewPictures, Guid[] RemovedPictureIds) : Command(Metadata);
 public record StockEdditedEvent(EventMetadata Metadata, PlantInformation Plant, Picture[] NewPictures, Guid[] RemovedPictureIds) : Event(Metadata);
 
 public record PostStockItemCommand(CommandMetadata Metadata, decimal Price) : Command(Metadata);

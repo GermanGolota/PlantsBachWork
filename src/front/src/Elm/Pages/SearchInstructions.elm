@@ -142,7 +142,7 @@ search : String -> String -> String -> String -> Cmd Msg
 search title description groupId token =
     let
         expect =
-            Http.expectJson GotSearch (searchDecoder token)
+            Http.expectJson GotSearch searchDecoder
 
         queryParams =
             [ ( "GroupName", groupId ), ( "Title", title ), ( "Description", description ) ]
@@ -150,18 +150,18 @@ search title description groupId token =
     Endpoints.getAuthedQuery (buildQuery queryParams) token FindInstructions expect Nothing |> mapCmd
 
 
-searchDecoder : String -> D.Decoder (List Instruction)
-searchDecoder token =
-    D.field "items" (D.list <| searchItemDecoder token)
+searchDecoder : D.Decoder (List Instruction)
+searchDecoder =
+    D.field "items" (D.list searchItemDecoder)
 
 
-searchItemDecoder : String -> D.Decoder Instruction
-searchItemDecoder token =
+searchItemDecoder : D.Decoder Instruction
+searchItemDecoder =
     D.succeed Instruction
         |> required "id" decodeId
         |> required "title" D.string
         |> required "description" D.string
-        |> custom (D.field "coverUrl" <| coverDecoder token)
+        |> custom (D.field "coverUrl" coverDecoder)
 
 
 

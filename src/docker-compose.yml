@@ -1,5 +1,15 @@
 version: "3.3"
 services:
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: "azurite --loose --blobHost 0.0.0.0 --blobPort 10000 --queueHost 0.0.0.0 --queuePort 10001 --location /workspace --debug /workspace/debug.log"
+    ports:
+      - 10000:10000
+      - 10011:10001
+      - 10012:10002
+    volumes:
+      - ./persist/blobs:/workspace
+
   eventstore:
     image: eventstore/eventstore:22.10.0-buster-slim
     environment:
@@ -105,9 +115,9 @@ services:
       - Connection__ElasticSearch__Template=https://elasticsearch:9200
       - Connection__ElasticSearch__Creds__Username=elastic
       - Connection__ElasticSearch__Creds__Password=changeit
+      - Connection__Blob_Template=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:10000/devstoreaccount1;QueueEndpoint=http://host.docker.internal:10011/devstoreaccount1;
       - Connection__DefaultCreds__Username=admin
       - Connection__DefaultCreds__Password=changeit
-      - WebRoot__Path=/wwwroot
     volumes:
       - ./persist/wwwroot:/wwwroot
     depends_on:
@@ -131,6 +141,7 @@ services:
       - Connection__MongoDb__Template=mongodb://{0}:{1}@mongo:27017/?authSource=admin
       - Connection__MongoDb__DatabaseName=Dev
       - Connection__ElasticSearch__Template=https://elasticsearch:9200
+      - Connection__Blob_Template=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:10000/devstoreaccount1;QueueEndpoint=http://host.docker.internal:10011/devstoreaccount1;
       - Connection__DefaultCreds__Username=admin
       - Connection__DefaultCreds__Password=changeit
     volumes:

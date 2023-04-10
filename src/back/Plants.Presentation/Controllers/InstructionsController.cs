@@ -8,12 +8,15 @@ public class InstructionsController : ControllerBase
 {
     private readonly CommandHelper _command;
     private readonly IMediator _query;
+    private readonly IPictureUploader _fileUploader;
 
     public InstructionsController(CommandHelper command,
-        IMediator query)
+        IMediator query,
+        IPictureUploader fileUploader)
     {
         _command = command;
         _query = query;
+        _fileUploader = fileUploader;
     }
 
     [HttpGet("find")]
@@ -36,10 +39,12 @@ public class InstructionsController : ControllerBase
     public async Task<ActionResult<CommandViewResult>> Create([FromForm] CreateInstructionViewRequest request, IFormFile? file, CancellationToken token)
     {
         var bytes = await file.ReadBytesAsync(token);
+        var picture = await _fileUploader.UploadAsync(token, new FileView(Guid.NewGuid(), bytes));
+
         var guid = new Random().GetRandomConvertableGuid();
         var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<CreateInstructionCommand>(new(guid, nameof(PlantInstruction))),
-            meta => new CreateInstructionCommand(meta, new(request.GroupName, request.Text, request.Title, request.Description), bytes),
+            meta => new CreateInstructionCommand(meta, new(request.GroupName, request.Text, request.Title, request.Description), picture.Single()),
             token);
         return result.ToCommandResult();
     }
@@ -50,9 +55,11 @@ public class InstructionsController : ControllerBase
         )
     {
         var bytes = await file.ReadBytesAsync(token);
+        var picture = await _fileUploader.UploadAsync(token, new FileView(Guid.NewGuid(), bytes));
+        
         var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<EditInstructionCommand>(new(id, nameof(PlantInstruction))),
-            meta => new EditInstructionCommand(meta, new(cmd.GroupName, cmd.Text, cmd.Title, cmd.Description), bytes),
+            meta => new EditInstructionCommand(meta, new(cmd.GroupName, cmd.Text, cmd.Title, cmd.Description), picture.Single()),
             token);
         return result.ToCommandResult();
     }

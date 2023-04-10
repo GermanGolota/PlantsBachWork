@@ -13,12 +13,14 @@ internal class Seeder
     private readonly IIdentityProvider _identity;
     private readonly IIdentityHelper _helper;
     private readonly TempPasswordContext _context;
+    private readonly IPictureUploader _uploader;
     private readonly UserConfig _userOptions;
 
     public Seeder(IOptions<SeedingConfig> options, CommandHelper command, 
         IDateTimeProvider dateTime, ILogger<Seeder> logger, 
         IOptionsSnapshot<UserConfig> userOptions, IIdentityProvider identity, 
-        IIdentityHelper helper, TempPasswordContext context)
+        IIdentityHelper helper, TempPasswordContext context,
+        IPictureUploader uploader)
     {
         _options = options.Value;
         _command = command;
@@ -27,6 +29,7 @@ internal class Seeder
         _identity = identity;
         _helper = helper;
         _context = context;
+        _uploader = uploader;
         _userOptions = userOptions.Get(UserConstrants.NewAdmin);
     }
 
@@ -89,7 +92,7 @@ internal class Seeder
                 stockIds.Add(stockId);
                 results.Add(await _command.SendAndWaitAsync(
                     factory => factory.Create<AddToStockCommand, PlantStock>(stockId),
-                    meta => new AddToStockCommand(meta, stock, _dateTime.UtcNow, images.Random(1, 3).ToArray()),
+                    meta => new AddToStockCommand(meta, stock, _dateTime.UtcNow, images.Random(1,3).ToArray()),
                     token)
                     );
             }
@@ -141,11 +144,12 @@ internal class Seeder
         _identity.UpdateIdentity(_helper.Build(_userOptions.Password, _userOptions.Username, _identity.Identity!.Roles));
     }
 
-    private async Task<byte[][]> LoadTestImagesAsync(CancellationToken token)
+    private async Task<Picture[]> LoadTestImagesAsync(CancellationToken token)
     {
         var path = Path.Combine("Seeding", "Data", "Images");
         var loadTasks = Directory.GetFiles(path).Select(file => File.ReadAllBytesAsync(file, token));
-        return await Task.WhenAll(loadTasks);
+        var files = await Task.WhenAll(loadTasks);
+        return await _uploader.UploadAsync(token, files.Select(_ => new FileView(Guid.NewGuid(), _)).ToArray());
     }
 
     private async Task<PlantTestData> LoadTestDataAsync(CancellationToken token)

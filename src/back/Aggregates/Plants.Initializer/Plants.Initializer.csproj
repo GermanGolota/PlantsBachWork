@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Plants.Files.Infrastructure\Plants.Files.Infrastructure.csproj" />
     <ProjectReference Include="..\Plants.Aggregates.Infrastructure\Plants.Aggregates.Infrastructure.csproj" />
     <ProjectReference Include="..\Plants.Aggregates\Plants.Aggregates.csproj" />
   </ItemGroup>

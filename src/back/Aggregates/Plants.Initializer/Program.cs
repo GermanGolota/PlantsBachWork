@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Plants.Initializer;
 using Serilog;
 
@@ -14,10 +12,12 @@ var host = Host.CreateDefaultBuilder(args)
                 .AddShared()
                 .AddSharedServices()
                 .AddDomainInfrastructure()
-                .AddAggregatesInfrastructure();
+                .AddAggregatesInfrastructure()
+                .AddFilesServices();
 
             services.AddHealthChecks()
-                .AddDomainHealthChecks(ctx.Configuration);
+                .AddDomainHealthChecks(ctx.Configuration)
+                .AddFilesHealthChecks(ctx.Configuration);
 
             services.AddSingleton<MongoRolesDbInitializer>()
                     .AddSingleton<ElasticSearchRolesInitializer>()
@@ -25,18 +25,13 @@ var host = Host.CreateDefaultBuilder(args)
                     .AddSingleton<AdminUserCreator>()
                     .AddSingleton<Initializer>()
                     .AddSingleton<Seeder>()
-                    .AddSingleton<INotificationSender, MockNotificationSender>()
-                    .AddSingleton<IFileProvider>(factory =>
-                    {
-                        var options = factory.GetRequiredService<IOptions<WebRootConfig>>().Value;
-                        return new PhysicalFileProvider(options.Path);
-                    })
-                    .AddSingleton<IHostingContext, HostingContext>();
+                    .AddSingleton<INotificationSender, MockNotificationSender>();
         })
         .UseSerilog()
         .Build();
 
 host.Services.GetRequiredService<ILoggerInitializer>().Initialize();
+await host.Services.GetRequiredService<IBlobStoragesInitializer>().Initialize(CancellationToken.None);
 
 var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (s, e) =>
@@ -64,7 +59,7 @@ using (var scope = scopeFactory.CreateScope())
 
     sub.Stop();
 
-    var logger = provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Program>>();
+    var logger = provider.GetRequiredService<ILogger<Program>>();
     result.Match(succ =>
     {
         logger.LogInformation("Successfully initialized");

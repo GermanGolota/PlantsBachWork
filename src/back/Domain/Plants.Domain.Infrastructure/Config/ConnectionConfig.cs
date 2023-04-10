@@ -17,6 +17,9 @@ public class ConnectionConfig
     public ElasticSearchConnection ElasticSearch { get; set; } = null!;
 
     [Required]
+    public BlobServiceConnection Blob { get; set; } = null!;
+
+    [Required]
     public ServiceCreds DefaultCreds { get; set; } = null!;
 
     public ServiceCreds GetCreds(Func<ConnectionConfig, ServiceConnection> connectionGetter) =>
@@ -28,6 +31,12 @@ public class ServiceConnection
     [Required]
     public string Template { get; set; } = null!;
     public ServiceCreds? Creds { get; set; }
+}
+
+public class BlobServiceConnection : ServiceConnection
+{
+    [Required]
+    public string ContainerName { get; set; } = "images";
 }
 
 public class MongoDbServiceConnection : ServiceConnection

@@ -10,14 +10,6 @@ namespace Plants.Presentation;
 
 public static class DIExtensions
 {
-    public static IServiceCollection AddWebRootFileProvider(this IServiceCollection services)
-    {
-        services.AddSingleton<IHostingContext, HostingContext>();
-        services.AddSingleton(factory => factory.GetRequiredService<IWebHostEnvironment>().WebRootFileProvider);
-
-        return services;
-    }
-
     public static IServiceCollection AddPlantsConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
         services.BindConfigSections(configuration, typeof(StartupCheckingConfigBinder<>));
