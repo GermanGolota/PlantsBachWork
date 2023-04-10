@@ -37,7 +37,8 @@ public class Startup
             });
 
         services.AddHealthChecks()
-            .AddDomainHealthChecks(Configuration);
+            .AddDomainHealthChecks(Configuration)
+            .AddAggregatesHealthChecks(Configuration);
 
         services.AddCors(opt =>
         {
