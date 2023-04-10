@@ -13,6 +13,8 @@ COPY ["Aggregates/Plants.Aggregates.Infrastructure/Plants.Aggregates.Infrastruct
 COPY ["Aggregates/Plants.Aggregates/Plants.Aggregates.csproj", "Aggregates/Plants.Aggregates/"]
 COPY ["Shared/Plants.Services/Plants.Services.csproj", "Shared/Plants.Services/"]
 COPY ["Shared/Plants.Services.Infrastructure/Plants.Services.Infrastructure.csproj", "Shared/Plants.Services.Infrastructure/"]
+COPY ["Shared/Plants.Files.Infrastructure/Plants.Files.Infrastructure.csproj", "Shared/Plants.Files.Infrastructure/"]
+COPY ["Shared/Plants.Files/Plants.Files.csproj", "Shared/Plants.Files/"]
 RUN dotnet restore "Plants.Presentation/Plants.Presentation.csproj"
 COPY . .
 WORKDIR "/src/Plants.Presentation"

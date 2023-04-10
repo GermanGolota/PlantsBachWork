@@ -5,12 +5,14 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 
 COPY ["Aggregates/Plants.Initializer/Plants.Initializer.csproj", "Aggregates/Plants.Initializer/"]
-COPY ["Aggregates/Plants.Aggregates.Infrastructure/Plants.Aggregates.Infrastructure.csproj", "Aggregates/Plants.Aggregates.Infrastructure/"]
+COPY ["Shared/Plants.Files.Infrastructure/Plants.Files.Infrastructure.csproj", "Shared/Plants.Files.Infrastructure/"]
 COPY ["Domain/Plants.Domain.Infrastructure/Plants.Domain.Infrastructure.csproj", "Domain/Plants.Domain.Infrastructure/"]
 COPY ["Shared/Plants.Shared/Plants.Shared.csproj", "Shared/Plants.Shared/"]
 COPY ["Domain/Plants.Domain/Plants.Domain.csproj", "Domain/Plants.Domain/"]
+COPY ["Shared/Plants.Files/Plants.Files.csproj", "Shared/Plants.Files/"]
 COPY ["Aggregates/Plants.Aggregates/Plants.Aggregates.csproj", "Aggregates/Plants.Aggregates/"]
 COPY ["Shared/Plants.Services/Plants.Services.csproj", "Shared/Plants.Services/"]
+COPY ["Aggregates/Plants.Aggregates.Infrastructure/Plants.Aggregates.Infrastructure.csproj", "Aggregates/Plants.Aggregates.Infrastructure/"]
 COPY ["Shared/Plants.Services.Infrastructure/Plants.Services.Infrastructure.csproj", "Shared/Plants.Services.Infrastructure/"]
 RUN dotnet restore "Aggregates/Plants.Initializer/Plants.Initializer.csproj"
 COPY . .
