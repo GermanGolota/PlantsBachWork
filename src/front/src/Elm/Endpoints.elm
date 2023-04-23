@@ -149,17 +149,17 @@ endpointToUrl endpoint =
             baseUrl ++ "eventsourcing/history"
 
 
-imagesDecoder : String -> List String -> D.Decoder ImageList.Model
-imagesDecoder token at =
+imagesDecoder : List String -> D.Decoder ImageList.Model
+imagesDecoder at =
     let
         baseDecoder tuples =
             ImageList.fromDict <| Dict.fromList tuples
     in
-    D.map baseDecoder (D.at at (D.list <| imageDecoder token))
+    D.map baseDecoder (D.at at (D.list imageDecoder))
 
 
-imageDecoder : String -> D.Decoder ( String, String )
-imageDecoder token =
+imageDecoder : D.Decoder ( String, String )
+imageDecoder =
     D.map2 Tuple.pair (D.field "id" D.string) (D.field "location" D.string)
 
 

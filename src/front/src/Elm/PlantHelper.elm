@@ -36,13 +36,13 @@ type alias PersonCreds =
     }
 
 
-plantDecoder : Maybe Float -> String -> D.Decoder (Maybe PlantModel)
-plantDecoder priceOverride token =
-    existsDecoder (plantDecoderBase priceOverride token)
+plantDecoder : Maybe Float -> D.Decoder (Maybe PlantModel)
+plantDecoder priceOverride =
+    existsDecoder (plantDecoderBase priceOverride)
 
 
-plantDecoderBase : Maybe Float -> String -> D.Decoder PlantModel
-plantDecoderBase priceOverride token =
+plantDecoderBase : Maybe Float -> D.Decoder PlantModel
+plantDecoderBase priceOverride =
     let
         requiredItem name =
             requiredAt [ "item", name ]
@@ -67,7 +67,7 @@ plantDecoderBase priceOverride token =
         |> requiredItem "sellerPhone" D.string
         |> custom (credsDecoder "seller")
         |> custom (credsDecoder "careTaker")
-        |> custom (imagesDecoder token [ "item", "images" ])
+        |> custom (imagesDecoder [ "item", "images" ])
 
 
 credsDecoder : String -> D.Decoder PersonCreds

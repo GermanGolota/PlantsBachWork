@@ -743,7 +743,7 @@ plantDecoderBase av token =
         |> custom (D.map reg regIdsDecoder)
         |> custom (D.map soil soilIdsDecoder)
         |> custom (D.map family familyIdsDecoder)
-        |> custom (imagesDecoder token [ "item", "images" ])
+        |> custom (imagesDecoder [ "item", "images" ])
         |> hardcoded []
 
 

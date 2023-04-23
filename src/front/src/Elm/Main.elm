@@ -16,7 +16,7 @@ notifyCmd result =
         SubmittedSuccess _ command ->
             Task.perform (\_ -> NotificationStarted <| Notification command True) (Task.succeed True)
 
-        SubmittedFail a ->
+        SubmittedFail _ ->
             Cmd.none
 
 
@@ -247,7 +247,7 @@ updateBase updateFunc message model =
                                 auth.notifications
 
                             else
-                                [ ( notification, False ) ] ++ auth.notifications
+                                ( notification, False ) :: auth.notifications
                     in
                     ( Authorized { auth | notifications = updateNotifications } page, resizeAccordions () )
 

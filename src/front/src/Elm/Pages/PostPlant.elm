@@ -128,7 +128,7 @@ getPlantCommand : String -> String -> Cmd Msg
 getPlantCommand token plantId =
     let
         expect =
-            Http.expectJson GotPlant (plantDecoder (Just 0) token)
+            Http.expectJson GotPlant (plantDecoder (Just 0))
     in
     getAuthed token (PreparedPlant plantId) expect Nothing |> mapCmd
 

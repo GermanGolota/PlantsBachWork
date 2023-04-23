@@ -358,17 +358,17 @@ search items token =
 
 searchResultsDecoder : String -> D.Decoder (List SearchResultItem)
 searchResultsDecoder token =
-    D.field "items" <| D.list <| searchResultDecoder token
+    D.field "items" <| D.list <| searchResultDecoder
 
 
-searchResultDecoder : String -> D.Decoder SearchResultItem
-searchResultDecoder token =
+searchResultDecoder : D.Decoder SearchResultItem
+searchResultDecoder =
     D.succeed SearchResultItem
         |> required "id" decodeId
         |> required "plantName" D.string
         |> required "description" D.string
         |> required "price" D.float
-        |> custom (imagesDecoder token [ "images" ])
+        |> custom (imagesDecoder [ "images" ])
         |> hardcoded Nothing
 
 
