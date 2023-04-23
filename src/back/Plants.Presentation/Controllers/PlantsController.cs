@@ -84,7 +84,7 @@ public class PlantsController : ControllerBase
         var plantInfo = new PlantInformation(plant.PlantName, plant.PlantDescription, plant.RegionNames, plant.SoilNames, plant.FamilyNames);
         var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<EditStockItemCommand>(new(id, nameof(PlantStock))),
-            meta => new EditStockItemCommand(meta, plantInfo, pictures, plant.RemovedImages),
+            meta => new EditStockItemCommand(meta, plantInfo, pictures, plant.RemovedImages ?? Array.Empty<Guid>()),
             token);
         return result.ToCommandResult();
     }

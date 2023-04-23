@@ -52,7 +52,7 @@ internal static class NationalityParser
                 {
                     return new RegionInfo(culture.Name);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     //Console.WriteLine(e.Message);
                     return null;

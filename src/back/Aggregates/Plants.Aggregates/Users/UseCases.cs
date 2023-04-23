@@ -19,9 +19,9 @@ public record GetOwnUsedAddresses : IRequest<AddressViewResult>;
 
 // Types
 
-public record UserCreationDto(string FirstName, string LastName, string PhoneNumber, string Login, string Email, string Language, UserRole[] Roles);
+public record UserCreationDto(string FirstName, string LastName, string PhoneNumber, string Login, string Email, string? Language, UserRole[] Roles);
 
 public record AddressViewResult(List<DeliveryAddress> Addresses);
-public record UserSearchParams(string Name, string Phone, UserRole[] Roles) : ISearchParams;
+public record UserSearchParams(string? Name, string? Phone, UserRole[] Roles) : ISearchParams;
 public record FindUsersResultItem(Guid Id, string FullName, string Mobile, string Login, UserRole[] RoleCodes);
 
