@@ -20,7 +20,7 @@ public record GetPost(Guid PostId) : IRequest<PostViewResultItem?>;
 public record DeliveryAddress(string City, long MailNumber);
 
 public record PostViewResultItem(Guid Id, string PlantName, string Description, decimal Price,
-    string[] SoilNames, string[] RegionNames, string[] GroupNames, DateTime Created,
+    string[] SoilNames, string[] RegionNames, string[] FamilyNames, DateTime Created,
     string SellerName, string SellerPhone, long SellerCared, long SellerSold, long SellerInstructions,
     long CareTakerCared, long CareTakerSold, long CareTakerInstructions, Picture[] Images
 )
@@ -34,7 +34,7 @@ public record PlantPostParams(
     decimal? LowerPrice,
     decimal? TopPrice,
     DateTime? LastDate,
-    string[]? GroupNames,
+    string[]? FamilyNames,
     string[]? RegionNames,
     string[]? SoilNames) : ISearchParams;
 

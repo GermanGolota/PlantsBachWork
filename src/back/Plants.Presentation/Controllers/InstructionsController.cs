@@ -33,7 +33,7 @@ public class InstructionsController : ControllerBase
         return item.ToQueryResult();
     }
 
-    public record CreateInstructionViewRequest(string GroupName, string Text, string Title, string Description);
+    public record CreateInstructionViewRequest(string FamilyName, string Text, string Title, string Description);
 
     [HttpPost("create")]
     public async Task<ActionResult<CommandViewResult>> Create([FromForm] CreateInstructionViewRequest request, IFormFile? file, CancellationToken token)
@@ -44,7 +44,7 @@ public class InstructionsController : ControllerBase
         var guid = new Random().GetRandomConvertableGuid();
         var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<CreateInstructionCommand>(new(guid, nameof(PlantInstruction))),
-            meta => new CreateInstructionCommand(meta, new(request.GroupName, request.Text, request.Title, request.Description), picture.Single()),
+            meta => new CreateInstructionCommand(meta, new(request.FamilyName, request.Text, request.Title, request.Description), picture.Single()),
             token);
         return result.ToCommandResult();
     }
@@ -59,7 +59,7 @@ public class InstructionsController : ControllerBase
         
         var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<EditInstructionCommand>(new(id, nameof(PlantInstruction))),
-            meta => new EditInstructionCommand(meta, new(cmd.GroupName, cmd.Text, cmd.Title, cmd.Description), picture.Single()),
+            meta => new EditInstructionCommand(meta, new(cmd.FamilyName, cmd.Text, cmd.Title, cmd.Description), picture.Single()),
             token);
         return result.ToCommandResult();
     }

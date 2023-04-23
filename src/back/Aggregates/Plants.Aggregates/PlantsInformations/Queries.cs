@@ -61,6 +61,6 @@ internal sealed record GetUsedPlantSpecificationsHandler : IRequestHandler<GetUs
     public async Task<PlantSpecifications> Handle(GetUsedPlantSpecifications request, CancellationToken cancellationToken)
     {
         var dicts = await _query.GetByIdAsync(PlantsInformation.InfoId, cancellationToken);
-        return new PlantSpecifications(dicts.GroupNames, dicts.RegionNames, dicts.SoilNames);
+        return new PlantSpecifications(dicts.FamilyNames, dicts.RegionNames, dicts.SoilNames);
     }
 }

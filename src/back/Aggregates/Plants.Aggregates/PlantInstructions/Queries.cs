@@ -12,9 +12,9 @@ internal sealed class SearchInstructionsHandler : IRequestHandler<SearchInstruct
     public async Task<IEnumerable<FindInstructionsViewResultItem>> Handle(SearchInstructions request, CancellationToken token)
     {
         var results = await _search.SearchAsync(request.Parameters, request.Options, token);
-        //TODO: Fix group filtering not working with elastic
+        //TODO: Fix family filtering not working with elastic
         return results
-            .Where(_ => _.Information.GroupName == request.Parameters.GroupName)
+            .Where(_ => _.Information.FamilyName == request.Parameters.FamilyName)
             .Select(result => new FindInstructionsViewResultItem(result.Id, result.Information.Title, result.Information.Description, result.Cover.Location));
     }
 }
@@ -37,7 +37,7 @@ internal sealed class GetInstructionHandler : IRequestHandler<GetInstruction, Ge
             var instruction = await _query.GetByIdAsync(request.InstructionId, token);
 
             var information = instruction.Information;
-            result = new(instruction.Id, information.Title, information.Description, information.Text, instruction.Cover.Location, information.GroupName);
+            result = new(instruction.Id, information.Title, information.Description, information.Text, instruction.Cover.Location, information.FamilyName);
         }
         else
         {

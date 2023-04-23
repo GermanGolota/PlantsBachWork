@@ -52,7 +52,7 @@ public class PlantsController : ControllerBase
     }
 
     public record AddPlantViewRequest(string Name, string Description, 
-        string[] RegionNames, string[] SoilNames, string[] GroupNames, DateTime Created);
+        string[] RegionNames, string[] SoilNames, string[] FamilyNames, DateTime Created);
 
     [HttpPost("add")]
     public async Task<ActionResult<CommandViewResult>> Create
@@ -61,7 +61,7 @@ public class PlantsController : ControllerBase
         var bytes = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
         var pictures = await _fileUploader.UploadAsync(token, bytes.Select(_ => new FileView(Guid.NewGuid(), _)).ToArray());
         var stockId = new Random().GetRandomConvertableGuid();
-        var plantInfo = new PlantInformation(body.Name, body.Description, body.RegionNames, body.SoilNames, body.GroupNames);
+        var plantInfo = new PlantInformation(body.Name, body.Description, body.RegionNames, body.SoilNames, body.FamilyNames);
         var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<AddToStockCommand>(new(stockId, nameof(PlantStock))),
             meta => new AddToStockCommand(meta, plantInfo, body.Created, pictures),
@@ -72,7 +72,7 @@ public class PlantsController : ControllerBase
     }
 
     public record EditPlantViewRequest(string PlantName,
-      string PlantDescription, string[] RegionNames, string[] SoilNames, string[] GroupNames, Guid[]? RemovedImages);
+      string PlantDescription, string[] RegionNames, string[] SoilNames, string[] FamilyNames, Guid[]? RemovedImages);
 
     [HttpPost("{id}/edit")]
     public async Task<ActionResult<CommandViewResult>> Edit
@@ -81,7 +81,7 @@ public class PlantsController : ControllerBase
         var bytes = await Task.WhenAll(files.Select(file => file.ReadBytesAsync(token)));
         var pictures = await _fileUploader.UploadAsync(token, bytes.Select(_ => new FileView(Guid.NewGuid(), _)).ToArray());
 
-        var plantInfo = new PlantInformation(plant.PlantName, plant.PlantDescription, plant.RegionNames, plant.SoilNames, plant.GroupNames);
+        var plantInfo = new PlantInformation(plant.PlantName, plant.PlantDescription, plant.RegionNames, plant.SoilNames, plant.FamilyNames);
         var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<EditStockItemCommand>(new(id, nameof(PlantStock))),
             meta => new EditStockItemCommand(meta, plantInfo, pictures, plant.RemovedImages),

@@ -58,13 +58,13 @@ internal class Seeder
                 .Select(_ =>
                 {
                     var demonym = GetDemonym();
-                    var groupNames = testData.Groups.Random(1, 3);
-                    var name = $"{demonym} {groupNames.First()}";
+                    var familyNames = testData.Families.Random(1, 3);
+                    var name = $"{demonym} {familyNames.First()}";
                     return new PlantInformation(name,
                         Faker.Lorem.Sentence(5),
                         testData.Regions.Random(3).ToArray(),
                         testData.Soils.Random(1, 3).ToArray(),
-                        groupNames.ToArray());
+                        familyNames.ToArray());
                 })
                 .ToArray();
 
@@ -159,4 +159,4 @@ internal class Seeder
     }
 }
 
-internal record PlantTestData(List<string> Regions, List<string> Groups, List<string> Soils, List<string> Languages);
+internal record PlantTestData(List<string> Regions, List<string> Families, List<string> Soils, List<string> Languages);

@@ -35,7 +35,7 @@ internal sealed class GetStockItemHandler : IRequestHandler<GetStockItem, PlantV
             var plant = await _query.GetByIdAsync(request.StockId, cancellationToken);
             var info = plant.Information;
             item = new PlantViewResultItem(info.PlantName, info.Description,
-                info.GroupNames, info.SoilNames, plant.Pictures, info.RegionNames, plant.CreatedTime);
+                info.FamilyNames, info.SoilNames, plant.Pictures, info.RegionNames, plant.CreatedTime);
         }
         else
         {
@@ -70,7 +70,7 @@ internal sealed class GetPreparedHandler : IRequestHandler<GetPrepared, Prepared
             var plant = stock.Information;
             result = new PreparedPostResultItem(stock.Id,
                 plant.PlantName, plant.Description,
-                plant.SoilNames, plant.RegionNames, plant.GroupNames, stock.CreatedTime,
+                plant.SoilNames, plant.RegionNames, plant.FamilyNames, stock.CreatedTime,
                 seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
                 caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated,
                 stock.Pictures

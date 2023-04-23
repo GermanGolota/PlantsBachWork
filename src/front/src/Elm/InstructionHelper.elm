@@ -13,7 +13,7 @@ type alias InstructionView =
     , description : String
     , imageUrl : Maybe String
     , text : String
-    , groupId : String
+    , familyId : String
     }
 
 
@@ -43,7 +43,7 @@ decodeInstructionBase =
         |> requiredItem "description" D.string
         |> custom (D.at [ "item", "coverUrl" ] coverDecoder)
         |> requiredItem "instructionText" D.string
-        |> requiredItem "plantGroupName" decodeId
+        |> requiredItem "plantFamilyName" decodeId
 
 
 coverDecoder : D.Decoder (Maybe String)
