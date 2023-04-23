@@ -101,7 +101,7 @@ viewPlantBase priceEditable eventConverter imgConverter btns plant =
                 ++ [ viewPlantStat "Soils" (String.join ", " plant.soils)
                    , viewPlantStat "Regions" (String.join ", " plant.regions)
                    , viewPlantStat "Families" (String.join ", " plant.families)
-                   , viewPlantStat "Age" plant.created
+                   , viewPlantStat "Date of birth/Age" plant.created
                    , btns
                    ]
             )
