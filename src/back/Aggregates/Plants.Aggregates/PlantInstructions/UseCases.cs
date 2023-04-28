@@ -13,9 +13,6 @@ public record InstructionEditedEvent(EventMetadata Metadata, InstructionModel In
 public record SearchInstructions(PlantInstructionParams Parameters, QueryOptions Options) : IRequest<IEnumerable<FindInstructionsViewResultItem>>;
 public record GetInstruction(Guid InstructionId) : IRequest<GetInstructionViewResultItem?>;
 
-public record FindInstructionsViewResultItem(Guid Id, string Title, string Description, string CoverUrl);
-public record PlantInstructionParams(string FamilyName, string? Title, string? Description) : ISearchParams;
-
 // Types
 
 public record GetInstructionViewResultItem(Guid Id, string Title, string Description,
@@ -24,3 +21,6 @@ public record GetInstructionViewResultItem(Guid Id, string Title, string Descrip
 public record InstructionModel(
     string FamilyName, string Text, string Title,
     string Description);
+
+public record FindInstructionsViewResultItem(Guid Id, string Title, string Description, string CoverUrl);
+public record PlantInstructionParams(string FamilyName, string? Title, string? Description) : ISearchParams;

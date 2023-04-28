@@ -116,8 +116,34 @@ mainInit initFunc flags =
     initFunc authResp flags
 
 
-convertRolesStr roleIds =
-    List.map convertRoleStr roleIds
+decodeFlags : D.Decoder AuthResponse
+decodeFlags =
+    let
+        convertRoleStr roleId =
+            case roleId of
+                "Consumer" ->
+                    Consumer
+
+                "Producer" ->
+                    Producer
+
+                "Manager" ->
+                    Manager
+
+                _ ->
+                    Consumer
+
+        convertRolesStr roleIds =
+            List.map convertRoleStr roleIds
+    in
+    D.succeed AuthResponse
+        |> required "token" D.string
+        |> required "roles" (D.list D.string |> D.map convertRolesStr)
+        |> required "username" D.string
+        |> required "userId" D.string
+        |> required "notifications" (D.list decodeNotificationPair)
+        |> hardcoded Modal.hidden
+        |> hardcoded Accordion.initialState
 
 
 roleToStr : UserRole -> String
@@ -131,34 +157,6 @@ roleToStr role =
 
         Manager ->
             "Manager"
-
-
-convertRoleStr : String -> UserRole
-convertRoleStr roleId =
-    case roleId of
-        "Consumer" ->
-            Consumer
-
-        "Producer" ->
-            Producer
-
-        "Manager" ->
-            Manager
-
-        _ ->
-            Consumer
-
-
-decodeFlags : D.Decoder AuthResponse
-decodeFlags =
-    D.succeed AuthResponse
-        |> required "token" D.string
-        |> required "roles" (D.list D.string |> D.map convertRolesStr)
-        |> required "username" D.string
-        |> required "userId" D.string
-        |> required "notifications" (D.list decodeNotificationPair)
-        |> hardcoded Modal.hidden
-        |> hardcoded Accordion.initialState
 
 
 type ModelBase model

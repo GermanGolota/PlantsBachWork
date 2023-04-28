@@ -36,7 +36,6 @@ public record PlantViewResultItem(string PlantName, string Description, string[]
     public string CreatedDate => Created.ToShortDateString();
 }
 
-
 public record PreparedPostResultItem(
     Guid Id, string PlantName, string Description, string[] SoilNames,
     string[] RegionNames, string[] FamilyNames, DateTime Created,

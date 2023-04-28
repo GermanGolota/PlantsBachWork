@@ -29,15 +29,6 @@ public class PlantStock : AggregateBase,
         Metadata.Referenced.Add(new(@event.CaretakerUsername.ToGuid(), nameof(User)));
     }
 
-    public void Handle(StockEdditedEvent @event)
-    {
-        Information = @event.Plant;
-        Pictures = Pictures
-            .Where(_ => @event.RemovedPictureIds?.NotContains(_.Id) ?? true)
-            .Union(@event.NewPictures)
-            .ToArray();
-    }
-
     public CommandForbidden? ShouldForbid(PostStockItemCommand command, IUserIdentity user) =>
         user.HasAnyRoles(Producer, Manager)
             .And((BeenPosted is false).ToForbidden("Cannot post already posted stock"));
@@ -64,18 +55,25 @@ public class PlantStock : AggregateBase,
     {
         var validIdentity = user.HasRole(Manager).Or(user.HasRole(Producer).And(IsCaretaker(user)));
         var notPosted = (BeenPosted is false).ToForbidden("Cannot edit stock after it was posted");
-        //TODO: Should validate data here
         return validIdentity.And(notPosted);
+    }
+
+    public IEnumerable<Event> Handle(EditStockItemCommand command) =>
+        new[]
+        {
+            new StockEdditedEvent(EventFactory.Shared.Create<StockEdditedEvent>(command), command.Plant, command.NewPictures, command.RemovedPictureIds)
+        };
+
+    public void Handle(StockEdditedEvent @event)
+    {
+        Information = @event.Plant;
+        Pictures = Pictures
+            .Where(_ => @event.RemovedPictureIds?.NotContains(_.Id) ?? true)
+            .Union(@event.NewPictures)
+            .ToArray();
     }
 
     private CommandForbidden? IsCaretaker(IUserIdentity user) =>
         (user.UserName == Caretaker.Login).ToForbidden("Cannot eddit somebody elses stock item");
 
-    public IEnumerable<Event> Handle(EditStockItemCommand command)
-    {
-        return new[]
-        {
-            new StockEdditedEvent(EventFactory.Shared.Create<StockEdditedEvent>(command), command.Plant, command.NewPictures, command.RemovedPictureIds)
-        };
-    }
 }
