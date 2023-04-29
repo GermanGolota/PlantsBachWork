@@ -8,14 +8,14 @@
     "Jungle"
   ],
   "Families": [
-    "Cherry",
     "Apple",
-    "Strawberry",
     "Blackberry",
+    "Blueberry",
+    "Cherry",
+    "Strawberry",
     "Grape",
     "Plum",
-    "Raspberry",
-    "Blueberry"
+    "Raspberry"
   ],
   "Soils": [
     "Loamy",
