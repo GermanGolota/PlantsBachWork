@@ -39,6 +39,10 @@ public class ElasticSearchQueryService<TAggregate, TParams> : ISearchQueryServic
             {
                 s.From(pager.StartFrom).Size(pager.Size);
             }
+            else
+            {
+                s.From(0).Size(999);
+            }
 
             projector.ProjectParams(parameters, s);
 
