@@ -54,12 +54,13 @@ public class InstructionsController : ControllerBase
         [FromRoute] Guid id, [FromForm] CreateInstructionViewRequest cmd, IFormFile? file, CancellationToken token
         )
     {
-        var bytes = await file.ReadBytesAsync(token);
-        var picture = await _fileUploader.UploadAsync(token, new FileView(Guid.NewGuid(), bytes));
+        var picture = file is null 
+            ? null 
+            : (await _fileUploader.UploadAsync(token, new FileView(Guid.NewGuid(), await file.ReadBytesAsync(token)))).First();
         
         var result = await _command.SendAndNotifyAsync(
             factory => factory.Create<EditInstructionCommand>(new(id, nameof(PlantInstruction))),
-            meta => new EditInstructionCommand(meta, new(cmd.FamilyName, cmd.Text, cmd.Title, cmd.Description), picture.Single()),
+            meta => new EditInstructionCommand(meta, new(cmd.FamilyName, cmd.Text, cmd.Title, cmd.Description), picture),
             token);
         return result.ToCommandResult();
     }

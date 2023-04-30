@@ -5,8 +5,8 @@
 public record CreateInstructionCommand(CommandMetadata Metadata, InstructionModel Instruction, Picture CoverImage) : Command(Metadata);
 public record InstructionCreatedEvent(EventMetadata Metadata, InstructionModel Instruction, Picture CoverImage, string WriterUsername, Guid InstructionId) : Event(Metadata);
 
-public record EditInstructionCommand(CommandMetadata Metadata, InstructionModel Instruction, Picture CoverImage) : Command(Metadata);
-public record InstructionEditedEvent(EventMetadata Metadata, InstructionModel Instruction, Picture CoverImage) : Event(Metadata);
+public record EditInstructionCommand(CommandMetadata Metadata, InstructionModel Instruction, Picture? CoverImage) : Command(Metadata);
+public record InstructionEditedEvent(EventMetadata Metadata, InstructionModel Instruction, Picture? CoverImage) : Event(Metadata);
 
 // Queries
 
