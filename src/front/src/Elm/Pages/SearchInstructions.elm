@@ -175,7 +175,7 @@ view model =
 
 viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
-    viewWebdata page.available (viewMain (intersect [ Producer, Manager ] resp.roles) (isAdmin resp) page)
+    viewWebdata page.available (viewMain (isAdmin resp) (intersect [ Producer, Manager ] resp.roles) page)
 
 
 viewMain : Bool -> Bool -> View -> Available -> Html Msg

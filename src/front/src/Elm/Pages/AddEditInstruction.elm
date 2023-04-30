@@ -318,7 +318,7 @@ viewMain historyBtn isEdit page av =
 
         resultText =
             if isEdit then
-                "Submitted edited instruction. Check notifications for results."
+                "Submitted edit instruction. Check notifications for results."
 
             else
                 "Submitted create instruction. Check notifications for results."

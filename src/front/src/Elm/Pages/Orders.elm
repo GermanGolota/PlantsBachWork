@@ -15,6 +15,7 @@ import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
 import Main2 exposing (viewBase)
 import NavBar exposing (ordersLink)
+import String exposing (left)
 import Utils exposing (bgTeal, decodeId, fillParent, flex, flex1, formatPrice, mediumCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -616,7 +617,7 @@ viewOrderBase fill order viewAdd btnView =
     let
         imgCol =
             div [ flex, Flex.col, smallMargin, flex1 ]
-                [ div mediumCentered [ text ("#" ++ order.postId ++ " from " ++ order.orderedDate) ]
+                [ div mediumCentered [ text ("#" ++ left 6 order.postId ++ " from " ++ order.orderedDate) ]
                 , Html.map (\e -> Images e order.postId) (ImageList.view order.images)
                 ]
 

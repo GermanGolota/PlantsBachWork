@@ -46,6 +46,7 @@ colors =
         , Color.rgb255 245 222 179
         , Color.rgb255 210 105 30
         , Color.rgb255 255 228 225
+        , Color.rgb255 32 178 170
         ]
 
 

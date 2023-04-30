@@ -18,7 +18,7 @@ import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), ba
 import Main2 exposing (viewBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar
-import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, mediumFont, smallMargin, textCenter)
+import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPricePartial, intersect, largeCentered, mediumFont, smallMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -492,7 +492,8 @@ resultView isAdmin showOrder showDelete token item =
             , Block.text [] [ text item.description ]
             , Block.custom <|
                 div [ flex, Flex.row, Flex.alignItemsCenter, Flex.justifyCenter ]
-                    [ div [ flex, Flex.col, flex1, mediumFont ] [ text <| formatPrice item.price ]
+                    [ div [ flex, Flex.col, flex1, mediumFont ] [ text <| formatPricePartial item.price ]
+                    , div [ flex, Flex.col, flex1, mediumFont ] [ text " ₴" ]
                     , div [ flex, Flex.col, flex1 ] [ orderBtn ]
                     , div [ flex, Flex.col, flex1 ]
                         [ Button.linkButton

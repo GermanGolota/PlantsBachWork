@@ -242,9 +242,13 @@ chunkedView size viewFunc items =
         )
 
 
+formatPricePartial : Float -> String
+formatPricePartial price =
+    format usLocale price 
+
 formatPrice : Float -> String
 formatPrice price =
-    format usLocale price ++ " ₴"
+    formatPricePartial price ++ " ₴"
 
 
 type SubmittedResult
