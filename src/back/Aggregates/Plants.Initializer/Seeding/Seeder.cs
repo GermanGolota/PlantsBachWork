@@ -83,7 +83,7 @@ internal class Seeder
                     Faker.Lorem.Sentence(5),
                     testData.Regions.Random(3).ToArray(),
                     testData.Soils.Random(1, 3).ToArray(),
-                    familyNames.ToArray()); 
+                    familyNames.ToArray());
                 var stockId = rng.GetRandomConvertableGuid();
                 var images = familyToImages[primaryFamily].Random(1, 3).ToArray();
                 stockIds.Add(stockId);
@@ -94,11 +94,43 @@ internal class Seeder
                     );
             }
 
-            var stocksToPost = stockIds.Random((int)(stockIds.Count * 3.0 / 4));
+            var stocksToPost = stockIds.Random(Math.Max(1, (int)(stockIds.Count * 3.0 / 4))).ToArray();
             foreach (var postId in stocksToPost)
             {
                 results.Add(await _command.SendAndWaitAsync(
                    factory => factory.Create<PostStockItemCommand, PlantStock>(postId),
+                   meta => new PostStockItemCommand(meta, rng.Next(_options.PriceRangeMin, _options.PriceRangeMax)),
+                   token)
+                   );
+            }
+
+            // TODO: Actually load this list from somewhere sensible
+            var ukrainianCities = new[]
+            {
+                "Kyiv",
+                "Kharkiv",
+                "Odesa",
+                "Dnipro",
+                "Lviv"
+            };
+
+            var orderToCreate = stocksToPost.Random(Math.Max(1, (int)(stocksToPost.Length * 1.0 / 4)));
+            foreach (var orderId in orderToCreate)
+            {
+                results.Add(await _command.SendAndWaitAsync(
+                 factory => factory.Create<OrderPostCommand, PlantPost>(orderId),
+                 meta => new OrderPostCommand(meta, new(ukrainianCities.Random(), Random.Shared.Next(1, 150))),
+                 token)
+                 );
+            }
+
+            for (var _ = 0; _ < _options.InstructionsCount; _++)
+            {
+                var family = testData.Families.Random();
+                var cover = familyToImages[family].Random();
+                var istruction = new InstructionModel(family, String.Join('\n', Faker.Lorem.Paragraphs(3)), Faker.Lorem.Sentence(), Faker.Lorem.Paragraph());
+                results.Add(await _command.SendAndWaitAsync(
+                   factory => factory.Create<CreateInstructionCommand, PlantInstruction>(rng.GetRandomConvertableGuid()),
                    meta => new PostStockItemCommand(meta, rng.Next(_options.PriceRangeMin, _options.PriceRangeMax)),
                    token)
                    );
