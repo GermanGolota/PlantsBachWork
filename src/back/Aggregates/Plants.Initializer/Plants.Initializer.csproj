@@ -102,9 +102,6 @@
     <Content Include="Seeding\Data\Images\Cherry\Cherry3.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Seeding\Data\Images\Cherry\Cherry4.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>

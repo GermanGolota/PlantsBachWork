@@ -76,14 +76,13 @@ internal class Seeder
             for (var _ = 0; _ < _options.PlantsCount; _++)
             {
                 var demonym = GetDemonym();
-                var familyNames = testData.Families.Random(1, 3);
-                var primaryFamily = familyNames.First();
+                var primaryFamily = testData.Families.Random();
                 var name = $"{demonym} {primaryFamily}";
                 var stock = new PlantInformation(name,
                     Faker.Lorem.Sentence(5),
                     testData.Regions.Random(3).ToArray(),
                     testData.Soils.Random(1, 3).ToArray(),
-                    familyNames.ToArray());
+                   new[] { primaryFamily });
                 var stockId = rng.GetRandomConvertableGuid();
                 var images = familyToImages[primaryFamily].Random(1, 3).ToArray();
                 stockIds.Add(stockId);
@@ -122,6 +121,20 @@ internal class Seeder
                  meta => new OrderPostCommand(meta, new(ukrainianCities.Random(), Random.Shared.Next(1, 150))),
                  token)
                  );
+                if (Random.Shared.NextDouble() > 0.5)
+                {
+                    results.Add(await _command.SendAndWaitAsync(
+                         factory => factory.Create<StartOrderDeliveryCommand, PlantOrder>(orderId),
+                         meta => new StartOrderDeliveryCommand(meta, Faker.Lorem.Words(1).First()),
+                         token));
+                    if (Random.Shared.NextDouble() > 0.5)
+                    {
+                        results.Add(await _command.SendAndWaitAsync(
+                        factory => factory.Create<ConfirmDeliveryCommand, PlantOrder>(orderId),
+                        meta => new ConfirmDeliveryCommand(meta),
+                        token));
+                    }
+                }
             }
 
             for (var _ = 0; _ < _options.InstructionsCount; _++)
@@ -131,7 +144,7 @@ internal class Seeder
                 var istruction = new InstructionModel(family, String.Join('\n', Faker.Lorem.Paragraphs(3)), Faker.Lorem.Sentence(), Faker.Lorem.Paragraph());
                 results.Add(await _command.SendAndWaitAsync(
                    factory => factory.Create<CreateInstructionCommand, PlantInstruction>(rng.GetRandomConvertableGuid()),
-                   meta => new PostStockItemCommand(meta, rng.Next(_options.PriceRangeMin, _options.PriceRangeMax)),
+                   meta => new CreateInstructionCommand(meta, istruction, cover),
                    token)
                    );
             }
