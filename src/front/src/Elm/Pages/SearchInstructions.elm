@@ -33,7 +33,7 @@ type alias Model =
 type alias View =
     { available : WebData Available
     , instructions : WebData (List Instruction)
-    , selectedGroup : String
+    , selectedFamily : String
     , selectedDescription : String
     , selectedTitle : String
     , showAdd : Bool
@@ -57,7 +57,7 @@ type LocalMsg
     | GotAvailable (Result Http.Error Available)
     | TitleChanged String
     | DescriptionChanged String
-    | GroupChanged String
+    | FamilyChanged String
     | GotSearch (Result Http.Error (List Instruction))
 
 
@@ -82,13 +82,13 @@ updateLocal msg m =
                     Authorized auth
 
                 triggerSearch withModel =
-                    search withModel.selectedTitle withModel.selectedDescription withModel.selectedGroup auth.token
+                    search withModel.selectedTitle withModel.selectedDescription withModel.selectedFamily auth.token
             in
             case msg of
                 GotAvailable (Ok res) ->
                     let
                         newModel =
-                            { model | available = Loaded res, selectedGroup = res.groups |> Multiselect.getValues |> List.head |> Maybe.withDefault ( "", "" ) |> Tuple.first }
+                            { model | available = Loaded res, selectedFamily = res.families |> Multiselect.getValues |> List.head |> Maybe.withDefault ( "", "" ) |> Tuple.first }
                     in
                     ( authed newModel, triggerSearch newModel )
 
@@ -101,10 +101,10 @@ updateLocal msg m =
                 GotSearch (Err err) ->
                     ( authed { model | instructions = Error err }, Cmd.none )
 
-                GroupChanged groupId ->
+                FamilyChanged familyId ->
                     let
                         newModel =
-                            { model | selectedGroup = groupId, instructions = Loading }
+                            { model | selectedFamily = familyId, instructions = Loading }
                     in
                     ( authed newModel, triggerSearch newModel )
 
@@ -139,13 +139,13 @@ getAvailable token =
 
 
 search : String -> String -> String -> String -> Cmd Msg
-search title description groupId token =
+search title description familyId token =
     let
         expect =
             Http.expectJson GotSearch searchDecoder
 
         queryParams =
-            [ ( "GroupName", groupId ), ( "Title", title ), ( "Description", description ) ]
+            [ ( "FamilyName", familyId ), ( "Title", title ), ( "Description", description ) ]
     in
     Endpoints.getAuthedQuery (buildQuery queryParams) token FindInstructions expect Nothing |> mapCmd
 
@@ -175,7 +175,7 @@ view model =
 
 viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
-    viewWebdata page.available (viewMain (intersect [ Producer, Manager ] resp.roles) (isAdmin resp) page)
+    viewWebdata page.available (viewMain (isAdmin resp) (intersect [ Producer, Manager ] resp.roles) page)
 
 
 viewMain : Bool -> Bool -> View -> Available -> Html Msg
@@ -199,18 +199,18 @@ viewMain isAdmin isProducer page av =
 viewSelections : View -> Available -> List (Html LocalMsg)
 viewSelections page av =
     let
-        groups =
-            Multiselect.getValues av.groups
+        families =
+            Multiselect.getValues av.families
 
-        viewGroup group =
-            Select.item [ value <| Tuple.first group ] [ text <| Tuple.second group ]
+        viewFamily family =
+            Select.item [ value <| Tuple.first family ] [ text <| Tuple.second family ]
 
         colAttrs =
             [ flex, Flex.col, flex1, smallMargin ]
     in
     [ div colAttrs
-        [ div largeCentered [ text "Group" ]
-        , Select.select [ Select.onChange GroupChanged ] (List.map viewGroup groups)
+        [ div largeCentered [ text "Family" ]
+        , Select.select [ Select.onChange FamilyChanged ] (List.map viewFamily families)
         ]
     , div colAttrs
         [ div largeCentered [ text "Title" ]

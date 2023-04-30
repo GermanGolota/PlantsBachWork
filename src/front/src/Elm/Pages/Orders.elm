@@ -15,6 +15,7 @@ import Json.Decode.Pipeline exposing (custom, required)
 import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), baseApplication, initBase, isAdmin, mapCmd, subscriptionBase, updateBase)
 import Main2 exposing (viewBase)
 import NavBar exposing (ordersLink)
+import String exposing (left)
 import Utils exposing (bgTeal, decodeId, fillParent, flex, flex1, formatPrice, mediumCentered, smallMargin)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -301,19 +302,16 @@ decoderSelector token status =
 
         mapToDelivered decoder =
             D.map Delivered decoder
-
-        initedDecoder =
-            orderDecoderBase token
     in
     case status of
         0 ->
-            initedDecoder (D.succeed True) |> mapToCreated
+            orderDecoderBase (D.succeed True) |> mapToCreated
 
         1 ->
-            initedDecoder (deliveringDecoder (D.succeed True)) |> mapToDelivering
+            orderDecoderBase (deliveringDecoder (D.succeed True)) |> mapToDelivering
 
         2 ->
-            initedDecoder (deliveringDecoder deliveredDecoder) |> mapToDelivered
+            orderDecoderBase (deliveringDecoder deliveredDecoder) |> mapToDelivered
 
         _ ->
             D.fail "unsupported status"
@@ -332,8 +330,8 @@ deliveringDecoder addDecoder =
         |> custom addDecoder
 
 
-orderDecoderBase : String -> D.Decoder a -> D.Decoder (OrderBase a)
-orderDecoderBase token addDecoder =
+orderDecoderBase : D.Decoder a -> D.Decoder (OrderBase a)
+orderDecoderBase addDecoder =
     D.succeed OrderBase
         |> custom statusDecoder
         |> required "postId" decodeId
@@ -343,7 +341,7 @@ orderDecoderBase token addDecoder =
         |> required "sellerContact" D.string
         |> required "price" D.float
         |> required "orderedDate" D.string
-        |> custom (imagesDecoder token [ "images" ])
+        |> custom (imagesDecoder [ "images" ])
         |> custom addDecoder
 
 
@@ -619,7 +617,7 @@ viewOrderBase fill order viewAdd btnView =
     let
         imgCol =
             div [ flex, Flex.col, smallMargin, flex1 ]
-                [ div mediumCentered [ text ("#" ++ order.postId ++ " from " ++ order.orderedDate) ]
+                [ div mediumCentered [ text ("#" ++ left 6 order.postId ++ " from " ++ order.orderedDate) ]
                 , Html.map (\e -> Images e order.postId) (ImageList.view order.images)
                 ]
 

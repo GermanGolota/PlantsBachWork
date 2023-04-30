@@ -13,8 +13,8 @@ availableDecoder =
         ((D.field "soils" <| D.list D.string)
             |> dictDecoder "soil"
         )
-        (D.field "groups" (D.list D.string)
-            |> dictDecoder "group"
+        (D.field "families" (D.list D.string)
+            |> dictDecoder "family"
         )
 
 
@@ -31,5 +31,5 @@ convertDict tag items =
 type alias Available =
     { regions : Multiselect.Model
     , soils : Multiselect.Model
-    , groups : Multiselect.Model
+    , families : Multiselect.Model
     }

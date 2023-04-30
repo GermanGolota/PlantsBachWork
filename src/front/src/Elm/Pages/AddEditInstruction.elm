@@ -49,7 +49,7 @@ type ViewType
 
 type alias View =
     { selectedText : String
-    , selectedGroupName : String
+    , selectedFamilyName : String
     , selectedTitle : String
     , selectedDescription : String
     , uploadedFile : Maybe File
@@ -66,7 +66,7 @@ type LocalMsg
     = NoOp
     | GotInstruction (Result Http.Error (Maybe InstructionView))
     | EditorTextUpdated String
-    | GroupSelected String
+    | FamilySelected String
     | TitleChanged String
     | DescriptionChanged String
     | OpenEditor
@@ -163,11 +163,11 @@ updateLocal msg m =
                 DescriptionChanged desc ->
                     updateModel { getMainView | selectedDescription = desc }
 
-                GroupSelected groupName ->
-                    updateModel { getMainView | selectedGroupName = groupName }
+                FamilySelected familyName ->
+                    updateModel { getMainView | selectedFamilyName = familyName }
 
                 GotAvailable (Ok res) ->
-                    updateModel { getMainView | available = Loaded res, selectedGroupName = res.groups |> Multiselect.getValues |> List.head |> Maybe.withDefault ( "", "" ) |> Tuple.first }
+                    updateModel { getMainView | available = Loaded res, selectedFamilyName = res.families |> Multiselect.getValues |> List.head |> Maybe.withDefault ( "", "" ) |> Tuple.first }
 
                 GotAvailable (Err err) ->
                     updateModel { getMainView | available = Error err }
@@ -202,7 +202,7 @@ updateLocal msg m =
 
 convertView : InstructionView -> View
 convertView ins =
-    View ins.text ins.groupId ins.title ins.description Nothing Loading Nothing
+    View ins.text ins.familyId ins.title ins.description Nothing Loading Nothing
 
 
 
@@ -231,7 +231,7 @@ bodyEncoder : View -> Http.Body
 bodyEncoder page =
     let
         constant =
-            [ Http.stringPart "GroupName" page.selectedGroupName
+            [ Http.stringPart "FamilyName" page.selectedFamilyName
             , Http.stringPart "Text" page.selectedText
             , Http.stringPart "Title" page.selectedTitle
             , Http.stringPart "Description" page.selectedDescription
@@ -302,11 +302,11 @@ viewMain historyBtn isEdit page av =
         viewCol =
             div [ flex1, Flex.col, flex, smallMargin ]
 
-        groups =
-            Multiselect.getValues av.groups
+        families =
+            Multiselect.getValues av.families
 
-        viewGroup group =
-            Select.item [ value <| Tuple.first group ] [ text <| Tuple.second group ]
+        viewFamily family =
+            Select.item [ value <| Tuple.first family ] [ text <| Tuple.second family ]
 
         fileStr =
             case page.uploadedFile of
@@ -318,7 +318,7 @@ viewMain historyBtn isEdit page av =
 
         resultText =
             if isEdit then
-                "Submitted edited instruction. Check notifications for results."
+                "Submitted edit instruction. Check notifications for results."
 
             else
                 "Submitted create instruction. Check notifications for results."
@@ -360,8 +360,8 @@ viewMain historyBtn isEdit page av =
     div ([ Flex.col, flex ] ++ fillParent)
         ([ viewRow
             [ viewCol
-                [ div largeCentered [ text "Group" ]
-                , Select.select [ Select.onChange (\str -> Main <| GroupSelected str) ] (List.map viewGroup groups)
+                [ div largeCentered [ text "Family" ]
+                , Select.select [ Select.onChange (\str -> Main <| FamilySelected str) ] (List.map viewFamily families)
                 ]
             ]
          , viewRow

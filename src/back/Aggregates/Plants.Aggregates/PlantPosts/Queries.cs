@@ -13,9 +13,9 @@ internal sealed class SearchPostsHandler : IRequestHandler<SearchPosts, IEnumera
     {
         var result = await _search.SearchAsync(request.Parameters, new QueryOptions.All(), token);
         var parameters = request.Parameters;
-        //TODO: Fix group filtering not working with elastic
+        //TODO: Fix family filtering not working with elastic
         result = result.Where(post => (
-                parameters.GroupNames is null || post.Stock.Information.GroupNames.Intersect(parameters.GroupNames).Any())
+                parameters.FamilyNames is null || post.Stock.Information.FamilyNames.Intersect(parameters.FamilyNames).Any())
             && (parameters.RegionNames is null || post.Stock.Information.RegionNames.Intersect(parameters.RegionNames).Any())
             && (parameters.SoilNames is null || post.Stock.Information.SoilNames.Intersect(parameters.SoilNames).Any()
             )
@@ -57,7 +57,7 @@ internal sealed class GetPostHandler : IRequestHandler<GetPost, PostViewResultIt
                 var caretaker = stock.Caretaker;
                 var plant = stock.Information;
                 result = new(post.Id, plant.PlantName, plant.Description, post.Price,
-                    plant.SoilNames, plant.RegionNames, plant.GroupNames, stock.CreatedTime,
+                    plant.SoilNames, plant.RegionNames, plant.FamilyNames, stock.CreatedTime,
                     seller.FullName, seller.PhoneNumber, seller.PlantsCared, seller.PlantsSold, seller.InstructionCreated,
                     caretaker.PlantsCared, caretaker.PlantsSold, caretaker.InstructionCreated,
                     stock.Pictures);

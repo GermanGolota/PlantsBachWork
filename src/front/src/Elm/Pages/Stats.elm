@@ -351,7 +351,7 @@ viewSelectedBase item selectTable =
                     selectTable value
 
                 Nothing ->
-                    Html.text "No group is selected"
+                    Html.text "No family is selected"
             ]
         ]
 
@@ -486,7 +486,7 @@ financialDecoder =
 totalItemDecoder : D.Decoder TotalsPieItem
 totalItemDecoder =
     D.succeed TotalsPieItem
-        |> required "groupName" D.string
+        |> required "familyName" D.string
         |> required "income" D.float
         |> required "instructions" D.float
         |> required "popularity" D.float
@@ -495,7 +495,7 @@ totalItemDecoder =
 financialItemDecoder : D.Decoder FinancialPieItem
 financialItemDecoder =
     D.succeed FinancialPieItem
-        |> required "groupName" D.string
+        |> required "familyName" D.string
         |> required "soldCount" D.float
         |> required "percentSold" D.float
         |> required "income" D.float

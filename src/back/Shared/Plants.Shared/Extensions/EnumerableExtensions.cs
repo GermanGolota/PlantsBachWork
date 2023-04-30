@@ -30,7 +30,7 @@ public static class EnumerableExtensions
             int index;
             do
             {
-                index = rng.Next(0, sourceCount - 1);
+                index = rng.Next(0, sourceCount);
             }
             while (indexes.Contains(index));
 

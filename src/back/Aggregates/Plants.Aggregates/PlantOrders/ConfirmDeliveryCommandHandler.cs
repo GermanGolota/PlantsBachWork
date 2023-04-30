@@ -13,7 +13,7 @@ internal class ConfirmDeliveryCommandHandler : ICommandHandler<ConfirmDeliveryCo
     public Task<IEnumerable<Event>> HandleAsync(ConfirmDeliveryCommand command, CancellationToken token = default) =>
         (new[]
         {
-            new DeliveryConfirmedEvent(EventFactory.Shared.Create<DeliveryConfirmedEvent>(command), _order.Post.Seller.Login, _order.Post.Stock.Information.GroupNames, _order.Post.Price)
+            new DeliveryConfirmedEvent(EventFactory.Shared.Create<DeliveryConfirmedEvent>(command), _order.Post.Seller.Login, _order.Post.Stock.Information.FamilyNames, _order.Post.Price)
         }).ToResultTask<IEnumerable<Event>>();
 
     public async Task<CommandForbidden?> ShouldForbidAsync(ConfirmDeliveryCommand command, IUserIdentity user, CancellationToken token = default)

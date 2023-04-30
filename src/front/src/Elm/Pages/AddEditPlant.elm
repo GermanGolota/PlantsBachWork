@@ -56,7 +56,7 @@ type alias PlantView =
     , created : String
     , regions : Multiselect.Model
     , soils : Multiselect.Model
-    , groups : Multiselect.Model
+    , families : Multiselect.Model
     , images : ImageList.Model
     , uploadedFiles : List File
     }
@@ -76,7 +76,7 @@ type LocalMsg
     | StartUpload
     | ImagesLoaded File (List File)
     | RegionsMS Multiselect.Msg
-    | GroupsMS Multiselect.Msg
+    | FamiliesMS Multiselect.Msg
     | SoilsMS Multiselect.Msg
     | GotAvailable (Result Http.Error Available)
     | GotPlant (Result Http.Error (Maybe PlantView))
@@ -138,7 +138,7 @@ updateLocal msg m =
                             { plant
                                 | regions = res.regions
                                 , soils = res.soils
-                                , groups = res.groups
+                                , families = res.families
                             }
                     in
                     ( authed <| Add <| { addView | available = Loaded res, plant = updatePlant addView.plant }, Cmd.none )
@@ -179,24 +179,24 @@ updateLocal msg m =
                         _ ->
                             noOp
 
-                ( GroupsMS msEvent, Add addView ) ->
+                ( FamiliesMS msEvent, Add addView ) ->
                     let
                         ( subModel, subCmd, _ ) =
-                            Multiselect.update msEvent addView.plant.groups
+                            Multiselect.update msEvent addView.plant.families
 
                         updatedRegion plant =
-                            { plant | groups = subModel }
+                            { plant | families = subModel }
                     in
-                    ( authed <| Add <| { addView | plant = updatedRegion addView.plant }, Cmd.map GroupsMS subCmd |> mapCmd )
+                    ( authed <| Add <| { addView | plant = updatedRegion addView.plant }, Cmd.map FamiliesMS subCmd |> mapCmd )
 
-                ( GroupsMS msEvent, Edit editView ) ->
+                ( FamiliesMS msEvent, Edit editView ) ->
                     case editView.plant of
                         Loaded plantView ->
                             let
                                 ( subModel, subCmd, _ ) =
-                                    Multiselect.update msEvent plantView.groups
+                                    Multiselect.update msEvent plantView.families
                             in
-                            ( authed <| Edit <| { editView | plant = Loaded { plantView | groups = subModel } }, Cmd.map GroupsMS subCmd |> mapCmd )
+                            ( authed <| Edit <| { editView | plant = Loaded { plantView | families = subModel } }, Cmd.map FamiliesMS subCmd |> mapCmd )
 
                         _ ->
                             noOp
@@ -408,6 +408,7 @@ viewPage resp page =
                                 , Button.attrs [ smallMargin, largeFont ]
                                 ]
                                 [ text "View history" ]
+
                         else
                             div [] []
 
@@ -607,7 +608,7 @@ leftView isEdit plant av =
             )
         ++ viewInput "Regions" (Html.map RegionsMS <| Multiselect.view plant.regions)
         ++ viewInput "Soils" (Html.map SoilsMS <| Multiselect.view plant.soils)
-        ++ viewInput "Groups" (Html.map GroupsMS <| Multiselect.view plant.groups)
+        ++ viewInput "Families" (Html.map FamiliesMS <| Multiselect.view plant.families)
         ++ viewInput "Description" (Input.text [ Input.onInput DescriptionUpdate, Input.value plant.description ])
         ++ viewInput "Created Date" dateInput
     )
@@ -708,8 +709,8 @@ plantDecoderBase av token =
         regions =
             Multiselect.getValues av.regions
 
-        groups =
-            Multiselect.getValues av.groups
+        families =
+            Multiselect.getValues av.families
 
         soils =
             Multiselect.getValues av.soils
@@ -720,8 +721,8 @@ plantDecoderBase av token =
         reg ids =
             Multiselect.populateValues (Multiselect.initModel regions "regionNames" Multiselect.Show) regions (toSelfDict ids)
 
-        group ids =
-            Multiselect.populateValues (Multiselect.initModel groups "groupNames" Multiselect.Show) groups (toSelfDict ids)
+        family ids =
+            Multiselect.populateValues (Multiselect.initModel families "familyNames" Multiselect.Show) families (toSelfDict ids)
 
         soil ids =
             Multiselect.populateValues (Multiselect.initModel soils "soilNames" Multiselect.Show) soils (toSelfDict ids)
@@ -729,8 +730,8 @@ plantDecoderBase av token =
         regIdsDecoder =
             D.at [ "item", "regionNames" ] (D.list decodeId)
 
-        groupIdsDecoder =
-            D.at [ "item", "groupNames" ] (D.list decodeId)
+        familyIdsDecoder =
+            D.at [ "item", "familyNames" ] (D.list decodeId)
 
         soilIdsDecoder =
             D.at [ "item", "soilNames" ] (D.list decodeId)
@@ -741,8 +742,8 @@ plantDecoderBase av token =
         |> custom createdDecoder
         |> custom (D.map reg regIdsDecoder)
         |> custom (D.map soil soilIdsDecoder)
-        |> custom (D.map group groupIdsDecoder)
-        |> custom (imagesDecoder token [ "item", "images" ])
+        |> custom (D.map family familyIdsDecoder)
+        |> custom (imagesDecoder [ "item", "images" ])
         |> hardcoded []
 
 
@@ -772,7 +773,7 @@ getEditBody plant removed =
          ]
             ++ selectedValues "RegionNames" plant.regions
             ++ selectedValues "SoilNames" plant.soils
-            ++ selectedValues "GroupNames" plant.groups
+            ++ selectedValues "FamilyNames" plant.families
             ++ filesParts plant.uploadedFiles
             ++ removedParts removed
         )
@@ -787,7 +788,7 @@ getAddBody plant =
          ]
             ++ selectedValues "RegionNames" plant.regions
             ++ selectedValues "SoilNames" plant.soils
-            ++ selectedValues "GroupNames" plant.groups
+            ++ selectedValues "FamilyNames" plant.families
             ++ filesParts plant.uploadedFiles
         )
 

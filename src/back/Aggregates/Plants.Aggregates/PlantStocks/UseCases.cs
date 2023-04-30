@@ -11,7 +11,7 @@ public record EditStockItemCommand(CommandMetadata Metadata, PlantInformation Pl
 public record StockEdditedEvent(EventMetadata Metadata, PlantInformation Plant, Picture[] NewPictures, Guid[] RemovedPictureIds) : Event(Metadata);
 
 public record PostStockItemCommand(CommandMetadata Metadata, decimal Price) : Command(Metadata);
-public record StockItemPostedEvent(EventMetadata Metadata, string SellerUsername, decimal Price, string[] GroupNames) : Event(Metadata);
+public record StockItemPostedEvent(EventMetadata Metadata, string SellerUsername, decimal Price, string[] FamilyNames) : Event(Metadata);
 
 // Queries
 
@@ -26,20 +26,19 @@ public record StockViewResultItem(Guid Id, string PlantName, string Description,
 
 public record PlantInformation(
     string PlantName, string Description, string[] RegionNames,
-    string[] SoilNames, string[] GroupNames
+    string[] SoilNames, string[] FamilyNames
     );
 
-public record PlantViewResultItem(string PlantName, string Description, string[] GroupNames,
+public record PlantViewResultItem(string PlantName, string Description, string[] FamilyNames,
     string[] SoilNames, Picture[] Images, string[] RegionNames, DateTime Created)
 {
     public string CreatedHumanDate => Created.Humanize();
     public string CreatedDate => Created.ToShortDateString();
 }
 
-
 public record PreparedPostResultItem(
     Guid Id, string PlantName, string Description, string[] SoilNames,
-    string[] RegionNames, string[] GroupNames, DateTime Created,
+    string[] RegionNames, string[] FamilyNames, DateTime Created,
     string SellerName, string SellerPhone, long SellerCared, long SellerSold, long SellerInstructions,
     long CareTakerCared, long CareTakerSold, long CareTakerInstructions, Picture[] Images)
 {

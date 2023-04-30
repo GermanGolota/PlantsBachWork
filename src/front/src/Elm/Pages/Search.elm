@@ -18,7 +18,7 @@ import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), ba
 import Main2 exposing (viewBase)
 import Multiselect exposing (InputInMenu(..))
 import NavBar
-import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPrice, intersect, largeCentered, mediumFont, smallMargin, textCenter)
+import Utils exposing (buildQuery, decodeId, fillParent, flex, flex1, formatPricePartial, intersect, largeCentered, mediumFont, smallMargin, textCenter)
 import Webdata exposing (WebData(..), viewWebdata)
 
 
@@ -57,7 +57,7 @@ type LocalMsg
     | GotAvailable (Result Http.Error Available)
     | RegionsMS Multiselect.Msg
     | SoilMS Multiselect.Msg
-    | GroupMS Multiselect.Msg
+    | FamilyMS Multiselect.Msg
     | SelectedDeletePost String
     | GotDeletePost String (Result Http.Error Bool)
     | ImageSelected String ImageList.Msg
@@ -173,16 +173,16 @@ updateLocal msg m =
                     in
                     ( authed updatedView, Cmd.batch [ Cmd.map SoilMS subCmd |> mapCmd, searchCmd ] )
 
-                ( GroupMS sub, Loaded val ) ->
+                ( FamilyMS sub, Loaded val ) ->
                     let
                         ( subModel, subCmd, _ ) =
-                            Multiselect.update sub val.groups
+                            Multiselect.update sub val.families
 
                         newVal =
-                            updateAvailableGroup val subModel
+                            updateAvailableFamily val subModel
 
                         availableChanged =
-                            Multiselect.getSelectedValues val.groups /= Multiselect.getSelectedValues newVal.groups
+                            Multiselect.getSelectedValues val.families /= Multiselect.getSelectedValues newVal.families
 
                         setNew =
                             { model | availableValues = Loaded newVal }
@@ -201,7 +201,7 @@ updateLocal msg m =
                             else
                                 Cmd.none
                     in
-                    ( authed updatedView, Cmd.batch [ Cmd.map GroupMS subCmd |> mapCmd, searchCmd ] )
+                    ( authed updatedView, Cmd.batch [ Cmd.map FamilyMS subCmd |> mapCmd, searchCmd ] )
 
                 ( SelectedDeletePost id, Loaded val ) ->
                     let
@@ -302,10 +302,10 @@ availableToList av =
         soils =
             map "SoilNames" <| Multiselect.getSelectedValues av.soils
 
-        groups =
-            map "GroupNames" <| Multiselect.getSelectedValues av.groups
+        families =
+            map "FamilyNames" <| Multiselect.getSelectedValues av.families
     in
-    regions ++ soils ++ groups
+    regions ++ soils ++ families
 
 
 updateAvailableRegion : Available -> Multiselect.Model -> Available
@@ -318,9 +318,9 @@ updateAvailableSoil av model =
     { av | soils = model }
 
 
-updateAvailableGroup : Available -> Multiselect.Model -> Available
-updateAvailableGroup av model =
-    { av | groups = model }
+updateAvailableFamily : Available -> Multiselect.Model -> Available
+updateAvailableFamily av model =
+    { av | families = model }
 
 
 updateData : View -> AuthResponse -> WebData (List SearchResultItem) -> Model
@@ -358,17 +358,17 @@ search items token =
 
 searchResultsDecoder : String -> D.Decoder (List SearchResultItem)
 searchResultsDecoder token =
-    D.field "items" <| D.list <| searchResultDecoder token
+    D.field "items" <| D.list <| searchResultDecoder
 
 
-searchResultDecoder : String -> D.Decoder SearchResultItem
-searchResultDecoder token =
+searchResultDecoder : D.Decoder SearchResultItem
+searchResultDecoder =
     D.succeed SearchResultItem
         |> required "id" decodeId
         |> required "plantName" D.string
         |> required "description" D.string
         |> required "price" D.float
-        |> custom (imagesDecoder token [ "images" ])
+        |> custom (imagesDecoder [ "images" ])
         |> hardcoded Nothing
 
 
@@ -416,7 +416,7 @@ viewAvailable av =
             viewInput text (multiSelectInput convert model)
     in
     div [ flex, Flex.row, style "width" "100%" ]
-        [ viewMultiselectInput "Groups" GroupMS av.groups
+        [ viewMultiselectInput "Families" FamilyMS av.families
         , viewMultiselectInput "Soils" SoilMS av.soils
         , viewMultiselectInput "Regions" RegionsMS av.regions
         ]
@@ -492,7 +492,8 @@ resultView isAdmin showOrder showDelete token item =
             , Block.text [] [ text item.description ]
             , Block.custom <|
                 div [ flex, Flex.row, Flex.alignItemsCenter, Flex.justifyCenter ]
-                    [ div [ flex, Flex.col, flex1, mediumFont ] [ text <| formatPrice item.price ]
+                    [ div [ flex, Flex.col, flex1, mediumFont ] [ text <| formatPricePartial item.price ]
+                    , div [ flex, Flex.col, flex1, mediumFont ] [ text " ₴" ]
                     , div [ flex, Flex.col, flex1 ] [ orderBtn ]
                     , div [ flex, Flex.col, flex1 ]
                         [ Button.linkButton

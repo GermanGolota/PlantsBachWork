@@ -19,23 +19,23 @@ public class PlantsInformation : AggregateBase, IEventHandler<StockAddedEvent>,
         }
     }
 
-    public HashSet<string> GroupNames { get; private set; } = new();
+    public HashSet<string> FamilyNames { get; private set; } = new();
     public HashSet<string> RegionNames { get; private set; } = new();
     public HashSet<string> SoilNames { get; private set; } = new();
 
-    // group name
+    // family name
     public Dictionary<string, PlantStats> TotalStats { get; private set; } = new();
-    // date yyyy-mm-dd, group name
+    // date yyyy-mm-dd, family name
     public Dictionary<string, Dictionary<string, PlantStats>> DailyStats { get; private set; } = new();
 
     public void Handle(StockAddedEvent @event)
     {
         var plant = @event.Plant;
 
-        foreach (var group in plant.GroupNames)
+        foreach (var family in plant.FamilyNames)
         {
-            GroupNames.Add(group);
-            UpdateStats(group, @event.Metadata.Time, stat =>
+            FamilyNames.Add(family);
+            UpdateStats(family, @event.Metadata.Time, stat =>
             {
                 stat.PlantsCount++;
                 return stat;
@@ -56,7 +56,7 @@ public class PlantsInformation : AggregateBase, IEventHandler<StockAddedEvent>,
 
     public void Handle(InstructionCreatedEvent @event)
     {
-        UpdateStats(@event.Instruction.GroupName, @event.Metadata.Time, stat =>
+        UpdateStats(@event.Instruction.FamilyName, @event.Metadata.Time, stat =>
         {
             stat.InstructionsCount++;
             return stat;
@@ -65,9 +65,9 @@ public class PlantsInformation : AggregateBase, IEventHandler<StockAddedEvent>,
 
     public void Handle(StockItemPostedEvent @event)
     {
-        foreach (var group in @event.GroupNames)
+        foreach (var family in @event.FamilyNames)
         {
-            UpdateStats(group, @event.Metadata.Time, stat =>
+            UpdateStats(family, @event.Metadata.Time, stat =>
             {
                 stat.PostedCount++;
                 return stat;
@@ -77,9 +77,9 @@ public class PlantsInformation : AggregateBase, IEventHandler<StockAddedEvent>,
 
     public void Handle(DeliveryConfirmedEvent @event)
     {
-        foreach (var group in @event.GroupNames)
+        foreach (var family in @event.FamilyNames)
         {
-            UpdateStats(group, @event.Metadata.Time, stat =>
+            UpdateStats(family, @event.Metadata.Time, stat =>
             {
                 stat.SoldCount++;
                 stat.Income += @event.Price;
@@ -88,14 +88,14 @@ public class PlantsInformation : AggregateBase, IEventHandler<StockAddedEvent>,
         }
     }
 
-    private void UpdateStats(string groupName, DateTime time, Func<PlantStats, PlantStats> statUpdater)
+    private void UpdateStats(string familyName, DateTime time, Func<PlantStats, PlantStats> statUpdater)
     {
-        if (TotalStats.ContainsKey(groupName) is false)
+        if (TotalStats.ContainsKey(familyName) is false)
         {
-            TotalStats[groupName] = new();
+            TotalStats[familyName] = new();
         }
 
-        TotalStats[groupName] = statUpdater(TotalStats[groupName]);
+        TotalStats[familyName] = statUpdater(TotalStats[familyName]);
 
         var date = GetDateKey(time);
         if (DailyStats.ContainsKey(date) is false)
@@ -103,13 +103,13 @@ public class PlantsInformation : AggregateBase, IEventHandler<StockAddedEvent>,
             DailyStats[date] = new();
         }
 
-        var groupStats = DailyStats[date];
-        if (groupStats.ContainsKey(groupName) is false)
+        var familyStats = DailyStats[date];
+        if (familyStats.ContainsKey(familyName) is false)
         {
-            groupStats[groupName] = new();
+            familyStats[familyName] = new();
         }
 
-        DailyStats[date][groupName] = statUpdater(groupStats[groupName]);
+        DailyStats[date][familyName] = statUpdater(familyStats[familyName]);
     }
 
     private static string GetDateKey(DateTime time) =>
