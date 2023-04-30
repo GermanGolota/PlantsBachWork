@@ -40,7 +40,7 @@ internal sealed class GetFinancialStatsHandler : IRequestHandler<GetFinancialSta
             {
                 var sold = pair.Sum(_ => _.Value.SoldCount);
                 var plants = pair.Sum(_ => _.Value.PlantsCount);
-                return new FinancialStatsViewResult(pair.Sum(_ => _.Value.Income), pair.Key, sold, plants is 0 ? 0 : sold / plants);
+                return new FinancialStatsViewResult(pair.Sum(_ => _.Value.Income), pair.Key, sold, plants is 0 ? 0 : sold * 100 / plants);
             });
     }
 
