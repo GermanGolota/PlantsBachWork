@@ -5,5 +5,5 @@ namespace Plants.Presentation;
 internal class LoginRequestExample : IExamplesProvider<AuthController.LoginViewRequest>
 {
     public AuthController.LoginViewRequest GetExamples() =>
-         new("postgres", "testPassword");
+         new("superuser", "testPassword");
 }

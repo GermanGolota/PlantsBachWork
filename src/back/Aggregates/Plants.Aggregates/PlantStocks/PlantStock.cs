@@ -8,7 +8,7 @@
 public class PlantStock : AggregateBase, 
     IEventHandler<StockAddedEvent>, IEventHandler<StockEdditedEvent>, 
     IDomainCommandHandler<PostStockItemCommand>, IDomainCommandHandler<AddToStockCommand>,
-    IDomainCommandHandler<EditStockItemCommand>
+    IDomainCommandHandler<EditStockItemCommand>, IEventHandler<PostRemovedEvent>
 {
     public PlantStock(Guid id) : base(id)
     {
@@ -76,4 +76,18 @@ public class PlantStock : AggregateBase,
     private CommandForbidden? IsCaretaker(IUserIdentity user) =>
         (user.UserName == Caretaker.Login).ToForbidden("Cannot eddit somebody elses stock item");
 
+    public void Handle(PostRemovedEvent @event)
+    {
+        BeenPosted = false;
+    }
+
+    private class PlantPostSubscription : IAggregateSubscription<PlantStock, PlantPost>
+    {
+        public IEnumerable<EventSubscriptionBase<PlantStock, PlantPost>> Subscriptions => new[]
+        {
+            new EventSubscription<PlantStock, PlantPost, PostRemovedEvent>(
+                new(@event => @event.Metadata.Aggregate.Id,
+                    (events, post) => events.Select(@event => post.TransposeSubscribedEvent(@event))))
+        };
+    }
 }
