@@ -2,8 +2,8 @@
 
 // Commands
 
-public record CreateUserCommand(CommandMetadata Metadata, UserCreationDto Data) : Command(Metadata);
-public record UserCreatedEvent(EventMetadata Metadata, UserCreationDto Data) : Event(Metadata);
+public record CreateUserCommand(CommandMetadata Metadata, UserCreationData Data) : Command(Metadata);
+public record UserCreatedEvent(EventMetadata Metadata, UserCreationData Data) : Event(Metadata);
 
 public record ChangeRoleCommand(CommandMetadata Metadata, UserRole Role) : Command(Metadata);
 public record RoleChangedEvent(EventMetadata Metadata, UserRole Role) : Event(Metadata);
@@ -19,7 +19,7 @@ public record GetOwnUsedAddresses : IRequest<AddressViewResult>;
 
 // Types
 
-public record UserCreationDto(string FirstName, string LastName, string PhoneNumber, string Login, string Email, string? Language, UserRole[] Roles);
+public record UserCreationData(string FirstName, string LastName, string PhoneNumber, string Login, string Email, string? Language, UserRole[] Roles);
 
 public record AddressViewResult(List<DeliveryAddress> Addresses);
 public record UserSearchParams(string? Name, string? Phone, UserRole[] Roles) : ISearchParams;
