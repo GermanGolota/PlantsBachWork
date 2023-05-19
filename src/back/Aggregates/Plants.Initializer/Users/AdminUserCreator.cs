@@ -19,7 +19,7 @@ internal class AdminUserCreator
         await _command.SendAndWaitAsync(
             factory => factory.Create<CreateUserCommand, User>(_options.Username.ToGuid()),
             meta => new CreateUserCommand(meta,
-            new UserCreationDto(
+            new UserCreationData(
                 _options.FirstName,
                 _options.LastName,
                 "",

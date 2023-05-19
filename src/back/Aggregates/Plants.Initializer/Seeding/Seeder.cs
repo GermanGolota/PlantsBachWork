@@ -44,7 +44,7 @@ internal class Seeder
             var testData = await LoadTestDataAsync(token);
             var familyToImages = await LoadTestImagesAsync(token);
             var users = Enumerable.Range(0, _options.UsersCount)
-                .Select(_ => new UserCreationDto(
+                .Select(_ => new UserCreationData(
                     Faker.Name.First(),
                     Faker.Name.Last(),
                     Faker.Phone.Number(),
