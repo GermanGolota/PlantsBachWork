@@ -277,8 +277,8 @@ viewPage resp page =
             let
                 btn =
                     if isAdmin resp then
-                        Button.linkButton
-                            [ Button.outlinePrimary
+                        Button.button
+                            [ Button.primary
                             , Button.onClick <| Navigate <| historyUrl "PlantInstruction" id
                             , Button.attrs [ smallMargin ]
                             ]

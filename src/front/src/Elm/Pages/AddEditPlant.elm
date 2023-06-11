@@ -402,8 +402,8 @@ viewPage resp page =
                 case page of
                     Edit e ->
                         if isAdmin resp then
-                            Button.linkButton
-                                [ Button.outlinePrimary
+                            Button.button
+                                [ Button.primary
                                 , Button.onClick <| Navigate <| historyUrl "PlantStock" e.plantId
                                 , Button.attrs [ smallMargin, largeFont ]
                                 ]
@@ -507,8 +507,8 @@ viewResultAddValue data =
             div [ flex1, flex, Flex.col, class "text-success", Flex.alignItemsCenter, Flex.justifyEnd ]
                 [ div [] [ text ("Successfully submitted " ++ humanizePascalCase notification.name ++ ". Check your notifications for results.") ]
                 , div []
-                    [ Button.linkButton
-                        [ Button.primary
+                    [ Button.button
+                        [ Button.info
                         , Button.onClick <| GoBack
                         ]
                         [ text "Go back" ]

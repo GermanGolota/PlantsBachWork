@@ -436,7 +436,7 @@ resultView isAdmin showOrder showDelete token item =
     let
         orderBtn =
             div [ flex, Flex.col, flex1 ]
-                [ Button.linkButton
+                [ Button.button
                     [ Button.primary
                     , Button.onClick <| Navigate ("/plant/" ++ item.id ++ "/order")
                     , Button.disabled (not showOrder)
@@ -472,8 +472,8 @@ resultView isAdmin showOrder showDelete token item =
         historyBtn =
             if isAdmin then
                 div [ flex, Flex.row, flex1 ]
-                    [ Button.linkButton
-                        [ Button.outlinePrimary
+                    [ Button.button
+                        [ Button.primary
                         , Button.onClick <| Navigate <| historyUrl "PlantPost" item.id
                         , Button.attrs [ smallMargin ]
                         ]
@@ -483,7 +483,7 @@ resultView isAdmin showOrder showDelete token item =
             else
                 div [] []
     in
-    Card.config [ Card.attrs (fillParent ++ [ style "flex" "1" ]) ]
+    Card.config [ Card.attrs (fillParent ++ [ style "flex" "1", style "background-color" "#F0E68C" ]) ]
         |> Card.header [ class "text-center" ]
             [ ImageList.view item.images |> Html.map (\msg -> Main <| ImageSelected item.id msg)
             ]
@@ -496,7 +496,7 @@ resultView isAdmin showOrder showDelete token item =
                     , div [ flex, Flex.col, flex1, mediumFont ] [ text " ₴" ]
                     , div [ flex, Flex.col, flex1 ] [ orderBtn ]
                     , div [ flex, Flex.col, flex1 ]
-                        [ Button.linkButton
+                        [ Button.button
                             [ Button.primary
                             , Button.onClick <| Navigate ("/plant/" ++ item.id)
                             ]

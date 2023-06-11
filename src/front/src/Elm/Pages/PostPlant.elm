@@ -189,7 +189,7 @@ viewButtons result id =
     let
         btns =
             div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
-                [ Button.linkButton
+                [ Button.button
                     [ Button.primary
                     , Button.onClick <| Navigate ("/notPosted/" ++ id ++ "/edit")
                     , Button.attrs

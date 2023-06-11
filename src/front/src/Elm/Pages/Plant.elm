@@ -316,7 +316,7 @@ viewPage auth page =
     in
     case page of
         NoPlant ->
-            div [] [ text "Please select a plant", Button.linkButton [ Button.primary, Button.onClick <| Navigate "/search", Button.attrs [ smallMargin ] ] [ text "Return to search" ] ]
+            div [] [ text "Please select a plant", Button.button [ Button.primary, Button.onClick <| Navigate "/search", Button.attrs [ smallMargin ] ] [ text "Return to search" ] ]
 
         Plant p ->
             let
@@ -393,7 +393,7 @@ viewResult result =
                 [ div [ Flex.row, flex1 ]
                     [ baseView "text-primary" "Successfully submitted. Check your notifications for results." ]
                 , div [ Flex.row, flex1 ]
-                    [ Button.linkButton [ Button.onClick <| Navigate "/orders", Button.info, Button.attrs [ largeFont ] ] [ text "View my orders" ]
+                    [ Button.button [ Button.onClick <| Navigate "/orders", Button.info, Button.attrs [ largeFont ] ] [ text "View my orders" ]
                     ]
                 ]
 
@@ -548,7 +548,7 @@ interactionButtons isAdmin allowOrder isOrder id =
 
         orderBtn =
             if allowOrder then
-                Button.linkButton
+                Button.button
                     [ Button.primary
                     , orderOnClick
                     , Button.attrs [ smallMargin, largeFont ]
@@ -560,8 +560,8 @@ interactionButtons isAdmin allowOrder isOrder id =
 
         historyBtn =
             if isOrder == False && isAdmin then
-                Button.linkButton
-                    [ Button.outlinePrimary
+                Button.button
+                    [ Button.primary
                     , Button.onClick <| Navigate <| historyUrl "PlantPost" id
                     , Button.attrs [ smallMargin, largeFont ]
                     ]
@@ -571,7 +571,7 @@ interactionButtons isAdmin allowOrder isOrder id =
                 div [] []
     in
     div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
-        [ Button.linkButton
+        [ Button.button
             ([ Button.primary
              , Button.onClick <| Navigate <| backUrl
              , Button.attrs [ smallMargin, largeFont ]

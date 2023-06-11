@@ -129,6 +129,7 @@ flatten : List (List a) -> List a
 flatten plane =
     plane |> List.foldr (++) []
 
+
 viewLoading : Html msg
 viewLoading =
     let
@@ -213,10 +214,10 @@ chunkedView size viewFunc items =
                     size - val
 
         emptyCol =
-            Grid.col [ Col.attrs [ style "flex" "1", style "max-width" <| String.fromFloat (100.0 / toFloat size) ++ "%" ] ] []
+            Grid.col [ Col.attrs [ style "flex" "1", style "margin" "2% 0 2% 0", style "max-width" <| String.fromFloat (100.0 / toFloat size) ++ "%" ] ] []
 
         toCol item =
-            Grid.col [ Col.attrs [ style "flex" "1", style "max-width" <| String.fromFloat (100.0 / toFloat size) ++ "%" ] ] [ viewFunc item ]
+            Grid.col [ Col.attrs [ style "flex" "1", style "margin" "2% 0 2% 0", style "max-width" <| String.fromFloat (100.0 / toFloat size) ++ "%" ] ] [ viewFunc item ]
 
         addRemainder index =
             if index == List.length chunks - 1 then
@@ -244,7 +245,8 @@ chunkedView size viewFunc items =
 
 formatPricePartial : Float -> String
 formatPricePartial price =
-    format usLocale price 
+    format usLocale price
+
 
 formatPrice : Float -> String
 formatPrice price =

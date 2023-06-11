@@ -100,7 +100,7 @@ viewPage resp page =
     in
     div (fillParent ++ [ flex, Flex.col ])
         [ div [ flex, style "flex" "13", Flex.justifyBetween, Flex.row ]
-            [ Button.linkButton
+            [ Button.button
                 [ Button.primary
                 , Button.onClick <| Navigate "/notPosted/add"
                 , Button.attrs
@@ -133,12 +133,12 @@ viewItem isAdmin item =
                 bgTeal
 
             else
-                class ""
+                style "background-color" "rgb(240, 230, 140)"
 
         historyBtn =
             if isAdmin then
-                Button.linkButton
-                    [ Button.outlinePrimary
+                Button.button
+                    [ Button.primary
                     , Button.onClick <| Navigate <| historyUrl "PlantStock" item.id
                     , Button.attrs [ smallMargin ]
                     ]
@@ -155,13 +155,13 @@ viewItem isAdmin item =
             [ Block.text [] [ text item.description ]
             , Block.custom <|
                 div [ flex, Flex.row, Flex.justifyEnd, Flex.alignItemsCenter ]
-                    [ Button.linkButton
+                    [ Button.button
                         [ Button.primary
                         , Button.onClick <| Navigate ("/notPosted/" ++ item.id ++ "/edit")
                         , Button.attrs [ smallMargin ]
                         ]
                         [ text "Edit" ]
-                    , Button.linkButton
+                    , Button.button
                         [ Button.primary
                         , Button.onClick <| Navigate ("/notPosted/" ++ item.id ++ "/post")
                         , Button.attrs [ smallMargin ]
