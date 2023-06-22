@@ -89,14 +89,11 @@ navBar username roles currentLink notifications =
         , class "bg-light"
         , style "position" "fixed"
         ]
-        [ div ([ flex, Flex.col, style "justify-content" "space-between" ] ++ fillParent)
-            [ div []
-                [ div [ flex, Flex.row, Flex.justifyCenter ]
-                    [ treeIcon (px 200) Color.black
-                    ]
-                , linksView currentLink <| getLinksFor roles
+        [ div ([ flex, Flex.col, style "justify-content" "space-between", style "background-color" "#8FBC8F" ] ++ fillParent)
+            [ div [] [ userView username notifications ]
+            , div [ flex1 ]
+                [ linksView currentLink <| getLinksFor roles
                 ]
-            , div [] [ userView username notifications ]
             ]
         ]
 

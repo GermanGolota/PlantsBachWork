@@ -273,7 +273,7 @@ viewPage : AuthResponse -> View -> Html Msg
 viewPage resp page =
     div ([ flex, Flex.col ] ++ fillParent)
         [ div [ flex1, mediumMargin ]
-            [ Button.linkButton [ Button.primary, Button.onClick <| Navigate "/user/add", Button.attrs largeCentered ] [ text "Create User" ]
+            [ Button.button [ Button.primary, Button.onClick <| Navigate "/user/add", Button.attrs largeCentered ] [ text "Create User" ]
             ]
         , div [ style "flex" "2", flex, Flex.row, Flex.alignItemsCenter ]
             [ viewInput (Input.text [ Input.onInput ChangedName ]) "Name"
@@ -292,8 +292,8 @@ viewUser isAdmin viewerRoles user =
     let
         historyBtn =
             if isAdmin then
-                Button.linkButton
-                    [ Button.outlinePrimary
+                Button.button
+                    [ Button.primary
                     , Button.onClick <| Navigate <| historyUrl "User" user.id
                     , Button.attrs [ smallMargin ]
                     ]
@@ -324,7 +324,7 @@ viewUser isAdmin viewerRoles user =
                 Nothing ->
                     btnViewBase
     in
-    Card.config []
+    Card.config [ Card.attrs [ style "background-color" "#F0E68C" ] ]
         |> Card.header largeCentered
             [ div largeCentered [ text user.name ]
             ]

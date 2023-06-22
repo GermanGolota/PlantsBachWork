@@ -1,32 +1,47 @@
 Cover:
-Good afternoon.  I would be presenting my bachelor's thesis on the development of IT solutions and services for the green market.
+Good afternoon.  I would be presenting my bachelor's thesis on the development 
+of IT solutions and services for the green market.
 Introduction:
 The main purpose of this work was to develop a system that would be useful for a plant-selling business.
-By automating and streamlining various processes within it, the work aims to increase productivity in a high-social-impact area of business.
-Additionally, we would discuss architectural ideas that came into the system as we come into them.
+Such business operates within the ecological sector, which is quite important nowadays.
+Following from that, increasing the productivity of such a business via development of an automated solution
+would be beneficial.
 Use Cases:
-From the preliminary analysis, we concluded that there are three main groups of users: consumers, producers, and managers. Each group has unique goals and needs within the system.
-For example, consumers are primarily focused on accessing information, such as instructions for growing plants and finding plants for sale.
-Producers, on the other hand, need to manage inventory, post plants for sale, and write instructions for growing plants. 
-Meanwhile, managers are primarily concerned with the operations of the business, such as analyzing statistics, managing employees, and reviewing historical data.
-Architecture:
-As we have previously seen, the goals of different user types are not the same.
-Additionally, those goals may be grouped into different buckets, such as consumers being primarily read users and producers being primarily write users.
+From the preliminary analysis, we concluded that there are three main groups of users: 
+consumers, producers, and managers. Each group has unique goals and needs within the system.
+Let's review the consumers use cases within the application.
+(Demo Search plants, order a plant, search for instructions)
+So, next we can demo the producer
+(Demo Creating and Editing Plant and Writing an Instruction)
+The last type of user is the Manager
+(Demo Statistics and History)
+As we can see from the demonstration the goals of users are quite different.
+Namely, the consumers are primarly interested in reading the data, 
+while the producers are mainly interested in writing the data
 CQRS:
-To accommodate these differing user needs, we used a design pattern called Command Query Responsibility Segregation (CQRS).
-This approach separates the read and write models of the system, avoiding a data model with a "compromise", where the same model is used for both reads and writes.
-By using different data storages for reads and writes and lazily updating the read model to match the write model, we were able to create a more efficient and flexible system.
-DDD:
-We have used Domain-Driven Design (DDD) to model the domain of the problem.
-DDD allowed us to describe the problem's domain using a ubiquitous language that is understandable to both the client and the developer.
-Our diagram represents the read model and includes business terms like delivery address and user role without a normalized data model.
-Conventional diagram:
-So, now that we are done with the read model, we may review the write model.
-Initially, we tried to use a conventional, highly normalized database design for the write model.
-However, we found this approach to be too complex, non-intuitive, and hard to sync with the read model.
+To accommodate these differing user needs, we used a design pattern of Command Query Responsibility Segregation (CQRS).
+Using this approach we separate the read and write models of the system.
+By doing so, we avoid a data model that is a "compromise", where the same model is used for both reads and writes.
+Read model (DDD):
+To create the read model, we have used the ideas of Domain-Driven Design (DDD).
+DDD allowed us to describe the problem's domain using a ubiquitous language 
+that is understandable to both the client and the developer.
+The diagram includes business terms like delivery address and user role without a normalized data model.
+Write model (Events):
+So, outside of the read model for the application there is also a write model.
+The write model uses events to store the information.
+The events are grouped within the Aggregate that encompasses them and 
+the events represent actual events that might be dscibed to happen within the system by a business analist.
 Event Sourcing:
-We then adopted the concept of event sourcing, which allowed us to simplify the process of syncing the read model and improve the ease of understanding of the write model.
+The concept upon which the write model is built is event sourcing.
+The main idea here is that the actual events should be stored and treated like the source of truth 
+and not the reaction our system had on them.
+This architectural approach allowed us to simplify the process of syncing the read model 
+and improve the ease of understanding of the write model as it is built with events.
 Final slide:
-In summary, the work I have presented has achieved its goals.
-Additionally, by adopting suitable architectural approaches, we were able to create a system that caters to the unique needs of consumers, producers, and managers.
-Thank you for listening, and I'd be happy to answer any questions you might have.
+In conclusion:
+- the processes were analyzed and modeled
+- the model was succesfully realized 
+- the realization used interesting and unique artchitectural approaches.
+
+Thank you for listening. Do you have any questions?

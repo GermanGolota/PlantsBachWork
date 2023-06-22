@@ -42,10 +42,10 @@ notificationsModal modal accordion notifications =
         |> Modal.withAnimation AnimateNotificationsModal
         |> Modal.small
         |> Modal.h3 [] [ text "Notifications" ]
-        |> Modal.body [] [ Button.linkButton [ Button.outlineDanger, Button.onClick AllNotificationsDismissed ] [ text "Dismiss all" ], viewNotifications notifications accordion ]
+        |> Modal.body [] [ Button.button [ Button.danger, Button.onClick AllNotificationsDismissed ] [ text "Dismiss all" ], viewNotifications notifications accordion ]
         |> Modal.footer []
             [ Button.button
-                [ Button.outlinePrimary
+                [ Button.primary
                 , Button.attrs [ onClick <| AnimateNotificationsModal Modal.hiddenAnimated ]
                 ]
                 [ text "Close" ]
@@ -80,7 +80,7 @@ viewNotification notification loaded =
             if loaded then
                 case findResultLocation notification.command.name notification.command.aggregate.id of
                     Just location ->
-                        [ Button.linkButton [ Button.onClick <| Navigate location, Button.info ]
+                        [ Button.button [ Button.onClick <| Navigate location, Button.info ]
                             [ text <| "See " ++ humanizePascalCase notification.command.aggregate.name ]
                         ]
 

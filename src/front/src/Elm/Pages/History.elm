@@ -532,7 +532,7 @@ viewToolbar agg =
                     True
     in
     [ div [ Flex.col, mediumMargin ]
-        [ Button.linkButton [ Button.outlineInfo, Button.onClick GoBack, Button.attrs largeCentered ] [ text "Go back" ]
+        [ Button.button [ Button.info, Button.onClick GoBack, Button.attrs largeCentered ] [ text "Go back" ]
         ]
     , div [ Flex.col, smallMargin ]
         [ Input.date
@@ -575,7 +575,7 @@ viewHistory advanced history =
                     |> Modal.body [] [ JsonViewer.viewJsonTree meta |> Html.map MetadataJson ]
                     |> Modal.footer []
                         [ Button.button
-                            [ Button.outlinePrimary
+                            [ Button.primary
                             , Button.attrs [ onClick <| AnimateMetadataModal Modal.hiddenAnimated ]
                             ]
                             [ text "Close" ]
@@ -604,8 +604,8 @@ viewSnapshot snapshot state advanced =
                     (List.map
                         (\rel ->
                             ListGroup.li [ ListGroup.dark ]
-                                [ Button.linkButton
-                                    [ Button.outlinePrimary
+                                [ Button.button
+                                    [ Button.primary
                                     , Button.onClick <| Navigate <| historyUrl rel.name rel.id
                                     ]
                                     [ text rel.role ]
@@ -617,7 +617,7 @@ viewSnapshot snapshot state advanced =
     in
     Accordion.card
         { id = id
-        , options = [ Card.outlineDark, Card.align Text.alignXsCenter ]
+        , options = [ Card.outlineDark, Card.align Text.alignXsCenter, Card.attrs [ style "background-color" "rgb(240, 230, 140)" ] ]
         , header =
             Accordion.header [] <| Accordion.toggle [] [ viewSnapshotName snapshot ]
         , blocks =

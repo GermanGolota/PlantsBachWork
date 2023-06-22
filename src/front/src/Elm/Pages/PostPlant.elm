@@ -12,6 +12,7 @@ import Main exposing (AuthResponse, ModelBase(..), MsgBase(..), UserRole(..), ba
 import Main2 exposing (viewBase)
 import NavBar exposing (plantsLink)
 import PlantHelper exposing (PlantModel, plantDecoder, viewPlantBase)
+import Platform.Cmd as Cmd
 import Utils exposing (SubmittedResult(..), flex, flex1, largeFont, smallMargin, submittedDecoder)
 import Webdata exposing (WebData(..), viewWebdata)
 
@@ -99,7 +100,22 @@ updateLocal msg m =
                         Submit ->
                             case plantView.plant of
                                 Loaded (Just pl) ->
-                                    ( authedPlant <| { plantView | postResult = Just Loading }, submitCommand auth.token id pl.price )
+                                    let
+                                        resultCache =
+                                            if pl.price > 0 then
+                                                Just Loading
+
+                                            else
+                                                Just <| Loaded <| SubmittedFail "Invalid price"
+
+                                        commandCache =
+                                            if pl.price > 0 then
+                                                submitCommand auth.token id pl.price
+
+                                            else
+                                                Cmd.none
+                                    in
+                                    ( authedPlant <| { plantView | postResult = resultCache }, commandCache )
 
                                 _ ->
                                     noOp
@@ -189,7 +205,7 @@ viewButtons result id =
     let
         btns =
             div [ flex, style "margin" "3em", Flex.row, Flex.justifyEnd ]
-                [ Button.linkButton
+                [ Button.button
                     [ Button.primary
                     , Button.onClick <| Navigate ("/notPosted/" ++ id ++ "/edit")
                     , Button.attrs

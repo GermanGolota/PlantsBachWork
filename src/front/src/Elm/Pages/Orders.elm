@@ -411,7 +411,7 @@ viewPage resp page =
             if page.showAdditional then
                 [ checksView
                 , div []
-                    [ Button.linkButton
+                    [ Button.button
                         [ Button.primary
                         , Button.onClick <| Navigate viewLocation
                         , Button.attrs
@@ -474,8 +474,8 @@ viewOrder isAdmin confirmed rejected ttns viewType order =
 
         historyBtn =
             if isAdmin then
-                Button.linkButton
-                    [ Button.outlinePrimary
+                Button.button
+                    [ Button.primary
                     , Button.onClick <| Navigate <| historyUrl "PlantOrder" orderId
                     , Button.attrs [ smallMargin ]
                     ]

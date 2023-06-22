@@ -183,7 +183,7 @@ viewMain isAdmin isProducer page av =
     let
         btnView =
             if page.showAdd then
-                div [ flex, Flex.row, style "flex" "0.5", mediumMargin ] [ Button.linkButton [ Button.primary, Button.onClick <| Navigate "/instructions/add" ] [ text "Create" ] ]
+                div [ flex, Flex.row, style "flex" "0.5", mediumMargin ] [ Button.button [ Button.primary, Button.onClick <| Navigate "/instructions/add" ] [ text "Create" ] ]
 
             else
                 div [] []
@@ -235,8 +235,8 @@ viewInstruction isAdmin isProducer ins =
     let
         historyBtn =
             if isAdmin then
-                Button.linkButton
-                    [ Button.outlinePrimary
+                Button.button
+                    [ Button.primary
                     , Button.onClick <| Navigate <| historyUrl "PlantInstruction" ins.id
                     , Button.attrs [ smallMargin ]
                     ]
@@ -247,12 +247,12 @@ viewInstruction isAdmin isProducer ins =
 
         editBtn =
             if isProducer then
-                Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/instructions/" ++ ins.id ++ "/edit"), Button.attrs [ smallMargin ] ] [ text "Edit" ]
+                Button.button [ Button.primary, Button.onClick <| Navigate ("/instructions/" ++ ins.id ++ "/edit"), Button.attrs [ smallMargin ] ] [ text "Edit" ]
 
             else
                 div [] []
     in
-    Card.config [ Card.attrs (fillParent ++ [ style "flex" "1" ]) ]
+    Card.config [ Card.attrs (fillParent ++ [ style "flex" "1", style "background-color" "#F0E68C" ]) ]
         |> Card.header [ class "text-center" ]
             [ Html.img ([ src (Maybe.withDefault "" ins.imageUrl), alt "No cover for this instruction" ] ++ fillParent) []
             ]
@@ -262,7 +262,7 @@ viewInstruction isAdmin isProducer ins =
             , Block.custom <|
                 div [ flex, Flex.row, Flex.justifyEnd, Flex.alignItemsCenter ]
                     [ editBtn
-                    , Button.linkButton [ Button.primary, Button.onClick <| Navigate ("/instructions/" ++ ins.id) ] [ text "Open Full" ]
+                    , Button.button [ Button.primary, Button.onClick <| Navigate ("/instructions/" ++ ins.id) ] [ text "Open Full" ]
                     , historyBtn
                     ]
             ]

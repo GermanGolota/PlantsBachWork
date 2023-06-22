@@ -123,8 +123,8 @@ viewPage resp page =
 
         historyBtn =
             if isAdmin resp then
-                Button.linkButton
-                    [ Button.outlinePrimary
+                Button.button
+                    [ Button.primary
                     , Button.onClick <| Navigate <| historyUrl "User" resp.userId
                     , Button.attrs [ smallMargin ]
                     ]
@@ -149,7 +149,7 @@ viewPage resp page =
                 ]
                 |> Html.map Main
             , buttonView page |> Html.map Main
-            , Button.linkButton [ Button.danger, Button.onClick <| Navigate "/login/new", Button.attrs [ mediumMargin ] ] [ text "Logout" ]
+            , Button.button [ Button.danger, Button.onClick <| Navigate "/login/new", Button.attrs [ mediumMargin ] ] [ text "Logout" ]
             , historyBtn
             ]
         ]

@@ -97,8 +97,8 @@ viewPage resp page =
             let
                 historyBtn id =
                     if isAdmin resp then
-                        Button.linkButton
-                            [ Button.outlinePrimary
+                        Button.button
+                            [ Button.primary
                             , Button.onClick <| Navigate <| historyUrl "PlantInstruction" id
                             , Button.attrs [ smallMargin ]
                             ]
@@ -108,8 +108,8 @@ viewPage resp page =
                         div [] []
 
                 editBtn id =
-                    Button.linkButton
-                        [ Button.outlinePrimary
+                    Button.button
+                        [ Button.primary
                         , Button.onClick <| Navigate <| "/instructions/" ++ id ++ "/edit"
                         , Button.attrs [ smallMargin ]
                         ]
@@ -158,7 +158,7 @@ viewInstruction conditionalBtns ins =
                 [ Html.p [] (textHtml ins.text) ]
             ]
         , div [ style "flex" "0.5", flex, Flex.row, Flex.justifyCenter, smallMargin ]
-            ([ Button.linkButton [ Button.outlinePrimary, Button.onClick <| Navigate "/instructions" ] [ text "Go back" ]
+            ([ Button.button [ Button.primary, Button.onClick <| Navigate "/instructions" ] [ text "Go back" ]
              ]
                 ++ conditionalBtns
             )
